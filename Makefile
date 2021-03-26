@@ -37,17 +37,18 @@ BUILD_DIR      ?= $(MAKEFILE_PATH)/build
 OBJS_DIR       ?= $(BUILD_DIR)/objs
 SYSROOT_DIR    ?= $(BUILD_DIR)/sysroot/
 SCRIPTS_DIR    ?= $(MAKEFILE_PATH)/scripts
+OUT_ISO_PATH   ?= $(BUILD_DIR)/$(FULL_BIN_NAME).iso
 
-OUTPUT_FORMATED = $(SCRIPTS_DIR)/output-formated.sh
+OUTPUT_FORMATTED = $(SCRIPTS_DIR)/output-formatted.sh
 
-export OUTPUT_FORMATED
+export OUTPUT_FORMATTED
 export SYSROOT_DIR
 export SCRIPTS_DIR
 export BUILD_DIR
 export OBJS_DIR
 
-DEFINES ?= 
-DEFINES += \
+DEFS ?= 
+DEFS += \
 -D__K_VER_MAJ__=$(VERSION_MAJOR) \
 -D__K_VER_MIN__=$(VERSION_MINOR) \
 -D__K_PATCH_N__=$(PATCH_NUMBER) \
@@ -56,23 +57,18 @@ DEFINES += \
 CFLAGS += \
 -ffreestanding -Wall -Wextra \
 -isystem=/usr/include --sysroot=$(SYSROOT_DIR) \
-$(DEFINES)
+$(DEFS)
 
 export CFLAGS
-export DEFINES
+export DEFS
 
-LDFLAGS        += -nostdlib -lgcc
-MAKEFLAGS      += --no-print-directory
-SUBDIRS        ?= init arch
+LDFLAGS    += -nostdlib -lgcc
+MAKEFLAGS  += --no-print-directory
+SUBDIRS    ?= init arch
 
-ifeq ($(ARCH), x86)
-	SRCARCH := x86
-endif
-ifeq ($(ARCH), i386)
-	SRCARCH := x86
-endif
-ifeq ($(ARCH), i686)
-	SRCARCH := x86
+SRCARCH    := $(shell $(SCRIPTS_DIR)/arch-to-srcarch.sh $(ARCH))
+ifeq ($(SRCARCH), undefined)
+$(error Unsupported arch $(ARCH))
 endif
 
 -include arch/$(SRCARCH)/video/Makefile.config
@@ -85,11 +81,13 @@ $(ARCH_BOOT_OBJS) \
 $(INIT_OBJS) \
 )
 
-.PHONY: $(BIN_NAME) clean mrclean iso iso-qemu headers
+.PHONY: $(BIN_NAME) clean mrclean iso iso-run headers
 .SUFFIXES: .o .c .s
 
 $(BIN_NAME): Makefile
-	$(shell $(SCRIPTS_DIR)/sysroot.sh $(SYSROOT_DIR))
+	@mkdir -p $(BUILD_DIR)
+	@mkdir -p $(OBJS_DIR)
+	@mkdir -p $(SYSROOT_DIR)/boot/grub $(SYSROOT_DIR)/usr/include
 
 	make headers
 
@@ -101,24 +99,29 @@ $(BIN_NAME): Makefile
 		fi \
 	done
 
-	@echo "$(shell $(OUTPUT_FORMATED) LD $(FULL_BIN_NAME))"
-	@$(CC) -T arch/$(SRCARCH)/boot/linker.ld $(OBJS) $(CFLAGS) $(LDFLAGS) -o $(SYSROOT_DIR)/boot/$(FULL_BIN_NAME)
-
-	@grub-file --is-x86-multiboot $(SYSROOT_DIR)/boot/$(FULL_BIN_NAME)
+	@$(OUTPUT_FORMATTED) LD $(FULL_BIN_NAME)
+	@$(CC) \
+	-T arch/$(SRCARCH)/boot/linker.ld \
+	$(OBJS) $(CFLAGS) $(LDFLAGS) \
+	-o $(SYSROOT_DIR)/boot/$(FULL_BIN_NAME)
 
 iso:
 	make $(BIN_NAME)
-	$(shell $(SCRIPTS_DIR)/iso.sh $(SYSROOT_DIR) $(FULL_BIN_NAME))
+	
+	@$(SCRIPTS_DIR)/iso.sh \
+	--sysrot-dir $(SYSROOT_DIR) \
+	--bin-name $(FULL_BIN_NAME) \
+	--out-iso-path $(OUT_ISO_PATH)
 
-	#@echo "menuentry '$(FULL_BIN_NAME)' { multiboot /boot/$(FULL_BIN_NAME) }" > $(ISO_DIR)/boot/grub/grub.cfg
-	#grub-mkrescue -o $(BUILD_DIR)/$(FULL_BIN_NAME).iso $(ISO_DIR)
-
-iso-qemu:
+iso-run:
 	make iso
-	qemu-system-x86_64 -cdrom $(BUILD_DIR)/$(FULL_BIN_NAME).iso
+
+	@$(SCRIPTS_DIR)/iso-run.sh \
+	--iso-path $(BUILD_DIR)/$(FULL_BIN_NAME).iso \
+	--arch $(ARCH)
 
 headers:
-	cp -r $(INCLUDE_DIR)/* $(SYSROOT_DIR)/usr/include
+	@cp -r $(INCLUDE_DIR)/* $(SYSROOT_DIR)/usr/include
 
 clean:
 	@for f in $(SUBDIRS); do \
@@ -131,7 +134,7 @@ clean:
 
 mrclean:
 	make clean
-	rm -f $(SYSROOT_DIR)/boot/$(FULL_BIN_NAME)
-	rm -rf $(ISO_DIR)/*
-	rm -f $(BUILD_DIR)/$(FULL_BIN_NAME).iso
-	rm -rf $(SYSROOT_DIR)/usr/include/*
+	@#check if SYSROOT_DIR doesn't actually expand to the host sysroot before removing it :-) kms
+	@if [ "$(realpath --canonicalize-missing -s $(SYSROOT_DIR))" != "/" ]; then \
+		rm -rf $(SYSROOT_DIR)/* ; \
+	fi

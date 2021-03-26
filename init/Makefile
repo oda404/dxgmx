@@ -10,7 +10,7 @@ init: $(addprefix $(OBJS_DIR)/, $(INIT_OBJS)) Makefile
 	@
 
 $(OBJS_DIR)/%.o : $(WD_PATH)/%.c
-	@echo "$(shell $(OUTPUT_FORMATED) CC $(notdir $< $@))"
+	@$(OUTPUT_FORMATTED) CC $(notdir $< $@)
 	@$(CC) -c $< $(CFLAGS) -o $@
 
 clean:
