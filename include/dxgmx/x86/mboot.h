@@ -8,7 +8,7 @@
 #define MBOOT_BOOTLOADER_MAGIC 0x2BADB002
 
 /* align modules on 4K page boundaries */
-#define MBOOT_FLAG_PAGE_ALIGN 0x1
+#define MBOOT_FLAG_PAGE_ALIGN  0x1
 /* provide the kernel with info about the memory */
 #define MBOOT_FLAG_MEM_INFO    0x2
 /* provide the kernel with info about the video  */
@@ -16,10 +16,15 @@
 
 #ifndef __ASM__
 
+#include<stdint.h>
+
 typedef struct
 {
-    
-} mboot_header;
+    uint32_t flags;
+    uint32_t mem_lower;
+    uint32_t mem_upper;
+
+} mboot_info;
 
 #endif // __ASM__
 

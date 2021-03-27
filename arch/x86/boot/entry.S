@@ -1,6 +1,6 @@
 
 #define __ASM__
-#include "mboot.h"
+#include <dxgmx/x86/mboot.h>
 
 #define MBOOT_HEADER_FLAGS \
 (MBOOT_FLAG_PAGE_ALIGN | MBOOT_FLAG_MEM_INFO)
