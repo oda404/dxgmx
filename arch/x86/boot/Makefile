@@ -12,7 +12,7 @@ boot: $(addprefix $(OBJS_DIR)/, $(ARCH_BOOT_OBJS))
 clean:
 	rm -f $(addprefix $(OBJS_DIR)/, $(ARCH_BOOT_OBJS))
 
-$(OBJS_DIR)/%.o : $(WD_PATH)/%.s
+$(OBJS_DIR)/%.o : $(WD_PATH)/%.S
 	@$(OUTPUT_FORMATTED) CC $(notdir $< $@)
 	@$(CC) -c $< $(CFLAGS) -o $@
 
