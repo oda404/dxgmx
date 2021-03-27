@@ -17,7 +17,7 @@
 #define __K_CODENAME__ "undefined"
 #endif
 
-void kmain(void)
+void kmain()
 {
     vga_disable_cursor();
     vga_put_str("Booting codename: " __K_CODENAME__, VGA_COLOR_WHITE, VGA_COLOR_BLACK, 0);

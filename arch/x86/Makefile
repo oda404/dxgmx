@@ -2,7 +2,7 @@
 
 .PHONY: x86 clean
 
-SUBDIRS := boot video
+SUBDIRS := boot video core
 
 x86: Makefile
 	@for f in $(SUBDIRS); do \

@@ -54,6 +54,15 @@ DEFS += \
 -D__K_PATCH_N__=$(PATCH_NUMBER) \
 -D__K_CODENAME__='"$(CODE_NAME)"'
 
+SRCARCH    := $(shell $(SCRIPTS_DIR)/arch-to-srcarch.sh $(ARCH))
+ifeq ($(SRCARCH), undefined)
+$(error Unsupported arch $(ARCH))
+endif
+
+ifeq ($(SRCARCH), x86)
+	DEFS += -D__X86__
+endif
+
 CFLAGS += \
 -ffreestanding -Wall -Wextra \
 -isystem=/usr/include --sysroot=$(SYSROOT_DIR) \
@@ -66,12 +75,8 @@ LDFLAGS    += -nostdlib -lgcc
 MAKEFLAGS  += --no-print-directory
 SUBDIRS    ?= init arch
 
-SRCARCH    := $(shell $(SCRIPTS_DIR)/arch-to-srcarch.sh $(ARCH))
-ifeq ($(SRCARCH), undefined)
-$(error Unsupported arch $(ARCH))
-endif
-
 -include arch/$(SRCARCH)/video/Makefile.config
+include arch/$(SRCARCH)/core/Makefile.config
 include arch/$(SRCARCH)/boot/Makefile.config
 include init/Makefile.config
 
@@ -79,6 +84,7 @@ OBJS := $(addprefix $(OBJS_DIR)/, \
 $(VIDEO_OBJS) \
 $(ARCH_BOOT_OBJS) \
 $(INIT_OBJS) \
+$(ARCH_CORE_OBJS) \
 )
 
 .PHONY: $(BIN_NAME) clean mrclean iso iso-run headers
