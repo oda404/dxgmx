@@ -38,6 +38,7 @@ OBJS_DIR       ?= $(BUILD_DIR)/objs
 SYSROOT_DIR    ?= $(BUILD_DIR)/sysroot/
 SCRIPTS_DIR    ?= $(MAKEFILE_PATH)/scripts
 OUT_ISO_PATH   ?= $(BUILD_DIR)/$(FULL_BIN_NAME).iso
+LIBC_DIR       ?= $(MAKEFILE_PATH)/libc
 
 OUTPUT_FORMATTED = $(SCRIPTS_DIR)/output-formatted.sh
 
@@ -79,15 +80,17 @@ SUBDIRS    ?= init arch
 include arch/$(SRCARCH)/core/Makefile.config
 include arch/$(SRCARCH)/boot/Makefile.config
 include init/Makefile.config
+include libc/Makefile.config
 
 OBJS := $(addprefix $(OBJS_DIR)/, \
 $(VIDEO_OBJS) \
 $(ARCH_BOOT_OBJS) \
 $(INIT_OBJS) \
 $(ARCH_CORE_OBJS) \
+$(LIBC_OBJS) \
 )
 
-.PHONY: $(BIN_NAME) clean mrclean iso iso-run headers
+.PHONY: $(BIN_NAME) clean mrclean iso iso-run headers libc
 .SUFFIXES: .o .c .s
 
 $(BIN_NAME): Makefile
@@ -96,6 +99,7 @@ $(BIN_NAME): Makefile
 	@mkdir -p $(SYSROOT_DIR)/boot/grub $(SYSROOT_DIR)/usr/include
 
 	make headers
+	make libc
 
 	@for f in $(SUBDIRS); do \
 		if [ "$${f}" == "arch" ]; then \
@@ -137,6 +141,11 @@ clean:
 			$(MAKE) clean $(MAKEFLAGS) -C $${f}; \
 		fi \
 	done
+	$(MAKE) clean -C $(LIBC_DIR)
+
+libc:
+	@$(MAKE) libc-headers -C $(LIBC_DIR)
+	@ LIBC_FREESTANDING=1 $(MAKE) -C $(LIBC_DIR)
 
 mrclean:
 	make clean
