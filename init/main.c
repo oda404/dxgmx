@@ -1,7 +1,5 @@
 
 
-#include<dxgmx/tty/tty.h>
-#include<dxgmx/kio/kio.h>
 #include<dxgmx/video/vga_text.h>
 #include<dxgmx/purgatory.h>
 
