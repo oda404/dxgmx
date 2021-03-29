@@ -28,18 +28,17 @@ HEADERS := \
 include/stdlib.h \
 include/string.h
 
-.PHONY: libc clean libc-headers
+.PHONY: libc libc-headers
 
-libc: $(addprefix $(OBJS_DIR)/, $(OBJS)) $(SRC) Makefile
-	@
+libc: libc-headers $(addprefix $(OBJS_DIR)/, $(OBJS)) Makefile
+	@$(OUTPUT_FORMATTED) AR $(notdir $@)
+	@$(AR) -cq $(KLIBS_DIR)/libc.a $(addprefix $(OBJS_DIR)/, $(OBJS))
+	
 
 $(OBJS_DIR)/%.o : $(WD_PATH)/%.c
 	@$(OUTPUT_FORMATTED) CC $(notdir $< $@)
 	@$(CC) -c $< $(CFLAGS) -o $@
 
-clean:
-	@rm -f $(addprefix $(OBJS_DIR)/, $(OBJS))
-	@rm -f $(addprefix $(SYSROOT_DIR)/include, $(HEADERS))
-
 libc-headers: $(HEADERS)
+	@mkdir -p $(SYSROOT_DIR)/usr/include
 	@cp include/* $(SYSROOT_DIR)/usr/include
