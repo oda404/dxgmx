@@ -1,44 +1,50 @@
 
 WD_PATH := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
 
-CC     ?= gcc
-# libc will not be compiled with the same cflags 
-# and defs as the rest of the kernel
-CFLAGS := -Wall -Wextra
-DEFS   := 
+CC             ?= gcc
+AR             ?= ar
+CFLAGS         := -Wall -Wextra -MMD -MP
+DEFS           := 
+CFLAGS_DEBUG   := -g
+CFLAGS_RELEASE := -O2
 
 ifeq ($(LIBC_FREESTANDING), 1)
-	CFLAGS += -ffreestanding --sysroot=$(SYSROOT_DIR) -isystem=/usr/include/
-	DEFS   += -D__LIBC_FREESTANDING__
+	CFLAGS += \
+	-ffreestanding --sysroot=$(SYSROOT_DIR) \
+	-isystem=/usr/include/
+
+	DEFS += -D__LIBC_FREESTANDING__
 else
 	
 endif
 
 CFLAGS += $(DEFS)
 
-SRC := \
-stdlib.c \
-string.c
+include Makefile.config
 
-OBJS := \
-stdlib.o \
-string.o
+HEADERS := $(addprefix include/, $(SRC_LIBC))
+HEADERS := $(patsubst %.c, %.h, $(HEADERS))
 
-HEADERS := \
-include/stdlib.h \
-include/string.h
+DEPS    := $(addprefix $(BUILD_DIR)/, $(OBJS_LIBC))
+DEPS    := $(patsubst %.o, %.d, $(DEPS))
 
-.PHONY: libc libc-headers
+.PHONY: all libc libc-builddir headers clean
 
-libc: libc-headers $(addprefix $(OBJS_DIR)/, $(OBJS)) Makefile
-	@$(OUTPUT_FORMATTED) AR $(notdir $@)
-	@$(AR) -cq $(KLIBS_DIR)/libc.a $(addprefix $(OBJS_DIR)/, $(OBJS))
-	
+all: libc
 
-$(OBJS_DIR)/%.o : $(WD_PATH)/%.c
-	@$(OUTPUT_FORMATTED) CC $(notdir $< $@)
+libc: libc-builddir headers $(addprefix $(BUILD_DIR)/, $(OBJS_LIBC)) Makefile
+
+-include $(DEPS)
+
+$(BUILD_DIR)/libc/%.o : $(patsubst $(BUILD_DIR), ,%.c)
+	@$(OUTPUT_FORMATTED) CC libc/$< 
 	@$(CC) -c $< $(CFLAGS) -o $@
 
-libc-headers: $(HEADERS)
-	@mkdir -p $(SYSROOT_DIR)/usr/include
+libc-builddir:
+	@mkdir -p $(BUILD_DIR)/libc
+
+headers: $(HEADERS)
 	@cp include/* $(SYSROOT_DIR)/usr/include
+
+clean:
+	rm -rf $(BUILD_DIR)/libc
