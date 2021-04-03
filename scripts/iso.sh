@@ -33,6 +33,7 @@ elif [ -z "$BIN_NAME" ]; then
 	exit 3
 fi
 
+mkdir -p $SYSROOT_DIR/boot/grub
 cat > $SYSROOT_DIR/boot/grub/grub.cfg << EOF
 menuentry "$BIN_NAME" {
 	multiboot /boot/$BIN_NAME
