@@ -9,7 +9,7 @@ SECTIONS
 
     .text BLOCK(4K) : ALIGN(4K) /* text section */
     {
-        *(.multiboot)
+        KEEP(*(.multiboot))
         *(.text)
     }
 

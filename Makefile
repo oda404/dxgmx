@@ -23,6 +23,7 @@ CFLAGS_DEBUG      := -g
 CFLAGS_RELEASE    := -O2
 
 LIBC_FREESTANDING := 0
+BOOT_SPEC         ?= multiboot2
 
 # if we are cross compiling check if CROSS_CC was exported
 ifeq ($(IS_CROSS_COMP), 1)
@@ -73,7 +74,17 @@ DEFS += \
 -D__KVER_MAJ__=$(VER_MAJ) \
 -D__KVER_MIN__=$(VER_MIN) \
 -D__KPATCH_N__=$(PATCH_N) \
--D__KCODENAME__='"$(CODE_NAME)"'
+-D__KCODENAME__='"$(CODE_NAME)"' 
+
+ifeq ($(BOOT_SPEC), multiboot2)
+	DEFS += -D__MBOOT2__
+endif
+ifeq ($(BOOT_SPEC), multiboot)
+	DEFS += -D__MBOOT__
+endif
+ifeq ($(BOOT_SPEC), standalone)
+	DEFS += -D__STANDALONE_BOOT__
+endif
 
 ifeq ($(SRCARCH), x86)
 	DEFS += -D__X86__
@@ -127,12 +138,12 @@ dxgmx: builddir-struct sysroot-struct headers libc $(addprefix $(BUILD_DIR)/, $(
 
 -include $(DEPS)
 
-$(BUILD_DIR)/%.o : $(patsubst $(BUILD_DIR), ,%.c)
+$(BUILD_DIR)/%.o : $(patsubst $(BUILD_DIR), ,%.c) Makefile
 	@mkdir -p $(dir $@)
 	@$(OUTPUT_FORMATTED) CC $<
 	@$(CC) -c $< $(CFLAGS) -o $@
 
-$(BUILD_DIR)/%.o : $(patsubst $(BUILD_DIR), ,%.S)
+$(BUILD_DIR)/%.o : $(patsubst $(BUILD_DIR), ,%.S) Makefile
 	@mkdir -p $(dir $@)
 	@$(OUTPUT_FORMATTED) AS $<
 	@$(CC) -c $< $(CFLAGS) -o $@
@@ -158,7 +169,8 @@ iso:
 	$(SCRIPTS_DIR)/iso.sh \
 	--sysroot-dir $(SYSROOT_DIR) \
 	--bin-name $(FULL_BIN_NAME) \
-	--out-iso-path $(OUT_ISO_PATH)
+	--out-iso-path $(OUT_ISO_PATH) \
+	--boot-spec $(BOOT_SPEC)
 
 iso-run:
 	$(MAKE) iso

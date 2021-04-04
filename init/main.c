@@ -24,12 +24,21 @@
 
 void kmain(unsigned long magic, unsigned long  mboot_info_addr __ATTR_MAYBE_UNUSED)
 {
-    if(magic != MBOOT_BOOTLOADER_MAGIC)
+    switch(magic)
     {
-        /* has not been booted by a multi boot compliant bootloader, and we don t support that */
-        vga_put_str("Panic: Not booted by a multi boot compliant booloader.", VGA_COLOR_WHITE, VGA_COLOR_BLACK, 0);
+    case MBOOT2_BOOTLOADER_MAGIC:
+        vga_put_str("Booted by a multiboot2 bootloader.", VGA_COLOR_WHITE, VGA_COLOR_BLACK, 0);
+        break;
+
+    case MBOOT_BOOTLOADER_MAGIC:
+        vga_put_str("Booted by a multiboot bootloader.", VGA_COLOR_WHITE, VGA_COLOR_BLACK, 0);
+        break;
+    
+    default:
+        vga_put_str("Panic: Not booted by a multiboot compliant booloader.", VGA_COLOR_WHITE, VGA_COLOR_BLACK, 0);
         purgatory_enter();
+        break;
     }
 
-    vga_put_str("Booting codename: " __KCODENAME__, VGA_COLOR_WHITE, VGA_COLOR_BLACK, 1);
+    vga_put_str("Codename " __KCODENAME__, VGA_COLOR_WHITE, VGA_COLOR_BLACK, 1);
 }
