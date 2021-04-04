@@ -16,6 +16,10 @@ do
 			OUT_ISO_PATH="$2"
 			shift 2
 		;;
+		"-B"|"--boot-spec")
+			BOOT_SPEC="$2"
+			shift 2
+		;;
 		*)
 			shift
 		;;
@@ -31,12 +35,21 @@ elif [ -z "$OUT_ISO_PATH" ]; then
 elif [ -z "$BIN_NAME" ]; then
 	echo "[iso.sh] BIN_NAME unset"
 	exit 3
+elif [ -z "$BOOT_SPEC" ]; then
+	echo "[iso.sh] BOOT_SPEC unset"
+	exit 4
 fi
 
-mkdir -p $SYSROOT_DIR/boot/grub
-cat > $SYSROOT_DIR/boot/grub/grub.cfg << EOF
+if [ "$BOOT_SPEC" -eq "standalone" ]; then
+	echo idk we ll see
+else
+
+	mkdir -p $SYSROOT_DIR/boot/grub
+	cat > $SYSROOT_DIR/boot/grub/grub.cfg << EOF
 menuentry "$BIN_NAME" {
-	multiboot /boot/$BIN_NAME
+	"$BOOT_SPEC" /boot/$BIN_NAME
 }
 EOF
-grub-mkrescue -o $OUT_ISO_PATH $SYSROOT_DIR
+
+	grub-mkrescue -o $OUT_ISO_PATH $SYSROOT_DIR
+fi	
