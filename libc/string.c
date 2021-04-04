@@ -21,7 +21,7 @@ size_t strlen(const char *str)
 {
     size_t ret = 0;
     while(str[ret++] != '\0');
-    return ret;
+    return ret - 1;
 }
 
 char *strcat(char *dest, const char *src)
