@@ -11,6 +11,8 @@
 #define VGA_ERR_INVALID_HEIGHT 2
 #define VGA_ERR_INVALID_FG     3
 #define VGA_ERR_INVALID_BG     4
+#define VGA_MAX_WIDTH        80
+#define VGA_MAX_HEIGHT       25
 
 enum VGAColor
 {

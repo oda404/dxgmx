@@ -1,6 +1,6 @@
 
 VER_MAJ           := 0
-VER_MIN           := 1
+VER_MIN           := 2
 PATCH_N           := 0
 CODE_NAME         := angel_attack
 

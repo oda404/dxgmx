@@ -3,8 +3,6 @@
 
 #define VGA_CURSOR_START_REG 0x0A
 #define VGA_PORT             0x3D5
-#define VGA_MAX_WIDTH        80
-#define VGA_MAX_HEIGHT       25
 
 static uint16_t *vga_buff_base = (uint16_t *)0xB8000;
 

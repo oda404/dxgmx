@@ -1,6 +1,5 @@
 
 
-#include<dxgmx/video/vga_text.h>
 #include<dxgmx/purgatory.h>
 
 #if defined(__X86__)
@@ -21,24 +20,27 @@
 #endif
 
 #include<dxgmx/gcc/attrs.h>
+#include<dxgmx/video/tty.h>
 
 void kmain(unsigned long magic, unsigned long  mboot_info_addr __ATTR_MAYBE_UNUSED)
 {
+    tty_init();
+    
     switch(magic)
     {
     case MBOOT2_BOOTLOADER_MAGIC:
-        vga_put_str("Booted by a multiboot2 bootloader.", VGA_COLOR_WHITE, VGA_COLOR_BLACK, 0);
+        tty_print("Booted by a multiboot2 bootloader.");
         break;
 
     case MBOOT_BOOTLOADER_MAGIC:
-        vga_put_str("Booted by a multiboot bootloader.", VGA_COLOR_WHITE, VGA_COLOR_BLACK, 0);
+        tty_print("Booted by a multiboot bootloader.");
         break;
     
     default:
-        vga_put_str("Panic: Not booted by a multiboot compliant booloader.", VGA_COLOR_WHITE, VGA_COLOR_BLACK, 0);
+        tty_print("Panic: Not booted by a multiboot compliant booloader.");
         purgatory_enter();
         break;
     }
 
-    vga_put_str("Codename " __KCODENAME__, VGA_COLOR_WHITE, VGA_COLOR_BLACK, 1);
+    tty_print("Codename " __KCODENAME__);
 }
