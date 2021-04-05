@@ -23,10 +23,13 @@ void tty_clear()
     }
 }
 
-void tty_print(const char *str)
+int tty_print(const char *str, size_t n)
 {
+    size_t len = strlen(str);
+    if(n > len)
+        return -1;
     size_t i;
-    for(i = 0; i < strlen(str); ++i)
+    for(i = 0; i < n; ++i)
     {
         if(current_col >= VGA_MAX_WIDTH)
         {
@@ -54,4 +57,6 @@ void tty_print(const char *str)
             break;
         }
     }
+
+    return n;
 }
