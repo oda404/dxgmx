@@ -6,13 +6,6 @@
 
 static uint16_t *vga_buff_base = (uint16_t *)0xB8000;
 
-static size_t no_std_lib_having_ass_strlen(const char *str)
-{
-    size_t len = 0;
-    while(str[len++] != '\0');
-    return len;
-}
-
 int vga_put_char(char c, uint8_t fg, uint8_t bg, uint8_t row, uint8_t col)
 {
     if(row > VGA_MAX_HEIGHT)
@@ -44,20 +37,6 @@ int vga_clear_row(uint8_t row)
     
     for(size_t i = 0; i < VGA_MAX_WIDTH; ++i)
         vga_clear_char(row, i);
-
-    return 0;
-}
-
-int vga_put_str(const char *str, uint8_t fg, uint8_t bg, uint8_t row)
-{
-    if(row > VGA_MAX_HEIGHT)
-        return VGA_ERR_INVALID_HEIGHT;
-
-    vga_clear_row(row);
-    for(size_t i = 0; i < no_std_lib_having_ass_strlen(str); ++i)
-    {
-        vga_put_char(str[i], fg, bg, row, i);
-    }
 
     return 0;
 }

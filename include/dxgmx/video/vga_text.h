@@ -38,7 +38,6 @@ void vga_enable_cursor();
 void vga_disable_cursor();
 int vga_clear_row(uint8_t row);
 int vga_put_char(char c, uint8_t fg, uint8_t bg, uint8_t row, uint8_t col);
-int vga_put_str(const char *str, uint8_t fg, uint8_t bg, uint8_t row);
 int vga_clear_char(uint8_t row, uint8_t col);
 
 #endif // __VGA_TEXT_H__
