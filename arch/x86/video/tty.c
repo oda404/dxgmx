@@ -10,8 +10,6 @@ static uint16_t current_col;
 void tty_init()
 {
     tty_clear();
-    current_col = 0;
-    current_row = 0;
 }
 
 void tty_clear()
@@ -21,6 +19,8 @@ void tty_clear()
     {
         vga_clear_row(i);
     }
+    current_col = 0;
+    current_row = 0;
 }
 
 int tty_print(const char *str, size_t n)
