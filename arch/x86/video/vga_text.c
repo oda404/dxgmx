@@ -8,9 +8,9 @@ static uint16_t *vga_buff_base = (uint16_t *)0xB8000;
 
 int vga_put_char(char c, uint8_t fg, uint8_t bg, uint8_t row, uint8_t col)
 {
-    if(row > VGA_MAX_HEIGHT)
+    if(row >= VGA_MAX_HEIGHT)
         return VGA_ERR_INVALID_HEIGHT;
-    if(col > VGA_MAX_WIDTH)
+    if(col >= VGA_MAX_WIDTH)
         return VGA_ERR_INVALID_WIDTH;
     
     *(vga_buff_base + VGA_MAX_WIDTH * row + col) |= c << 0 | (uint16_t) fg << 8 | (uint16_t) bg << 12;
@@ -20,9 +20,9 @@ int vga_put_char(char c, uint8_t fg, uint8_t bg, uint8_t row, uint8_t col)
 
 int vga_clear_char(uint8_t row, uint8_t col)
 {
-    if(row > VGA_MAX_HEIGHT)
+    if(row >= VGA_MAX_HEIGHT)
         return VGA_ERR_INVALID_HEIGHT;
-    if(col > VGA_MAX_WIDTH)
+    if(col >= VGA_MAX_WIDTH)
         return VGA_ERR_INVALID_WIDTH;
     
     *(vga_buff_base  + VGA_MAX_WIDTH * row + col) = 0;
@@ -32,7 +32,7 @@ int vga_clear_char(uint8_t row, uint8_t col)
 
 int vga_clear_row(uint8_t row)
 {
-    if(row > VGA_MAX_HEIGHT - 1)
+    if(row >= VGA_MAX_HEIGHT)
         return VGA_ERR_INVALID_HEIGHT;
     
     for(size_t i = 0; i < VGA_MAX_WIDTH; ++i)
