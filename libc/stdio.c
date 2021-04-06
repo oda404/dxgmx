@@ -94,13 +94,15 @@ int printf(const char *fmt, ...)
 
             /* reverse int */
             int tmp = 0;
+            size_t size = 0;
             while(val > 0) 
             {
                 tmp = tmp * 10 + val % 10;
                 val /= 10;
+                ++size;
             }
 
-            while(tmp > 0)
+            while(size--)
             {
                 const char c = tmp % 10 + '0';
                 tty_print(&c, 1);
