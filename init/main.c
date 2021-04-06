@@ -12,7 +12,7 @@
 #define __KCODENAME__ "undefined"
 #endif
 
-#include<dxgmx/purgatory.h>
+#include<dxgmx/abandon_ship.h>
 #include<dxgmx/gcc/attrs.h>
 #include<dxgmx/video/tty.h>
 #include<stdio.h>
@@ -36,8 +36,7 @@ void kmain(unsigned long magic, unsigned long  mboot_info_addr __ATTR_MAYBE_UNUS
         break;
     
     default:
-        printf("Panic: Not booted by a multiboot compliant booloader\n");
-        purgatory_enter();
+        abandon_ship("Not booted by a multiboot compliant bootloader\n");
         break;
     }
 
