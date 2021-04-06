@@ -1,20 +1,28 @@
 
 #define __ASM__
-#include <dxgmx/x86/mboot.h>
 
 .section .multiboot
 multiboot_header:
 #if defined(__MBOOT2__)
+
+  #include <dxgmx/x86/mboot2.h>
 
   .align  MBOOT2_HEADER_ALIGN
   .long   MBOOT2_HEADER_MAGIC
   .long   MBOOT2_ARCH_I386
   .long   multiboot_header_end - multiboot_header
   .long   -(MBOOT2_HEADER_MAGIC + MBOOT2_ARCH_I386 + (multiboot_header_end - multiboot_header))
-
+  
+  .align  MBOOT2_HEADER_ALIGN
+  .short  MBOOT2_HEADER_TAG_END
+  .short  0
+  .long   8
+  
 #elif defined(__MBOOT__)
 
-#define FLAGS MBOOT_FLAG_PAGE_ALIGN | MBOOT_FLAG_MEM_INFO
+  #include <dxgmx/x86/mboot.h>
+  #define FLAGS MBOOT_FLAG_PAGE_ALIGN | MBOOT_FLAG_MEM_INFO
+
   .align  MBOOT_HEADER_ALIGN
   .long   MBOOT_HEADER_MAGIC
   .long   FLAGS
@@ -22,8 +30,8 @@ multiboot_header:
 
 #else
 
-# standalone, and i don t support that yet
-oopsie
+  # standalone, and i don t support that yet
+  oopsie
 
 #endif // defined(__MBOOT2__)
 multiboot_header_end:
@@ -41,17 +49,19 @@ stack_top:
 _start:                  # kernel entry point
   movl $stack_top, %esp  # put stack_top address into the stack_ptr reg
 
-  pushl $0
-  popf
+  # clear eflags
+  pushl $0               # push 0 on the stack
+  popf                   # pop 0 off the stack and store it into EFLAGS
 
-  pushl %ebx
-  pushl %eax
+  # prepare args for kmain
+  pushl %ebx             # push the multiboot struct addr on the stack
+  pushl %eax             # push the magic number on the stack
   
-  call kmain
+  call kmain             # less go
 
-dead_loop:               # halt if kmain shits itself
+1:                       # halt if kmain shits itself
   cli
   hlt
-  jmp dead_loop          # loop back in case of nmis
+  jmp 1b                 # loop back in case of nmis
 
 .size _start, . - _start

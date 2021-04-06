@@ -17,28 +17,32 @@
 #include<dxgmx/video/tty.h>
 #include<stdio.h>
 
-#if defined(__X86__)
+#if defined(__MBOOT2__)
+
+#include<dxgmx/x86/mboot2.h>
+#define BL_MAGIC MBOOT2_BOOTLOADER_MAGIC
+#define BOOT_SPEC_NAME "multiboot2"
+
+#elif defined(__MBOOT__)
+
 #include<dxgmx/x86/mboot.h>
-#endif // defined(__X86__)
+#define BL_MAGIC MBOOT_BOOTLOADER_MAGIC
+#define BOOT_SPEC_NAME "multiboot"
+
+#else // standalone
+
+#endif // defined(__MBOOT2__)
 
 void kmain(unsigned long magic, unsigned long  mboot_info_addr __ATTR_MAYBE_UNUSED)
 {
     tty_init();
-    
-    switch(magic)
-    {
-    case MBOOT2_BOOTLOADER_MAGIC:
-        printf("Booted by a multiboot2 bootloader\n");
-        break;
 
-    case MBOOT_BOOTLOADER_MAGIC:
-        printf("Booted by a multiboot bootloader\n");
-        break;
-    
-    default:
-        abandon_ship("Not booted by a multiboot compliant bootloader\n");
-        break;
+    if(magic != BL_MAGIC)
+    {
+        abandon_ship("Expected boot spec " BOOT_SPEC_NAME " was not matched\n");
     }
+
+    printf("Boot spec is %s\n", BOOT_SPEC_NAME);
 
     printf(
         "Codename %s version %d.%d.%d\n", 
