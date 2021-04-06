@@ -78,3 +78,9 @@ long long int llabs(long long int n)
 {
     return n < 0 ? -n : n;
 }
+
+void abort(void)
+{
+    asm volatile ("1: cli; hlt; jmp 1b");
+    __builtin_unreachable();
+}
