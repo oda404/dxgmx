@@ -20,13 +20,14 @@ int memcmp(const void *str1, const void *str2, size_t n)
 size_t strlen(const char *str) 
 {
     size_t ret = 0;
-    while(str[ret++] != '\0');
-    return ret - 1;
+    while(str[ret] != '\0')
+        ++ret;
+    return ret;
 }
 
 char *strcat(char *dest, const char *src)
 {
-    size_t dest_i = strlen(dest) - 1;
+    size_t dest_i = strlen(dest);
     size_t src_i = 0;
 
     for(; src_i < strlen(src); ++src_i)
