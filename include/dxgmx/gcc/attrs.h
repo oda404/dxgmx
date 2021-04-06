@@ -27,4 +27,9 @@
 */
 #define __ATTR_ALLOC_SIZE(...) __attribute__((alloc_size(__VA_ARGS__)))
 
+/*
+ * funtion will not return.
+*/
+#define __ATTR_NORETURN        __attribute__((noreturn))
+
 #endif // __DXGMX_GCC_ATTRS_H__
