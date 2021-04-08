@@ -1,6 +1,8 @@
 
 #include<stdlib.h>
 #include<ctype.h>
+#include<limits.h>
+#include<errno.h>
 
 void *malloc(size_t size)
 {
@@ -23,10 +25,11 @@ void free(void *ptr)
 
 long int strtol(const char *str, char **endptr, int base)
 {
-    long int out = 0;
+    // only base 10 for now
     int neg = 0;
+    /* assume the initial str is invalid */
     if(endptr)
-        *endptr = str;
+        *endptr = (char*)str; /* needed voodo to supress warnings */
     
     while(isspace(*str))
         ++str;
@@ -35,32 +38,31 @@ long int strtol(const char *str, char **endptr, int base)
         neg = 1;
         ++str;
     }
-    if(!isdigit(*str)) // no digits can be parsed
+    /* if a digit isn't found after the potential sign return 0 */
+    if(!isdigit(*str))
     {
+        errno = EINVAL;
         return 0;
     }
 
-    if(endptr)
-        *endptr = NULL;
+    long int out = 0;
 
     for(; *str != '\0'; ++str)
     {
         if(!isdigit(*str))
-        {
-            if(endptr)
-                *endptr = str;
-            return neg ? -out : out;
-        }
+            break;
 
         long int tmp = out * 10 + (*str - '0');
         if(tmp < out) // over or under flow based on sign
         {
-            return neg ? -(__LONG_MAX__) : __LONG_MAX__;
+            errno = ERANGE;
+            return neg ? LONG_MIN : LONG_MAX;
         }
-
         out = tmp;
     }
 
+    if(endptr)
+        *endptr = (char*)str; /* needed voodo to supress warnings */
     return neg ? -out : out;
 }
 
