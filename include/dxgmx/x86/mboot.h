@@ -16,6 +16,46 @@
 
 #ifndef __ASM__
 
+#define U32 __UINT32_TYPE__
+#define U64 __UINT64_TYPE__
+
+__attribute__((packed))
+typedef struct
+{
+    U32 flags;
+    U32 mem_lower;
+    U32 mem_upper;
+    U32 boot_device;
+    U32 cmdline;
+    U32 mods_count;
+    U32 mods_base_addr;
+    U32 syms[4];
+    U32 mmap_length;
+    U32 mmap_base_addr;
+    U32 drives_length;
+    U32 drives_base_addr;
+    U32 config_table;
+    U32 bl_name_base_addr;
+    U32 apm_table_base_addr;
+
+    //...
+} mboot_mbi;
+
+#define MBOOT_MMAP_TYPE_AVAILABLE        1
+#define MBOOT_MMAP_TYPE_RESERVED         2
+#define MBOOT_MMAP_TYPE_ACPI_RECLAIMABLE 3
+#define MBOOT_MMAP_TYPE_NVS              4
+#define MBOOT_MMAP_TYPE_BADRAM           5
+
+__attribute__((packed))
+typedef struct
+{
+    U32 size;
+    U64 base_addr;
+    U64 length;
+    U32 type;
+} mboot_mmap;
+
 #endif // __ASM__
 
 #endif // __DXGMX_MBOOT_H__
