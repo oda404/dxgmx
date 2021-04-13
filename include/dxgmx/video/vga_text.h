@@ -34,6 +34,7 @@ enum VGAColor
     VGA_COLOR_WHITE   = 0xF
 };
 
+void vga_init();
 void vga_enable_cursor();
 void vga_disable_cursor();
 int vga_clear_row(uint8_t row);

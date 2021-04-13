@@ -9,6 +9,8 @@ static uint16_t current_col;
 
 void tty_init()
 {
+    vga_init();
+    vga_disable_cursor();
     tty_clear();
 }
 
