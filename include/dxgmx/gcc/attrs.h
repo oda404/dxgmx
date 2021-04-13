@@ -26,10 +26,13 @@
  * pointed to by the returned ptr
 */
 #define __ATTR_ALLOC_SIZE(...) __attribute__((alloc_size(__VA_ARGS__)))
-
 /*
  * funtion will not return.
 */
 #define __ATTR_NORETURN        __attribute__((noreturn))
+/*
+ * function will always be inlined even if optimizations are off
+*/
+#define __ATTR_ALWAYS_INLINE   __attribute__((always_inline)) inline
 
 #endif // __DXGMX_GCC_ATTRS_H__
