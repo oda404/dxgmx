@@ -13,5 +13,7 @@ int abs(int n);
 long int labs(long int n);
 long long int llabs(long long int n);
 void abort(void) __ATTR_NORETURN;
+char *itoa(int n, char *__restrict str, int base)
+__ATTR_NONNULL(2);
 
 #endif // _STDLIB_H
