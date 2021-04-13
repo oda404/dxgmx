@@ -2,8 +2,10 @@
 #include<stdio.h>
 #include<stdarg.h>
 #include<dxgmx/video/tty.h>
+#include<dxgmx/gcc/attrs.h>
 #include<stddef.h>
 #include<stdlib.h>
+#include<limits.h>
 #include<string.h>
 
 #define PRINTF_FSPEC  '%'
@@ -18,6 +20,8 @@
 #define PRINTF_UINT   'u'
 #define PRINTF_HEX_L  'x'
 #define PRINTF_HEX_C  'X'
+
+#define PRINTF_WRITE_CAP INT_MAX
 
 int printf(const char *fmt, ...)
 {
@@ -34,11 +38,8 @@ int printf(const char *fmt, ...)
 
     for(; *fmt != '\0'; ++fmt)
     {
-        size_t maxrem = __SIZE_MAX__ - written;
-        if(maxrem == 0)
-        {
-            return -1;
-        }
+        if(written == PRINTF_WRITE_CAP)
+            goto end;
 
         if(*fmt != PRINTF_FSPEC)
         {
@@ -53,14 +54,41 @@ int printf(const char *fmt, ...)
         case '\0':
             tty_print("%", 1);
             ++written;
-            break;
+            goto end;
 
-        case PRINTF_CHAR:
+        case PRINTF_INT_1:
+        case PRINTF_INT_2:
         {
-            char val = va_arg(arg_list, int);
-            tty_print(&val, 1);
-            ++written;
-            ++fmt; // increment so we jump over the format
+            int val = va_arg(arg_list, int);
+
+            char buff[11] = { 0 };
+            itoa(val, buff, 10);
+
+            size_t bufflen = strlen(buff);
+
+            if(written + bufflen > PRINTF_WRITE_CAP)
+                goto end;
+
+            tty_print(buff, bufflen);
+            break;
+        }
+
+        case PRINTF_HEX_C:
+        {
+            unsigned int val = va_arg(arg_list, unsigned int);
+
+            val = abs(val);
+
+            char buff[11] = { 0 };
+            itoa(val, buff, 16);
+
+            size_t bufflen = strlen(buff);
+
+            if(written + bufflen > PRINTF_WRITE_CAP)
+                goto end;
+
+            tty_print(buff, bufflen);
+            written += bufflen;
             break;
         }
 
@@ -68,49 +96,12 @@ int printf(const char *fmt, ...)
         {
             char *val = va_arg(arg_list, char*);
             size_t len = strlen(val);
+
+            if(written + len > PRINTF_WRITE_CAP)
+                goto end;
+            
             tty_print(val, len);
             written += len;
-            ++fmt; // increment so we jump over the format
-            break;
-        }
-
-        case PRINTF_INT_1:
-        case PRINTF_INT_2:
-        {
-            int val = va_arg(arg_list, int);
-            if(val == 0)
-            {
-                tty_print("0", 1);
-                ++written;
-                ++fmt;
-                break;
-            }
-            if(val < 0)
-            {
-                tty_print("-", 1);
-                val = abs(val);
-                ++written;
-            }
-
-            /* reverse int */
-            int tmp = 0;
-            size_t size = 0;
-            while(val > 0) 
-            {
-                tmp = tmp * 10 + val % 10;
-                val /= 10;
-                ++size;
-            }
-
-            while(size--)
-            {
-                const char c = tmp % 10 + '0';
-                tty_print(&c, 1);
-                ++written;
-                tmp /= 10;
-            }
-
-            ++fmt; // increment so we jump over the format
             break;
         }
 
@@ -122,11 +113,12 @@ int printf(const char *fmt, ...)
             */
             tty_print("%", 1);
             ++written;
-            ++fmt; // increment so we jump over the format
             break;
         }
+        ++fmt;
     }
 
+end:
     va_end(arg_list);
     return written;
 }
