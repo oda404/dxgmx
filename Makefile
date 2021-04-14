@@ -1,7 +1,7 @@
 
 VER_MAJ           := 0
 VER_MIN           := 2
-PATCH_N           := 19
+PATCH_N           := 20
 CODE_NAME         := angel_attack
 
 DEFAULT_ARCH      := x86
@@ -93,7 +93,7 @@ endif
 CFLAGS += \
 -ffreestanding -Wall -Wextra \
 -isystem=/usr/include --sysroot=$(SYSROOT_DIR) \
-$(DEFS) -MMD -MP
+$(DEFS) -MD -MP
 
 export CFLAGS
 export DEFS
@@ -122,12 +122,18 @@ OBJS := $(OBJS_ARCH) $(OBJS_INIT)
 DEPS := $(addprefix $(BUILD_DIR)/, $(OBJS))
 DEPS := $(patsubst %.o, %.d, $(DEPS))
 
-.PHONY: FORCE all dxgmx clean mrclean \
+# set all headers recursively
+HEADERS   := 
+include $(INCLUDE_DIR)/Makefile
+# set headers as they should be in SYSROOT_DIR/usr/include
+SYSROOT_HEADERS := $(addprefix $(SYSROOT_DIR)/usr/include/, $(HEADERS))
+
+.PHONY: all dxgmx clean mrclean \
 iso iso-run sysroot-struct builddir-struct libc headers
 
 all: dxgmx
 
-dxgmx: builddir-struct sysroot-struct headers libc $(addprefix $(BUILD_DIR)/, $(OBJS)) Makefile
+dxgmx: builddir-struct sysroot-struct $(SYSROOT_HEADERS) libc $(addprefix $(BUILD_DIR)/, $(OBJS)) Makefile
 	@$(OUTPUT_FORMATTED) LD $(notdir $@)
 
 	@$(CC) -T arch/$(SRCARCH)/boot/linker.ld \
@@ -138,19 +144,23 @@ dxgmx: builddir-struct sysroot-struct headers libc $(addprefix $(BUILD_DIR)/, $(
 
 -include $(DEPS)
 
+# deps are stripped of the BUILD_DIR
 $(BUILD_DIR)/%.o : $(patsubst $(BUILD_DIR), ,%.c) Makefile
 	@mkdir -p $(dir $@)
 	@$(OUTPUT_FORMATTED) CC $<
 	@$(CC) -c $< $(CFLAGS) -o $@
 
+# deps are stripped of the BUILD_DIR
 $(BUILD_DIR)/%.o : $(patsubst $(BUILD_DIR), ,%.S) Makefile
 	@mkdir -p $(dir $@)
 	@$(OUTPUT_FORMATTED) AS $<
 	@$(CC) -c $< $(CFLAGS) -o $@
 
+# create the build dir
 builddir-struct:
 	@mkdir -p $(BUILD_DIR)
 
+# create the sysroot dir
 sysroot-struct:
 	@mkdir -p $(SYSROOT_DIR)
 	@mkdir -p $(SYSROOT_DIR)/boot
@@ -158,8 +168,8 @@ sysroot-struct:
 
 # the include path in a freestanding env is 
 # in $(SYSROOT_DIR)/usr/include so we copy everything there 
-headers:
-	@cp -r $(INCLUDE_DIR)/* $(SYSROOT_DIR)/usr/include
+$(SYSROOT_HEADERS): $(addprefix $(INCLUDE_DIR)/, $(HEADERS))
+	@cp -ru $(INCLUDE_DIR)/* $(SYSROOT_DIR)/usr/include
 
 libc:
 	@LIBC_FREESTANDING=$(LIBC_FREESTANDING) $(MAKE) -C libc/

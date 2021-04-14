@@ -3,7 +3,7 @@ WD_PATH := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
 
 CC             ?= gcc
 AR             ?= ar
-CFLAGS         := -Wall -Wextra -MMD -MP
+CFLAGS         := -Wall -Wextra -MD -MP
 DEFS           := 
 CFLAGS_DEBUG   := -g
 CFLAGS_RELEASE := -O2
@@ -22,17 +22,14 @@ CFLAGS += $(DEFS)
 
 include Makefile.config
 
-HEADERS := $(addprefix include/, $(SRC_LIBC))
-HEADERS := $(patsubst %.c, %.h, $(HEADERS))
-
 DEPS    := $(addprefix $(BUILD_DIR)/, $(OBJS_LIBC))
 DEPS    := $(patsubst %.o, %.d, $(DEPS))
 
-.PHONY: all libc libc-builddir headers clean
+.PHONY: all libc libc-builddir clean
 
 all: libc
 
-libc: libc-builddir headers $(addprefix $(BUILD_DIR)/, $(OBJS_LIBC)) Makefile
+libc: libc-builddir $(addprefix $(BUILD_DIR)/, $(OBJS_LIBC)) Makefile
 
 -include $(DEPS)
 
@@ -42,9 +39,6 @@ $(BUILD_DIR)/libc/%.o : $(patsubst $(BUILD_DIR), ,%.c)
 
 libc-builddir:
 	@mkdir -p $(BUILD_DIR)/libc
-
-headers: $(HEADERS)
-	@cp include/* $(SYSROOT_DIR)/usr/include
 
 clean:
 	rm -rf $(BUILD_DIR)/libc
