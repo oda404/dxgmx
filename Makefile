@@ -45,28 +45,42 @@ export AS
 export LD
 export AR
 
-# declare some handy paths
-FULL_BIN_NAME   ?= dxgmx-$(VER_MAJ).$(VER_MIN).$(PATCH_N)
-INCLUDE_DIR     ?= $(PWD)/include
-BUILD_DIR       ?= $(PWD)/build
-SYSROOT_DIR     ?= $(BUILD_DIR)/sysroot
-SCRIPTS_DIR     ?= $(PWD)/scripts
-FULL_BIN_PATH   ?= $(FULL_BIN_NAME)
-OUT_ISO_PATH    ?= $(BUILD_DIR)/$(FULL_BIN_NAME).iso
+CWD := $(PWD)
 
-# format the output
-OUTPUT_FORMATTED = $(SCRIPTS_DIR)/output-formatted.sh
+# set misc directories
+INCLUDE_DIR    := $(CWD)/include
+BUILD_DIR      := $(CWD)/build
+SYSROOT_DIR    := $(BUILD_DIR)/sysroot
+SCRIPTS_DIR    := $(CWD)/scripts
 
-export OUTPUT_FORMATTED
+export INCLUDE_DIR
 export SYSROOT_DIR
 export SCRIPTS_DIR
 export BUILD_DIR
 
-# check if the arch is supported
+# check if the arch is supported and set SRCARCH
 SRCARCH := $(shell $(SCRIPTS_DIR)/arch-to-srcarch.sh $(ARCH))
 ifeq ($(SRCARCH), undefined)
 $(error Unsupported arch $(ARCH))
 endif
+
+# set src directories
+ARCH_DIR       := $(CWD)/arch/$(SRCARCH)
+INIT_DIR       := $(CWD)/init
+LIBKC_DIR      := $(CWD)/libkc
+CXFFXX_DIR     := $(CWD)/cxffxx
+export ARCH_DIR
+export INIT_DIR
+export LIBKC_DIR
+export CXFFXX_DIR
+
+FULL_BIN_NAME  ?= dxgmx-$(VER_MAJ).$(VER_MIN).$(PATCH_N)
+FULL_BIN_PATH  ?= $(CWD)/$(FULL_BIN_NAME)
+ISO_PATH       ?= $(CWD)/$(FULL_BIN_NAME).iso
+
+# format the output
+OUTPUT_FORMATTED = $(SCRIPTS_DIR)/output-formatted.sh
+export OUTPUT_FORMATTED
 
 DEFS ?= 
 DEFS += \
@@ -76,6 +90,7 @@ DEFS += \
 -D__KPATCH_N__=$(PATCH_N) \
 -D__KCODENAME__='"$(CODE_NAME)"' 
 
+# set boot spec macro
 ifeq ($(BOOT_SPEC), multiboot2)
 	DEFS += -D__MBOOT2__
 endif
@@ -86,6 +101,7 @@ ifeq ($(BOOT_SPEC), standalone)
 	DEFS += -D__STANDALONE_BOOT__
 endif
 
+# set SRCARCH macro
 ifeq ($(SRCARCH), x86)
 	DEFS += -D__X86__
 endif
@@ -103,33 +119,33 @@ LDFLAGS += \
 
 MAKEFLAGS  += --no-print-directory
 
-OBJS_ARCH := 
-OBJS_INIT := 
-OBJS_LIBC := 
+OBJS_ARCH  := 
+OBJS_INIT  := 
+OBJS_LIBKC := 
 
 INC_MKFILE_DIR := arch/$(SRCARCH)
 include arch/$(SRCARCH)/Makefile
 INC_MKFILE_DIR := init
 include init/Makefile
-INC_MKFILE_DIR := libc
-include libc/Makefile.config
+include libkc/Makefile
 
-OBJS_ARCH := $(addprefix arch/$(SRCARCH)/, $(OBJS_ARCH))
-OBJS_INIT := $(addprefix init/, $(OBJS_INIT))
+OBJS_ARCH       := $(addprefix arch/$(SRCARCH)/, $(OBJS_ARCH))
+OBJS_INIT       := $(addprefix init/, $(OBJS_INIT))
+OBJS_LIBKC      := $(addprefix libkc/, $(OBJS_LIBKC))
 
-OBJS := $(OBJS_ARCH) $(OBJS_INIT)
+OBJS            := $(OBJS_ARCH) $(OBJS_INIT) $(OBJS_LIBKC)
 
-DEPS := $(addprefix $(BUILD_DIR)/, $(OBJS))
-DEPS := $(patsubst %.o, %.d, $(DEPS))
+DEPS            := $(addprefix $(BUILD_DIR)/, $(OBJS))
+DEPS            := $(patsubst %.o, %.d, $(DEPS))
 
 # set all headers recursively
-HEADERS   := 
+HEADERS         := 
 include $(INCLUDE_DIR)/Makefile
 # set headers as they should be in SYSROOT_DIR/usr/include
 SYSROOT_HEADERS := $(addprefix $(SYSROOT_DIR)/usr/include/, $(HEADERS))
 
 .PHONY: all dxgmx clean mrclean \
-iso iso-run sysroot-struct builddir-struct libc headers
+iso iso-run sysroot-struct builddir-struct libc
 
 all: dxgmx
 
@@ -137,7 +153,7 @@ dxgmx: builddir-struct sysroot-struct $(SYSROOT_HEADERS) libc $(addprefix $(BUIL
 	@$(OUTPUT_FORMATTED) LD $(notdir $@)
 
 	@$(CC) -T arch/$(SRCARCH)/boot/linker.ld \
-	$(addprefix $(BUILD_DIR)/, $(OBJS) $(OBJS_LIBC)) \
+	$(addprefix $(BUILD_DIR)/, $(OBJS)) \
 	$(LDFLAGS) -o $(FULL_BIN_PATH)
 
 	@cp $(FULL_BIN_PATH) $(SYSROOT_DIR)/boot/
@@ -156,7 +172,7 @@ $(BUILD_DIR)/%.o : $(patsubst $(BUILD_DIR), ,%.S) Makefile
 	@$(OUTPUT_FORMATTED) AS $<
 	@$(CC) -c $< $(CFLAGS) -o $@
 
-# create the build dir
+# create the build dirISO_PATH
 builddir-struct:
 	@mkdir -p $(BUILD_DIR)
 
@@ -171,29 +187,26 @@ sysroot-struct:
 $(SYSROOT_HEADERS): $(addprefix $(INCLUDE_DIR)/, $(HEADERS))
 	@cp -ru $(INCLUDE_DIR)/* $(SYSROOT_DIR)/usr/include
 
-libc:
-	@LIBC_FREESTANDING=$(LIBC_FREESTANDING) $(MAKE) -C libc/
-
 iso:
 	$(MAKE)
 	$(SCRIPTS_DIR)/iso.sh \
 	--sysroot-dir $(SYSROOT_DIR) \
 	--bin-name $(FULL_BIN_NAME) \
-	--out-iso-path $(OUT_ISO_PATH) \
+	--out-iso-path $(ISO_PATH) \
 	--boot-spec $(BOOT_SPEC)
 
 iso-run:
 	$(MAKE) iso
 	$(SCRIPTS_DIR)/iso-run.sh \
-	--iso-path $(OUT_ISO_PATH) \
+	--iso-path $(ISO_PATH) \
 	--arch $(ARCH)
 
 clean:
-	@rm -rf $(dir $(addprefix $(BUILD_DIR)/, $(OBJS)))
-	@rm -rf $(BUILD_DIR)/arch
-	@rm -f $(FULL_BIN_PATH)
-	$(MAKE) clean -C libc
+	rm -f $(addprefix $(BUILD_DIR)/, $(OBJS))
+	@rm -f $(DEPS)
 
 mrclean:
 	$(MAKE) clean $(KILL_STDOUT)
-	@rm -rf $(BUILD_DIR)
+	@rm -f $(BUILD_DIR)
+	@rm -f $(ISO_PATH)
+	@rm -f $(FULL_BIN_PATH)
