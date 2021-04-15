@@ -123,11 +123,10 @@ OBJS_ARCH  :=
 OBJS_INIT  := 
 OBJS_LIBKC := 
 
-INC_MKFILE_DIR := arch/$(SRCARCH)
-include arch/$(SRCARCH)/Makefile
-INC_MKFILE_DIR := init
-include init/Makefile
-include libkc/Makefile
+# set objs recursively
+include $(ARCH_DIR)/Makefile
+include $(INIT_DIR)/Makefile
+include $(LIBKC_DIR)/Makefile
 
 OBJS_ARCH       := $(addprefix arch/$(SRCARCH)/, $(OBJS_ARCH))
 OBJS_INIT       := $(addprefix init/, $(OBJS_INIT))
@@ -202,7 +201,7 @@ iso-run:
 	--arch $(ARCH)
 
 clean:
-	rm -f $(addprefix $(BUILD_DIR)/, $(OBJS))
+	@rm -f $(addprefix $(BUILD_DIR)/, $(OBJS))
 	@rm -f $(DEPS)
 
 mrclean:
