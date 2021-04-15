@@ -1,6 +1,4 @@
 
-WD := dxgmx/video
-
 HEADERS += \
-$(WD)/tty.h \
-$(WD)/vga_text.h \
+dxgmx/video/tty.h \
+dxgmx/video/vga_text.h \

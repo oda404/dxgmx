@@ -1,5 +1,3 @@
 
-WD := cxffxx
-
 HEADERS += \
-$(WD)/types.h
+cxffxx/types.h

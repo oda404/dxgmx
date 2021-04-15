@@ -1,5 +1,3 @@
 
-WD := dxgmx/gcc
-
 HEADERS += \
-$(WD)/attrs.h
+dxgmx/gcc/attrs.h

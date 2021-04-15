@@ -1,13 +1,11 @@
 
-WD := dxgmx
-
 HEADERS += \
-$(WD)/abandon_ship.h \
-$(WD)/kstdio.h \
-$(WD)/kctype.h \
-$(WD)/kerrno.h \
-$(WD)/kstdlib.h \
-$(WD)/kstring.h \
+dxgmx/abandon_ship.h \
+dxgmx/kstdio.h \
+dxgmx/kctype.h \
+dxgmx/kerrno.h \
+dxgmx/kstdlib.h \
+dxgmx/kstring.h \
 
 include $(INCLUDE_DIR)/dxgmx/x86/Makefile
 include $(INCLUDE_DIR)/dxgmx/video/Makefile
