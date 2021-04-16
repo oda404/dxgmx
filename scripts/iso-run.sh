@@ -26,4 +26,4 @@ elif [ -z "$ARCH" ]; then
     exit 2
 fi
 
-qemu-system-i386 -cdrom $ISO_PATH
+qemu-system-x86_64 -kernel dxgmx-0.2.22
