@@ -22,7 +22,6 @@ LDFLAGS           ?=
 CFLAGS_DEBUG      := -g
 CFLAGS_RELEASE    := -O2
 
-LIBC_FREESTANDING := 0
 BOOT_SPEC         ?= multiboot
 
 # if we are cross compiling check if CROSS_CC was exported
