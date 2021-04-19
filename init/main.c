@@ -12,6 +12,7 @@
 #define __KCODENAME__ "undefined"
 #endif
 
+#include<dxgmx/x86/gdt.h>
 #include<dxgmx/abandon_ship.h>
 #include<dxgmx/gcc/attrs.h>
 #include<dxgmx/video/tty.h>
@@ -39,6 +40,7 @@ extern uint32_t kernel_addr_end;
 
 void kmain(uint32_t magic, uint32_t mbi_base_addr)
 {
+    gdt_init();
     tty_init();
 
     kprintf(
