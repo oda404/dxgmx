@@ -34,5 +34,9 @@
  * function will always be inlined even if optimizations are off
 */
 #define __ATTR_ALWAYS_INLINE   __attribute__((always_inline)) inline
+/*
+ * no extra padding is added by the compiler between struct vars for alignment
+*/
+#define __ATTR_PACKED          __attribute__((packed))
 
 #endif // __DXGMX_GCC_ATTRS_H__
