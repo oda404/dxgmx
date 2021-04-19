@@ -143,7 +143,7 @@ include $(INCLUDE_DIR)/Makefile
 SYSROOT_HEADERS := $(addprefix $(SYSROOT_DIR)/usr/include/, $(HEADERS))
 
 .PHONY: all dxgmx clean mrclean \
-iso iso-run sysroot-struct builddir-struct libc
+iso iso-run run sysroot-struct builddir-struct libc
 
 all: dxgmx
 
@@ -197,6 +197,12 @@ iso-run:
 	$(MAKE) iso
 	$(SCRIPTS_DIR)/iso-run.sh \
 	--iso-path $(ISO_PATH) \
+	--arch $(ARCH)
+
+run:
+	$(MAKE)
+	$(SCRIPTS_DIR)/run.sh \
+	--kernel-path $(FULL_BIN_PATH) \
 	--arch $(ARCH)
 
 clean:
