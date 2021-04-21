@@ -41,7 +41,7 @@
 static GDTEntry gdt[GDT_ENTRIES_CNT];
 
 /* this is implemented in loadgtdr.S cuz i don't want to write inline asm */
-extern void __asm_loadgdt(GDTDescriptor *gdtr);
+extern void __asm_loadgdt(GDTR *gdtr);
 
 //note: bit 0 of flags is currently unused
 
@@ -83,7 +83,7 @@ void gdt_init()
     );
     // TODO: add tss
 
-    GDTDescriptor gdtr;
+    GDTR gdtr;
     gdtr.base = (uint32_t)gdt;
     gdtr.limit = sizeof(gdt);
 

@@ -14,7 +14,7 @@ __ATTR_PACKED
 {
     uint16_t limit;
     uint32_t base;
-} GDTDescriptor;
+} GDTR;
 
 /*
  * Format of a GDT entry - 64 bits
