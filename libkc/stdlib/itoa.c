@@ -1,7 +1,7 @@
 
-#include<dxgmx/kstdlib.h>
+#include<dxgmx/stdlib.h>
 
-char *kitoa(int n, char *str, int base)
+char *__itoa(int n, char *str, int base)
 {
     if(!n)
     {
@@ -14,7 +14,7 @@ char *kitoa(int n, char *str, int base)
     if(n < 0)
     {
         str[0] = '-';
-        n = kabs(n);
+        n = __abs(n);
         ++revstart;
     }
 

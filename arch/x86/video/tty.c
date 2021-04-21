@@ -1,7 +1,7 @@
 
 #include<dxgmx/video/tty.h>
 #include<dxgmx/video/vga_text.h>
-#include<dxgmx/kstring.h>
+#include<dxgmx/string.h>
 #include<stdint.h>
 
 static uint16_t current_row;
@@ -27,7 +27,7 @@ void tty_clear()
 
 int tty_print(const char *str, size_t n)
 {
-    size_t len = kstrlen(str);
+    size_t len = __strlen(str);
     if(n > len)
         return -1;
     size_t i;

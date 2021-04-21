@@ -1,5 +1,5 @@
 
-#include<dxgmx/kstdlib.h>
+#include<dxgmx/stdlib.h>
 
 void kabort(void)
 {

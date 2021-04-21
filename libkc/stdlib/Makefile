@@ -1,10 +1,10 @@
 
 OBJS_LIBKC += \
-stdlib/kabort.o \
-stdlib/kabs.o \
-stdlib/klabs.o \
-stdlib/kllabs.o \
-stdlib/kfree.o \
-stdlib/kmalloc.o \
-stdlib/kitoa.o \
-stdlib/kstrtol.o \
+stdlib/abort.o \
+stdlib/abs.o \
+stdlib/labs.o \
+stdlib/llabs.o \
+stdlib/free.o \
+stdlib/malloc.o \
+stdlib/itoa.o \
+stdlib/strtol.o \

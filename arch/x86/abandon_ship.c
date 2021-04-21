@@ -1,7 +1,7 @@
 
 #include<dxgmx/abandon_ship.h>
-#include<dxgmx/kstdlib.h>
-#include<dxgmx/kstdio.h>
+#include<dxgmx/stdlib.h>
+#include<dxgmx/stdio.h>
 
 void abandon_ship(const char *lastmsg)
 {

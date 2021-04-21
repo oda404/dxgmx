@@ -1,11 +1,11 @@
 
 HEADERS += \
 dxgmx/abandon_ship.h \
-dxgmx/kstdio.h \
-dxgmx/kctype.h \
-dxgmx/kerrno.h \
-dxgmx/kstdlib.h \
-dxgmx/kstring.h \
+dxgmx/stdio.h \
+dxgmx/ctype.h \
+dxgmx/errno.h \
+dxgmx/stdlib.h \
+dxgmx/string.h \
 
 include $(INCLUDE_DIR)/dxgmx/x86/Makefile
 include $(INCLUDE_DIR)/dxgmx/video/Makefile

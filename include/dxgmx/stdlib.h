@@ -10,15 +10,15 @@ void kfree(void *ptr);
 void *kmalloc(size_t size)
 __ATTR_MALLOC(free) __ATTR_ALLOC_SIZE(1);
 
-long int kstrtol(const char *__restrict str, char **__restrict endptr, int base);
+long int __strtol(const char *__restrict str, char **__restrict endptr, int base);
 
-int kabs(int n);
+int __abs(int n);
 
-long int klabs(long int n);
+long int __labs(long int n);
 
-long long int kllabs(long long int n);
+long long int __llabs(long long int n);
 
-char *kitoa(int n, char *__restrict str, int base)
+char *__itoa(int n, char *__restrict str, int base)
 __ATTR_NONNULL(2);
 
 void kabort(void)

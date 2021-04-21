@@ -16,7 +16,7 @@
 #include<dxgmx/abandon_ship.h>
 #include<dxgmx/gcc/attrs.h>
 #include<dxgmx/video/tty.h>
-#include<dxgmx/kstdio.h>
+#include<dxgmx/stdio.h>
 #include<stdint.h>
 
 #if defined(__MBOOT2__)

@@ -1,9 +1,9 @@
 
-#include<dxgmx/kstring.h>
+#include<dxgmx/string.h>
 
 #define UC unsigned char
 
-int kmemcmp(const void *str1, const void *str2, size_t n)
+int __memcmp(const void *str1, const void *str2, size_t n)
 {
     size_t i = 0;
     for(; i < n; ++i)

@@ -1,5 +1,5 @@
 
-#include<dxgmx/kerrno.h>
+#include<dxgmx/errno.h>
 
 static int kerno = 0;
 

@@ -1,4 +1,4 @@
 
 OBJS_LIBKC += \
-ctype/kisdigit.o \
-ctype/kisspace.o \
+ctype/isdigit.o \
+ctype/isspace.o \

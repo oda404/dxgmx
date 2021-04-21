@@ -1,8 +1,8 @@
 
-#include<dxgmx/kstdio.h>
-#include<dxgmx/kstring.h>
+#include<dxgmx/stdio.h>
+#include<dxgmx/string.h>
 #include<dxgmx/video/tty.h>
-#include<dxgmx/kstdlib.h>
+#include<dxgmx/stdlib.h>
 #include<stdarg.h>
 #include<stddef.h>
 #include<limits.h>
@@ -61,9 +61,9 @@ int kprintf(const char *fmt, ...)
             int val = va_arg(arg_list, int);
 
             char buff[11] = { 0 };
-            kitoa(val, buff, 10);
+            __itoa(val, buff, 10);
 
-            size_t bufflen = kstrlen(buff);
+            size_t bufflen = __strlen(buff);
 
             if(written + bufflen > PRINTF_WRITE_CAP)
                 goto end;
@@ -76,12 +76,12 @@ int kprintf(const char *fmt, ...)
         {
             unsigned int val = va_arg(arg_list, unsigned int);
 
-            val = kabs(val);
+            val = __abs(val);
 
             char buff[11] = { 0 };
-            kitoa(val, buff, 16);
+            __itoa(val, buff, 16);
 
-            size_t bufflen = kstrlen(buff);
+            size_t bufflen = __strlen(buff);
 
             if(written + bufflen > PRINTF_WRITE_CAP)
                 goto end;
@@ -94,7 +94,7 @@ int kprintf(const char *fmt, ...)
         case PRINTF_STR:
         {
             char *val = va_arg(arg_list, char*);
-            size_t len = kstrlen(val);
+            size_t len = __strlen(val);
 
             if(written + len > PRINTF_WRITE_CAP)
                 goto end;

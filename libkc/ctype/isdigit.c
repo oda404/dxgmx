@@ -1,7 +1,7 @@
 
-#include<dxgmx/kctype.h>
+#include<dxgmx/ctype.h>
 
-int kisdigit(int c)
+int __isdigit(int c)
 {
     // basic ass ascii check
     return c >= '0' && c <= '9';

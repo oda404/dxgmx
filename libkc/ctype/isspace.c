@@ -1,7 +1,7 @@
 
-#include<dxgmx/kctype.h>
+#include<dxgmx/ctype.h>
 
-int kisspace(int c)
+int __isspace(int c)
 {
     return 
     c ==  ' ' || 

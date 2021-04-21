@@ -1,10 +1,10 @@
 
-#include<dxgmx/kstdlib.h>
-#include<dxgmx/kctype.h>
-#include<dxgmx/kerrno.h>
+#include<dxgmx/stdlib.h>
+#include<dxgmx/ctype.h>
+#include<dxgmx/errno.h>
 #include<limits.h>
 
-long int kstrtol(const char *str, char **endptr, int base)
+long int __strtol(const char *str, char **endptr, int base)
 {
     // only base 10 for now
     int neg = 0;
@@ -12,7 +12,7 @@ long int kstrtol(const char *str, char **endptr, int base)
     if(endptr)
         *endptr = (char*)str; /* needed voodo to supress warnings */
     
-    while(kisspace(*str))
+    while(__isspace(*str))
         ++str;
     if(*str == '-')
     {
@@ -20,7 +20,7 @@ long int kstrtol(const char *str, char **endptr, int base)
         ++str;
     }
     /* if a digit isn't found after the potential sign return 0 */
-    if(!kisdigit(*str))
+    if(!__isdigit(*str))
     {
         errno = EINVAL;
         return 0;
@@ -30,7 +30,7 @@ long int kstrtol(const char *str, char **endptr, int base)
 
     for(; *str != '\0'; ++str)
     {
-        if(!kisdigit(*str))
+        if(!__isdigit(*str))
             break;
 
         long int tmp = out * 10 + (*str - '0');

@@ -2,8 +2,8 @@
 #ifndef __DXGMX_KCTYPE_H__
 #define __DXGMX_KCTYPE_H__
 
-int kisdigit(int c);
+int __isdigit(int c);
 
-int kisspace(int c);
+int __isspace(int c);
 
 #endif // __DXGMX_KCTYPE_H__
