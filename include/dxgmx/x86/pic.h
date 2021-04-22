@@ -28,6 +28,7 @@ uint8_t pic_get_isr(uint8_t pic);
  * @param pic 0 for master, increment for slaves.
 */
 uint8_t pic_get_irr(uint8_t pic);
+void pic_signal_eoi(uint8_t pic);
 void pic_disable();
 
 #endif // __DXGMX_PIC_H__

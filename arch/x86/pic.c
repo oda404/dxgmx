@@ -185,6 +185,20 @@ uint8_t pic_get_irr(uint8_t pic)
     return ret;
 }
 
+void pic_signal_eoi(uint8_t pic)
+{
+    switch (pic)
+    {
+    case 0:
+        port_outb(0x20, PIC_MASTER_PORT_COMMAND);
+        break;
+    
+    default:
+        port_outb(0x20, PIC_SLAVE_PORT_COMMAND);
+        break;
+    }
+}
+
 void pic_disable()
 {
     port_outb(0xFF, PIC_SLAVE_PORT_DATA);
