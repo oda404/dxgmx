@@ -194,6 +194,7 @@ void pic_signal_eoi(uint8_t pic)
         break;
     
     default:
+        port_outb(0x20, PIC_MASTER_PORT_COMMAND);
         port_outb(0x20, PIC_SLAVE_PORT_COMMAND);
         break;
     }

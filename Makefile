@@ -1,7 +1,7 @@
 
 VER_MAJ           := 0
 VER_MIN           := 4
-PATCH_N           := 1
+PATCH_N           := 2
 CODE_NAME         := angel_attack
 
 DEFAULT_ARCH      := x86
