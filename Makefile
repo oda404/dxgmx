@@ -105,10 +105,13 @@ ifeq ($(SRCARCH), x86)
 	DEFS += -D__X86__
 endif
 
+WARNINGS := \
+-Werror-implicit-function-declaration \
+
 CFLAGS += \
 -ffreestanding -Wall -Wextra \
 -isystem=/usr/include --sysroot=$(SYSROOT_DIR) \
-$(DEFS) -MD -MP
+$(DEFS) $(WARNINGS) -MD -MP
 
 export CFLAGS
 export DEFS
