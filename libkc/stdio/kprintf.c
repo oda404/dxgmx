@@ -55,6 +55,13 @@ int kprintf(const char *fmt, ...)
             ++written;
             goto end;
 
+        case PRINTF_CHAR:
+        {
+            char val = va_arg(arg_list, int);
+            tty_print(&val, 1);
+            break;
+        }
+
         case PRINTF_INT_1:
         case PRINTF_INT_2:
         {
