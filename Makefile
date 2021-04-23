@@ -216,4 +216,3 @@ mrclean:
 	$(MAKE) clean $(KILL_STDOUT)
 	@rm -f $$(ls | grep -Eo '^dxgmx-[0-9]+.[0-9]+.[0-9]+(.iso)?')
 	@rm -f $(BUILD_DIR)
-	@rm -f $(ISO_PATH)
