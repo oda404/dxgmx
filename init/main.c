@@ -13,6 +13,7 @@
 #endif
 
 #include<dxgmx/x86/gdt.h>
+#include<dxgmx/x86/idt.h>
 #include<dxgmx/abandon_ship.h>
 #include<dxgmx/gcc/attrs.h>
 #include<dxgmx/video/tty.h>
@@ -41,6 +42,7 @@ extern uint32_t kernel_addr_end;
 void kmain(uint32_t magic, uint32_t mbi_base_addr)
 {
     gdt_init();
+    idt_init();
     tty_init();
 
     kprintf(
@@ -78,4 +80,7 @@ void kmain(uint32_t magic, uint32_t mbi_base_addr)
         kprintf("type %d ", mmap->type);
         kprintf("size %d\n", mmap->size);
     }
+    
+    for(;;)
+        asm volatile("hlt");
 }
