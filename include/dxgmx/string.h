@@ -1,3 +1,7 @@
+/*
+    Copyright Alexandru Olaru.
+    Distributed under the MIT license.
+*/
 
 #ifndef __DXGMX_KSTRING_H__
 #define __DXGMX_KSTRING_H__

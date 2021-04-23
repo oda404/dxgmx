@@ -1,0 +1,4 @@
+/*
+    Copyright Alexandru Olaru.
+    Distributed under the MIT license.
+*/

@@ -1,3 +1,7 @@
+/*
+    Copyright Alexandru Olaru.
+    Distributed under the MIT license.
+*/
 
 #include<dxgmx/stdio.h>
 #include<dxgmx/string.h>

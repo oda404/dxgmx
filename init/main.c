@@ -1,3 +1,7 @@
+/*
+    Copyright Alexandru Olaru.
+    Distributed under the MIT license.
+*/
 
 #ifndef __KVER_MAJ__
 #define __KVER_MAJ__ -1

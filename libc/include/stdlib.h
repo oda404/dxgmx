@@ -1,3 +1,7 @@
+/*
+    Copyright Alexandru Olaru.
+    Distributed under the MIT license.
+*/
 
 #ifndef _STDLIB_H
 #define _STDLIB_H

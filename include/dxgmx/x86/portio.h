@@ -1,3 +1,7 @@
+/*
+    Copyright Alexandru Olaru.
+    Distributed under the MIT license.
+*/
 
 #ifndef __DXGMX_X86_PORTIO_H__
 #define __DXGMX_X86_PORTIO_H__

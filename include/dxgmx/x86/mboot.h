@@ -1,3 +1,7 @@
+/*
+    Copyright Alexandru Olaru.
+    Distributed under the MIT license.
+*/
 
 #ifndef __DXGMX_MBOOT_H__
 #define __DXGMX_MBOOT_H__

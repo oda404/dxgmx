@@ -1,3 +1,7 @@
+/*
+    Copyright Alexandru Olaru.
+    Distributed under the MIT license.
+*/
 
 #include<dxgmx/video/tty.h>
 #include<dxgmx/video/vga_text.h>

@@ -1,3 +1,7 @@
+/*
+    Copyright Alexandru Olaru.
+    Distributed under the MIT license.
+*/
 
 #include<dxgmx/abandon_ship.h>
 #include<dxgmx/stdlib.h>
