@@ -16,11 +16,14 @@ __ATTR_MALLOC(free) __ATTR_ALLOC_SIZE(1);
 
 long int __strtol(const char *__restrict str, char **__restrict endptr, int base);
 
-int __abs(int n);
+int __abs(int n)
+__ATTR_CONST;
 
-long int __labs(long int n);
+long int __labs(long int n)
+__ATTR_CONST;
 
-long long int __llabs(long long int n);
+long long int __llabs(long long int n)
+__ATTR_CONST;
 
 char *__itoa(int n, char *__restrict str, int base)
 __ATTR_NONNULL(2);

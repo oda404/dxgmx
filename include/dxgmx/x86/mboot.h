@@ -20,27 +20,27 @@
 
 #ifndef __ASM__
 
-#define U32 __UINT32_TYPE__
-#define U64 __UINT64_TYPE__
+#include<dxgmx/gcc/attrs.h>
+#include<stdint.h>
 
-__attribute__((packed))
 typedef struct
+__ATTR_PACKED
 {
-    U32 flags;
-    U32 mem_lower;
-    U32 mem_upper;
-    U32 boot_device;
-    U32 cmdline;
-    U32 mods_count;
-    U32 mods_base_addr;
-    U32 syms[4];
-    U32 mmap_length;
-    U32 mmap_base_addr;
-    U32 drives_length;
-    U32 drives_base_addr;
-    U32 config_table;
-    U32 bl_name_base_addr;
-    U32 apm_table_base_addr;
+    uint32_t flags;
+    uint32_t mem_lower;
+    uint32_t mem_upper;
+    uint32_t boot_device;
+    uint32_t cmdline;
+    uint32_t mods_count;
+    uint32_t mods_base_addr;
+    uint32_t syms[4];
+    uint32_t mmap_length;
+    uint32_t mmap_base_addr;
+    uint32_t drives_length;
+    uint32_t drives_base_addr;
+    uint32_t config_table;
+    uint32_t bl_name_base_addr;
+    uint32_t apm_table_base_addr;
 
     //...
 } mboot_mbi;
@@ -51,13 +51,13 @@ typedef struct
 #define MBOOT_MMAP_TYPE_NVS              4
 #define MBOOT_MMAP_TYPE_BADRAM           5
 
-__attribute__((packed))
 typedef struct
+__ATTR_PACKED
 {
-    U32 size;
-    U64 base_addr;
-    U64 length;
-    U32 type;
+    uint32_t size;
+    uint64_t base_addr;
+    uint64_t length;
+    uint32_t type;
 } mboot_mmap;
 
 #endif // __ASM__

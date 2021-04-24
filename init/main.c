@@ -75,8 +75,8 @@ void kmain(uint32_t magic, uint32_t mbi_base_addr)
     kprintf("\nmemory map: \n");
     for(
         mmap = (mboot_mmap *)mbi->mmap_base_addr;
-        (U32)mmap < mbi->mmap_base_addr + mbi->mmap_length;
-        mmap = (mboot_mmap *)((U32)mmap + mmap->size + sizeof(mmap->size))
+        (uint32_t)mmap < mbi->mmap_base_addr + mbi->mmap_length;
+        mmap = (mboot_mmap *)((uint32_t)mmap + mmap->size + sizeof(mmap->size))
     )
     {
         kprintf("base 0x%X ", mmap->base_addr);
