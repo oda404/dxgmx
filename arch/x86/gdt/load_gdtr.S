@@ -4,10 +4,10 @@
 */
 
 .section .text
-  .global __asm_loadgdt
-  .type __asm_loadgdt, @function
+  .global load_gdtr
+  .type load_gdtr, @function
 
-__asm_loadgdt:
+load_gdtr:
   /* 
    * esp + 4 is the first arg, a ptr 
    * to the gdt descriptor.

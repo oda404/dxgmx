@@ -45,7 +45,7 @@
 static GDTEntry gdt[GDT_ENTRIES_CNT];
 
 /* this is implemented in loadgtdr.S cuz i don't want to write inline asm */
-extern void __asm_loadgdt(GDTR *gdtr);
+extern void load_gdtr(GDTR *gdtr);
 
 //note: bit 0 of flags is currently unused
 
@@ -91,7 +91,7 @@ void gdt_init()
     gdtr.base = (uint32_t)gdt;
     gdtr.limit = sizeof(gdt);
 
-    __asm_loadgdt(&gdtr);
+    load_gdtr(&gdtr);
 }
 
 void gdt_encode_entry(
