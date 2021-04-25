@@ -44,7 +44,7 @@ void kmain(uint32_t bl_magic, uint32_t bl_info_base)
         break;
 
     default:
-        abandon_ship("Expected boot spec was not matched\n");
+        abandon_ship("Not booted by a supported bootloader\n");
         break;
     }
 
