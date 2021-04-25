@@ -7,6 +7,7 @@ dxgmx/errno.h \
 dxgmx/stdlib.h \
 dxgmx/string.h \
 dxgmx/kdefs.h \
+dxgmx/bootinfo.h \
 
 include $(INCLUDE_DIR)/dxgmx/x86/Makefile
 include $(INCLUDE_DIR)/dxgmx/video/Makefile

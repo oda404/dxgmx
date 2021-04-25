@@ -3,87 +3,53 @@
     Distributed under the MIT license.
 */
 
-#ifndef __KVER_MAJ__
-#define __KVER_MAJ__ -1
-#endif
-#ifndef __KVER_MIN__
-#define __KVER_MIN__ -1
-#endif
-#ifndef __KPATCH_N__
-#define __KPATCH_N__ -1
-#endif
-#ifndef __KCODENAME__
-#define __KCODENAME__ "undefined"
-#endif
-
-#include<dxgmx/x86/gdt.h>
-#include<dxgmx/x86/idt.h>
 #include<dxgmx/abandon_ship.h>
-#include<dxgmx/gcc/attrs.h>
-#include<dxgmx/video/tty.h>
 #include<dxgmx/stdio.h>
+#include<dxgmx/bootinfo.h>
+#include<dxgmx/video/tty.h>
 #include<stdint.h>
 
-#if defined(__MBOOT2__)
-
-#include<dxgmx/x86/mboot2.h>
-#define BL_MAGIC MBOOT2_BOOTLOADER_MAGIC
-#define BOOT_SPEC_NAME "multiboot2"
-
-#elif defined(__MBOOT__)
-
+#if defined(__X86__)
 #include<dxgmx/x86/mboot.h>
-#define BL_MAGIC MBOOT_BOOTLOADER_MAGIC
-#define BOOT_SPEC_NAME "multiboot"
+#include<dxgmx/x86/mboot2.h>
+#endif // __X86__
 
-#else // standalone
+/* 
+ * This function initiates core hardware and 
+ * brings the machine in an operational state.
+ * It s implementation is architecture specific 
+ * and can be found in arch/<arch>/init_stage1.c .
+ */
+int kinit_stage1(const BootInfo *bootinfo);
+/* This function expects the hardware to be initialized
+ * and in working order. It is responsible for initiating
+ * kernel specific stuff.
+ */
+int kinit_stage2();
 
-#endif // defined(__MBOOT2__)
-
-extern uint32_t kernel_addr_base;
-extern uint32_t kernel_addr_end;
-
-void kmain(uint32_t magic, uint32_t mbi_base_addr)
+void kmain(uint32_t bl_magic, uint32_t bl_info_base)
 {
-    gdt_init();
-    idt_init();
     tty_init();
 
-    kprintf(
-        "Codename %s version %d.%d.%d\n", 
-        __KCODENAME__,
-        __KVER_MAJ__,
-        __KVER_MIN__,
-        __KPATCH_N__
-    );
+    BootInfo bootinfo;
 
-    kprintf(
-        "Kernel base: 0x%X, size: 0x%X\n",
-        &kernel_addr_base,
-        &kernel_addr_end - &kernel_addr_base
-    );
-
-    if(magic != BL_MAGIC)
+    switch(bl_magic)
     {
-        abandon_ship("Expected boot spec " BOOT_SPEC_NAME " was not matched\n");
+    case MBOOT2_BOOTLOADER_MAGIC:
+        kprintf("Boot spec is multiboot2\n");
+        break;
+
+    case MBOOT_BOOTLOADER_MAGIC:
+        kprintf("Boot spec is multiboot\n");
+        break;
+
+    default:
+        abandon_ship("Expected boot spec was not matched\n");
+        break;
     }
 
-    kprintf("Boot spec is %s\n", BOOT_SPEC_NAME);
-
-    mboot_mbi *mbi = (mboot_mbi*)mbi_base_addr;
-    mboot_mmap *mmap = NULL;
-    kprintf("\nmemory map: \n");
-    for(
-        mmap = (mboot_mmap *)mbi->mmap_base_addr;
-        (uint32_t)mmap < mbi->mmap_base_addr + mbi->mmap_length;
-        mmap = (mboot_mmap *)((uint32_t)mmap + mmap->size + sizeof(mmap->size))
-    )
-    {
-        kprintf("base 0x%X ", mmap->base_addr);
-        kprintf("len 0x%X ", mmap->length);
-        kprintf("type %d ", mmap->type);
-        kprintf("size %d\n", mmap->size);
-    }
+    kinit_stage1(&bootinfo);
+    kinit_stage2();
     
     for(;;)
         asm volatile("hlt");
