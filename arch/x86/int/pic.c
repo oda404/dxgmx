@@ -71,7 +71,7 @@
 */
 #define PIC_ICW4_SFNM         (1 << 4)
 
-void pic_remap(uint8_t master_offset, uint8_t slave_offset)
+void pic8259_remap(uint8_t master_offset, uint8_t slave_offset)
 {
     uint8_t master_mask;
     uint8_t slave_mask;
@@ -111,7 +111,7 @@ void pic_remap(uint8_t master_offset, uint8_t slave_offset)
     port_outb(slave_mask, PIC_SLAVE_PORT_DATA);
 }
 
-void pic_mask_irq(uint8_t irqline)
+void pic8259_mask_irq_line(uint8_t irqline)
 {
     uint16_t port;
     /* if irqline >= 8, the irq corresponds to the slave */
@@ -130,7 +130,7 @@ void pic_mask_irq(uint8_t irqline)
     port_outb(mask | (1 << irqline), port);
 }
 
-void pic_unmask_irq(uint8_t irqline)
+void pic8259_unmask_irq_line(uint8_t irqline)
 {
     uint16_t port;
     /* if irqline >= 8, the irq corresponds to the slave */
@@ -149,7 +149,21 @@ void pic_unmask_irq(uint8_t irqline)
     port_outb(mask & ~(1 << irqline), port);
 }
 
-uint8_t pic_get_isr(uint8_t pic)
+void pic8259_set_mask(uint8_t mask, uint8_t pic)
+{
+    switch(pic)
+    {
+    case 0:
+        port_outb(mask, PIC_MASTER_PORT_DATA);
+        break;
+    
+    default:
+        port_outb(mask, PIC_SLAVE_PORT_DATA);
+        break;
+    }
+}
+
+uint8_t pic8259_get_isr(uint8_t pic)
 {
     uint8_t ret;
     switch(pic)
@@ -167,7 +181,7 @@ uint8_t pic_get_isr(uint8_t pic)
     return ret;
 }
 
-uint8_t pic_get_irr(uint8_t pic)
+uint8_t pic8259_get_irr(uint8_t pic)
 {
     uint8_t ret;
     switch(pic)
@@ -185,9 +199,9 @@ uint8_t pic_get_irr(uint8_t pic)
     return ret;
 }
 
-void pic_signal_eoi(uint8_t pic)
+void pic8259_signal_eoi(uint8_t pic)
 {
-    switch (pic)
+    switch(pic)
     {
     case 0:
         port_outb(0x20, PIC_MASTER_PORT_COMMAND);
@@ -200,8 +214,20 @@ void pic_signal_eoi(uint8_t pic)
     }
 }
 
-void pic_disable()
+void pic8259_disable(uint8_t pic)
 {
-    port_outb(0xFF, PIC_SLAVE_PORT_DATA);
-    port_outb(0xFF, PIC_MASTER_PORT_DATA);
+    switch(pic)
+    {
+    case 0:
+        port_outb(0xFF, PIC_MASTER_PORT_DATA);
+        break;
+    default:
+        port_outb(0xFF, PIC_SLAVE_PORT_DATA);
+        break;
+    }
+}
+
+uint8_t pic8259_get_pics_count()
+{
+    return 2;
 }

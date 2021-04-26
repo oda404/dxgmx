@@ -121,7 +121,7 @@ static void idt_x86_encode_entry(
 
 void idt_init()
 {
-    pic_remap(MASTER_PIC_OFFSET, SLAVE_PIC_OFFSET);
+    pic8259_remap(MASTER_PIC_OFFSET, SLAVE_PIC_OFFSET);
     /* paranoia */
     asm volatile("cli");
 
