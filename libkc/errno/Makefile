@@ -1,3 +1,3 @@
 
 OBJS_LIBKC += \
-errno/errno.o \
+libkc/errno/errno.o \

@@ -1,3 +1,3 @@
 
 OBJS_ARCH += \
-boot/entry.o
+arch/x86/boot/entry.o

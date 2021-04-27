@@ -133,16 +133,13 @@ include $(INIT_DIR)/Makefile
 include $(LIBKC_DIR)/Makefile
 include $(KERNEL_DIR)/Makefile
 
-OBJS_ARCH       := $(addprefix arch/$(SRCARCH)/, $(OBJS_ARCH))
-OBJS_INIT       := $(addprefix init/, $(OBJS_INIT))
-OBJS_LIBKC      := $(addprefix libkc/, $(OBJS_LIBKC))
-OBJS_KERNEL     := $(addprefix kernel/, $(OBJS_KERNEL))
-
 OBJS            := \
 $(OBJS_ARCH) $(OBJS_INIT) \
 $(OBJS_LIBKC) $(OBJS_KERNEL)
 
+# prefix objs with the build dir path
 DEPS            := $(addprefix $(BUILD_DIR)/, $(OBJS))
+# change their extensions to .d
 DEPS            := $(patsubst %.o, %.d, $(DEPS))
 
 # set all headers recursively

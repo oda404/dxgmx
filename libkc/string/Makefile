@@ -1,6 +1,6 @@
 
 OBJS_LIBKC += \
-string/memcmp.o \
-string/strcat.o \
-string/strcpy.o \
-string/strlen.o \
+libkc/string/memcmp.o \
+libkc/string/strcat.o \
+libkc/string/strcpy.o \
+libkc/string/strlen.o \

@@ -1,4 +1,4 @@
 
 OBJS_ARCH += \
-gdt/gdt.o \
-gdt/load_gdtr.o \
+arch/x86/gdt/gdt.o \
+arch/x86/gdt/load_gdtr.o \

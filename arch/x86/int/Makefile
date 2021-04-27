@@ -1,8 +1,8 @@
 
 
 OBJS_ARCH += \
-int/idt.o \
-int/load_idtr.o \
-int/irq_handlers.o \
-int/irqs.o \
-int/pic.o \
+arch/x86/int/idt.o \
+arch/x86/int/load_idtr.o \
+arch/x86/int/irq_handlers.o \
+arch/x86/int/irqs.o \
+arch/x86/int/pic.o \

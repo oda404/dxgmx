@@ -1,5 +1,5 @@
 
 OBJS_KERNEL += \
-abandon_ship.o \
-bootinfo.o \
+kernel/abandon_ship.o \
+kernel/bootinfo.o \
 

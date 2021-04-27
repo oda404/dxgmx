@@ -1,4 +1,4 @@
 
 OBJS_ARCH += \
-video/vga_text.o \
-video/tty.o
+arch/x86/video/vga_text.o \
+arch/x86/video/tty.o

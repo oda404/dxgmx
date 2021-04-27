@@ -1,3 +1,3 @@
 
 OBJS_INIT += \
-main.o
+init/main.o

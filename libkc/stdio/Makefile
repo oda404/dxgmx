@@ -1,3 +1,3 @@
 
 OBJS_LIBKC += \
-stdio/kprintf.o \
+libkc/stdio/kprintf.o \
