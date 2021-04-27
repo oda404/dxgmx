@@ -1,7 +1,7 @@
 
 VER_MAJ           := 0
 VER_MIN           := 5
-PATCH_N           := 9
+PATCH_N           := 10
 CODE_NAME         := angel_attack
 
 DEFAULT_ARCH      := x86
@@ -66,12 +66,10 @@ endif
 # set src directories
 ARCH_DIR       := $(CWD)/arch/$(SRCARCH)
 INIT_DIR       := $(CWD)/init
-LIBKC_DIR      := $(CWD)/libkc
 KERNEL_DIR     := $(CWD)/kernel
 CXFFXX_DIR     := $(CWD)/cxffxx
 export ARCH_DIR
 export INIT_DIR
-export LIBKC_DIR
 export CXFFXX_DIR
 
 FULL_BIN_NAME  ?= dxgmx-$(VER_MAJ).$(VER_MIN).$(PATCH_N)
@@ -124,18 +122,16 @@ MAKEFLAGS  += --no-print-directory
 
 OBJS_ARCH   := 
 OBJS_INIT   := 
-OBJS_LIBKC  := 
 OBJS_KERNEL :=
 
 # set objs recursively
 include $(ARCH_DIR)/Makefile
 include $(INIT_DIR)/Makefile
-include $(LIBKC_DIR)/Makefile
 include $(KERNEL_DIR)/Makefile
 
 OBJS            := \
 $(OBJS_ARCH) $(OBJS_INIT) \
-$(OBJS_LIBKC) $(OBJS_KERNEL)
+$(OBJS_KERNEL)
 
 # prefix objs with the build dir path
 DEPS            := $(addprefix $(BUILD_DIR)/, $(OBJS))
