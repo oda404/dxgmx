@@ -1,3 +1,0 @@
-
-HEADERS += \
-cxffxx/types.h

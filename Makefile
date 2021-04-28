@@ -1,7 +1,7 @@
 
 VER_MAJ           := 0
 VER_MIN           := 5
-PATCH_N           := 10
+PATCH_N           := 11
 CODE_NAME         := angel_attack
 
 DEFAULT_ARCH      := x86
@@ -24,6 +24,9 @@ CFLAGS_RELEASE    := -O2
 
 BOOT_SPEC         ?= multiboot
 
+PHONY_TARGETS     :=
+DXGMX_DEPS        := 
+
 # if we are cross compiling check if CROSS_CC was exported
 ifeq ($(IS_CROSS_COMP), 1)
 	LIBC_FREESTANDING := 1
@@ -44,13 +47,11 @@ export AS
 export LD
 export AR
 
-CWD := $(PWD)
-
 # set misc directories
-INCLUDE_DIR    := $(CWD)/include
-BUILD_DIR      := $(CWD)/build
+INCLUDE_DIR    := include
+BUILD_DIR      := build
 SYSROOT_DIR    := $(BUILD_DIR)/sysroot
-SCRIPTS_DIR    := $(CWD)/scripts
+SCRIPTS_DIR    := scripts
 
 export INCLUDE_DIR
 export SYSROOT_DIR
@@ -64,17 +65,17 @@ $(error Unsupported arch $(ARCH))
 endif
 
 # set src directories
-ARCH_DIR       := $(CWD)/arch/$(SRCARCH)
-INIT_DIR       := $(CWD)/init
-KERNEL_DIR     := $(CWD)/kernel
-CXFFXX_DIR     := $(CWD)/cxffxx
+ARCH_DIR         := arch/$(SRCARCH)
+ARCH_INCLUDE_DIR := $(ARCH_DIR)/include
+INIT_DIR         := init
+KERNEL_DIR       := kernel
+
 export ARCH_DIR
 export INIT_DIR
-export CXFFXX_DIR
 
 FULL_BIN_NAME  ?= dxgmx-$(VER_MAJ).$(VER_MIN).$(PATCH_N)
-FULL_BIN_PATH  ?= $(CWD)/$(FULL_BIN_NAME)
-ISO_PATH       ?= $(CWD)/$(FULL_BIN_NAME).iso
+FULL_BIN_PATH  ?= $(FULL_BIN_NAME)
+ISO_PATH       ?= $(FULL_BIN_NAME).iso
 
 # format the output
 OUTPUT_FORMATTED = $(SCRIPTS_DIR)/output-formatted.sh
@@ -91,11 +92,9 @@ DEFS += \
 # set boot spec macro
 ifeq ($(BOOT_SPEC), multiboot2)
 	DEFS += -D__MBOOT2__
-endif
-ifeq ($(BOOT_SPEC), multiboot)
+else ifeq ($(BOOT_SPEC), multiboot)
 	DEFS += -D__MBOOT__
-endif
-ifeq ($(BOOT_SPEC), standalone)
+else ifeq ($(BOOT_SPEC), standalone)
 	DEFS += -D__STANDALONE_BOOT__
 endif
 
@@ -120,9 +119,9 @@ LDFLAGS += \
 
 MAKEFLAGS  += --no-print-directory
 
-OBJS_ARCH   := 
-OBJS_INIT   := 
-OBJS_KERNEL :=
+OBJS_ARCH    := 
+OBJS_INIT    := 
+OBJS_KERNEL  :=
 
 # set objs recursively
 include $(ARCH_DIR)/Makefile
@@ -138,18 +137,13 @@ DEPS            := $(addprefix $(BUILD_DIR)/, $(OBJS))
 # change their extensions to .d
 DEPS            := $(patsubst %.o, %.d, $(DEPS))
 
-# set all headers recursively
-HEADERS         := 
-include $(INCLUDE_DIR)/Makefile
-# set headers as they should be in SYSROOT_DIR/usr/include
-SYSROOT_HEADERS := $(addprefix $(SYSROOT_DIR)/usr/include/, $(HEADERS))
+DXGMX_DEPS += builddir sysroot kernel_headers \
+arch_headers $(addprefix $(BUILD_DIR)/, $(OBJS)) \
+Makefile 
 
-.PHONY: all dxgmx clean mrclean \
-iso iso-run run sysroot-struct builddir-struct libc
-
+PHONY_TARGETS += all dxgmx 
 all: dxgmx
-
-dxgmx: builddir-struct sysroot-struct $(SYSROOT_HEADERS) libc $(addprefix $(BUILD_DIR)/, $(OBJS)) Makefile
+dxgmx: $(DXGMX_DEPS)
 	@$(OUTPUT_FORMATTED) LD $(notdir $@)
 
 	@$(CC) -T arch/$(SRCARCH)/boot/linker.ld \
@@ -172,21 +166,30 @@ $(BUILD_DIR)/%.o : $(patsubst $(BUILD_DIR), ,%.S) Makefile
 	@$(OUTPUT_FORMATTED) AS $<
 	@$(CC) -c $< $(CFLAGS) -o $@
 
-# create the build dirISO_PATH
-builddir-struct:
+PHONY_TARGETS += builddir 
+# create the build dir
+builddir:
 	@mkdir -p $(BUILD_DIR)
 
+PHONY_TARGETS += sysroot 
 # create the sysroot dir
-sysroot-struct:
+sysroot:
 	@mkdir -p $(SYSROOT_DIR)
 	@mkdir -p $(SYSROOT_DIR)/boot
-	@mkdir -p $(SYSROOT_DIR)/usr/include
+	@mkdir -p $(SYSROOT_DIR)/usr/include/dxgmx/$(SRCARCH)
 
-# the include path in a freestanding env is 
-# in $(SYSROOT_DIR)/usr/include so we copy everything there 
-$(SYSROOT_HEADERS): $(addprefix $(INCLUDE_DIR)/, $(HEADERS))
+PHONY_TARGETS += kernel_headers 
+# kernel headers 
+kernel_headers: 
 	@cp -ru $(INCLUDE_DIR)/* $(SYSROOT_DIR)/usr/include
 
+PHONY_TARGETS += arch_headers 
+# arch specific headers
+arch_headers:
+	@cp -ru $(ARCH_DIR)/include/* \
+	$(SYSROOT_DIR)/usr/include/dxgmx/$(SRCARCH)
+
+PHONY_TARGETS += iso 
 iso:
 	$(MAKE)
 	$(SCRIPTS_DIR)/iso.sh \
@@ -195,23 +198,29 @@ iso:
 	--out-iso-path $(ISO_PATH) \
 	--boot-spec $(BOOT_SPEC)
 
+PHONY_TARGETS += iso-run 
 iso-run:
 	$(MAKE) iso
 	$(SCRIPTS_DIR)/iso-run.sh \
 	--iso-path $(ISO_PATH) \
 	--arch $(ARCH)
 
+PHONY_TARGETS += run 
 run:
 	$(MAKE)
 	$(SCRIPTS_DIR)/run.sh \
 	--kernel-path $(FULL_BIN_PATH) \
 	--arch $(ARCH)
 
+PHONY_TARGETS += clean 
 clean:
 	@rm -f $(addprefix $(BUILD_DIR)/, $(OBJS))
 	@rm -f $(DEPS)
 
+PHONY_TARGETS += mrclean 
 mrclean:
 	$(MAKE) clean $(KILL_STDOUT)
-	@rm -f $$(ls | grep -Eo '^dxgmx-[0-9]+.[0-9]+.[0-9]+(.iso)?')
+	@rm -f $$(ls | grep -Eo '^dxgmx-[0-9]+.[0-9]+.[0-9]+(.iso)?$$')
 	@rm -f $(BUILD_DIR)
+
+.PHONY: $(PHONY_TARGETS)
