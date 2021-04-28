@@ -1,0 +1,3 @@
+
+OBJS_ARCH += \
+arch/x86/paging/frame.o \
