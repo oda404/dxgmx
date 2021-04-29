@@ -41,6 +41,8 @@ multiboot_header:
 multiboot_header_end:
 
 .section .bss          # stack for the initial kernel thread
+  .global stack_top
+  .global stack_bottom
   .align 16
 stack_bottom:
   .skip 16384
