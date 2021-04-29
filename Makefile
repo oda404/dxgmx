@@ -1,7 +1,7 @@
 
 VER_MAJ           := 0
 VER_MIN           := 5
-PATCH_N           := 16
+PATCH_N           := 17
 CODE_NAME         := angel_attack
 
 DEFAULT_ARCH      := x86
@@ -21,9 +21,6 @@ CFLAGS            ?=
 LDFLAGS           ?= 
 CFLAGS_DEBUG      := -g
 CFLAGS_RELEASE    := -O2
-
-BOOT_SPEC         ?= multiboot
-
 PHONY_TARGETS     :=
 DXGMX_DEPS        := 
 
@@ -88,15 +85,6 @@ DEFS += \
 -D__KVER_MIN__=$(VER_MIN) \
 -D__KPATCH_N__=$(PATCH_N) \
 -D__KCODENAME__='"$(CODE_NAME)"' 
-
-# set boot spec macro
-ifeq ($(BOOT_SPEC), multiboot2)
-	DEFS += -D__MBOOT2__
-else ifeq ($(BOOT_SPEC), multiboot)
-	DEFS += -D__MBOOT__
-else ifeq ($(BOOT_SPEC), standalone)
-	DEFS += -D__STANDALONE_BOOT__
-endif
 
 # set SRCARCH macro
 ifeq ($(SRCARCH), x86)
@@ -196,7 +184,7 @@ iso:
 	--sysroot-dir $(SYSROOT_DIR) \
 	--bin-name $(FULL_BIN_NAME) \
 	--out-iso-path $(ISO_PATH) \
-	--boot-spec $(BOOT_SPEC)
+	--boot-spec multiboot
 
 PHONY_TARGETS += iso-run 
 iso-run:

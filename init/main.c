@@ -9,10 +9,10 @@
 #include<dxgmx/video/tty.h>
 #include<stdint.h>
 
-#if defined(__X86__)
-#include<dxgmx/x86/mboot.h>
-#include<dxgmx/x86/mboot2.h>
-#endif // __X86__
+extern uint32_t _kernel_base;
+extern uint32_t _kernel_end;
+extern uint32_t _kstack_top;
+extern uint32_t _kstack_bot;
 
 /* 
  * This function initiates core hardware and 
@@ -27,28 +27,22 @@ int kinit_stage1(const BootInfo *bootinfo);
  */
 int kinit_stage2();
 
-void kmain(uint32_t bl_magic, uint32_t bl_info_base)
+void kmain(uint32_t blmagic, uint32_t blinfo_base)
 {
     tty_init();
 
-    BootInfo bootinfo;
-
-    switch(bl_magic)
     {
-    case MBOOT2_BOOTLOADER_MAGIC:
-        kprintf("Boot spec is multiboot2\n");
-        break;
+        BootInfo bootinfo;
+        bootinfo.kernel_base = (uint32_t)&_kernel_base;
+        bootinfo.kernel_end  = (uint32_t)&_kernel_end;
+        bootinfo.kstack_top  = (uint32_t)&_kstack_top;
+        bootinfo.kstack_bot  = (uint32_t)&_kstack_bot;
+        bootinfo.blmagic     = blmagic;
+        bootinfo.blinfo_base = blinfo_base;
 
-    case MBOOT_BOOTLOADER_MAGIC:
-        kprintf("Boot spec is multiboot\n");
-        break;
-
-    default:
-        abandon_ship("Not booted by a supported bootloader\n");
-        break;
+        kinit_stage1(&bootinfo);
     }
 
-    kinit_stage1(&bootinfo);
     kinit_stage2();
     
     for(;;)
