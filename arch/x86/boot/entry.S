@@ -41,19 +41,19 @@ multiboot_header:
 multiboot_header_end:
 
 .section .bss          # stack for the initial kernel thread
-  .global stack_top
-  .global stack_bottom
+  .global _kstack_top
+  .global _kstack_bot
   .align 16
-stack_bottom:
+_kstack_bot:
   .skip 16384
-stack_top:
+_kstack_top:
 
 .section .text 
   .global _start
   .type _start, @function
 
 _start:                  # kernel entry point
-  movl $stack_top, %esp  # put stack_top address into the stack_ptr reg
+  movl $_kstack_top, %esp  # put stack_top address into the stack_ptr reg
 
   # clear eflags
   pushl $0               # push 0 on the stack
