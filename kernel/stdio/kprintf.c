@@ -80,6 +80,7 @@ int kprintf(const char *fmt, ...)
                 goto end;
 
             tty_print(buff, bufflen);
+            written += bufflen;
             break;
         }
 
