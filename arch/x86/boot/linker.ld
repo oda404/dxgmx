@@ -6,7 +6,7 @@ ENTRY(_start)
 SECTIONS
 {
     . = 1M; /* start putting sections at 1Mib */
-    kernel_addr_base = .;
+    _kernel_base = .;
 
     .text BLOCK(4K) : ALIGN(4K) /* text section */
     {
@@ -29,5 +29,5 @@ SECTIONS
         *(COMMON)
         *(.bss)
     }
-    kernel_addr_end = .;
+    _kernel_end = .;
 }
