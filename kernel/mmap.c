@@ -166,7 +166,7 @@ static int mmap_areas_handle_overlap(
 {
     uint8_t overlap = mmap_area_overlap(area2, area1);
     if(overlap == OVERLAP_NONE)
-        return 0;
+        return 3;
 
     if(area1->type == area2->type)
         return 2;
@@ -266,7 +266,21 @@ int mmap_mark_area_kreserved(
     uint64_t size
 )
 {
-    
+    MemoryMapArea kreserved;
+    kreserved.base = base;
+    kreserved.size = size;
+    kreserved.type = MMAP_AREA_KRESERVED;
+
+    size_t i;
+    for(i = 1; i < mmap.areas_cnt; ++i)
+    {
+        MemoryMapArea *tmp = &mmap.areas[i];
+        mmap_areas_handle_overlap(tmp, &kreserved);
+    }
+
+    mmap_enlarge(1);
+    mmap.areas[mmap.areas_cnt - 1] = kreserved;
+
     return 0;
 }
 

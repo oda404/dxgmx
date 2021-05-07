@@ -51,6 +51,9 @@ int kinit_stage1(const BootInfo *bootinfo)
         mmap_add_area(mmap->base_addr, mmap->length, mmap->type);
     }
 
+    /* mark the kernel itself as kreserved */
+    mmap_mark_area_kreserved(bootinfo->kernel_base, bootinfo->kernel_end - bootinfo->kernel_base);
+
     const MemoryMap *mmapa = mmap_get_full_map();
 
     for(
