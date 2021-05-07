@@ -26,4 +26,4 @@ elif [ -z "$ARCH" ]; then
     exit 2
 fi
 
-qemu-system-x86_64 -kernel $KERNEL_PATH
+qemu-system-x86_64 -m 2G -kernel $KERNEL_PATH
