@@ -56,6 +56,16 @@ int mmap_mark_area_kreserved(
     uint64_t base,
     uint64_t size
 );
+
+/*
+    Aligns available areas on given bytes,
+    shrinking if needed.
+    @param bytes Alignment.
+*/
+void mmap_align_avail_areas(
+    uint32_t bytes
+);
+
 /*
  * Get the full memory map.
  */

@@ -201,6 +201,16 @@ static int mmap_areas_handle_overlap(
     return 0;
 }
 
+static int mmap_is_addr_inside_area(
+    uint64_t addr,
+    const MemoryMapArea *area
+)
+{
+    if(addr > area->base && addr < area->base + area->size)
+        return 1;
+    return 0;
+}
+
 static int __is64wide(uint64_t n)
 {
     return (n >> 31);
@@ -282,6 +292,26 @@ int mmap_mark_area_kreserved(
     mmap.areas[mmap.areas_cnt - 1] = kreserved;
 
     return 0;
+}
+
+void mmap_align_avail_areas(
+    uint32_t bytes
+)
+{
+    size_t i;
+    for(i = 1; i < mmap.areas_cnt; ++i)
+    {
+        MemoryMapArea *tmp = &mmap.areas[i];
+        if(tmp->type == MMAP_AREA_AVAILABLE)
+        {
+            uint64_t aligned_base = (tmp->base + (bytes - 1)) & ~(bytes - 1);
+            if(mmap_is_addr_inside_area(aligned_base, tmp))
+            {
+                mmap_area_shrink(tmp, aligned_base - tmp->base);
+                tmp->base = aligned_base;
+            }
+        }
+    }
 }
 
 const MemoryMap *mmap_get_full_map()
