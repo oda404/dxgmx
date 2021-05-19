@@ -5,8 +5,10 @@
 #include<dxgmx/video/tty.h>
 #include<dxgmx/bootinfo.h>
 #include<dxgmx/mmap.h>
+#include<dxgmx/cpu.h>
 #include<dxgmx/kdefs.h>
 #include<dxgmx/abandon_ship.h>
+#include<dxgmx/pgframe.h>
 #include<dxgmx/stdio.h>
 #include<stdint.h>
 
@@ -54,6 +56,8 @@ int kinit_stage1(const BootInfo *bootinfo)
     /* mark the kernel itself as kreserved */
     mmap_mark_area_kreserved(bootinfo->kernel_base, bootinfo->kernel_end - bootinfo->kernel_base);
 
+    pgframe_alloc_init();
+    
     const MemoryMap *mmapa = mmap_get_full_map();
 
     for(

@@ -2,8 +2,12 @@
 #ifndef __DXGMX_PGFRAME_H__
 #define __DXGMX_PGFRAME_H__
 
+#include<stdint.h>
+
 void pgframe_alloc_init();
-int  pgframe_alloc();
-void pgframe_free();
+uint64_t pgframe_alloc();
+uint32_t pgframe_get_avail_frames_cnt();
+uint32_t pgframe_get_frame_size();
+void pgframe_free(uint64_t pgframe_base);
 
 #endif // __DXGMX_PGFRAME_H__
