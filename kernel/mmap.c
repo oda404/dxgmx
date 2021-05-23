@@ -323,3 +323,18 @@ const MemoryMap *mmap_get_full_map()
 {
     return &mmap;
 }
+
+void mmap_print_map()
+{
+    kprintf("System memory map:\n");
+    for(size_t i = 0; i < mmap.areas_cnt; ++i)
+    {
+        const MemoryMapArea *tmp = &mmap.areas[i];
+        kprintf(
+            "base: 0x%X size: 0x%X type: %d\n", 
+            (uint32_t)tmp->base, 
+            (uint32_t)tmp->size, 
+            tmp->type
+        );
+    }
+}

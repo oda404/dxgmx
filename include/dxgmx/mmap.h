@@ -71,4 +71,6 @@ void mmap_align_avail_areas(
  */
 const MemoryMap *mmap_get_full_map();
 
+void mmap_print_map();
+
 #endif // __DXGMX_MMAP_H__

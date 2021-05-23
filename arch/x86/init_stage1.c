@@ -57,22 +57,7 @@ int kinit_stage1(const BootInfo *bootinfo)
     mmap_mark_area_kreserved(bootinfo->kernel_base, bootinfo->kernel_end - bootinfo->kernel_base);
 
     pgframe_alloc_init();
-    
-    const MemoryMap *mmapa = mmap_get_full_map();
-
-    for(
-        size_t i = 0;
-        i < mmapa->areas_cnt;
-        ++i
-    )
-    {
-        kprintf(
-            "base: 0x%X | size: 0x%X | type: %d\n",
-            (uint32_t)mmapa->areas[i].base,
-            (uint32_t)mmapa->areas[i].size,
-            mmapa->areas[i].type
-        );
-    }
+    mmap_print_map();
 
     gdt_init();
     idt_init();
