@@ -70,6 +70,8 @@ static void pgframe_add_available(const MemoryMapArea *area)
         frame += PAGE_FRAME_SIZE
     )
     {
+        if(frame > PAGE_FRAME_SIZE * 1024 * 64)
+            return;
         pgframe_free(frame);
     }
 }
