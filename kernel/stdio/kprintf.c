@@ -71,7 +71,7 @@ int kprintf(const char *fmt, ...)
         {
             int val = va_arg(arg_list, int);
 
-            char buff[11] = { 0 };
+            char buff[12] = { 0 };
             __itoa(val, buff, 10);
 
             size_t bufflen = __strlen(buff);
@@ -84,14 +84,13 @@ int kprintf(const char *fmt, ...)
             break;
         }
 
+        case PRINTF_HEX_L: // TODO: actual lower case
         case PRINTF_HEX_C:
         {
-            unsigned int val = va_arg(arg_list, unsigned int);
+            unsigned long val = va_arg(arg_list, unsigned long);
 
-            val = __abs(val);
-
-            char buff[11] = { 0 };
-            __itoa(val, buff, 16);
+            char buff[21] = { 0 };
+            __ultoa(val, buff, 16);
 
             size_t bufflen = __strlen(buff);
 
