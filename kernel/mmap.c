@@ -2,6 +2,7 @@
 #include<dxgmx/mmap.h>
 #include<dxgmx/abandon_ship.h>
 #include<dxgmx/stdio.h>
+#include<dxgmx/bitwise.h>
 #include<stddef.h>
 
 static MemoryMap mmap;
@@ -178,11 +179,6 @@ static __ATTR_ALWAYS_INLINE int mmap_is_addr_inside_entry(
     return (addr > entry->base && addr < entry->base + entry->size);
 }
 
-static int __is64wide(uint64_t n)
-{
-    return (n >> 31);
-}
-
 static int __log_fatal_overlap_and_die(
     const MemoryMapEntry *entry1,
     const MemoryMapEntry *entry2
@@ -228,7 +224,7 @@ void mmap_entry_add(
 )
 {
     /* ignore 64 bit values */
-    if(__is64wide(base) || __is64wide(size))
+    if(bw_is64_wide(base) || bw_is64_wide(size))
         return;
 
     mmap_enlarge(1);
