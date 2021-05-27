@@ -28,6 +28,12 @@ __ATTR_CONST;
 char *__itoa(int n, char *__restrict str, int base)
 __ATTR_NONNULL(2);
 
+char *__ltoa(long n, char *__restrict str, int base)
+__ATTR_NONNULL(2);
+
+char *__ultoa(unsigned long n, char *__restrict str, int base)
+__ATTR_NONNULL(2);
+
 void kabort(void)
 __ATTR_NORETURN;
 

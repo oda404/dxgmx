@@ -8,3 +8,5 @@ kernel/stdlib/free.o \
 kernel/stdlib/malloc.o \
 kernel/stdlib/itoa.o \
 kernel/stdlib/strtol.o \
+kernel/stdlib/ltoa.o \
+kernel/stdlib/ultoa.o \
