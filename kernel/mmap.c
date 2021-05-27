@@ -5,88 +5,76 @@
 #include<stddef.h>
 
 static MemoryMap mmap;
-static MemoryMapArea *mareas_area;
 
-void mmap_init(uint64_t areas_base)
+void mmap_init()
 {
-    mmap.areas_cnt = 1;
-    mmap.areas = (MemoryMapArea *)(uint32_t)areas_base;
-    
-    /* add an area marking the areas 
-     * themselves as kreserved.
-     * It always sits at index 0
-     */
-    mareas_area = &mmap.areas[0];
-    mareas_area->base = areas_base;
-    mareas_area->size = sizeof(MemoryMapArea);
-    mareas_area->type = MMAP_AREA_KRESERVED;
+    mmap.entries_cnt = 0;
 }
 
-typedef enum E_MemAreaOverlap
+typedef enum E_MemEntryOverlap
 {
-    MMAP_AREA_OVERLAP_NONE = 0,
+    MMAP_ENTRY_OVERLAP_NONE = 0,
     /* First area overlaps at the start of the second area */
-    MMAP_AREA_OVERLAP_START = 1,
+    MMAP_ENTRY_OVERLAP_START = 1,
     /* First area overlaps at the end of the second area */
-    MMAP_AREA_OVERLAP_END = 2,
+    MMAP_ENTRY_OVERLAP_END = 2,
     /* First area is completely inside the second area */
-    MMAP_AREA_OVERLAP_COMPLETE = 3
-} MemAreaOverlap;
+    MMAP_ENTRY_OVERLAP_COMPLETE = 3
+} MemEntryOverlap;
 
 /* 
- * Check if area1 overlaps with area2. 
- * Note: If area2 is completely inside area1 this 
- * function will return MMAP_AREA_OVERLAP_NONE 
- * because it only checks if area1 is completely in area2.
- * @return See MemAreaOverlap enum.
+ * Check if entry1 overlaps with entry2. 
+ * Note: If entry2 is completely inside entry1 this 
+ * function will return MMAP_ENTRY_OVERLAP_NONE 
+ * because it only checks if entry1 is completely in entry2.
+ * @return See MemEntryOverlap enum.
  */
-static int mmap_area_overlap(
-    const MemoryMapArea *area1,
-    const MemoryMapArea *area2
+static int mmap_entry_overlap(
+    const MemoryMapEntry *entry1,
+    const MemoryMapEntry *entry2
 )
 {
     if(
-        area1->base <= area2->base &&
-        area1->base + area1->size < area2->base + area2->size &&
-        area1->base + area1->size > area2->base
+        entry1->base <= entry2->base &&
+        entry1->base + entry1->size < entry2->base + entry2->size &&
+        entry1->base + entry1->size > entry2->base
     )
     {
-        return MMAP_AREA_OVERLAP_START;
+        return MMAP_ENTRY_OVERLAP_START;
     }
     else if(
-        area1->base > area2->base &&
-        area1->base < area2->base + area2->size &&
-        area1->base + area1->size >= area2->base + area2->size
+        entry1->base >= entry2->base &&
+        entry1->base < entry2->base + entry2->size &&
+        entry1->base + entry1->size > entry2->base + entry2->size
     )
     {
-        return MMAP_AREA_OVERLAP_END;
+        return MMAP_ENTRY_OVERLAP_END;
     }
     else if(
-        area1->base >= area2->base &&
-        area1->base + area1->size <= area2->base + area2->size
+        entry1->base >= entry2->base &&
+        entry1->base + entry1->size <= entry2->base + entry2->size
     )
     {
-        return MMAP_AREA_OVERLAP_COMPLETE;
+        return MMAP_ENTRY_OVERLAP_COMPLETE;
     }
     else
     {
-        return MMAP_AREA_OVERLAP_NONE;
+        return MMAP_ENTRY_OVERLAP_NONE;
     }
 }
 
-static int mmap_area_rm(MemoryMapArea *area)
+static int mmap_entry_rm(MemoryMapEntry *area)
 {
-    size_t i;
-    for(i = 1; i < mmap.areas_cnt; ++i)
+    for(size_t i = 0; i < mmap.entries_cnt; ++i)
     {
-        if(&mmap.areas[i] == area)
+        if(&mmap.entries[i] == area)
         {
-            for(; i < mmap.areas_cnt - 1; ++i)
+            for(; i < mmap.entries_cnt - 1; ++i)
             {
-                mmap.areas[i] = mmap.areas[i + 1];
+                mmap.entries[i] = mmap.entries[i + 1];
             }
-            --mmap.areas_cnt;
-            mmap.areas[0].size -= sizeof(MemoryMapArea);
+            --mmap.entries_cnt;
+            mmap.entries[0].size -= sizeof(MemoryMapEntry);
             return 0;
         }
     }
@@ -100,117 +88,94 @@ static int mmap_area_rm(MemoryMapArea *area)
  * @param size How much to shrink by.
  * @return 1 if area was remove, 0 if it was only shrunk.
  */
-static int mmap_area_shrink(
-    MemoryMapArea *area, 
+static int mmap_entry_shrink(
+    MemoryMapEntry *entry, 
     uint64_t size
 )
 {
-    if(size >= area->size)
+    if(size >= entry->size)
     {
-        mmap_area_rm(area);
+        mmap_entry_rm(entry);
         return 1;
     }
 
-    area->size -= size;
+    entry->size -= size;
     return 0;
 }
 
 static int mmap_enlarge(size_t n)
 {
-    size_t enlarge_size = n * sizeof(MemoryMapArea);
-
-    MemoryMapArea mareas_area_new = *mareas_area;
-    mareas_area_new.size += enlarge_size;
-
-    /* Check if the enlarged mareas_area will overlap with other areas */
-    for(size_t i = 1; i < mmap.areas_cnt; ++i)
-    {
-        MemoryMapArea *tmp = &mmap.areas[i];
-        if(mmap_area_overlap(&mareas_area_new, tmp) != MMAP_AREA_OVERLAP_NONE)
-        {
-            if(tmp->type != MMAP_AREA_AVAILABLE)
-            {
-                /* trying to expand into reserved area */
-                kprintf(
-                    "Refusing to resize mem area: base 0x%X type %d\n",
-                    tmp->base, 
-                    tmp->type
-                );
-                abandon_ship("Illegal memory operation.\n");
-            }
-            mmap_area_shrink(tmp, enlarge_size);
-            tmp->base += enlarge_size;
-        }
-    }
-    mmap.areas_cnt += n;
-    mareas_area->size += enlarge_size;
-    return 0;
+    if(mmap.entries_cnt + n > MMAP_MAX_ENTRIES_CNT)
+        kprintf("Exceeded MMAP_MAX_ENTRIES_CNT when enlarging mmap.");
+    mmap.entries_cnt += n;
+    return n;
 }
 
-typedef enum E_MemAreaOverlapHandle
+typedef enum E_MemEntryOverlapHandle
 {
-    MMAP_AREA_OVERLAP_HANDLE_OK = 0,
-    MMAP_AREA_OVERLAP_HANDLE_INVALID = 1
-} MemAreaOverlapHandle;
+    MMAP_ENTRY_OVERLAP_HANDLE_OK = 0,
+    MMAP_ENTRY_OVERLAP_HANDLE_INVALID = 1
+} MemEntryOverlapHandle;
 
 /* 
- * Tries to fix overlaping areas, modifying area1 in such a way that 
- * area2 fits. If needed area1 will be split into multiple areas.
- * Only work if area1 is of type MMAP_AREA_AVAILABLE.
- * @return See MemAreaOverlapHandle enum.
+ * Tries to fix overlaping areas, modifying entry1 in such a way that 
+ * entry2 fits. If needed entry1 will be split into multiple areas.
+ * Only work if entry1 is of type MMAP_ENTRY_AVAILABLE.
+ * @return See MemEntryOverlapHandle enum.
  */
-static int mmap_areas_handle_overlap(
-    MemoryMapArea *area1,
-    const MemoryMapArea *area2
+static int mmap_overlap_handle(
+    MemoryMapEntry *entry1,
+    const MemoryMapEntry *entry2
 )
 {
-    uint8_t overlap = mmap_area_overlap(area2, area1);
-    if(overlap == MMAP_AREA_OVERLAP_NONE)
-        return MMAP_AREA_OVERLAP_HANDLE_OK;
+    uint8_t overlap = mmap_entry_overlap(entry2, entry1);
+    if(overlap == MMAP_ENTRY_OVERLAP_NONE)
+        return MMAP_ENTRY_OVERLAP_HANDLE_OK;
     
-    if(area1->type != MMAP_AREA_AVAILABLE)
-        return MMAP_AREA_OVERLAP_HANDLE_INVALID;
+    if(entry1->type != MMAP_ENTRY_AVAILABLE)
+        return MMAP_ENTRY_OVERLAP_HANDLE_INVALID;
 
-    if(area1->type == area2->type)
+    if(entry1->type == entry2->type)
     {
         //todo merge them both into one area.
-        return MMAP_AREA_OVERLAP_HANDLE_INVALID;
+        return MMAP_ENTRY_OVERLAP_HANDLE_INVALID;
     }
 
     switch(overlap)
     {
-    case MMAP_AREA_OVERLAP_START:
-        if(mmap_area_shrink(area1, (area2->base + area2->size - area1->base)) == 0)
-            area1->base += (area2->base + area2->size - area1->base);
+    case MMAP_ENTRY_OVERLAP_START:
+        if(mmap_entry_shrink(entry1, (entry2->base + entry2->size - entry1->base)) == 0)
+            entry1->base += (entry2->base + entry2->size - entry1->base);
         break;
 
-    case MMAP_AREA_OVERLAP_END:
-        mmap_area_shrink(area1, (area2->base + area2->size - area1->base));
+    case MMAP_ENTRY_OVERLAP_END:
+        mmap_entry_shrink(entry1, (entry2->base + entry2->size - entry1->base));
         break;
 
-    case MMAP_AREA_OVERLAP_COMPLETE:
+    case MMAP_ENTRY_OVERLAP_COMPLETE:
     {
-        uint64_t init_size = area1->size;
-        area1->size = area2->base - area1->base;
+
+        uint64_t init_size = entry1->size;
+        entry1->size = entry2->base - entry1->base;
         /* first area needs to be split into two */
         mmap_enlarge(1);
-        MemoryMapArea *newarea = &mmap.areas[mmap.areas_cnt - 1];
-        newarea->type = MMAP_AREA_AVAILABLE;
-        newarea->base = area2->base + area2->size;
-        newarea->size = init_size - (area2->base + area2->size);
+        MemoryMapEntry *newarea = &mmap.entries[mmap.entries_cnt - 1];
+        newarea->type = MMAP_ENTRY_AVAILABLE;
+        newarea->base = entry2->base + entry2->size;
+        newarea->size = init_size - (entry2->base + entry2->size);
         break;
     }
     }
 
-    return MMAP_AREA_OVERLAP_HANDLE_OK;
+    return MMAP_ENTRY_OVERLAP_HANDLE_OK;
 }
 
-static int mmap_is_addr_inside_area(
+static __ATTR_ALWAYS_INLINE int mmap_is_addr_inside_entry(
     uint64_t addr,
-    const MemoryMapArea *area
+    const MemoryMapEntry *entry
 )
 {
-    return (addr > area->base && addr < area->base + area->size);
+    return (addr > entry->base && addr < entry->base + entry->size);
 }
 
 static int __is64wide(uint64_t n)
@@ -218,24 +183,45 @@ static int __is64wide(uint64_t n)
     return (n >> 31);
 }
 
-static int __log_invalid_overlap_and_die(
-    const MemoryMapArea *area1,
-    const MemoryMapArea *area2
+static int __log_fatal_overlap_and_die(
+    const MemoryMapEntry *entry1,
+    const MemoryMapEntry *entry2
 )
 {
     kprintf(
         "Refusing to fix overlap for (base 0x%X size 0x%X type %d) (base 0x%X size 0x%X type %d)\n",
-        area1->base,
-        area1->size,
-        area1->type,
-        area2->base,
-        area2->size,
-        area2->type
+        (uint32_t)entry1->base,
+        (uint32_t)entry1->size,
+        entry1->type,
+        (uint32_t)entry2->base,
+        (uint32_t)entry2->size,
+        entry2->type
     );
+
     abandon_ship("Illegal memory operation.\n");
 }
 
-void mmap_add_area(
+static void mmap_entries_overlap_handle()
+{
+    for(size_t i = 0; i < mmap.entries_cnt; ++i)
+    {
+        MemoryMapEntry *entry1 = &mmap.entries[i];
+        for(size_t k = 0; k < mmap.entries_cnt; ++k)
+        {
+            MemoryMapEntry *entry2 = &mmap.entries[k];
+            if(
+                entry1 != entry2 &&
+                mmap_overlap_handle(entry1, entry2) == MMAP_ENTRY_OVERLAP_HANDLE_INVALID &&
+                mmap_overlap_handle(entry2, entry1) == MMAP_ENTRY_OVERLAP_HANDLE_INVALID
+            )
+            {
+                __log_fatal_overlap_and_die(entry1, entry2);
+            }
+        }
+    }
+}
+
+void mmap_entry_add(
     uint64_t base,
     uint64_t size,
     uint32_t type
@@ -244,92 +230,74 @@ void mmap_add_area(
     /* ignore 64 bit values */
     if(__is64wide(base) || __is64wide(size))
         return;
+
+    mmap_enlarge(1);
     
-    MemoryMapArea *area = &mmap.areas[mmap.areas_cnt];
-    area->base = base;
-    area->size = size;
-    area->type = type;
+    MemoryMapEntry *entry = &mmap.entries[mmap.entries_cnt - 1];
+    entry->base = base;
+    entry->size = size;
+    entry->type = type;
 
-    ++mmap.areas_cnt;
-    mareas_area->size += sizeof(MemoryMapArea);
-
-    for(size_t i = 1; i < mmap.areas_cnt; ++i)
-    {
-        MemoryMapArea *tmp = &mmap.areas[i];
-        if(
-            mmap_areas_handle_overlap(tmp, mareas_area) == MMAP_AREA_OVERLAP_HANDLE_INVALID)
-        {
-            __log_invalid_overlap_and_die(tmp, mareas_area);
-        }
-    }
-
-    for(size_t i = 1; i < mmap.areas_cnt - 1; ++i)
-    {
-        MemoryMapArea *tmp = &mmap.areas[i];
-        if(mmap_areas_handle_overlap(tmp, area) == MMAP_AREA_OVERLAP_HANDLE_INVALID)
-        {
-            __log_invalid_overlap_and_die(tmp, mareas_area);
-        }
-    }
+    mmap_entries_overlap_handle();
 }
 
-int mmap_mark_area_kreserved(
+int mmap_area_mark_kreserved(
     uint64_t base,
     uint64_t size
 )
 {
-    MemoryMapArea kreserved;
+    MemoryMapEntry kreserved;
     kreserved.base = base;
     kreserved.size = size;
-    kreserved.type = MMAP_AREA_KRESERVED;
+    kreserved.type = MMAP_ENTRY_KRESERVED;
 
-    for(size_t i = 1; i < mmap.areas_cnt; ++i)
+    for(size_t i = 0; i < mmap.entries_cnt; ++i)
     {
-        MemoryMapArea *tmp = &mmap.areas[i];
+        MemoryMapEntry *tmp = &mmap.entries[i];
         if(
-            mmap_areas_handle_overlap(tmp, &kreserved) == MMAP_AREA_OVERLAP_HANDLE_INVALID
+            mmap_overlap_handle(tmp, &kreserved) == MMAP_ENTRY_OVERLAP_HANDLE_INVALID
         )
         {
-            __log_invalid_overlap_and_die(tmp, mareas_area);
+            __log_fatal_overlap_and_die(tmp, &kreserved);
         }
     }
 
     mmap_enlarge(1);
-    mmap.areas[mmap.areas_cnt - 1] = kreserved;
+    mmap.entries[mmap.entries_cnt - 1] = kreserved;
 
     return 0;
 }
 
-void mmap_align_avail_areas(
+void mmap_entries_align(
     uint32_t bytes
 )
 {
-    for(size_t i = 1; i < mmap.areas_cnt; ++i)
+    for(size_t i = 0; i < mmap.entries_cnt; ++i)
     {
-        MemoryMapArea *tmp = &mmap.areas[i];
-        if(tmp->type == MMAP_AREA_AVAILABLE)
+        MemoryMapEntry *tmp = &mmap.entries[i];
+        if(tmp->type == MMAP_ENTRY_AVAILABLE)
         {
             uint64_t aligned_base = (tmp->base + (bytes - 1)) & ~(bytes - 1);
-            if(mmap_is_addr_inside_area(aligned_base, tmp))
+            if(mmap_is_addr_inside_entry(aligned_base, tmp))
             {
-                mmap_area_shrink(tmp, aligned_base - tmp->base);
+                mmap_entry_shrink(tmp, aligned_base - tmp->base);
                 tmp->base = aligned_base;
             }
         }
     }
 }
 
-const MemoryMap *mmap_get_full_map()
+const MemoryMap *mmap_get_mmap()
 {
     return &mmap;
 }
 
-void mmap_print_map()
+void mmap_print()
 {
     kprintf("System memory map:\n");
-    for(size_t i = 0; i < mmap.areas_cnt; ++i)
+    for(size_t i = 0; i < mmap.entries_cnt; ++i)
     {
-        const MemoryMapArea *tmp = &mmap.areas[i];
+        const MemoryMapEntry *tmp = &mmap.entries[i];
         kprintf(
             "base: 0x%X size: 0x%X type: %d\n", 
             (uint32_t)tmp->base, 

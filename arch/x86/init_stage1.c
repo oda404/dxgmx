@@ -39,7 +39,7 @@ int kinit_stage1(const BootInfo *bootinfo)
     );
 
     /* start putting mmap entries at phys address 0 and hope for the best */
-    mmap_init(0);
+    mmap_init();
 
     mboot_mbi *mbi = (mboot_mbi *)bootinfo->blinfo_base;
     mboot_mmap *mmap;
@@ -50,14 +50,19 @@ int kinit_stage1(const BootInfo *bootinfo)
         mmap = (mboot_mmap *)((uint32_t)mmap + mmap->size + sizeof(mmap->size))
     )
     {
-        mmap_add_area(mmap->base_addr, mmap->length, mmap->type);
+        mmap_entry_add(mmap->base_addr, mmap->length, mmap->type);
     }
 
     /* mark the kernel itself as kreserved */
-    mmap_mark_area_kreserved(bootinfo->kernel_base, bootinfo->kernel_end - bootinfo->kernel_base);
+    mmap_area_mark_kreserved(bootinfo->kernel_base, bootinfo->kernel_end - bootinfo->kernel_base);
+    /* 
+     * i lose a bit of available physical memory by aligning 
+     * the available areas but gain a lot of mental health
+     */
+    mmap_entries_align(pgframe_get_frame_size());
+    mmap_print();
 
     pgframe_alloc_init();
-    mmap_print_map();
 
     gdt_init();
     idt_init();

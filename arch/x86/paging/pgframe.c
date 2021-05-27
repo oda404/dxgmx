@@ -59,9 +59,9 @@ void __nonnative_set_bit(uint64_t *n, uint8_t bit)
 }
 
 /* Adds any complete PAGE_FRAME_SIZE sized frames from the given area. */
-static void pgframe_add_available(const MemoryMapArea *area)
+static void pgframe_add_available(const MemoryMapEntry *area)
 {
-    if(area->type != MMAP_AREA_AVAILABLE)
+    if(area->type != MMAP_ENTRY_AVAILABLE)
         return;
 
     for(
@@ -78,7 +78,7 @@ static void pgframe_add_available(const MemoryMapArea *area)
 
 void pgframe_alloc_init()
 {
-    mmap_sys = mmap_get_full_map();
+    mmap_sys = mmap_get_mmap();
 
     /* 
      * mark all the pages as being used initially,
@@ -89,15 +89,9 @@ void pgframe_alloc_init()
         k_pgframe_pool[i] = UINT64_MAX;
     }
 
-    /* 
-     * i lose a bit of available physical memory by aligning 
-     * the available areas but gain a lot of mental health
-     */
-    mmap_align_avail_areas(PAGE_FRAME_SIZE);
-
-    for(size_t i = 0; i < mmap_sys->areas_cnt; ++i)
+    for(size_t i = 0; i < mmap_sys->entries_cnt; ++i)
     {
-        pgframe_add_available(&mmap_sys->areas[i]);
+        pgframe_add_available(&mmap_sys->entries[i]);
     }
 
     if(pgframes_avail_cnt == 0)
