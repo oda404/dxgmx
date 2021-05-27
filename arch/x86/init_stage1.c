@@ -38,7 +38,6 @@ int kinit_stage1(const BootInfo *bootinfo)
         bootinfo->kstack_bot
     );
 
-    /* start putting mmap entries at phys address 0 and hope for the best */
     mmap_init();
 
     mboot_mbi *mbi = (mboot_mbi *)bootinfo->blinfo_base;
