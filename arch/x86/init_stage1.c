@@ -8,7 +8,7 @@
 #include<dxgmx/cpu.h>
 #include<dxgmx/kdefs.h>
 #include<dxgmx/abandon_ship.h>
-#include<dxgmx/pgframe.h>
+#include<dxgmx/paging/pgframe.h>
 #include<dxgmx/stdio.h>
 #include<stdint.h>
 

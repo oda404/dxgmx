@@ -1,5 +1,5 @@
 
-#include<dxgmx/pgframe.h>
+#include<dxgmx/paging/pgframe.h>
 #include<dxgmx/mmap.h>
 #include<dxgmx/stdio.h>
 #include<dxgmx/abandon_ship.h>
