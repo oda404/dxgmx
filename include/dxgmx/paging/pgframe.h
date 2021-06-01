@@ -7,7 +7,6 @@
 void pgframe_alloc_init();
 uint64_t pgframe_alloc();
 uint32_t pgframe_get_avail_frames_cnt();
-uint32_t pgframe_get_frame_size();
 void pgframe_free(uint64_t pgframe_base);
 
 #endif // __DXGMX_PGFRAME_H__

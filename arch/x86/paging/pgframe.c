@@ -99,11 +99,6 @@ uint32_t pgframe_get_avail_frames_cnt()
     return pgframes_avail_cnt;
 }
 
-uint32_t pgframe_get_frame_size()
-{
-    return _PG_SIZE;
-}
-
 void pgframe_free(uint64_t pgframe_base)
 {
     uint64_t pgframe_n = pgframe_base / _PG_SIZE;
