@@ -1,5 +1,6 @@
 
 #include<dxgmx/paging/pgframe.h>
+#include<dxgmx/paging/pgsize.h>
 #include<dxgmx/mmap.h>
 #include<dxgmx/stdio.h>
 #include<dxgmx/abandon_ship.h>
@@ -7,8 +8,6 @@
 #include<stdint.h>
 #include<stddef.h>
 #include<limits.h>
-
-#define PAGE_FRAME_SIZE 4096
 
 /* 
  * This whole page frame allocator is not really following
@@ -36,10 +35,10 @@ static void pgframe_add_available(const MemoryMapEntry *area)
     for(
         uint64_t frame = area->base;
         frame < area->base + area->size;
-        frame += PAGE_FRAME_SIZE
+        frame += _PG_SIZE
     )
     {
-        if(frame > PAGE_FRAME_SIZE * 1024 * 64)
+        if(frame > _PG_SIZE * 1024 * 64)
         {
             kprintf("Tried to add out of range page with base 0x%X\n", frame);
             return;
@@ -72,7 +71,7 @@ void pgframe_alloc_init()
     kprintf(
         "Using %d free, %d byte sized page frames.\n",
         pgframes_avail_cnt,
-        PAGE_FRAME_SIZE
+        _PG_SIZE
     );
 }
 
@@ -88,7 +87,7 @@ uint64_t pgframe_alloc()
             {
                 bw_set(pgframe_pool, k);
                 --pgframes_avail_cnt;
-                return i * 64 * PAGE_FRAME_SIZE + k * PAGE_FRAME_SIZE;
+                return i * 64 * _PG_SIZE + k * _PG_SIZE;
             }
         }
     }
@@ -102,12 +101,12 @@ uint32_t pgframe_get_avail_frames_cnt()
 
 uint32_t pgframe_get_frame_size()
 {
-    return PAGE_FRAME_SIZE;
+    return _PG_SIZE;
 }
 
 void pgframe_free(uint64_t pgframe_base)
 {
-    uint64_t pgframe_n = pgframe_base / PAGE_FRAME_SIZE;
+    uint64_t pgframe_n = pgframe_base / _PG_SIZE;
     uint16_t pgframe_pool_i = pgframe_n / 64;
     pgframe_n -= pgframe_pool_i * 64;
 
