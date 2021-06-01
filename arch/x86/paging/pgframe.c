@@ -40,7 +40,10 @@ static void pgframe_add_available(const MemoryMapEntry *area)
     )
     {
         if(frame > PAGE_FRAME_SIZE * 1024 * 64)
+        {
+            kprintf("Tried to add out of range page with base 0x%X\n", frame);
             return;
+        }
         pgframe_free(frame);
     }
 }
