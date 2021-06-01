@@ -20,7 +20,7 @@ int kinit_stage1(const BootInfo *bootinfo)
         abandon_ship("Not booted by a multiboot compliant bootloader\n");
 
     kprintf(
-        "Codename %s version %d.%d.%d\n", 
+        "dxgmx - %s %d.%d.%d\n", 
         __KCODENAME__,
         __KVER_MAJ__,
         __KVER_MIN__,
