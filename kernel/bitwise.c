@@ -2,6 +2,12 @@
 #include<dxgmx/bitwise.h>
 #include<dxgmx/gcc/attrs.h>
 
+__ATTR_ALWAYS_INLINE int 
+bw_is_aligned(uint64_t n, uint64_t align)
+{
+    return ((n + (align - 1) & ~(align - 1)) == n);
+}
+
 __ATTR_ALWAYS_INLINE void 
 bw_clear(uint64_t *n, uint8_t bit)
 {

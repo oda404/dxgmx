@@ -9,6 +9,8 @@
 
 #include<stdint.h>
 
+/* returns 1 if 'n' is aligned on 'align' bytes. */
+int bw_is_aligned(uint64_t n, uint64_t align);
 void bw_clear(uint64_t *n, uint8_t bit);
 void bw_set(uint64_t *n, uint8_t bit);
 /* returns > 0 if the given number uses more than 32 bits */
