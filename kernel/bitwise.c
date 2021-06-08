@@ -5,7 +5,7 @@
 __ATTR_ALWAYS_INLINE int 
 bw_is_aligned(uint64_t n, uint64_t align)
 {
-    return ((n + (align - 1) & ~(align - 1)) == n);
+    return (((n + (align - 1)) & ~(align - 1)) == n);
 }
 
 __ATTR_ALWAYS_INLINE void 
