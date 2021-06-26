@@ -35,10 +35,10 @@ static void pgframe_add_available(const MemoryMapEntry *area)
     for(
         uint64_t frame = area->base;
         frame < area->base + area->size;
-        frame += _PG_SIZE
+        frame += _PAGE_SIZE
     )
     {
-        if(frame > _PG_SIZE * 1024 * 64)
+        if(frame > _PAGE_SIZE * 1024 * 64)
         {
             kprintf("Tried to add out of range page with base 0x%X\n", frame);
             return;
@@ -71,7 +71,7 @@ void pgframe_alloc_init()
     kprintf(
         "Using %d free, %d byte sized page frames.\n",
         pgframes_avail_cnt,
-        _PG_SIZE
+        _PAGE_SIZE
     );
 }
 
@@ -87,7 +87,7 @@ uint64_t pgframe_alloc()
             {
                 bw_set(pgframe_pool, k);
                 --pgframes_avail_cnt;
-                return i * 64 * _PG_SIZE + k * _PG_SIZE;
+                return i * 64 * _PAGE_SIZE + k * _PAGE_SIZE;
             }
         }
     }
@@ -101,7 +101,7 @@ uint32_t pgframe_get_avail_frames_cnt()
 
 void pgframe_free(uint64_t pgframe_base)
 {
-    uint64_t pgframe_n = pgframe_base / _PG_SIZE;
+    uint64_t pgframe_n = pgframe_base / _PAGE_SIZE;
     uint16_t pgframe_pool_i = pgframe_n / 64;
     pgframe_n -= pgframe_pool_i * 64;
 

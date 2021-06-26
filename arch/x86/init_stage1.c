@@ -10,6 +10,7 @@
 #include<dxgmx/abandon_ship.h>
 #include<dxgmx/paging/pgframe.h>
 #include<dxgmx/paging/pgsize.h>
+#include<dxgmx/paging/pgdir.h>
 #include<dxgmx/stdio.h>
 #include<stdint.h>
 
@@ -59,7 +60,7 @@ int kinit_stage1(const BootInfo *bootinfo)
      * i lose a bit of available physical memory by aligning 
      * the available areas but gain a lot of mental health
      */
-    mmap_entries_align(_PG_SIZE);
+    mmap_entries_align(_PAGE_SIZE);
     mmap_print();
 
     pgframe_alloc_init();

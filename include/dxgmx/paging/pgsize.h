@@ -1,4 +1,4 @@
 
-#ifndef _PG_SIZE
-#define _PG_SIZE 4096
-#endif // _PG_SIZE
+#ifndef _PAGE_SIZE
+#define _PAGE_SIZE 4096
+#endif // _PAGE_SIZE

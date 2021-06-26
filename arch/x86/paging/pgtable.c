@@ -9,7 +9,7 @@ int pgtable_entry_encode(
     PageTableEntry *entry
 )
 {
-    if(((base + (_PG_SIZE - 1)) & ~(_PG_SIZE - 1)) != base)
+    if(((base + (_PAGE_SIZE - 1)) & ~(_PAGE_SIZE - 1)) != base)
         return 1;
 
     if((flags & 0b111111111) != flags)
