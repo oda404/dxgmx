@@ -21,4 +21,7 @@ __ATTR_NONNULL(1, 2);
 char *__strcpy(char *__restrict dest, const char *__restrict src)
 __ATTR_NONNULL(1, 2);
 
+void *__memset(void *__restrict s, int c, size_t n)
+__ATTR_NONNULL(1);
+
 #endif // __DXGMX_KSTRING_H__
