@@ -4,7 +4,7 @@ VER_MIN           := 7
 PATCH_N           := 15
 CODE_NAME         := angel_attack
 
-include buildconfig
+-include buildconfig
 
 DEFAULT_ARCH      := x86
 ARCH              ?= $(DEFAULT_ARCH)
