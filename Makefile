@@ -4,6 +4,8 @@ VER_MIN           := 7
 PATCH_N           := 15
 CODE_NAME         := angel_attack
 
+include buildconfig
+
 DEFAULT_ARCH      := x86
 ARCH              ?= $(DEFAULT_ARCH)
 IS_CROSS_COMP     ?= 1
@@ -26,7 +28,6 @@ DXGMX_DEPS        :=
 
 # if we are cross compiling check if CROSS_CC was exported
 ifeq ($(IS_CROSS_COMP), 1)
-	LIBC_FREESTANDING := 1
 	ifeq ($(CROSS_CC),)
 $(error Cross compiling but no CROSS_CC was exported)
 	endif

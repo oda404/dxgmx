@@ -4,3 +4,4 @@ build
 .o
 dxgmx-*
 .vscode
+buildconfig
