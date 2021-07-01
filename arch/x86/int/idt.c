@@ -36,9 +36,9 @@ _ATTR_PACKED
     uint32_t base;
 } IDTR;
 
-#ifdef __X86__
+#ifdef _X86_
 static IDTEntry_x86 idt[255];
-#endif // __X86__
+#endif // _X86_
 
 /* handy macros for irq creation */
 

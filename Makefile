@@ -1,184 +1,153 @@
 
+APPNAME           := dxgmx
+
 VER_MAJ           := 0
 VER_MIN           := 7
 PATCH_N           := 15
-CODE_NAME         := angel_attack
+CODENAME          := angel_attack
 
 -include buildconfig
 
-DEFAULT_ARCH      := x86
-ARCH              ?= $(DEFAULT_ARCH)
+# directories
+INCLUDE_DIR       := include
+BUILD_DIR         := build
+SYSROOT_DIR       := $(BUILD_DIR)/sysroot
+SCRIPTS_DIR       := scripts
+
+TARGET_TRIPLET    ?= x86-dxgmx-elf
 IS_CROSS_COMP     ?= 1
 
-HOST_CC           ?= gcc
-CROSS_CC          ?= 
-HOST_AS           ?= as
-CROSS_AS          ?= 
-HOST_LD           ?= ld
-CROSS_LD          ?= 
-HOST_AR           ?= ar
-CROSS_AR          ?= 
-
-CFLAGS            ?= 
-LDFLAGS           ?= 
-CFLAGS_DEBUG      := -g
-CFLAGS_RELEASE    := -O2
-PHONY_TARGETS     :=
-DXGMX_DEPS        := 
-
-# if we are cross compiling check if CROSS_CC was exported
-ifeq ($(IS_CROSS_COMP), 1)
-	ifeq ($(CROSS_CC),)
-$(error Cross compiling but no CROSS_CC was exported)
-	endif
-
-    CC := $(CROSS_CC)
-else
-    CC := $(HOST_CC)
-	AS := $(HOST_AS)
-	LD := $(HOST_LD)
-	AR := $(HOST_AR)
+ARCH              := $(shell $(SCRIPTS_DIR)/target-triplet-to-arch.sh $(TARGET_TRIPLET))
+ifeq ($(ARCH), undefined)
+    $(error Couldn't get arch from target triplet)
 endif
 
-export CC
-export AS
-export LD
-export AR
-
-# set misc directories
-INCLUDE_DIR    := include
-BUILD_DIR      := build
-SYSROOT_DIR    := $(BUILD_DIR)/sysroot
-SCRIPTS_DIR    := scripts
-
-export INCLUDE_DIR
-export SYSROOT_DIR
-export SCRIPTS_DIR
-export BUILD_DIR
-
-# check if the arch is supported and set SRCARCH
-SRCARCH := $(shell $(SCRIPTS_DIR)/arch-to-srcarch.sh $(ARCH))
+SRCARCH           := $(shell $(SCRIPTS_DIR)/arch-to-srcarch.sh $(ARCH))
 ifeq ($(SRCARCH), undefined)
-$(error Unsupported arch $(ARCH))
+    $(error Unsupported arch $(ARCH))
 endif
 
-# set src directories
-ARCH_DIR         := arch/$(SRCARCH)
-ARCH_INCLUDE_DIR := $(ARCH_DIR)/include
-INIT_DIR         := init
-KERNEL_DIR       := kernel
+ARCH_DIR          := arch/$(SRCARCH)
+ARCH_INCLUDE_DIR  := $(ARCH_DIR)/include
+INIT_DIR          := init
+KERNEL_DIR        := kernel
 
-export ARCH_DIR
-export INIT_DIR
+CC                ?= gcc
+LD                ?= ld
+AR                ?= ar
+AS                ?= as
 
-FULL_BIN_NAME  ?= dxgmx-$(VER_MAJ).$(VER_MIN).$(PATCH_N)
-FULL_BIN_PATH  ?= $(FULL_BIN_NAME)
-ISO_PATH       ?= $(FULL_BIN_NAME).iso
+CFLAGS            := 
+EXTRA_CFLAGS      ?= 
+LDFLAGS           := 
+EXTRA_LDFLAGS     ?= 
+DEBUG_CFLAGS      := -g
+RELEASE_CFLAGS    := -O2
+
+CFLAGS            += $(EXTRA_CFLAGS)
+LDFLAGS           += $(EXTRA_LDFLAGS)
+
+FULL_BIN_NAME     ?= dxgmx-$(VER_MAJ).$(VER_MIN).$(PATCH_N)
+FULL_BIN_PATH     ?= $(FULL_BIN_NAME)
+ISO_PATH          ?= $(FULL_BIN_PATH).iso
+
+BUILD_TARGET      ?= debug
+ifeq ($(BUILD_TARGET), debug)
+    CFLAGS += $(DEBUG_CFLAGS)
+else ifeq ($(BUILD_TARGET), release)
+    CFLAGS += $(RELEASE_CFLAGS)
+else
+    $(error Unknown BUILD_TARGET=$(BUILD_TARGET))
+endif
 
 # format the output
 OUTPUT_FORMATTED = $(SCRIPTS_DIR)/output-formatted.sh
 export OUTPUT_FORMATTED
 
-DEFS ?= 
-DEFS += \
--D__DXGMX__ \
--D__KVER_MAJ__=$(VER_MAJ) \
--D__KVER_MIN__=$(VER_MIN) \
--D__KPATCH_N__=$(PATCH_N) \
--D__KCODENAME__='"$(CODE_NAME)"' 
+MACROS            := \
+-D__dxgmx__ -D_DXGMX_ -D_DXGMX_VER_MAJ=$(VER_MAJ) \
+-D_DXGMX_VER_MIN_=$(VER_MIN) -D_DXGMX_PATCH_N_=$(PATCH_N) \
+-D_DXGMX_CODENAME_='"$(CODENAME)"' 
 
 # set SRCARCH macro
 ifeq ($(SRCARCH), x86)
-	DEFS += -D__X86__
+	MACROS += -D_X86_
 endif
 
-WARNINGS := \
--Werror-implicit-function-declaration \
+WARNINGS          := -Wall -Wextra \
+-Werror-implicit-function-declaration
 
-CFLAGS += \
--ffreestanding -Wall -Wextra \
--isystem=/usr/include --sysroot=$(SYSROOT_DIR) \
-$(DEFS) $(WARNINGS) -MD -MP
+CFLAGS            += -MD -MP -m32 \
+-ffreestanding -isystem=/usr/include \
+--sysroot=$(SYSROOT_DIR)
 
-export CFLAGS
-export DEFS
+CFLAGS            += $(WARNINGS) $(MACROS) 
 
-LDFLAGS += \
--nostdlib -lgcc \
+LDFLAGS           += -nostdlib 
 
-MAKEFLAGS  += --no-print-directory
+MAKEFLAGS         += --no-print-directory
 
-OBJS_ARCH    := 
-OBJS_INIT    := 
-OBJS_KERNEL  :=
+OBJS_ARCH         := 
+OBJS_INIT         := 
+OBJS_KERNEL       := 
 
 # set objs recursively
 include $(ARCH_DIR)/Makefile
 include $(INIT_DIR)/Makefile
 include $(KERNEL_DIR)/Makefile
 
-OBJS            := \
-$(OBJS_ARCH) $(OBJS_INIT) \
-$(OBJS_KERNEL)
+OBJS              := $(OBJS_ARCH) $(OBJS_INIT) $(OBJS_KERNEL)
+OBJS              := $(addprefix $(BUILD_DIR)/, $(OBJS))
 
-# prefix objs with the build dir path
-DEPS            := $(addprefix $(BUILD_DIR)/, $(OBJS))
-# change their extensions to .d
-DEPS            := $(patsubst %.o, %.d, $(DEPS))
+DEPS              := $(OBJS:%.o=%.d)
 
-DXGMX_DEPS += builddir sysroot kernel_headers \
-arch_headers $(addprefix $(BUILD_DIR)/, $(OBJS)) \
-Makefile 
+SYSROOT           := \
+$(SYSROOT_DIR) $(SYSROOT_DIR)/boot \
+$(SYSROOT_DIR)/usr/include/dxgmx
 
-PHONY_TARGETS += all dxgmx 
-all: dxgmx
-dxgmx: $(DXGMX_DEPS)
-	@$(OUTPUT_FORMATTED) LD $(notdir $@)
+DXGMX_DEPS        := $(SYSROOT) kernel_headers arch_headers $(OBJS) Makefile
+
+PHONY             :=
+
+PHONY += all $(FULL_BIN_PATH) 
+all: $(FULL_BIN_PATH)
+$(FULL_BIN_PATH): $(DXGMX_DEPS)
+	@$(OUTPUT_FORMATTED) LD $(notdir $(FULL_BIN_NAME))
 
 	@$(CC) -T arch/$(SRCARCH)/boot/linker.ld \
-	$(addprefix $(BUILD_DIR)/, $(OBJS)) \
-	$(LDFLAGS) -o $(FULL_BIN_PATH)
+	$(OBJS) $(LDFLAGS) -o $(FULL_BIN_PATH)
 
 	@cp $(FULL_BIN_PATH) $(SYSROOT_DIR)/boot/
 
 -include $(DEPS)
 
-# deps are stripped of the BUILD_DIR
-$(BUILD_DIR)/%.o : $(patsubst $(BUILD_DIR), ,%.c) Makefile
+$(BUILD_DIR)/%.o: %.c Makefile
 	@mkdir -p $(dir $@)
 	@$(OUTPUT_FORMATTED) CC $<
 	@$(CC) -c $< $(CFLAGS) -o $@
 
-# deps are stripped of the BUILD_DIR
-$(BUILD_DIR)/%.o : $(patsubst $(BUILD_DIR), ,%.S) Makefile
+$(BUILD_DIR)/%.o: %.S Makefile
 	@mkdir -p $(dir $@)
 	@$(OUTPUT_FORMATTED) AS $<
 	@$(CC) -c $< $(CFLAGS) -o $@
 
-PHONY_TARGETS += builddir 
-# create the build dir
-builddir:
-	@mkdir -p $(BUILD_DIR)
+PHONY += $(SYSROOT) 
+$(SYSROOT):
+	@mkdir -p $(SYSROOT)
 
-PHONY_TARGETS += sysroot 
-# create the sysroot dir
-sysroot:
-	@mkdir -p $(SYSROOT_DIR)
-	@mkdir -p $(SYSROOT_DIR)/boot
-	@mkdir -p $(SYSROOT_DIR)/usr/include/dxgmx/$(SRCARCH)
-
-PHONY_TARGETS += kernel_headers 
+PHONY += kernel_headers 
 # kernel headers 
 kernel_headers: 
 	@cp -ru $(INCLUDE_DIR)/* $(SYSROOT_DIR)/usr/include
 
-PHONY_TARGETS += arch_headers 
+PHONY += arch_headers 
 # arch specific headers
 arch_headers:
+	@mkdir -p $(SYSROOT_DIR)/usr/include/dxgmx/$(SRCARCH) 
 	@cp -ru $(ARCH_DIR)/include/* \
 	$(SYSROOT_DIR)/usr/include/dxgmx/$(SRCARCH)
 
-PHONY_TARGETS += iso 
+PHONY += iso 
 iso:
 	$(MAKE)
 	$(SCRIPTS_DIR)/iso.sh \
@@ -187,29 +156,29 @@ iso:
 	--out-iso-path $(ISO_PATH) \
 	--boot-spec multiboot
 
-PHONY_TARGETS += iso-run 
+PHONY += iso-run 
 iso-run:
 	$(MAKE) iso
 	$(SCRIPTS_DIR)/iso-run.sh \
 	--iso-path $(ISO_PATH) \
 	--arch $(ARCH)
 
-PHONY_TARGETS += run 
+PHONY += run 
 run:
 	$(MAKE)
 	$(SCRIPTS_DIR)/run.sh \
 	--kernel-path $(FULL_BIN_PATH) \
 	--arch $(ARCH)
 
-PHONY_TARGETS += clean 
+PHONY += clean 
 clean:
-	@rm -f $(addprefix $(BUILD_DIR)/, $(OBJS))
+	@rm -f $(OBJS)
 	@rm -f $(DEPS)
 
-PHONY_TARGETS += mrclean 
+PHONY += mrclean 
 mrclean:
-	$(MAKE) clean $(KILL_STDOUT)
+	$(MAKE) clean
 	@rm -f $$(ls | grep -Eo '^dxgmx-[0-9]+.[0-9]+.[0-9]+(.iso)?$$')
-	@rm -f $(BUILD_DIR)
+	@rmdir -p $$(find build -type d)
 
-.PHONY: $(PHONY_TARGETS)
+.PHONY: $(PHONY)
