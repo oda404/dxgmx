@@ -8,9 +8,8 @@
 #include<dxgmx/cpu.h>
 #include<dxgmx/kdefs.h>
 #include<dxgmx/abandon_ship.h>
-#include<dxgmx/paging/pgframe.h>
-#include<dxgmx/paging/pgsize.h>
-#include<dxgmx/paging/pgdir.h>
+#include<dxgmx/paging/frame.h>
+#include<dxgmx/paging/size.h>
 #include<dxgmx/stdio.h>
 #include<stdint.h>
 
@@ -63,7 +62,7 @@ int kinit_stage1(const BootInfo *bootinfo)
     mmap_entries_align(_PAGE_SIZE);
     mmap_print();
 
-    pgframe_alloc_init();
+    pageframe_alloc_init();
 
     gdt_init();
     idt_init();

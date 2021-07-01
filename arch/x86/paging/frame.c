@@ -1,6 +1,6 @@
 
-#include<dxgmx/paging/pgframe.h>
-#include<dxgmx/paging/pgsize.h>
+#include<dxgmx/paging/frame.h>
+#include<dxgmx/paging/size.h>
 #include<dxgmx/mmap.h>
 #include<dxgmx/stdio.h>
 #include<dxgmx/abandon_ship.h>
@@ -22,12 +22,12 @@
  * 1024 of those make a kilo page frame pool, and so on.
  */
 
-static uint64_t k_pgframe_pool[1024];
-static uint32_t pgframes_avail_cnt = 0;
+static uint64_t k_pageframe_pool[1024];
+static uint32_t pageframes_avail_cnt = 0;
 static const MemoryMap *mmap_sys;
 
 /* Adds any complete PAGE_FRAME_SIZE sized frames from the given area. */
-static void pgframe_add_available(const MemoryMapEntry *area)
+static void pageframe_add_available(const MemoryMapEntry *area)
 {
     if(area->type != MMAP_ENTRY_AVAILABLE)
         return;
@@ -43,11 +43,11 @@ static void pgframe_add_available(const MemoryMapEntry *area)
             kprintf("Tried to add out of range page with base 0x%X\n", frame);
             return;
         }
-        pgframe_free(frame);
+        pageframe_free(frame);
     }
 }
 
-void pgframe_alloc_init()
+void pageframe_alloc_init()
 {
     mmap_sys = mmap_get_mmap();
 
@@ -57,36 +57,36 @@ void pgframe_alloc_init()
      */
     for(uint16_t i = 0; i < 1024; ++i)
     {
-        k_pgframe_pool[i] = UINT64_MAX;
+        k_pageframe_pool[i] = UINT64_MAX;
     }
 
     for(size_t i = 0; i < mmap_sys->entries_cnt; ++i)
     {
-        pgframe_add_available(&mmap_sys->entries[i]);
+        pageframe_add_available(&mmap_sys->entries[i]);
     }
 
-    if(pgframes_avail_cnt == 0)
+    if(pageframes_avail_cnt == 0)
         abandon_ship("No free page frames have been registered.\n");
 
     kprintf(
         "Using %d free, %d byte sized page frames.\n",
-        pgframes_avail_cnt,
+        pageframes_avail_cnt,
         _PAGE_SIZE
     );
 }
 
 /* Returns a free page's address */
-uint64_t pgframe_alloc()
+uint64_t pageframe_alloc()
 {
     for(size_t i = 0; i < 1024; ++i)
     {
-        uint64_t *pgframe_pool = &k_pgframe_pool[i];
+        uint64_t *pageframe_pool = &k_pageframe_pool[i];
         for(uint16_t k = 0; k < 64; ++k)
         {
-            if(!(*pgframe_pool >> k & 1))
+            if(!(*pageframe_pool >> k & 1))
             {
-                bw_set(pgframe_pool, k);
-                --pgframes_avail_cnt;
+                bw_set(pageframe_pool, k);
+                --pageframes_avail_cnt;
                 return i * 64 * _PAGE_SIZE + k * _PAGE_SIZE;
             }
         }
@@ -94,20 +94,20 @@ uint64_t pgframe_alloc()
     return 0;
 }
 
-uint32_t pgframe_get_avail_frames_cnt()
+uint32_t pageframe_get_avail_frames_cnt()
 {
-    return pgframes_avail_cnt;
+    return pageframes_avail_cnt;
 }
 
-void pgframe_free(uint64_t pgframe_base)
+void pageframe_free(uint64_t pageframe_base)
 {
-    uint64_t pgframe_n = pgframe_base / _PAGE_SIZE;
-    uint16_t pgframe_pool_i = pgframe_n / 64;
-    pgframe_n -= pgframe_pool_i * 64;
+    uint64_t pageframe_n = pageframe_base / _PAGE_SIZE;
+    uint16_t pageframe_pool_i = pageframe_n / 64;
+    pageframe_n -= pageframe_pool_i * 64;
 
     bw_clear(
-        &k_pgframe_pool[pgframe_pool_i], 
-        pgframe_n
+        &k_pageframe_pool[pageframe_pool_i], 
+        pageframe_n
     );
-    ++pgframes_avail_cnt;
+    ++pageframes_avail_cnt;
 }
