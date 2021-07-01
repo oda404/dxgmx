@@ -5,7 +5,7 @@
 
 #include<dxgmx/x86/idt.h>
 #include<dxgmx/x86/pic.h>
-#include<dxgmx/gcc/attrs.h>
+#include<dxgmx/attrs.h>
 #include<stdint.h>
 
 /*
@@ -20,7 +20,7 @@
  * |31                              16|15                              0|
 */
 typedef struct
-__ATTR_PACKED
+_ATTR_PACKED
 {
     uint16_t base_0_15;
     uint16_t selector;
@@ -30,7 +30,7 @@ __ATTR_PACKED
 } IDTEntry_x86;
 
 typedef struct
-__ATTR_PACKED
+_ATTR_PACKED
 {
     uint16_t size;
     uint32_t base;

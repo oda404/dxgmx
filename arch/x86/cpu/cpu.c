@@ -1,8 +1,8 @@
 
 #include<dxgmx/cpu.h>
-#include<dxgmx/gcc/attrs.h>
+#include<dxgmx/attrs.h>
 
-__ATTR_ALWAYS_INLINE
+_ATTR_ALWAYS_INLINE
 uint32_t cpu_get_esp()
 {
     uint32_t esp;

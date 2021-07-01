@@ -20,11 +20,11 @@
 
 #ifndef __ASM__
 
-#include<dxgmx/gcc/attrs.h>
+#include<dxgmx/attrs.h>
 #include<stdint.h>
 
 typedef struct
-__ATTR_PACKED
+_ATTR_PACKED
 {
     uint32_t flags;
     uint32_t mem_lower;
@@ -52,7 +52,7 @@ __ATTR_PACKED
 #define MBOOT_MMAP_TYPE_BADRAM           5
 
 typedef struct
-__ATTR_PACKED
+_ATTR_PACKED
 {
     uint32_t size;
     uint64_t base_addr;

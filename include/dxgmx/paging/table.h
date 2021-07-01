@@ -3,7 +3,7 @@
 #define __DXGMX_PAGETABLE_H__
 
 #include<stdint.h>
-#include<dxgmx/gcc/attrs.h>
+#include<dxgmx/attrs.h>
 
 /*
  * Structure of a page table entry
@@ -43,7 +43,7 @@
 #define _PAGE_GLOBAL        (1 << 8)
 
 typedef struct
-__ATTR_PACKED S_PageTableEntry
+_ATTR_PACKED S_PageTableEntry
 {
     uint32_t base:20;
     uint8_t avail:3;

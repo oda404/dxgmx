@@ -5,7 +5,7 @@
 
 #include<dxgmx/x86/gdt.h>
 #include<stdint.h>
-#include<dxgmx/gcc/attrs.h>
+#include<dxgmx/attrs.h>
 
 /* set to 1 by the cpu if 
  * the segment is accessed,
@@ -48,7 +48,7 @@
     and it's base address in 4 bytes
 */
 typedef struct
-__ATTR_PACKED
+_ATTR_PACKED
 {
     uint16_t limit;
     uint32_t base;
@@ -67,7 +67,7 @@ __ATTR_PACKED
 */
 /* defined here as a packed struct for easier access */
 typedef struct
-__ATTR_PACKED
+_ATTR_PACKED
 {
     uint16_t limit_0_15;
     uint16_t base_0_15;

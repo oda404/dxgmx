@@ -1,14 +1,14 @@
 
 #include<dxgmx/bitwise.h>
-#include<dxgmx/gcc/attrs.h>
+#include<dxgmx/attrs.h>
 
-__ATTR_ALWAYS_INLINE int 
+_ATTR_ALWAYS_INLINE int 
 bw_is_aligned(uint64_t n, uint64_t align)
 {
     return (((n + (align - 1)) & ~(align - 1)) == n);
 }
 
-__ATTR_ALWAYS_INLINE void 
+_ATTR_ALWAYS_INLINE void 
 bw_clear(uint64_t *n, uint8_t bit)
 {
     if(bit < 32)
@@ -25,7 +25,7 @@ bw_clear(uint64_t *n, uint8_t bit)
     }
 }
 
-__ATTR_ALWAYS_INLINE void 
+_ATTR_ALWAYS_INLINE void 
 bw_set(uint64_t *n, uint8_t bit)
 {
     if(bit < 32)
@@ -42,7 +42,7 @@ bw_set(uint64_t *n, uint8_t bit)
     }
 }
 
-__ATTR_ALWAYS_INLINE int
+_ATTR_ALWAYS_INLINE int
 bw_is64_wide(uint64_t n)
 {
     return (n >> 32);

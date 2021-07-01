@@ -3,6 +3,7 @@
 #include<dxgmx/abandon_ship.h>
 #include<dxgmx/stdio.h>
 #include<dxgmx/bitwise.h>
+#include<dxgmx/attrs.h>
 #include<stddef.h>
 
 static MemoryMap mmap;
@@ -171,7 +172,7 @@ static int mmap_overlap_handle(
     return MMAP_ENTRY_OVERLAP_HANDLE_OK;
 }
 
-static __ATTR_ALWAYS_INLINE int mmap_is_addr_inside_entry(
+static _ATTR_ALWAYS_INLINE int mmap_is_addr_inside_entry(
     uint64_t addr,
     const MemoryMapEntry *entry
 )
