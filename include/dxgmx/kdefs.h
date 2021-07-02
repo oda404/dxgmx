@@ -2,17 +2,17 @@
 #ifndef __DXGMX_KCONFIG_H__
 #define __DXGMX_KCONFIG_H__
 
-#ifndef __KVER_MAJ__
-#define __KVER_MAJ__ -1
+#ifndef _DXGMX_VER_MAJ_
+#define _DXGMX_VER_MAJ_ -1
 #endif
-#ifndef __KVER_MIN__
-#define __KVER_MIN__ -1
+#ifndef _DXGMX_VER_MIN_
+#define _DXGMX_VER_MIN_ -1
 #endif
-#ifndef __KPATCH_N__
-#define __KPATCH_N__ -1
+#ifndef _DXGMX_PATCH_N_
+#define _DXGMX_PATCH_N_ -1
 #endif
-#ifndef __KCODENAME__
-#define __KCODENAME__ "undefined"
+#ifndef _DXGMX_CODENAME_
+#define _DXGMX_CODENAME_ "undefined"
 #endif
 
 #endif // __DXGMX_KCONFIG_H__

@@ -22,10 +22,10 @@ int kinit_stage1(const BootInfo *bootinfo)
 
     kprintf(
         "dxgmx - %s %d.%d.%d\n", 
-        __KCODENAME__,
-        __KVER_MAJ__,
-        __KVER_MIN__,
-        __KPATCH_N__
+        _DXGMX_CODENAME_,
+        _DXGMX_VER_MAJ_,
+        _DXGMX_VER_MIN_,
+        _DXGMX_PATCH_N_
     );
 
     kprintf(
