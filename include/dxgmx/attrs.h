@@ -47,7 +47,7 @@
 /**
  * Checks if arguments are the right types for the specified format.
 */
-#define _ATTR_FORMAT_PRINTF   __attribute__((format(printf, 2, 3)))
+#define _ATTR_FORMAT_PRINTF   __attribute__((format(printf, 1, 2)))
 
 #endif // __GNUC__
 
