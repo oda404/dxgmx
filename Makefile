@@ -65,7 +65,7 @@ OUTPUT_FORMATTED = $(SCRIPTS_DIR)/output-formatted.sh
 export OUTPUT_FORMATTED
 
 MACROS            := \
--D__dxgmx__ -D_DXGMX_ -D_DXGMX_VER_MAJ=$(VER_MAJ) \
+-D__dxgmx__ -D_DXGMX_ -D_DXGMX_VER_MAJ_=$(VER_MAJ) \
 -D_DXGMX_VER_MIN_=$(VER_MIN) -D_DXGMX_PATCH_N_=$(PATCH_N) \
 -D_DXGMX_CODENAME_='"$(CODENAME)"' 
 
