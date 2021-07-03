@@ -18,6 +18,9 @@ _ATTR_PURE _ATTR_NONNULL(1);
 char *__strcat(char *__restrict dest, const char *__restrict src)
 _ATTR_NONNULL(1, 2);
 
+char *__strncat(char *__restrict dest, const char *__restrict src, size_t n)
+_ATTR_NONNULL(1, 2);
+
 char *__strcpy(char *__restrict dest, const char *__restrict src)
 _ATTR_NONNULL(1, 2);
 
