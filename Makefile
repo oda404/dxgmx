@@ -83,7 +83,7 @@ CFLAGS            += -MD -MP -m32 \
 
 CFLAGS            += $(WARNINGS) $(MACROS) 
 
-LDFLAGS           += -nostdlib 
+LDFLAGS           += -nostdlib -lgcc
 
 MAKEFLAGS         += --no-print-directory
 
