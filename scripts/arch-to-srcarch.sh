@@ -3,7 +3,7 @@
 ARCH="$1"
 
 if [ -z "$ARCH" ]; then
-    echo "[arch-to-srcarch.sh] ARCH unset"
+    echo "undefined"
     exit 1
 fi
 
@@ -13,5 +13,6 @@ case "$ARCH" in
     ;;
     *)
         echo "undefined"
+        exit 2
     ;;
 esac
