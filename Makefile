@@ -105,7 +105,7 @@ SYSROOT           := \
 $(SYSROOT_DIR) $(SYSROOT_DIR)/boot \
 $(SYSROOT_DIR)/usr/include/dxgmx
 
-DXGMX_DEPS        := $(SYSROOT) kernel_headers arch_headers $(OBJS) Makefile
+DXGMX_DEPS        := $(SYSROOT) kernel_headers $(OBJS) Makefile
 
 PHONY             :=
 
@@ -139,13 +139,6 @@ PHONY += kernel_headers
 # kernel headers 
 kernel_headers: 
 	@cp -ru $(INCLUDE_DIR)/* $(SYSROOT_DIR)/usr/include
-
-PHONY += arch_headers 
-# arch specific headers
-arch_headers:
-	@mkdir -p $(SYSROOT_DIR)/usr/include/dxgmx/$(SRCARCH) 
-	@cp -ru $(ARCH_DIR)/include/* \
-	$(SYSROOT_DIR)/usr/include/dxgmx/$(SRCARCH)
 
 PHONY += iso 
 iso:
