@@ -10,6 +10,7 @@
 #include<stdarg.h>
 #include<stddef.h>
 #include<limits.h>
+#include<stdint.h>
 
 #define PRINTF_FSPEC  '%'
 #define PRINTF_CHAR   'c'
@@ -24,111 +25,212 @@
 #define PRINTF_HEX_L  'x'
 #define PRINTF_HEX_C  'X'
 
-#define PRINTF_WRITE_CAP INT_MAX
+#define WRITE_CAP INT_MAX
+
+enum PrintfLengthSpecifier
+{
+    PRINTF_LEN_NONE,
+    PRINTF_LEN_hh,
+    PRINTF_LEN_h,
+    PRINTF_LEN_l,
+    PRINTF_LEN_ll,
+    PRINTF_LEN_j,
+    PRINTF_LEN_z,
+    PRINTF_LEN_t,
+    PRINTF_LEN_L
+};
 
 int kprintf(const char *fmt, ...)
 {
-    va_list arg_list;
-    va_start(arg_list, fmt);
+    va_list arglist;
+    va_start(arglist, fmt);
 
     size_t written = 0;
-
-    /* 
-    this implementation makes a lot of calls
-    to tty_print, once malloc is a thing tty_print
-    should only be called once
-    */
+    uint8_t length;
 
     for(; *fmt != '\0'; ++fmt)
     {
-        if(written == PRINTF_WRITE_CAP)
-            goto end;
+        if(written >= WRITE_CAP)
+            goto die;
 
-        if(*fmt != PRINTF_FSPEC)
+        if(*fmt != '%')
         {
             tty_print(fmt, 1);
             ++written;
             continue;
         }
+        length = PRINTF_LEN_NONE;
 
-        /* met a format specifier so we go +1 to find the format */
+process_fmt:
         switch(*(fmt + 1))
         {
         case '\0':
-            tty_print("%", 1);
-            ++written;
-            goto end;
+            goto die;
 
-        case PRINTF_CHAR:
+        case 'l':  /* l length specifier */
+            if(length == PRINTF_LEN_l)
+            {
+                ++fmt;
+                length = PRINTF_LEN_ll;
+                goto process_fmt;
+            }
+            else if(length != PRINTF_LEN_NONE)
+            {
+                continue;
+            }
+            ++fmt;
+            length = PRINTF_LEN_l;
+            goto process_fmt;
+        
+        case 'h':  /* h length specifier */
+            if(length == PRINTF_LEN_h)
+            {
+                ++fmt;
+                length = PRINTF_LEN_hh;
+                goto process_fmt;
+            }
+            else if(length != PRINTF_LEN_NONE)
+            {
+                continue;
+            }
+            ++fmt;
+            length = PRINTF_LEN_h;
+            goto process_fmt;
+
+        case 'j':  /* j length specifier */
+            if(length != PRINTF_LEN_NONE)
+                continue;
+            ++fmt;
+            length = PRINTF_LEN_j;
+            goto process_fmt;
+
+        case 'z':  /* z length specifier */
+            if(length != PRINTF_LEN_NONE)
+                continue;
+            ++fmt;
+            length = PRINTF_LEN_z;
+            goto process_fmt;
+
+        case 't':  /* t length specifier */
+            if(length != PRINTF_LEN_NONE)
+                continue;
+            ++fmt;
+            length = PRINTF_LEN_t;
+            goto process_fmt;
+        
+        case 'L': /* L length specifier */
+            if(length != PRINTF_LEN_NONE)
+                continue;
+            ++fmt;
+            length = PRINTF_LEN_L;
+            goto process_fmt;
+
+        /* int %i %d */
+        case 'i':
+        case 'd':
         {
-            char val = va_arg(arg_list, int);
+            char buf[21] = { 0 };
+            switch(length)
+            {
+            case PRINTF_LEN_l:
+            {
+                long val = va_arg(arglist, long);
+                __ltoa(val, buf, 10);
+                break;
+            }
+            case PRINTF_LEN_ll:
+            {
+                long long val = va_arg(arglist, long long);
+                __lltoa(val, buf, 10);
+                break;
+            }
+            default:
+            {
+                int val = va_arg(arglist, int);
+                __itoa(val, buf, 10);
+                break;
+            }
+            }
+
+            size_t len = __strlen(buf);
+            if(written + len > WRITE_CAP)
+                goto die;
+                
+            written += len;
+            ++fmt;
+            
+            tty_print(buf, len);
+            break;
+        }
+
+        /* hexadecimal %x %X */
+        case 'x':
+        case 'X':
+        {
+            char buf[21] = { 0 };
+            switch(length)
+            {
+            case PRINTF_LEN_l:
+            {
+                unsigned long val = va_arg(arglist, unsigned long);
+                __ultoa(val, buf, 16);
+                break;
+            }
+            case PRINTF_LEN_ll:
+            {
+                unsigned long long val = va_arg(arglist, unsigned long long);
+                __ulltoa(val, buf, 16);
+                break;
+            }
+            default:
+            {
+                unsigned val = va_arg(arglist, unsigned);
+                __utoa(val, buf, 16);
+                break;
+            }
+            }
+
+            size_t len = __strlen(buf);
+            if(written + len > WRITE_CAP)
+                goto die;
+            
+            written += len;
+            ++fmt;
+
+            tty_print(buf, len);
+            break;
+        }
+
+        /* string %s */
+        case 's':
+        {
+            char *val = va_arg(arglist, char*);
+            size_t len = __strlen(val);
+            if(written + len > WRITE_CAP)
+                goto die;
+            written += len;
+            ++fmt;
+
+            tty_print(val, len);
+            break;
+        }
+
+        /* char %c */
+        case 'c':
+        {
+            char val = va_arg(arglist, int);
+            ++written;
+            ++fmt;
+
             tty_print(&val, 1);
             break;
         }
-
-        case PRINTF_INT_1:
-        case PRINTF_INT_2:
-        {
-            int val = va_arg(arg_list, int);
-
-            char buff[12] = { 0 };
-            __itoa(val, buff, 10);
-
-            size_t bufflen = __strlen(buff);
-
-            if(written + bufflen > PRINTF_WRITE_CAP)
-                goto end;
-
-            tty_print(buff, bufflen);
-            written += bufflen;
-            break;
+        
         }
 
-        case PRINTF_HEX_L: // TODO: actual lower case
-        case PRINTF_HEX_C:
-        {
-            unsigned long val = va_arg(arg_list, unsigned long);
-
-            char buff[21] = { 0 };
-            __ultoa(val, buff, 16);
-
-            size_t bufflen = __strlen(buff);
-
-            if(written + bufflen > PRINTF_WRITE_CAP)
-                goto end;
-
-            tty_print(buff, bufflen);
-            written += bufflen;
-            break;
-        }
-
-        case PRINTF_STR:
-        {
-            char *val = va_arg(arg_list, char*);
-            size_t len = __strlen(val);
-
-            if(written + len > PRINTF_WRITE_CAP)
-                goto end;
-            
-            tty_print(val, len);
-            written += len;
-            break;
-        }
-
-        default:
-            /* 
-            did not match any formats, might still
-            be flags, width, precision or length 
-            but idc about that yet
-            */
-            tty_print("%", 1);
-            ++written;
-            break;
-        }
-        ++fmt;
     }
 
-end:
-    va_end(arg_list);
+die:
+    va_end(arglist);
     return written;
 }

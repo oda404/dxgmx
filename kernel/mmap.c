@@ -186,7 +186,7 @@ static int __log_fatal_overlap_and_die(
 )
 {
     kprintf(
-        "Refusing to fix overlap for (base 0x%X size 0x%X type %d) (base 0x%X size 0x%X type %d)\n",
+        "Refusing to fix overlap for (base 0x%lX size 0x%lX type %ld) (base 0x%lX size 0x%lX type %ld)\n",
         (uint32_t)entry1->base,
         (uint32_t)entry1->size,
         entry1->type,
@@ -296,7 +296,7 @@ void mmap_print()
     {
         const MemoryMapEntry *tmp = &mmap.entries[i];
         kprintf(
-            "base: 0x%X size: 0x%X type: %d\n", 
+            "base: 0x%lX size: 0x%lX type: %ld\n", 
             (uint32_t)tmp->base, 
             (uint32_t)tmp->size, 
             tmp->type

@@ -29,12 +29,12 @@ int kinit_stage1(const BootInfo *bootinfo)
     );
 
     kprintf(
-        "Kernel base: 0x%X, size: 0x%X\n",
+        "Kernel base: 0x%lX, size: 0x%lX\n",
         bootinfo->kernel_base,
         bootinfo->kernel_end - bootinfo->kernel_base
     );
     kprintf(
-        "Kernel stack top: 0x%X, bottom: 0x%X\n",
+        "Kernel stack top: 0x%lX, bottom: 0x%lX\n",
         bootinfo->kstack_top,
         bootinfo->kstack_bot
     );

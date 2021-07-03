@@ -40,7 +40,7 @@ static void pageframe_add_available(const MemoryMapEntry *area)
     {
         if(frame > _PAGE_SIZE * 1024 * 64)
         {
-            kprintf("Tried to add out of range page with base 0x%X\n", frame);
+            kprintf("Tried to add out of range page with base 0x%llX\n", frame);
             return;
         }
         pageframe_free(frame);
@@ -69,7 +69,7 @@ void pageframe_alloc_init()
         abandon_ship("No free page frames have been registered.\n");
 
     kprintf(
-        "Using %d free, %d byte sized page frames.\n",
+        "Using %ld free, %d byte sized page frames.\n",
         pageframes_avail_cnt,
         _PAGE_SIZE
     );
