@@ -1,6 +1,5 @@
 
 OBJS_KERNEL += \
-kernel/stdlib/abort.o \
 kernel/stdlib/abs.o \
 kernel/stdlib/labs.o \
 kernel/stdlib/llabs.o \

@@ -43,7 +43,4 @@ _ATTR_NONNULL(2);
 char *__ulltoa(unsigned long long n, char *__restrict str, int base)
 _ATTR_NONNULL(2);
 
-void kabort(void)
-_ATTR_NORETURN;
-
 #endif //__DXGMX_KSTDLIB_H__
