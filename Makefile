@@ -105,12 +105,16 @@ SYSROOT           := \
 $(SYSROOT_DIR) $(SYSROOT_DIR)/boot \
 $(SYSROOT_DIR)/usr/include/dxgmx
 
-DXGMX_DEPS        := $(SYSROOT) kernel_headers $(OBJS) Makefile
+SYSROOT_HEADERS   := $(shell find include -name "*.h" -type f)
+SYSROOT_HEADERS   := $(addprefix $(SYSROOT_DIR)/usr/, $(SYSROOT_HEADERS))
+
+DXGMX_DEPS        := $(SYSROOT) $(SYSROOT_HEADERS) $(OBJS) Makefile
 
 PHONY             :=
 
-PHONY += all $(FULL_BIN_PATH) 
+PHONY += all
 all: $(FULL_BIN_PATH)
+
 $(FULL_BIN_PATH): $(DXGMX_DEPS)
 	@$(OUTPUT_FORMATTED) LD $(notdir $(FULL_BIN_NAME))
 
@@ -131,9 +135,12 @@ $(BUILD_DIR)/%.o: %.S Makefile
 	@$(OUTPUT_FORMATTED) AS $<
 	@$(CC) -c $< $(CFLAGS) -o $@
 
-PHONY += $(SYSROOT) 
 $(SYSROOT):
 	@mkdir -p $(SYSROOT)
+
+$(SYSROOT_DIR)/usr/%.h: %.h
+	@mkdir $(dir $@) 2> /dev/null || true
+	@cp -ru $< $@
 
 PHONY += kernel_headers 
 # kernel headers 
