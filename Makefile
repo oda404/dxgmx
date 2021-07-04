@@ -22,7 +22,7 @@ ifeq ($(ARCH), undefined)
     $(error Couldn't get arch from target triplet)
 endif
 
-SRCARCH           := $(shell $(SCRIPTS_DIR)/arch-to-srcarch.sh $(ARCH))
+SRCARCH           := $(shell $(SCRIPTS_DIR)/arch.sh --to-srcarch $(ARCH))
 ifeq ($(SRCARCH), undefined)
     $(error Unsupported arch $(ARCH))
 endif
