@@ -179,6 +179,7 @@ PHONY += mrclean
 mrclean:
 	$(MAKE) clean
 	@rm -f $$(ls | grep -Eo '^dxgmx-[0-9]+.[0-9]+.[0-9]+(.iso)?$$')
-	@rmdir -p $$(find build -type d)
+	@rm -rf $(SYSROOT_DIR)
+	@rmdir -p $(shell find $(BUILD_DIR) -type d 2> /dev/null) 2> /dev/null || true
 
 .PHONY: $(PHONY)
