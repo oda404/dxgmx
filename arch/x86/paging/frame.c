@@ -2,7 +2,7 @@
 #include<dxgmx/paging/frame.h>
 #include<dxgmx/paging/size.h>
 #include<dxgmx/mmap.h>
-#include<dxgmx/stdio.h>
+#include<dxgmx/kprintf.h>
 #include<dxgmx/abandon_ship.h>
 #include<dxgmx/bitwise.h>
 #include<stdint.h>

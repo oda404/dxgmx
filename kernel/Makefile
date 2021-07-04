@@ -3,6 +3,7 @@ OBJS_KERNEL += \
 kernel/abandon_ship.o \
 kernel/mmap.o \
 kernel/bitwise.o \
+kernel/kprintf.o \
 
 include $(KERNEL_DIR)/ctype/Makefile
 include $(KERNEL_DIR)/errno/Makefile

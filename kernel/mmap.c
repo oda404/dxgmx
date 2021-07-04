@@ -1,7 +1,7 @@
 
 #include<dxgmx/mmap.h>
 #include<dxgmx/abandon_ship.h>
-#include<dxgmx/stdio.h>
+#include<dxgmx/kprintf.h>
 #include<dxgmx/bitwise.h>
 #include<dxgmx/attrs.h>
 #include<stddef.h>

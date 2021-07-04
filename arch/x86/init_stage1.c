@@ -10,7 +10,7 @@
 #include<dxgmx/abandon_ship.h>
 #include<dxgmx/paging/frame.h>
 #include<dxgmx/paging/size.h>
-#include<dxgmx/stdio.h>
+#include<dxgmx/kprintf.h>
 #include<stdint.h>
 
 int kinit_stage1(const BootInfo *bootinfo)

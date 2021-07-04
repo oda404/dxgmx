@@ -1,31 +1,12 @@
-/*
-    Copyright Alexandru Olaru.
-    Distributed under the MIT license.
-*/
 
-#include<dxgmx/stdio.h>
+#include<dxgmx/kprintf.h>
+#include<dxgmx/stdlib.h>
 #include<dxgmx/string.h>
 #include<dxgmx/video/tty.h>
-#include<dxgmx/stdlib.h>
-#include<stdarg.h>
+#include<stdint.h>
 #include<stddef.h>
 #include<limits.h>
-#include<stdint.h>
-
-#define PRINTF_FSPEC  '%'
-#define PRINTF_CHAR   'c'
-#define PRINTF_INT_1  'd'
-#define PRINTF_INT_2  'i'
-#define PRINTF_FLOAT  'f'
-#define PRINTF_STR    's'
-#define PRINTF_PTR    'p'
-#define PRINTF_NONE   'n'
-#define PRINTF_OCT    'o'
-#define PRINTF_UINT   'u'
-#define PRINTF_HEX_L  'x'
-#define PRINTF_HEX_C  'X'
-
-#define WRITE_CAP INT_MAX
+#include<stdarg.h>
 
 enum PrintfLengthSpecifier
 {
@@ -40,18 +21,26 @@ enum PrintfLengthSpecifier
     PRINTF_LEN_L
 };
 
+#define WRITE_CAP INT_MAX
+
 int kprintf(const char *fmt, ...)
 {
     va_list arglist;
     va_start(arglist, fmt);
+    size_t written = vkprintf(fmt, arglist);
+    va_end(arglist);
+    return written;
+}
 
+int vkprintf(const char *fmt, va_list arglist)
+{
     size_t written = 0;
     uint8_t length;
 
     for(; *fmt != '\0'; ++fmt)
     {
         if(written >= WRITE_CAP)
-            goto die;
+            return written;
 
         if(*fmt != '%')
         {
@@ -65,7 +54,7 @@ process_fmt:
         switch(*(fmt + 1))
         {
         case '\0':
-            goto die;
+            return written;
 
         case 'l':  /* l length specifier */
             if(length == PRINTF_LEN_l)
@@ -154,7 +143,7 @@ process_fmt:
 
             size_t len = __strlen(buf);
             if(written + len > WRITE_CAP)
-                goto die;
+                return written;
                 
             written += len;
             ++fmt;
@@ -192,7 +181,7 @@ process_fmt:
 
             size_t len = __strlen(buf);
             if(written + len > WRITE_CAP)
-                goto die;
+                return written;
             
             written += len;
             ++fmt;
@@ -207,7 +196,7 @@ process_fmt:
             char *val = va_arg(arglist, char*);
             size_t len = __strlen(val);
             if(written + len > WRITE_CAP)
-                goto die;
+                return written;
             written += len;
             ++fmt;
 
@@ -230,7 +219,5 @@ process_fmt:
 
     }
 
-die:
-    va_end(arglist);
     return written;
 }

@@ -4,7 +4,7 @@
 */
 
 #include<dxgmx/x86/pic.h>
-#include<dxgmx/stdio.h>
+#include<dxgmx/kprintf.h>
 #include<dxgmx/x86/portio.h>
 
 /* PIT */
