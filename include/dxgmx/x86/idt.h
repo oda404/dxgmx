@@ -3,9 +3,9 @@
     Distributed under the MIT license.
 */
 
-#ifndef __DXGMX_IDT_H__
-#define __DXGMX_IDT_H__
+#ifndef _DXGMX_X86_IDT_H
+#define _DXGMX_X86_IDT_H
 
 void idt_init();
 
-#endif // __DXGMX_IDT_H__
+#endif // _DXGMX_X86_IDT_H

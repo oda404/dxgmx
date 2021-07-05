@@ -3,8 +3,8 @@
     Distributed under the MIT license.
 */
 
-#ifndef __DXGMX_X86_PORTIO_H__
-#define __DXGMX_X86_PORTIO_H__
+#ifndef _DXGMX_X86_PORTIO_H
+#define _DXGMX_X86_PORTIO_H
 
 #include<dxgmx/attrs.h>
 #include<stdint.h>
@@ -23,4 +23,4 @@ uint8_t port_inb(uint16_t port)
     return ret;
 }
 
-#endif // __DXGMX_X86_PORTIO_H__
+#endif // _DXGMX_X86_PORTIO_H

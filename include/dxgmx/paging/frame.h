@@ -1,6 +1,6 @@
 
-#ifndef __DXGMX_pageframe_H__
-#define __DXGMX_pageframe_H__
+#ifndef _DXGMX_PAGING_FRAME_H
+#define _DXGMX_PAGING_FRAME_H
 
 #include<stdint.h>
 
@@ -9,4 +9,4 @@ uint64_t pageframe_alloc();
 uint32_t pageframe_get_avail_frames_cnt();
 void pageframe_free(uint64_t pageframe_base);
 
-#endif // __DXGMX_pageframe_H__
+#endif // _DXGMX_PAGING_FRAME_H

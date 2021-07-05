@@ -1,6 +1,6 @@
 
-#ifndef __DXGMX_BITWISE_H__
-#define __DXGMX_BITWISE_H__
+#ifndef _DXGMX_BITWISE_H
+#define _DXGMX_BITWISE_H
 
 /* 
  * Different bitwise utilities that are mostly used 
@@ -16,4 +16,4 @@ void bw_set(uint64_t *n, uint8_t bit);
 /* returns > 0 if the given number uses more than 32 bits */
 int  bw_is64_wide(uint64_t n);
 
-#endif // __DXGMX_BITWISE_H__
+#endif // _DXGMX_BITWISE_H

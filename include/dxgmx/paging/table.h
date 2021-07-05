@@ -1,6 +1,6 @@
 
-#ifndef __DXGMX_PAGETABLE_H__
-#define __DXGMX_PAGETABLE_H__
+#ifndef _DXGMX_PAGING_TABLE_H
+#define _DXGMX_PAGING_TABLE_H
 
 #include<stdint.h>
 #include<dxgmx/attrs.h>
@@ -62,4 +62,4 @@ int pagetable_entry_encode(
     PageTableEntry *entry
 );
 
-#endif // __DXGMX_PAGETABLE_H__
+#endif // _DXGMX_PAGING_TABLE_H

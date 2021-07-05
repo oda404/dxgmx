@@ -1,9 +1,9 @@
 
-#ifndef __DXGMX_CPU_H__
-#define __DXGMX_CPU_H__
+#ifndef _DXGMX_CPU_H
+#define _DXGMX_CPU_H
 
 #include<stdint.h>
 
 uint32_t cpu_get_esp();
 
-#endif // __DXGMX_CPU_H__
+#endif // _DXGMX_CPU_H

@@ -3,8 +3,8 @@
     Distributed under the MIT license.
 */
 
-#ifndef __DXGMX_MBOOT_H__
-#define __DXGMX_MBOOT_H__
+#ifndef _DXGMX_X86_MBOOT_H
+#define _DXGMX_X86_MBOOT_H
 
 #define MBOOT_HEADER_ALIGN      4
 #define MBOOT_HEADER_MAGIC      0x1BADB002
@@ -62,4 +62,4 @@ _ATTR_PACKED
 
 #endif // __ASM__
 
-#endif // __DXGMX_MBOOT_H__
+#endif // _DXGMX_X86_MBOOT_H

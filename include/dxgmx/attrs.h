@@ -3,8 +3,8 @@
     Distributed under the MIT license.
 */
 
-#ifndef __DXGMX_GCC_ATTRS_H__
-#define __DXGMX_GCC_ATTRS_H__
+#ifndef _DXGMX_ATTRS_H
+#define _DXGMX_ATTRS_H
 
 #ifdef __GNUC__
 
@@ -61,4 +61,4 @@ __attribute__((format(printf, fmt, args)))
 
 #endif // __GNUC__
 
-#endif // __DXGMX_GCC_ATTRS_H__
+#endif // _DXGMX_ATTRS_H

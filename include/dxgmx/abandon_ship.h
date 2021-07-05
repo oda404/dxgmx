@@ -3,8 +3,8 @@
     Distributed under the MIT license.
 */
 
-#ifndef __DXGMX_ABANDON_SHIP_H__
-#define __DXGMX_ABANDON_SHIP_H__
+#ifndef _DXGMX_ABANDON_SHIP_H
+#define _DXGMX_ABANDON_SHIP_H
 
 #include<dxgmx/attrs.h>
 
@@ -12,4 +12,4 @@
 void abandon_ship(const char *lastwords)
 _ATTR_NORETURN;
 
-#endif // __DXGMX_ABANDON_SHIP_H__
+#endif // _DXGMX_ABANDON_SHIP_H

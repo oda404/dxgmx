@@ -3,8 +3,8 @@
     Distributed under the MIT license.
 */
 
-#ifndef __DXGMX_KSTRING_H__
-#define __DXGMX_KSTRING_H__
+#ifndef _DXGMX_STRING_H
+#define _DXGMX_STRING_H
 
 #include<stddef.h>
 #include<dxgmx/attrs.h>
@@ -27,4 +27,4 @@ _ATTR_NONNULL(1, 2);
 void *__memset(void *__restrict s, int c, size_t n)
 _ATTR_NONNULL(1);
 
-#endif // __DXGMX_KSTRING_H__
+#endif // _DXGMX_STRING_H

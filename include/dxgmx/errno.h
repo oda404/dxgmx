@@ -3,8 +3,8 @@
     Distributed under the MIT license.
 */
 
-#ifndef __DXGMX_KERRNO_H__
-#define __DXGMX_KERRNO_H__
+#ifndef _DXGMX_ERRNO_H
+#define _DXGMX_KCONFIG_H
 
 #define ERANGE 1
 #define EINVAL 2
@@ -16,4 +16,4 @@ int *__get_errno_addr();
 */
 #define errno (*__get_errno_addr())
 
-#endif // __DXGMX_KERRNO_H__
+#endif // _DXGMX_KCONFIG_H

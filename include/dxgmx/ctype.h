@@ -3,8 +3,8 @@
     Distributed under the MIT license.
 */
 
-#ifndef __DXGMX_KCTYPE_H__
-#define __DXGMX_KCTYPE_H__
+#ifndef _DXGMX_CTYPE_H
+#define _DXGMX_CTYPE_H
 
 #include<dxgmx/attrs.h>
 
@@ -14,4 +14,4 @@ _ATTR_CONST;
 int __isspace(int c)
 _ATTR_CONST;
 
-#endif // __DXGMX_KCTYPE_H__
+#endif // _DXGMX_CTYPE_H

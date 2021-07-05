@@ -3,8 +3,8 @@
     Distributed under the MIT license.
 */
 
-#ifndef __DXGMX_PIC_H__
-#define __DXGMX_PIC_H__
+#ifndef _DXGMX_X86_PIC8259_H
+#define _DXGMX_X86_PIC8259_H
 
 #include<stdint.h>
 
@@ -52,4 +52,4 @@ void pic8259_disable(uint8_t pic);
  */
 uint8_t pic8259_get_pics_count();
 
-#endif // __DXGMX_PIC_H__
+#endif // _DXGMX_X86_PIC8259_H

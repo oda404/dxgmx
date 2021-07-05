@@ -4,11 +4,10 @@
 */
 
 
-#ifndef __VGA_TEXT_H__
-#define __VGA_TEXT_H__
+#ifndef _DXGMX_VIDEO_VGA_TEXT_H
+#define _DXGMX_VIDEO_VGA_TEXT_H
 
 #include<stdint.h>
-#include<stdbool.h>
 #include<stddef.h>
 
 #define VGA_ERR_INVALID_WIDTH  1
@@ -45,4 +44,4 @@ int vga_clear_row(uint8_t row);
 int vga_put_char(char c, uint8_t fg, uint8_t bg, uint8_t row, uint8_t col);
 int vga_clear_char(uint8_t row, uint8_t col);
 
-#endif // __VGA_TEXT_H__
+#endif // _DXGMX_VIDEO_VGA_TEXT_H

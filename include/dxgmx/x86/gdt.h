@@ -3,9 +3,9 @@
     Distributed under the MIT license.
 */
 
-#ifndef __DXGMX_GDT_H__
-#define __DXGMX_GDT_H__
+#ifndef _DXGMX_X86_GDT_H
+#define _DXGMX_X86_GDT_H
 
 void gdt_init();
 
-#endif // __DXGMX_GDT_H__
+#endif // _DXGMX_X86_GDT_H

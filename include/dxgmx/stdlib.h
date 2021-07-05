@@ -3,8 +3,8 @@
     Distributed under the MIT license.
 */
 
-#ifndef __DXGMX_KSTDLIB_H__
-#define __DXGMX_KSTDLIB_H__
+#ifndef _DXGMX_STDLIB_H
+#define _DXGMX_STDLIB_H
 
 #include<dxgmx/attrs.h>
 #include<stddef.h>
@@ -43,4 +43,4 @@ _ATTR_NONNULL(2);
 char *__ulltoa(unsigned long long n, char *__restrict str, int base)
 _ATTR_NONNULL(2);
 
-#endif //__DXGMX_KSTDLIB_H__
+#endif //_DXGMX_STDLIB_H
