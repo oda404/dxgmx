@@ -1,5 +1,4 @@
 
-#include<dxgmx/stdio.h>
 
 int kinit_stage2()
 {

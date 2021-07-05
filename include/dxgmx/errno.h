@@ -9,11 +9,11 @@
 #define ERANGE 1
 #define EINVAL 2
 
-int *__get_errno_addr();
+int *_get_errno_addr();
 /* 
  * errno is the one thing that is not prefixed with k
  * because of later libc usage
 */
-#define errno (*__get_errno_addr())
+#define errno (*_get_errno_addr())
 
 #endif // _DXGMX_KCONFIG_H

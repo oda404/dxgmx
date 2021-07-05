@@ -5,7 +5,7 @@
 
 #include<dxgmx/ctype.h>
 
-int __isspace(int c)
+int isspace(int c)
 {
     return 
     c ==  ' ' || 

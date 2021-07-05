@@ -1,7 +1,7 @@
 
 #include<dxgmx/stdlib.h>
 
-char *__utoa(unsigned n, char *str, int base)
+char *utoa(unsigned n, char *str, int base)
 {
-    return __ultoa(n, str, base);
+    return ultoa(n, str, base);
 }

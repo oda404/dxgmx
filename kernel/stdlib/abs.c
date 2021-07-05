@@ -5,7 +5,7 @@
 
 #include<dxgmx/stdlib.h>
 
-int __abs(int n)
+int abs(int n)
 {
-    return __labs(n);
+    return labs(n);
 }

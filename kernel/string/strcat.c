@@ -5,7 +5,7 @@
 
 #include<dxgmx/string.h>
 
-char *__strcat(char *__restrict dest, const char *__restrict src)
+char *strcat(char *dest, const char *src)
 {
-    return __strncat(dest, src, __strlen(src));
+    return strncat(dest, src, strlen(src));
 }

@@ -1,7 +1,6 @@
 
 #include<dxgmx/paging/table.h>
 #include<dxgmx/paging/size.h>
-#include<dxgmx/stdio.h>
 
 int pgtable_entry_encode(
     uint32_t base,

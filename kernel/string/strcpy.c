@@ -5,10 +5,10 @@
 
 #include<dxgmx/string.h>
 
-char *__strcpy(char *__restrict dest, const char *__restrict src)
+char *strcpy(char *dest, const char *src)
 {
     size_t i = 0;
-    for(; i < __strlen(src); ++i)
+    for(; i < strlen(src); ++i)
     {
         dest[i] = src[i];
     }

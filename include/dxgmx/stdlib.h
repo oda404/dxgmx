@@ -14,33 +14,33 @@ void kfree(void *ptr);
 void *kmalloc(size_t size)
 _ATTR_MALLOC(free) _ATTR_ALLOC_SIZE(1);
 
-long int __strtol(const char *__restrict str, char **__restrict endptr, int base);
+long int strtol(const char *__restrict str, char **__restrict endptr, int base);
 
-int __abs(int n)
+int abs(int n)
 _ATTR_CONST;
 
-long int __labs(long int n)
+long int labs(long int n)
 _ATTR_CONST;
 
-long long int __llabs(long long int n)
+long long int llabs(long long int n)
 _ATTR_CONST;
 
-char *__itoa(int n, char *__restrict str, int base)
+char *itoa(int n, char *__restrict str, int base)
 _ATTR_NONNULL(2);
 
-char *__ltoa(long n, char *__restrict str, int base)
+char *ltoa(long n, char *__restrict str, int base)
 _ATTR_NONNULL(2);
 
-char *__lltoa(long long n, char *__restrict str, int base)
+char *lltoa(long long n, char *__restrict str, int base)
 _ATTR_NONNULL(2);
 
-char *__utoa(unsigned n, char *__restrict str, int base)
+char *utoa(unsigned n, char *__restrict str, int base)
 _ATTR_NONNULL(2);
 
-char *__ultoa(unsigned long n, char *__restrict str, int base)
+char *ultoa(unsigned long n, char *__restrict str, int base)
 _ATTR_NONNULL(2);
 
-char *__ulltoa(unsigned long long n, char *__restrict str, int base)
+char *ulltoa(unsigned long long n, char *__restrict str, int base)
 _ATTR_NONNULL(2);
 
 #endif //_DXGMX_STDLIB_H

@@ -124,24 +124,24 @@ process_fmt:
             case PRINTF_LEN_l:
             {
                 long val = va_arg(arglist, long);
-                __ltoa(val, buf, 10);
+                ltoa(val, buf, 10);
                 break;
             }
             case PRINTF_LEN_ll:
             {
                 long long val = va_arg(arglist, long long);
-                __lltoa(val, buf, 10);
+                lltoa(val, buf, 10);
                 break;
             }
             default:
             {
                 int val = va_arg(arglist, int);
-                __itoa(val, buf, 10);
+                itoa(val, buf, 10);
                 break;
             }
             }
 
-            size_t len = __strlen(buf);
+            size_t len = strlen(buf);
             if(written + len > WRITE_CAP)
                 return written;
                 
@@ -162,24 +162,24 @@ process_fmt:
             case PRINTF_LEN_l:
             {
                 unsigned long val = va_arg(arglist, unsigned long);
-                __ultoa(val, buf, 16);
+                ultoa(val, buf, 16);
                 break;
             }
             case PRINTF_LEN_ll:
             {
                 unsigned long long val = va_arg(arglist, unsigned long long);
-                __ulltoa(val, buf, 16);
+                ulltoa(val, buf, 16);
                 break;
             }
             default:
             {
                 unsigned val = va_arg(arglist, unsigned);
-                __utoa(val, buf, 16);
+                utoa(val, buf, 16);
                 break;
             }
             }
 
-            size_t len = __strlen(buf);
+            size_t len = strlen(buf);
             if(written + len > WRITE_CAP)
                 return written;
             
@@ -194,7 +194,7 @@ process_fmt:
         case 's':
         {
             char *val = va_arg(arglist, char*);
-            size_t len = __strlen(val);
+            size_t len = strlen(val);
             if(written + len > WRITE_CAP)
                 return written;
             written += len;

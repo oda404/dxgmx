@@ -1,7 +1,7 @@
 
 #include<dxgmx/stdlib.h>
 
-char *__lltoa(long long n, char *str, int base)
+char *lltoa(long long n, char *str, int base)
 {
     if(!n)
     {
@@ -14,7 +14,7 @@ char *__lltoa(long long n, char *str, int base)
     if(n < 0)
     {
         str[0] = '-';
-        n = __llabs(n);
+        n = llabs(n);
         ++revstart;
     }
 

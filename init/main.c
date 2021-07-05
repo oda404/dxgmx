@@ -4,7 +4,6 @@
 */
 
 #include<dxgmx/abandon_ship.h>
-#include<dxgmx/stdio.h>
 #include<dxgmx/bootinfo.h>
 #include<dxgmx/video/tty.h>
 #include<stdint.h>

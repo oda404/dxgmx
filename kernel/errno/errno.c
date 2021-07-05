@@ -7,7 +7,7 @@
 
 static int kerno = 0;
 
-int *__get_errno_addr()
+int *_get_errno_addr()
 {
     return &kerno;
 }

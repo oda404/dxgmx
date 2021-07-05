@@ -1,10 +1,10 @@
 
 #include<dxgmx/string.h>
 
-char *__strncat(char *dest, const char *src, size_t n)
+char *strncat(char *dest, const char *src, size_t n)
 {
-    dest += __strlen(dest);
-    size_t srclen = __strlen(src);
+    dest += strlen(dest);
+    size_t srclen = strlen(src);
     size_t end = n < srclen ? n : srclen;
 
     for(size_t src_i = 0; src_i < end; ++src_i)

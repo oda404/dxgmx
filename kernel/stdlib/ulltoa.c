@@ -1,7 +1,7 @@
 
 #include<dxgmx/stdlib.h>
 
-char *__ulltoa(unsigned long long n, char *str, int base)
+char *ulltoa(unsigned long long n, char *str, int base)
 {
     if(!n)
     {

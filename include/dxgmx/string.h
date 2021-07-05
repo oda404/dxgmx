@@ -9,22 +9,22 @@
 #include<stddef.h>
 #include<dxgmx/attrs.h>
 
-int __memcmp(const void *str1, const void *str2, size_t n)
+int memcmp(const void *str1, const void *str2, size_t n)
 _ATTR_PURE;
 
-size_t __strlen(const char *str) 
+size_t strlen(const char *str) 
 _ATTR_PURE _ATTR_NONNULL(1);
 
-char *__strcat(char *__restrict dest, const char *__restrict src)
+char *strcat(char *__restrict dest, const char *__restrict src)
 _ATTR_NONNULL(1, 2);
 
-char *__strncat(char *__restrict dest, const char *__restrict src, size_t n)
+char *strncat(char *__restrict dest, const char *__restrict src, size_t n)
 _ATTR_NONNULL(1, 2);
 
-char *__strcpy(char *__restrict dest, const char *__restrict src)
+char *strcpy(char *__restrict dest, const char *__restrict src)
 _ATTR_NONNULL(1, 2);
 
-void *__memset(void *__restrict s, int c, size_t n)
+void *memset(void *__restrict s, int c, size_t n)
 _ATTR_NONNULL(1);
 
 #endif // _DXGMX_STRING_H

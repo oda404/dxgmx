@@ -2,7 +2,7 @@
 
 #include<dxgmx/stdlib.h>
 
-char *__ltoa(long n, char *str, int base)
+char *ltoa(long n, char *str, int base)
 {
-    return __lltoa(n, str, base);
+    return lltoa(n, str, base);
 }

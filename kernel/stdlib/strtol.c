@@ -8,7 +8,7 @@
 #include<dxgmx/errno.h>
 #include<limits.h>
 
-long int __strtol(const char *str, char **endptr, int base)
+long int strtol(const char *str, char **endptr, int base)
 {
     // only base 10 for now
     int neg = 0;
@@ -16,7 +16,7 @@ long int __strtol(const char *str, char **endptr, int base)
     if(endptr)
         *endptr = (char*)str; /* needed voodo to supress warnings */
     
-    while(__isspace(*str))
+    while(isspace(*str))
         ++str;
     if(*str == '-')
     {
@@ -24,7 +24,7 @@ long int __strtol(const char *str, char **endptr, int base)
         ++str;
     }
     /* if a digit isn't found after the potential sign return 0 */
-    if(!__isdigit(*str))
+    if(!isdigit(*str))
     {
         errno = EINVAL;
         return 0;
@@ -34,7 +34,7 @@ long int __strtol(const char *str, char **endptr, int base)
 
     for(; *str != '\0'; ++str)
     {
-        if(!__isdigit(*str))
+        if(!isdigit(*str))
             break;
 
         long int tmp = out * 10 + (*str - '0');

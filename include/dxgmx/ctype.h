@@ -8,10 +8,10 @@
 
 #include<dxgmx/attrs.h>
 
-int __isdigit(int c)
+int isdigit(int c)
 _ATTR_CONST;
 
-int __isspace(int c)
+int isspace(int c)
 _ATTR_CONST;
 
 #endif // _DXGMX_CTYPE_H

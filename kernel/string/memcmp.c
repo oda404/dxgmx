@@ -7,7 +7,7 @@
 
 #define UC unsigned char
 
-int __memcmp(const void *str1, const void *str2, size_t n)
+int memcmp(const void *str1, const void *str2, size_t n)
 {
     size_t i = 0;
     for(; i < n; ++i)
