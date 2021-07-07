@@ -4,120 +4,71 @@
 */
 
 .section .text
-  .global irq0_entry, irq1_entry, irq2_entry
-  .global irq3_entry, irq4_entry, irq5_entry
-  .global irq6_entry, irq7_entry, irq8_entry
-  .global irq9_entry, irq10_entry, irq11_entry
-  .global irq12_entry, irq13_entry, irq14_entry, irq15_entry
-  .type irq0_entry,  @function
-  .type irq1_entry,  @function
-  .type irq2_entry,  @function
-  .type irq3_entry,  @function
-  .type irq4_entry,  @function
-  .type irq5_entry,  @function
-  .type irq6_entry,  @function
-  .type irq7_entry,  @function
-  .type irq8_entry,  @function
-  .type irq9_entry,  @function
-  .type irq10_entry, @function
-  .type irq11_entry, @function
-  .type irq12_entry, @function
-  .type irq13_entry, @function
-  .type irq14_entry, @function
-  .type irq15_entry, @function
 
-irq0_entry:
-  pusha
-  call irq0_handler
-  popa
-  iret
+#define IRQ(n) \
+.global irq##n; \
+.type irq##n, @function; \
+irq##n: \
+  pusha; \
+  call irq##n##_handler; \
+  popa; \
+  iret;
 
-irq1_entry:
-  pusha
-  call irq1_handler
-  popa
-  iret
+#define ISR(n) \
+.global isr##n; \
+.type isr##n, @function; \
+isr##n: \
+  pusha; \
+  call isr##n##_handler;
+  popa;
+  iret;
 
-irq2_entry:
-  pusha
-  call irq2_handler
-  popa
-  iret
+ISR(0)
+ISR(1)
+ISR(2)
+ISR(3)
+ISR(4)
+ISR(5)
+ISR(6)
+ISR(7)
+ISR(8)
+ISR(9)
+ISR(10)
+ISR(11)
+ISR(12)
+ISR(13)
+ISR(14)
+ISR(15)
+ISR(16)
+ISR(17)
+ISR(18)
+ISR(19)
+ISR(20)
+ISR(21)
+ISR(22)
+ISR(23)
+ISR(24)
+ISR(25)
+ISR(26)
+ISR(27)
+ISR(28)
+ISR(29)
+ISR(30)
+ISR(31)
 
-irq3_entry:
-  pusha
-  call irq3_handler
-  popa
-  iret
-
-irq4_entry:
-  pusha
-  call irq4_handler
-  popa
-  iret
-
-irq5_entry:
-  pusha
-  call irq5_handler
-  popa
-  iret
-
-irq6_entry:
-  pusha
-  call irq6_handler
-  popa
-  iret
-
-irq7_entry:
-  pusha
-  call irq7_handler
-  popa
-  iret
-
-irq8_entry:
-  pusha
-  call irq8_handler
-  popa
-  iret
-
-irq9_entry:
-  pusha
-  call irq9_handler
-  popa
-  iret
-
-irq10_entry:
-  pusha
-  call irq10_handler
-  popa
-  iret
-
-irq11_entry:
-  pusha
-  call irq11_handler
-  popa
-  iret
-
-irq12_entry:
-  pusha
-  call irq12_handler
-  popa
-  iret
-
-irq13_entry:
-  pusha
-  call irq13_handler
-  popa
-  iret
-
-irq14_entry:
-  pusha
-  call irq14_handler
-  popa
-  iret
-
-irq15_entry:
-  pusha
-  call irq15_handler
-  popa
-  iret
+IRQ(0)
+IRQ(1)
+IRQ(2)
+IRQ(3)
+IRQ(4)
+IRQ(5)
+IRQ(6)
+IRQ(7)
+IRQ(8)
+IRQ(9)
+IRQ(10)
+IRQ(11)
+IRQ(12)
+IRQ(13)
+IRQ(14)
+IRQ(15)

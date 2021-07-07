@@ -3,7 +3,7 @@
     Distributed under the MIT license.
 */
 
-#include<dxgmx/x86/pic.h>
+#include<dxgmx/x86/int/pic.h>
 #include<dxgmx/x86/portio.h>
 
 #define PIC_MASTER_PORT_COMMAND 0x20
