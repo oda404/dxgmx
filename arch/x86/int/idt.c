@@ -3,8 +3,8 @@
     Distributed under the MIT license.
 */
 
-#include<dxgmx/x86/int/idt.h>
-#include<dxgmx/x86/int/pic.h>
+#include<dxgmx/x86/idt.h>
+#include<dxgmx/x86/pic.h>
 #include<stdbool.h>
 #include<stdint.h>
 
@@ -26,4 +26,9 @@ void idt_encode_entry(
     entry->privilege  = flags & (0b11 << 5);
     entry->present    = (bool)(flags & (1 << 7));
 #endif // _X86_
+}
+
+void idt_load(const IDTR *idtr)
+{
+    asm volatile("lidt (%0)": : "b"(idtr));
 }

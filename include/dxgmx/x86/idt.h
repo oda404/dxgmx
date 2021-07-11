@@ -58,8 +58,8 @@ _ATTR_PACKED S_IDTEntry
 typedef struct 
 _ATTR_PACKED S_IDTR
 {
-    uint16_t size;
-    uint32_t base;
+    uint16_t limit;
+    IDTEntry *base;
 } IDTR;
 
 #endif // _X86_
@@ -73,5 +73,6 @@ void idt_encode_entry(
     IDTEntry *entry
 );
 
+void idt_load(const IDTR *idtr);
 
 #endif // _DXGMX_X86_IDT_H
