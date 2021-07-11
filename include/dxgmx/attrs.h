@@ -59,6 +59,9 @@ __attribute__((packed))
 #define _ATTR_FMT_PRINTF(fmt, args) \
 __attribute__((format(printf, fmt, args)))
 
+#define _ATTR_NAKED \
+__attribute__((naked))
+
 #endif // __GNUC__
 
 #endif // _DXGMX_ATTRS_H
