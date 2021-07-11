@@ -1,6 +1,6 @@
 
 #include<dxgmx/x86/int/interrupts.h>
-#include<dxgmx/x86/gdt.h>
+#include<dxgmx/x86/sysgdt.h>
 #include<dxgmx/x86/mboot.h>
 #include<dxgmx/video/tty.h>
 #include<dxgmx/bootinfo.h>
@@ -63,7 +63,7 @@ int kinit_stage1(const BootInfo *bootinfo)
 
     pageframe_alloc_init();
 
-    gdt_init();
+    sysgdt_init();
     interrupts_init();
 
     kprintf("Reached target: kinit_stage1.\n");
