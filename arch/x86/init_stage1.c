@@ -8,8 +8,7 @@
 #include<dxgmx/cpu.h>
 #include<dxgmx/kdefs.h>
 #include<dxgmx/abandon_ship.h>
-#include<dxgmx/paging/frame.h>
-#include<dxgmx/paging/size.h>
+#include<dxgmx/paging/paging.h>
 #include<dxgmx/kprintf.h>
 #include<stdint.h>
 
@@ -59,7 +58,7 @@ int kinit_stage1(const BootInfo *bootinfo)
      * i lose a bit of available physical memory by aligning 
      * the available areas but gain a lot of mental health
      */
-    mmap_entries_align(_PAGE_SIZE);
+    mmap_entries_align(PAGE_SIZE);
     mmap_print();
 
     pageframe_alloc_init();

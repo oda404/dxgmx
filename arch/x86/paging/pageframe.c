@@ -1,6 +1,6 @@
 
-#include<dxgmx/paging/frame.h>
-#include<dxgmx/paging/size.h>
+#include<dxgmx/paging/pageframe.h>
+#include<dxgmx/paging/pagesize.h>
 #include<dxgmx/mmap.h>
 #include<dxgmx/kprintf.h>
 #include<dxgmx/abandon_ship.h>
@@ -35,10 +35,10 @@ static void pageframe_add_available(const MemoryMapEntry *area)
     for(
         uint64_t frame = area->base;
         frame < area->base + area->size;
-        frame += _PAGE_SIZE
+        frame += PAGE_SIZE
     )
     {
-        if(frame > _PAGE_SIZE * 1024 * 64)
+        if(frame > PAGE_SIZE * 1024 * 64)
         {
             kprintf("Tried to add out of range page with base 0x%llX\n", frame);
             return;
@@ -71,7 +71,7 @@ void pageframe_alloc_init()
     kprintf(
         "Using %ld free, %d byte sized page frames.\n",
         pageframes_avail_cnt,
-        _PAGE_SIZE
+        PAGE_SIZE
     );
 }
 
@@ -87,7 +87,7 @@ uint64_t pageframe_alloc()
             {
                 bw_set(pageframe_pool, k);
                 --pageframes_avail_cnt;
-                return i * 64 * _PAGE_SIZE + k * _PAGE_SIZE;
+                return i * 64 * PAGE_SIZE + k * PAGE_SIZE;
             }
         }
     }
@@ -101,7 +101,7 @@ uint32_t pageframe_get_avail_frames_cnt()
 
 void pageframe_free(uint64_t pageframe_base)
 {
-    uint64_t pageframe_n = pageframe_base / _PAGE_SIZE;
+    uint64_t pageframe_n = pageframe_base / PAGE_SIZE;
     uint16_t pageframe_pool_i = pageframe_n / 64;
     pageframe_n -= pageframe_pool_i * 64;
 
