@@ -59,8 +59,13 @@ __attribute__((packed))
 #define _ATTR_FMT_PRINTF(fmt, args) \
 __attribute__((format(printf, fmt, args)))
 
+/* Omit the prologue and epilogue of the specified function. */
 #define _ATTR_NAKED \
 __attribute__((naked))
+
+/* Specifies minimum alignment for the specified var. */
+#define _ATTR_ALIGNED(n) \
+__attribute__((aligned(n)))
 
 #endif // __GNUC__
 
