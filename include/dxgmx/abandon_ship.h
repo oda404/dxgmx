@@ -9,7 +9,7 @@
 #include<dxgmx/attrs.h>
 
 /* immediately halts the cpu */
-void abandon_ship(const char *lastwords)
-_ATTR_NORETURN;
+void abandon_ship(const char *lastwords, ...);
+_ATTR_FMT_PRINTF(1, 2) _ATTR_NORETURN;
 
 #endif // _DXGMX_ABANDON_SHIP_H
