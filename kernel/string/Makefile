@@ -6,3 +6,4 @@ kernel/string/strcpy.o \
 kernel/string/strlen.o \
 kernel/string/memset.o \
 kernel/string/strncat.o \
+kernel/string/memcpy.o \
