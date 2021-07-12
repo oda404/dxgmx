@@ -8,6 +8,13 @@ CODENAME          := angel_attack
 
 -include buildconfig
 
+HAS_BUILDCONFIG   ?= 0
+ifeq ($(MAKECMDGOALS),)
+    ifeq ($(HAS_BUILDCONFIG), 0)
+        $(warning Building without a buildconfig file...)
+    endif
+endif
+
 # directories
 INCLUDE_DIR       := include
 BUILD_DIR         := build
