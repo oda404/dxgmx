@@ -14,5 +14,15 @@
 #ifndef _DXGMX_CODENAME_
 #define _DXGMX_CODENAME_ "undefined"
 #endif
+#ifdef _DXGMX_DEBUG_
+#define _DXGMX_DEBUG_ 1
+#else
+#define _DXGMX_DEBUG 0
+#endif
+#ifdef _DXGMX_RELEASE_
+#define _DXGMX_RELEASE_ 1
+#else
+#define _DXGMX_RELEASE_ 0
+#endif
 
 #endif // _DXGMX_KCONFIG_H
