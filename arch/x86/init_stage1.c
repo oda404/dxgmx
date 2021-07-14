@@ -14,26 +14,26 @@
 
 int kinit_stage1(const BootInfo *bootinfo)
 {
+    kprintf("     _                          \n");
+    kprintf("  __| |_  ____ _ _ __ ___ __  __\n");
+    kprintf(" / _` \\ \\/ / _` | '_ ` _ \\\\ \\/ /\n");
+    kprintf("| (_| |>  < (_| | | | | | |>  <\n");
+    kprintf(" \\__,_/_/\\_\\__, |_| |_| |_/_/\\_\\ %s ~ %d.%d.%d\n",_DXGMX_CODENAME_, _DXGMX_VER_MAJ_, _DXGMX_VER_MIN_, _DXGMX_PATCH_N_);
+    kprintf("           |___/                \n");
+    kprintf("\n");
+
     kprintf("Targeting: kinit_stage1.\n");
 
     if(bootinfo->blmagic != MBOOT_BOOTLOADER_MAGIC)
         abandon_ship("Not booted by a multiboot compliant bootloader\n");
 
     kprintf(
-        "dxgmx - %s %d.%d.%d\n", 
-        _DXGMX_CODENAME_,
-        _DXGMX_VER_MAJ_,
-        _DXGMX_VER_MIN_,
-        _DXGMX_PATCH_N_
-    );
-
-    kprintf(
-        "Kernel base: 0x%lX, size: 0x%lX\n",
+        "Kernel physical base: 0x%lX, size: 0x%lX\n",
         bootinfo->kernel_base,
         bootinfo->kernel_end - bootinfo->kernel_base
     );
     kprintf(
-        "Kernel stack top: 0x%lX, bottom: 0x%lX\n",
+        "Kernel physical stack top: 0x%lX, bottom: 0x%lX\n",
         bootinfo->kstack_top,
         bootinfo->kstack_bot
     );
@@ -59,7 +59,6 @@ int kinit_stage1(const BootInfo *bootinfo)
      * the available areas but gain a lot of mental health
      */
     mmap_entries_align(PAGE_SIZE);
-    mmap_print();
 
     pageframe_alloc_init();
 
