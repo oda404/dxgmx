@@ -48,8 +48,8 @@ CFLAGS            :=
 EXTRA_CFLAGS      ?= 
 LDFLAGS           := 
 EXTRA_LDFLAGS     ?= 
-DEBUG_CFLAGS      := -g
-RELEASE_CFLAGS    := -O2
+DEBUG_CFLAGS      := -g -D_DXGMX_DEBUG_
+RELEASE_CFLAGS    := -O2 -D_DXGMX_RELEASE_
 
 CFLAGS            += $(EXTRA_CFLAGS)
 LDFLAGS           += $(EXTRA_LDFLAGS)

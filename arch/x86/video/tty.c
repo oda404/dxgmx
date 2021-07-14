@@ -42,7 +42,6 @@ int tty_print(const char *str, size_t n)
             current_col = 0;
             ++current_row;
         }
-        // TODO handle scrolling
 
         switch(str[i])
         {
