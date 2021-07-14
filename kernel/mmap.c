@@ -196,6 +196,7 @@ static int __log_fatal_overlap_and_die(
     );
 
     abandon_ship("Illegal memory operation.\n");
+    return 0;
 }
 
 static void mmap_entries_overlap_handle()
