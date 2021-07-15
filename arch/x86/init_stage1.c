@@ -8,7 +8,9 @@
 #include<dxgmx/cpu.h>
 #include<dxgmx/kdefs.h>
 #include<dxgmx/abandon_ship.h>
-#include<dxgmx/paging/paging.h>
+#include<dxgmx/paging/pageframe.h>
+#include<dxgmx/paging/pagesize.h>
+#include<dxgmx/paging/kpagedir.h>
 #include<dxgmx/kprintf.h>
 #include<stdint.h>
 
@@ -64,6 +66,7 @@ int kinit_stage1(const BootInfo *bootinfo)
 
     sysgdt_init();
     sysidt_init();
+    kpagedir_init();
 
     kprintf("Reached target: kinit_stage1.\n");
 
