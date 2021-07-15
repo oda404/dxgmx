@@ -3,6 +3,7 @@
 #include<dxgmx/stdlib.h>
 #include<dxgmx/string.h>
 #include<dxgmx/video/tty.h>
+#include<dxgmx/ctype.h>
 #include<stdint.h>
 #include<stddef.h>
 #include<limits.h>
@@ -21,6 +22,14 @@ enum PrintfLengthSpecifier
     PRINTF_LEN_L
 };
 
+enum PrintfFlags
+{
+    PRINTF_FLAG_NONE,
+    PRINTF_FLAG_LEFT_JUST,
+    PRINTF_FLAG_FORCE_SIGN,
+    PRITNF_FLAG_LEFT_PAD_ZERO
+};
+
 #define WRITE_CAP INT_MAX
 
 int kprintf(const char *fmt, ...)
@@ -36,6 +45,8 @@ int vkprintf(const char *fmt, va_list arglist)
 {
     size_t written = 0;
     uint8_t length;
+    uint8_t flags;
+    uint8_t width;
 
     for(; *fmt != '\0'; ++fmt)
     {
@@ -49,19 +60,44 @@ int vkprintf(const char *fmt, va_list arglist)
             continue;
         }
         length = PRINTF_LEN_NONE;
+        flags  = PRINTF_FLAG_NONE;
+        width = 0;
 
-process_fmt:
+process_flags:
         switch(*(fmt + 1))
         {
-        case '\0':
-            return written;
+        case '-':
+            flags = PRINTF_FLAG_LEFT_JUST;
+            ++fmt;
+            goto process_flags;
+        case '+':
+            flags = PRINTF_FLAG_FORCE_SIGN;
+            ++fmt;
+            goto process_flags;
+        case '0':
+            flags = PRITNF_FLAG_LEFT_PAD_ZERO;
+            ++fmt;
+            goto process_flags;
+        default:
+            break;
+        }
 
+        // width
+        while(isdigit(*(fmt + 1)))
+        {
+            width = width * 10 + (*(fmt + 1) - '0');
+            ++fmt;
+        }
+        
+process_length:
+        switch(*(fmt + 1))
+        {
         case 'l':  /* l length specifier */
             if(length == PRINTF_LEN_l)
             {
                 ++fmt;
                 length = PRINTF_LEN_ll;
-                goto process_fmt;
+                goto process_length;
             }
             else if(length != PRINTF_LEN_NONE)
             {
@@ -69,14 +105,14 @@ process_fmt:
             }
             ++fmt;
             length = PRINTF_LEN_l;
-            goto process_fmt;
+            goto process_length;
         
         case 'h':  /* h length specifier */
             if(length == PRINTF_LEN_h)
             {
                 ++fmt;
                 length = PRINTF_LEN_hh;
-                goto process_fmt;
+                goto process_length;
             }
             else if(length != PRINTF_LEN_NONE)
             {
@@ -84,35 +120,45 @@ process_fmt:
             }
             ++fmt;
             length = PRINTF_LEN_h;
-            goto process_fmt;
+            goto process_length;
 
         case 'j':  /* j length specifier */
             if(length != PRINTF_LEN_NONE)
                 continue;
             ++fmt;
             length = PRINTF_LEN_j;
-            goto process_fmt;
+            goto process_length;
 
         case 'z':  /* z length specifier */
             if(length != PRINTF_LEN_NONE)
                 continue;
             ++fmt;
             length = PRINTF_LEN_z;
-            goto process_fmt;
+            goto process_length;
 
         case 't':  /* t length specifier */
             if(length != PRINTF_LEN_NONE)
                 continue;
             ++fmt;
             length = PRINTF_LEN_t;
-            goto process_fmt;
+            goto process_length;
         
         case 'L': /* L length specifier */
             if(length != PRINTF_LEN_NONE)
                 continue;
             ++fmt;
             length = PRINTF_LEN_L;
-            goto process_fmt;
+            goto process_length;
+
+        default:
+            break;
+        }
+
+        // specifier
+        switch(*(fmt + 1))
+        {
+        case '\0':
+            return written;
 
         /* int %i %d */
         case 'i':
