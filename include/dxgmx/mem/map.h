@@ -1,6 +1,6 @@
 
-#ifndef _DXGMX_MMAP_H
-#define _DXGMX_MMAP_H
+#ifndef _DXGMX_MEM_MAP_H
+#define _DXGMX_MEM_MAP_H
 
 #include<stdint.h>
 
@@ -80,4 +80,4 @@ const MemoryMap *mmap_get_mmap();
 */
 void mmap_print();
 
-#endif // _DXGMX_MMAP_H
+#endif // _DXGMX_MEM_MAP_H

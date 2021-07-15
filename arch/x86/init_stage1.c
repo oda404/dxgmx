@@ -4,7 +4,7 @@
 #include<dxgmx/x86/mboot.h>
 #include<dxgmx/video/tty.h>
 #include<dxgmx/bootinfo.h>
-#include<dxgmx/mmap.h>
+#include<dxgmx/mem/map.h>
 #include<dxgmx/cpu.h>
 #include<dxgmx/kdefs.h>
 #include<dxgmx/abandon_ship.h>

@@ -1,5 +1,5 @@
 
-#include<dxgmx/mmap.h>
+#include<dxgmx/mem/map.h>
 #include<dxgmx/abandon_ship.h>
 #include<dxgmx/kprintf.h>
 #include<dxgmx/bitwise.h>

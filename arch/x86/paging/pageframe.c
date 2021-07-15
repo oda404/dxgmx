@@ -1,7 +1,7 @@
 
 #include<dxgmx/paging/pageframe.h>
 #include<dxgmx/paging/pagesize.h>
-#include<dxgmx/mmap.h>
+#include<dxgmx/mem/map.h>
 #include<dxgmx/kprintf.h>
 #include<dxgmx/abandon_ship.h>
 #include<dxgmx/bitwise.h>
