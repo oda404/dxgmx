@@ -1,68 +1,106 @@
 
-#include<dxgmx/paging/paging.h>
+#include<dxgmx/paging/pagedir.h>
+#include<dxgmx/paging/pagetable.h>
+#include<dxgmx/paging/pagesize.h>
 #include<dxgmx/bitwise.h>
 #include<dxgmx/string.h>
-#include<stdbool.h>
-#include<dxgmx/kprintf.h>
 #include<stddef.h>
+#include<stdbool.h>
 
 void pagedir_init(PageDirectory *dir)
 {
     memset((void *)dir, 0, sizeof(PageDirectory));
 }
 
-int pagedir_add(
-    uint64_t page_base,
-    uint64_t frame_base,
-    uint16_t flags,
-    PageDirectory *dir,
-    PageTable tables[1024]
+void pagedir_load(PageDirectory *dir)
+{
+    asm volatile("movl %0, %%cr3" : : "b"(dir));
+}
+
+void pagedir_entry_set_present(
+    int present,
+    PageDirectoryEntry *entry
 )
 {
-    if(
-        !bw_is_aligned(page_base, PAGE_SIZE) ||
-        !bw_is_aligned(frame_base, PAGE_SIZE)
-    )
-    {
+    entry->present = (bool)present;
+}
+
+void pagedir_entry_set_rw(
+    int rw,
+    PageDirectoryEntry *entry
+)
+{
+    entry->rw = (bool)rw;
+}
+
+void pagedir_entry_set_user_access(
+    int user_acces,
+    PageDirectoryEntry *entry
+)
+{
+    entry->user_access = (bool)user_acces;
+}
+
+void pagedir_entry_set_cache_disabled(
+    int cache_disabled,
+    PageDirectoryEntry *entry
+)
+{
+    entry->cache_disabled = (bool)cache_disabled;
+}
+
+void pagedir_entry_set_page_size(
+    int page_size,
+    PageDirectoryEntry *entry
+)
+{
+    entry->page_size = (bool)page_size;
+}
+
+int pagedir_entry_set_table_base(
+    PageTable *table_base, 
+    PageDirectoryEntry *entry
+)
+{
+    if(!bw_is_aligned((uint32_t)table_base, PAGE_SIZE))
         return 1;
-    }
 
-    size_t entry_idx = page_base / PAGE_SIZE;
-    size_t table_idx = entry_idx / PAGE_SIZE;
-    entry_idx -= table_idx * PAGE_SIZE;
+    entry->table_base = (uint32_t)table_base >> 12;
 
-    PageDirectoryEntry *pagedir_entry = &dir->entries[table_idx];
-    pagedir_entry->table_base = (uint32_t)&tables[table_idx];
+    return 0;   
+}
 
-    if(!pagedir_entry->present)
-        pagedir_entry->present     = (bool)(flags & PAGEFLAG_PRESENT);
+int pagedir_entry_get_present(const PageDirectoryEntry *entry)
+{
+    return entry->present;
+}
 
-    if(!pagedir_entry->rw)
-        pagedir_entry->rw          = (bool)(flags & PAGEFLAG_RW);
+int pagedir_entry_get_rw(const PageDirectoryEntry *entry)
+{
+    return entry->rw;
+}
 
-    if(!pagedir_entry->user_access)
-        pagedir_entry->user_access = (bool)(flags & PAGEFLAG_USER_ACCESS);
+int pagedir_entry_get_user_access(const PageDirectoryEntry *entry)
+{
+    return entry->user_access;
+}
 
-    if(!pagedir_entry->write_through)
-        pagedir_entry->write_through = (bool)(flags & PAGEFLAG_WRITE_THROUGH);
+int pagedir_entry_get_cache_disabled(const PageDirectoryEntry *entry)
+{
+    return entry->cache_disabled;
+}
 
-    if(!pagedir_entry->cache_disabled)
-        pagedir_entry->cache_disabled = (bool)(flags & PAGEFLAG_CACHE_DISABLED);
+int pagedir_entry_get_accessed(const PageDirectoryEntry *entry)
+{
+    return entry->accessed;
+}
 
-    pagedir_entry->zero = 0;
+int pagedir_entry_get_page_size(const PageDirectoryEntry *entry)
+{
+    return entry->page_size;
+}
 
-    PageTable *pagetable = (PageTable *)(uint32_t)pagedir_entry->table_base;
-    PageTableEntry *pagetable_entry = &pagetable->entries[entry_idx];
-    
-    pagetable_entry->frame_base     = frame_base;
-    pagetable_entry->present        = (bool)(flags & PAGEFLAG_PRESENT);
-    pagetable_entry->rw             = (bool)(flags & PAGEFLAG_RW);
-    pagetable_entry->user_access    = (bool)(flags & PAGEFLAG_USER_ACCESS);
-    pagetable_entry->write_through  = (bool)(flags & PAGEFLAG_WRITE_THROUGH);
-    pagetable_entry->cache_disabled = (bool)(flags & PAGEFLAG_CACHE_DISABLED);
-    pagetable_entry->global         = (bool)(flags & PAGEFLAG_GLOBAL);
-
-    //kprintf("%ld ", entry_idx);
-    
-    return 0;
+PageTable *pagedir_entry_get_table_base(const PageDirectoryEntry *entry)
+{
+    return (PageTable *)((uint32_t)entry->table_base);
 }
