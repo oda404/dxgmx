@@ -4,4 +4,6 @@
 
 #include<stdint.h>
 
+uint32_t cpu_get_cr2();
+
 #endif // _DXGMX_CPU_H
