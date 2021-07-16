@@ -1,9 +1,9 @@
 
-#include<dxgmx/paging/kpagedir.h>
-#include<dxgmx/paging/pagedir.h>
-#include<dxgmx/paging/pagetable.h>
-#include<dxgmx/paging/paging.h>
-#include<dxgmx/paging/pagesize.h>
+#include<dxgmx/mem/kpagedir.h>
+#include<dxgmx/mem/pagedir.h>
+#include<dxgmx/mem/pagetable.h>
+#include<dxgmx/mem/paging.h>
+#include<dxgmx/mem/pagesize.h>
 #include<dxgmx/kprintf.h>
 #include<dxgmx/attrs.h>
 #include<stddef.h>
@@ -21,7 +21,7 @@ int kpagedir_init()
 {
     pagedir_init(&pagedir);
     pagetable_init(&pagetables);
-
+    
     /* Identity map the first 4MiB */
     for(size_t i = 0; i < 1024; ++i)
     {

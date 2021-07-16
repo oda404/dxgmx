@@ -1,5 +1,5 @@
 
-#include<dxgmx/paging/paging.h>
+#include<dxgmx/mem/paging.h>
 
 void paging_enable()
 {

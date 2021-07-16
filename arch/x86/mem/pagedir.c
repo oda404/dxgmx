@@ -1,7 +1,7 @@
 
-#include<dxgmx/paging/pagedir.h>
-#include<dxgmx/paging/pagetable.h>
-#include<dxgmx/paging/pagesize.h>
+#include<dxgmx/mem/pagedir.h>
+#include<dxgmx/mem/pagetable.h>
+#include<dxgmx/mem/pagesize.h>
 #include<dxgmx/bitwise.h>
 #include<dxgmx/string.h>
 #include<stddef.h>
@@ -14,7 +14,7 @@ void pagedir_init(PageDirectory *dir)
 
 void pagedir_load(PageDirectory *dir)
 {
-    asm volatile("movl %0, %%cr3" : : "b"(dir));
+    asm volatile("movl %0, %%eax; movl %%eax, %%cr3" : : "b"(dir));
 }
 
 void pagedir_entry_set_present(

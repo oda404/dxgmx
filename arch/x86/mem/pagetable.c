@@ -1,7 +1,7 @@
 
-#include<dxgmx/paging/pagetable.h>
+#include<dxgmx/mem/pagetable.h>
+#include<dxgmx/mem/pagesize.h>
 #include<dxgmx/bitwise.h>
-#include<dxgmx/paging/pagesize.h>
 #include<dxgmx/string.h>
 
 void pagetable_init(PageTable *table)

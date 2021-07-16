@@ -8,9 +8,9 @@
 #include<dxgmx/cpu.h>
 #include<dxgmx/kdefs.h>
 #include<dxgmx/abandon_ship.h>
-#include<dxgmx/paging/pageframe.h>
-#include<dxgmx/paging/pagesize.h>
-#include<dxgmx/paging/kpagedir.h>
+#include<dxgmx/mem/pageframe.h>
+#include<dxgmx/mem/pagesize.h>
+#include<dxgmx/mem/kpagedir.h>
 #include<dxgmx/kprintf.h>
 #include<stdint.h>
 

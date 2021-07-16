@@ -1,6 +1,6 @@
 
-#include<dxgmx/paging/pageframe.h>
-#include<dxgmx/paging/pagesize.h>
+#include<dxgmx/mem/pageframe.h>
+#include<dxgmx/mem/pagesize.h>
 #include<dxgmx/mem/map.h>
 #include<dxgmx/kprintf.h>
 #include<dxgmx/abandon_ship.h>

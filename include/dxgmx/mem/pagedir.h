@@ -4,7 +4,7 @@
 
 #include<stdint.h>
 #include<dxgmx/attrs.h>
-#include<dxgmx/paging/pagetable.h>
+#include<dxgmx/mem/pagetable.h>
 
 /*
  * Structure of a page directory entry
