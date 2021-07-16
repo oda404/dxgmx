@@ -24,10 +24,19 @@ enum PrintfLengthSpecifier
 
 enum PrintfFlags
 {
-    PRINTF_FLAG_NONE,
-    PRINTF_FLAG_LEFT_JUST,
-    PRINTF_FLAG_FORCE_SIGN,
-    PRITNF_FLAG_LEFT_PAD_ZERO
+    PRINTF_FLAG_NONE           = 0x0,
+    PRINTF_FLAG_LEFT_JUSTIFY   = 0x1,
+    PRINTF_FLAG_FORCE_SIGN     = 0x2,
+    PRINTF_FLAG_WHITESPACE     = 0x4,
+    PRINTF_FLAG_HASHTAG        = 0x8,
+    PRITNF_FLAG_PAD_ZERO       = 0x10
+};
+
+enum PrintfParseStatus
+{
+    PRINTF_PARSE_CONTINUE,
+    PRINTF_PARSE_INVALID,
+    PRINTF_PARSE_DONE
 };
 
 #define WRITE_CAP INT_MAX
@@ -41,12 +50,150 @@ int kprintf(const char *fmt, ...)
     return written;
 }
 
+static int printf_parse_flags(char c, uint8_t *flags)
+{
+    switch(c)
+    {
+    case '-':
+        *flags |= PRINTF_FLAG_LEFT_JUSTIFY;
+        return PRINTF_PARSE_CONTINUE;
+    case '+':
+        *flags  |= PRINTF_FLAG_FORCE_SIGN;
+        return PRINTF_PARSE_CONTINUE;
+    case ' ':
+        *flags  |= PRINTF_FLAG_WHITESPACE;
+        return PRINTF_PARSE_CONTINUE;
+    case '#':
+        *flags  |= PRINTF_FLAG_HASHTAG;
+        return PRINTF_PARSE_CONTINUE;
+    case '0':
+        *flags  |= PRITNF_FLAG_PAD_ZERO;
+        return PRINTF_PARSE_CONTINUE;
+    default:
+        return PRINTF_PARSE_DONE;
+    }
+}
+
+static int printf_parse_width(char c, uint16_t *width)
+{
+    if(isdigit(c))
+    {
+        *width = *width * 10 + (c - '0');
+        return PRINTF_PARSE_CONTINUE;
+    }
+
+    return PRINTF_PARSE_DONE;
+}
+
+static int printf_parse_length(char c, uint8_t *length)
+{
+    switch(c)
+    {
+    case 'l':
+        if(*length == PRINTF_LEN_l)
+        {
+            *length = PRINTF_LEN_ll;
+            return PRINTF_PARSE_CONTINUE;
+        }
+        else if(*length != PRINTF_LEN_NONE)
+            return PRINTF_PARSE_INVALID;
+        
+        *length = PRINTF_LEN_l;
+        return PRINTF_PARSE_CONTINUE;
+    
+    case 'h':
+        if(*length == PRINTF_LEN_h)
+        {
+            *length = PRINTF_LEN_hh;
+            return PRINTF_PARSE_CONTINUE;
+        }
+        else if(*length != PRINTF_LEN_NONE)
+            return PRINTF_PARSE_INVALID;
+        
+        *length = PRINTF_LEN_h;
+        return PRINTF_PARSE_CONTINUE;
+
+    case 'j':
+        if(*length != PRINTF_LEN_NONE)
+            return PRINTF_PARSE_INVALID;
+        *length = PRINTF_LEN_j;
+        return PRINTF_PARSE_CONTINUE;
+
+    case 'z':
+        if(*length != PRINTF_LEN_NONE)
+            return PRINTF_PARSE_INVALID;
+        *length = PRINTF_LEN_z;
+        return PRINTF_PARSE_CONTINUE;
+
+    case 't':
+        if(*length != PRINTF_LEN_NONE)
+            return PRINTF_PARSE_INVALID;
+        *length = PRINTF_LEN_t;
+        return PRINTF_PARSE_CONTINUE;
+    
+    case 'L':
+        if(*length != PRINTF_LEN_NONE)
+            return PRINTF_PARSE_INVALID;
+        *length = PRINTF_LEN_L;
+        return PRINTF_PARSE_CONTINUE;
+
+    default:
+        return PRINTF_PARSE_DONE;
+    }
+}
+
+static size_t printf_apply_flags_and_width(
+    char *buf,
+    size_t bufmax,
+    uint8_t flags,
+    size_t width
+)
+{
+    if(width > bufmax)
+        width = bufmax;
+
+    size_t buflen = strlen(buf);
+
+    if(flags & PRINTF_FLAG_LEFT_JUSTIFY)
+    {
+        //TODO
+    }
+
+    if(flags & PRINTF_FLAG_FORCE_SIGN)
+    {
+        //TODO
+    }
+
+    if(flags & PRINTF_FLAG_WHITESPACE)
+    {
+        //TODO
+    }
+
+    if(flags & PRINTF_FLAG_HASHTAG)
+    {
+        //TODO
+    }
+
+    if(width > buflen)
+    {
+        const char c = (flags & PRITNF_FLAG_PAD_ZERO) ? '0' : ' ';
+        for(size_t i = 0; i < width - buflen; ++i)
+        {
+            for(size_t k = buflen + i; k > 0; --k)
+                buf[k] = buf[k - 1];
+            buf[i] = c;
+        }
+    }
+
+    return strlen(buf);
+}
+
 int vkprintf(const char *fmt, va_list arglist)
 {
     size_t written = 0;
     uint8_t length;
     uint8_t flags;
-    uint8_t width;
+    uint16_t width;
 
     for(; *fmt != '\0'; ++fmt)
     {
@@ -63,103 +210,27 @@ int vkprintf(const char *fmt, va_list arglist)
         flags  = PRINTF_FLAG_NONE;
         width = 0;
 
-process_flags:
-        switch(*(fmt + 1))
-        {
-        case '-':
-            flags = PRINTF_FLAG_LEFT_JUST;
+        while(printf_parse_flags(*(fmt + 1), &flags) == PRINTF_PARSE_CONTINUE)
             ++fmt;
-            goto process_flags;
-        case '+':
-            flags = PRINTF_FLAG_FORCE_SIGN;
-            ++fmt;
-            goto process_flags;
-        case '0':
-            flags = PRITNF_FLAG_LEFT_PAD_ZERO;
-            ++fmt;
-            goto process_flags;
-        default:
-            break;
-        }
 
-        // width
-        while(isdigit(*(fmt + 1)))
-        {
-            width = width * 10 + (*(fmt + 1) - '0');
+        while(printf_parse_width(*(fmt + 1), &width) == PRINTF_PARSE_CONTINUE)
             ++fmt;
-        }
         
-process_length:
-        switch(*(fmt + 1))
+reprocess_length:
+        switch(printf_parse_length(*(fmt + 1), &length))
         {
-        case 'l':  /* l length specifier */
-            if(length == PRINTF_LEN_l)
-            {
-                ++fmt;
-                length = PRINTF_LEN_ll;
-                goto process_length;
-            }
-            else if(length != PRINTF_LEN_NONE)
-            {
-                continue;
-            }
+        case PRINTF_PARSE_INVALID:
+            continue;
+        case PRINTF_PARSE_CONTINUE:
             ++fmt;
-            length = PRINTF_LEN_l;
-            goto process_length;
-        
-        case 'h':  /* h length specifier */
-            if(length == PRINTF_LEN_h)
-            {
-                ++fmt;
-                length = PRINTF_LEN_hh;
-                goto process_length;
-            }
-            else if(length != PRINTF_LEN_NONE)
-            {
-                continue;
-            }
-            ++fmt;
-            length = PRINTF_LEN_h;
-            goto process_length;
-
-        case 'j':  /* j length specifier */
-            if(length != PRINTF_LEN_NONE)
-                continue;
-            ++fmt;
-            length = PRINTF_LEN_j;
-            goto process_length;
-
-        case 'z':  /* z length specifier */
-            if(length != PRINTF_LEN_NONE)
-                continue;
-            ++fmt;
-            length = PRINTF_LEN_z;
-            goto process_length;
-
-        case 't':  /* t length specifier */
-            if(length != PRINTF_LEN_NONE)
-                continue;
-            ++fmt;
-            length = PRINTF_LEN_t;
-            goto process_length;
-        
-        case 'L': /* L length specifier */
-            if(length != PRINTF_LEN_NONE)
-                continue;
-            ++fmt;
-            length = PRINTF_LEN_L;
-            goto process_length;
-
-        default:
+            goto reprocess_length;
+        case PRINTF_PARSE_DONE:
             break;
         }
 
         // specifier
         switch(*(fmt + 1))
         {
-        case '\0':
-            return written;
-
         /* int %i %d */
         case 'i':
         case 'd':
@@ -169,30 +240,30 @@ process_length:
             {
             case PRINTF_LEN_l:
             {
-                long val = va_arg(arglist, long);
-                ltoa(val, buf, 10);
+                ltoa(va_arg(arglist, long), buf, 10);
                 break;
             }
             case PRINTF_LEN_ll:
             {
-                long long val = va_arg(arglist, long long);
-                lltoa(val, buf, 10);
+                lltoa(va_arg(arglist, long long), buf, 10);
                 break;
             }
             default:
             {
-                int val = va_arg(arglist, int);
-                itoa(val, buf, 10);
+                itoa(va_arg(arglist, int), buf, 10);
                 break;
             }
             }
+            
+            size_t len = printf_apply_flags_and_width(buf, 21, flags, width);
 
-            size_t len = strlen(buf);
             if(written + len > WRITE_CAP)
-                return written;
+            {
+                tty_print(buf, written + len - WRITE_CAP);
+                return WRITE_CAP;
+            }
                 
             written += len;
-            ++fmt;
             
             tty_print(buf, len);
             break;
@@ -207,30 +278,30 @@ process_length:
             {
             case PRINTF_LEN_l:
             {
-                unsigned long val = va_arg(arglist, unsigned long);
-                ultoa(val, buf, 16);
+                ultoa(va_arg(arglist, unsigned long), buf, 16);
                 break;
             }
             case PRINTF_LEN_ll:
             {
-                unsigned long long val = va_arg(arglist, unsigned long long);
-                ulltoa(val, buf, 16);
+                ulltoa(va_arg(arglist, unsigned long long), buf, 16);
                 break;
             }
             default:
             {
-                unsigned val = va_arg(arglist, unsigned);
-                utoa(val, buf, 16);
+                utoa(va_arg(arglist, unsigned), buf, 16);
                 break;
             }
             }
 
-            size_t len = strlen(buf);
+            size_t len = printf_apply_flags_and_width(buf, 21, flags, width);
+
             if(written + len > WRITE_CAP)
-                return written;
-            
+            {
+                tty_print(buf, written + len - WRITE_CAP);
+                return WRITE_CAP;
+            }
+
             written += len;
-            ++fmt;
 
             tty_print(buf, len);
             break;
@@ -239,12 +310,16 @@ process_length:
         /* string %s */
         case 's':
         {
-            char *val = va_arg(arglist, char*);
+            const char *val = va_arg(arglist, const char*);
             size_t len = strlen(val);
+
             if(written + len > WRITE_CAP)
-                return written;
+            {
+                tty_print(val, written + len - WRITE_CAP);
+                return WRITE_CAP;
+            }
+
             written += len;
-            ++fmt;
 
             tty_print(val, len);
             break;
@@ -255,14 +330,13 @@ process_length:
         {
             char val = va_arg(arglist, int);
             ++written;
-            ++fmt;
 
             tty_print(&val, 1);
             break;
         }
         
         }
-
+        ++fmt;
     }
 
     return written;
