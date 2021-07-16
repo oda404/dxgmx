@@ -78,6 +78,6 @@ const MemoryMap *mmap_get_mmap();
 /*
  * Print all entries.
 */
-void mmap_print();
+void mmap_dump();
 
 #endif // _DXGMX_MEM_MAP_H

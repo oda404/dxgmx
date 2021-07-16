@@ -290,14 +290,14 @@ const MemoryMap *mmap_get_mmap()
     return &mmap;
 }
 
-void mmap_print()
+void mmap_dump()
 {
     kprintf("System memory map:\n");
     for(size_t i = 0; i < mmap.entries_cnt; ++i)
     {
         const MemoryMapEntry *tmp = &mmap.entries[i];
         kprintf(
-            "base: 0x%lX size: 0x%lX type: %ld\n", 
+            "base 0x%08lX size 0x%08lX type %ld\n", 
             (uint32_t)tmp->base, 
             (uint32_t)tmp->size, 
             tmp->type
