@@ -10,9 +10,10 @@
 
 void abandon_ship(const char *lastmsg, ...)
 {
-    kprintf("Abandoning ship ");
+    kprintf("Abandoning ship");
     if(lastmsg)
     {
+        kprintf(": ");
         va_list list;
         va_start(list, lastmsg);
         vkprintf(lastmsg, list);
