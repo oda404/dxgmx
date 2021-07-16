@@ -2,6 +2,7 @@
 OBJS_ARCH += \
 arch/x86/init_stage1.o \
 arch/x86/init_stage2.o \
+arch/x86/cpu.o \
 
 include $(ARCH_DIR)/boot/Makefile
 include $(ARCH_DIR)/video/Makefile
