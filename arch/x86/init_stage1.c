@@ -24,8 +24,6 @@ int kinit_stage1(const BootInfo *bootinfo)
     kprintf("           |___/                \n");
     kprintf("\n");
 
-    kprintf("Targeting: kinit_stage1.\n");
-
     if(bootinfo->blmagic != MBOOT_BOOTLOADER_MAGIC)
         abandon_ship("Not booted by a multiboot compliant bootloader\n");
 
@@ -61,14 +59,13 @@ int kinit_stage1(const BootInfo *bootinfo)
      * the available areas but gain a lot of mental health
      */
     mmap_entries_align(PAGE_SIZE);
+    mmap_dump();
 
     pageframe_alloc_init();
 
     sysgdt_init();
     sysidt_init();
     kpagedir_init();
-
-    kprintf("Reached target: kinit_stage1.\n");
 
     return 0;
 }
