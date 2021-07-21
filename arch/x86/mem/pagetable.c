@@ -80,7 +80,7 @@ int pagetable_entry_set_frame_base(
 
 uint32_t pagetable_entry_get_frame_base(PageTableEntry *entry)
 {
-    return entry->frame_base;
+    return entry->frame_base << 12;
 }
 
 int pagetable_entry_get_present(PageTableEntry *entry)

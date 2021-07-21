@@ -102,5 +102,5 @@ int pagedir_entry_get_page_size(const PageDirectoryEntry *entry)
 
 PageTable *pagedir_entry_get_table_base(const PageDirectoryEntry *entry)
 {
-    return (PageTable *)((uint32_t)entry->table_base);
+    return (PageTable *)((uint32_t)entry->table_base << 12);
 }
