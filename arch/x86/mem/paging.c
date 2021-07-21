@@ -1,14 +1,8 @@
 
 #include<dxgmx/mem/paging.h>
+#include<dxgmx/cpu.h>
 
 void paging_enable()
 {
-    asm volatile(
-        "movl $1,   %eax  \n"
-        "movl %cr0, %ebx  \n"
-        "or   %eax, %ebx  \n"
-        "shl  $31,  %eax  \n"
-        "or   %eax, %ebx  \n"
-        "movl %ebx, %cr0  \n"
-    );
+    cpu_set_cr0(cpu_get_cr0() | CR0FLAG_PE | CR0FLAG_PG | CR0FLAG_WP);
 }
