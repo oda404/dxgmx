@@ -3,7 +3,7 @@ APPNAME           := dxgmx
 
 VER_MAJ           := 0
 VER_MIN           := 8
-PATCH_N           := 0
+PATCH_N           := 1
 CODENAME          := angel_attack
 
 -include buildconfig
