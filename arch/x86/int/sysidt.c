@@ -5,6 +5,7 @@
 #include<dxgmx/kprintf.h>
 #include<dxgmx/x86/portio.h>
 #include<dxgmx/x86/pic.h>
+#include<dxgmx/x86/interrupt_frame.h>
 #include<dxgmx/attrs.h>
 #include<stdint.h>
 
@@ -201,174 +202,174 @@ void sysidt_init()
     asm volatile("sti");
 }
 
-void isr0_handler()
+void isr0_handler(const _ATTR_MAYBE_UNUSED InterruptFrame* frame)
 {
 
 }
 
-void isr1_handler()
+void isr1_handler(const _ATTR_MAYBE_UNUSED InterruptFrame* frame)
 {
 
 }
 
-void isr2_handler()
+void isr2_handler(const _ATTR_MAYBE_UNUSED InterruptFrame* frame)
 {
 
 }
 
-void isr3_handler()
+void isr3_handler(const _ATTR_MAYBE_UNUSED InterruptFrame* frame)
 {
 
 }
 
-void isr4_handler()
+void isr4_handler(const _ATTR_MAYBE_UNUSED InterruptFrame* frame)
 {
 
 }
 
-void isr5_handler()
+void isr5_handler(const _ATTR_MAYBE_UNUSED InterruptFrame* frame)
 {
 
 }
 
-void isr6_handler()
+void isr6_handler(const _ATTR_MAYBE_UNUSED InterruptFrame* frame)
 {
 
 }
 
-void isr7_handler()
+void isr7_handler(const _ATTR_MAYBE_UNUSED InterruptFrame* frame)
 {
 
 }
 
-void isr8_handler()
+void isr8_handler(const _ATTR_MAYBE_UNUSED InterruptFrame* frame)
 {
 
 }
 
-void isr9_handler()
+void isr9_handler(const _ATTR_MAYBE_UNUSED InterruptFrame* frame)
 {
 
 }
 
-void isr10_handler()
+void isr10_handler(const _ATTR_MAYBE_UNUSED InterruptFrame* frame)
 {
 
 }
 
-void isr11_handler()
+void isr11_handler(const _ATTR_MAYBE_UNUSED InterruptFrame* frame)
 {
 
 }
 
-void isr12_handler()
+void isr12_handler(const _ATTR_MAYBE_UNUSED InterruptFrame* frame)
 {
 
 }
 
-void isr13_handler()
+void isr13_handler(const _ATTR_MAYBE_UNUSED InterruptFrame* frame)
 {
 
 }
 
-void isr14_handler()
+void isr14_handler(const _ATTR_MAYBE_UNUSED InterruptFrame* frame)
 {
 
 }
 
-void isr15_handler()
+void isr15_handler(const _ATTR_MAYBE_UNUSED InterruptFrame* frame)
 {
 
 }
 
-void isr16_handler()
+void isr16_handler(const _ATTR_MAYBE_UNUSED InterruptFrame* frame)
 {
 
 }
 
-void isr17_handler()
+void isr17_handler(const _ATTR_MAYBE_UNUSED InterruptFrame* frame)
 {
 
 }
 
-void isr18_handler()
+void isr18_handler(const _ATTR_MAYBE_UNUSED InterruptFrame* frame)
 {
 
 }
 
-void isr19_handler()
+void isr19_handler(const _ATTR_MAYBE_UNUSED InterruptFrame* frame)
 {
 
 }
 
-void isr20_handler()
+void isr20_handler(const _ATTR_MAYBE_UNUSED InterruptFrame* frame)
 {
 
 }
 
-void isr21_handler()
+void isr21_handler(const _ATTR_MAYBE_UNUSED InterruptFrame* frame)
 {
 
 }
 
-void isr22_handler()
+void isr22_handler(const _ATTR_MAYBE_UNUSED InterruptFrame* frame)
 {
 
 }
 
-void isr23_handler()
+void isr23_handler(const _ATTR_MAYBE_UNUSED InterruptFrame* frame)
 {
 
 }
 
-void isr24_handler()
+void isr24_handler(const _ATTR_MAYBE_UNUSED InterruptFrame* frame)
 {
 
 }
 
-void isr25_handler()
+void isr25_handler(const _ATTR_MAYBE_UNUSED InterruptFrame* frame)
 {
 
 }
 
-void isr26_handler()
+void isr26_handler(const _ATTR_MAYBE_UNUSED InterruptFrame* frame)
 {
 
 }
 
-void isr27_handler()
+void isr27_handler(const _ATTR_MAYBE_UNUSED InterruptFrame* frame)
 {
 
 }
 
-void isr28_handler()
+void isr28_handler(const _ATTR_MAYBE_UNUSED InterruptFrame* frame)
 {
 
 }
 
-void isr29_handler()
+void isr29_handler(const _ATTR_MAYBE_UNUSED InterruptFrame* frame)
 {
 
 }
 
-void isr30_handler()
+void isr30_handler(const _ATTR_MAYBE_UNUSED InterruptFrame* frame)
 {
 
 }
 
-void isr31_handler()
+void isr31_handler(const _ATTR_MAYBE_UNUSED InterruptFrame* frame)
 {
 
 }
 
 /* PIT */
-void irq0_handler()
+void irq0_handler(const _ATTR_MAYBE_UNUSED InterruptFrame* frame)
 {
     pic8259_signal_eoi(0);
 }
 
 /* keyboard */
-void irq1_handler()
+void irq1_handler(const _ATTR_MAYBE_UNUSED InterruptFrame* frame)
 {
     unsigned char scan_code = port_inb(0x60); 
     kprintf("%d ", scan_code);
@@ -376,85 +377,85 @@ void irq1_handler()
 }
 
 /* used internally by the 2 PICs */
-void irq2_handler()
+void irq2_handler(const _ATTR_MAYBE_UNUSED InterruptFrame* frame)
 {
     pic8259_signal_eoi(0);
 }
 
 /* COM2 */
-void irq3_handler()
+void irq3_handler(const _ATTR_MAYBE_UNUSED InterruptFrame* frame)
 {
     pic8259_signal_eoi(0);
 }
 
 /* COM1 */
-void irq4_handler()
+void irq4_handler(const _ATTR_MAYBE_UNUSED InterruptFrame* frame)
 {
     pic8259_signal_eoi(0);
 }
 
 /* LPT2 */
-void irq5_handler()
+void irq5_handler(const _ATTR_MAYBE_UNUSED InterruptFrame* frame)
 {
     pic8259_signal_eoi(0);
 }
 
 /* floppy disk */
-void irq6_handler()
+void irq6_handler(const _ATTR_MAYBE_UNUSED InterruptFrame* frame)
 {
     pic8259_signal_eoi(0);
 }
 
 /* LPT1 */
-void irq7_handler()
+void irq7_handler(const _ATTR_MAYBE_UNUSED InterruptFrame* frame)
 {
     pic8259_signal_eoi(0);
 }
 
 /* CMOS RTC */
-void irq8_handler()
+void irq8_handler(const _ATTR_MAYBE_UNUSED InterruptFrame* frame)
 {
     pic8259_signal_eoi(1);
 }
 
 /* free for peripherals */
-void irq9_handler()
+void irq9_handler(const _ATTR_MAYBE_UNUSED InterruptFrame* frame)
 {
     pic8259_signal_eoi(1);
 }
 
 /* free for peripherals */
-void irq10_handler()
+void irq10_handler(const _ATTR_MAYBE_UNUSED InterruptFrame* frame)
 {
     pic8259_signal_eoi(1);
 }
 
 /* free for peripherals */
-void irq11_handler()
+void irq11_handler(const _ATTR_MAYBE_UNUSED InterruptFrame* frame)
 {
     pic8259_signal_eoi(1);
 }
 
 /* PS2 mouse */
-void irq12_handler()
+void irq12_handler(const _ATTR_MAYBE_UNUSED InterruptFrame* frame)
 {
     pic8259_signal_eoi(1);
 }
 
 /* FPU/co-CPU/inter-CPU */
-void irq13_handler()
+void irq13_handler(const _ATTR_MAYBE_UNUSED InterruptFrame* frame)
 {
     pic8259_signal_eoi(1);
 }
 
 /* primary ATA hard disk */
-void irq14_handler()
+void irq14_handler(const _ATTR_MAYBE_UNUSED InterruptFrame* frame)
 {
     pic8259_signal_eoi(1);
 }
 
 /* secondary ATA hard disk */
-void irq15_handler()
+void irq15_handler(const _ATTR_MAYBE_UNUSED InterruptFrame* frame)
 {
     pic8259_signal_eoi(1);
 }
