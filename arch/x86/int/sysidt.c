@@ -155,7 +155,7 @@ void sysidt_init()
         idt_encode_entry(
             (uint32_t)isrs[i],
             0x8,
-            IDT_GATE_TYPE_INT_32 | IDT_DESC_PRIV_0 | IDT_INT_PRESENT,
+            IDT_GATE_TYPE_TRAP_32 | IDT_DESC_PRIV_0 | IDT_INT_PRESENT,
             &idt[i]
         );
     }
