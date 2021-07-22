@@ -22,10 +22,15 @@ int kpagedir_init()
     pagedir_init(&pagedir);
     pagetable_init(&pagetables);
     
+    PageTableEntry *entry = &pagetables.entries[0];
+    pagetable_entry_set_frame_base(0, entry);
+    pagetable_entry_set_present(false, entry);
+    pagetable_entry_set_rw(false, entry);
+    
     /* Identity map the first 4MiB */
-    for(size_t i = 0; i < 1024; ++i)
+    for(size_t i = 1; i < 1024; ++i)
     {
-        PageTableEntry *entry = &pagetables.entries[i];
+        entry = &pagetables.entries[i];
         pagetable_entry_set_frame_base(i * PAGE_SIZE, entry);
         pagetable_entry_set_present(true, entry);
         pagetable_entry_set_rw(true, entry);
