@@ -8,60 +8,81 @@
 #include<dxgmx/attrs.h>
 #include<stdint.h>
 
-#define ISR_ENTRY(id)                \
-_ATTR_NAKED                          \
-void isr##id() {                     \
-    asm volatile(                    \
-        "pusha                   \n" \
-        "call isr" #id "_handler \n" \
-        "popa                    \n" \
-        "iret                    \n" \
-    );                               \
+asm(
+    ".type isr_exit, @function                       \n"
+    "isr_exit:                                       \n"
+    "  addl $4, %esp # jump over the InterruptFrame* \n"
+    "  popa                                          \n"
+    "  addl $4, %esp # jump over the code            \n"
+    "  iretl                                         \n"
+);
+
+/* ISR entry that has the status code pushed on to the stack. */
+#define ISR_ENTRY_CODE(id)                                     \
+_ATTR_NAKED void isr##id() {                                   \
+    asm volatile(                                              \
+        "pusha                                             \n" \
+        "pushl %esp              # set the InterruptFrame* \n" \
+        "call  isr"#id"_handler                            \n" \
+        "jmp isr_exit                                      \n" \
+    );                                                         \
 }
 
-#define IRQ_ENTRY(id)                \
-_ATTR_NAKED                          \
-void irq##id() {                     \
-    asm volatile(                    \
-        "pusha                   \n" \
-        "call irq" #id "_handler \n" \
-        "popa                    \n" \
-        "iret                    \n" \
-    );                               \
+/* ISR entry that pushes a dummy status code on to the stack. */
+#define ISR_ENTRY_NO_CODE(id)                                 \
+_ATTR_NAKED void isr##id() {                                  \
+    asm volatile(                                             \
+        "pushl $0                #push a fake code        \n" \
+        "pusha                                            \n" \
+        "pushl %esp              #set the InterruptFrame* \n" \
+        "call  isr"#id"_handler                           \n" \
+        "jmp isr_exit                                     \n" \
+    );                                                        \
 }
 
-ISR_ENTRY(0)
-ISR_ENTRY(1)
-ISR_ENTRY(2)
-ISR_ENTRY(3)
-ISR_ENTRY(4)
-ISR_ENTRY(5)
-ISR_ENTRY(6)
-ISR_ENTRY(7)
-ISR_ENTRY(8)
-ISR_ENTRY(9)
-ISR_ENTRY(10)
-ISR_ENTRY(11)
-ISR_ENTRY(12)
-ISR_ENTRY(13)
-ISR_ENTRY(14)
-ISR_ENTRY(15)
-ISR_ENTRY(16)
-ISR_ENTRY(17)
-ISR_ENTRY(18)
-ISR_ENTRY(19)
-ISR_ENTRY(20)
-ISR_ENTRY(21)
-ISR_ENTRY(22)
-ISR_ENTRY(23)
-ISR_ENTRY(24)
-ISR_ENTRY(25)
-ISR_ENTRY(26)
-ISR_ENTRY(27)
-ISR_ENTRY(28)
-ISR_ENTRY(29)
-ISR_ENTRY(30)
-ISR_ENTRY(31)
+#define IRQ_ENTRY(id)                 \
+_ATTR_NAKED void irq##id() {          \
+    asm volatile(                     \
+        "pushl $0                 \n" \
+        "pusha                    \n" \
+        "pushl %esp               \n" \
+        "call irq"#id"_handler    \n" \
+        "jmp isr_exit             \n" \
+    );                                \
+}
+
+ISR_ENTRY_NO_CODE(0)
+ISR_ENTRY_NO_CODE(1)
+ISR_ENTRY_NO_CODE(2)
+ISR_ENTRY_NO_CODE(3)
+ISR_ENTRY_NO_CODE(4)
+ISR_ENTRY_NO_CODE(5)
+ISR_ENTRY_NO_CODE(6)
+ISR_ENTRY_NO_CODE(7)
+ISR_ENTRY_CODE(8)
+ISR_ENTRY_NO_CODE(9)
+ISR_ENTRY_CODE(10)
+ISR_ENTRY_CODE(11)
+ISR_ENTRY_CODE(12)
+ISR_ENTRY_CODE(13)
+ISR_ENTRY_CODE(14)
+ISR_ENTRY_NO_CODE(15)
+ISR_ENTRY_NO_CODE(16)
+ISR_ENTRY_CODE(17)
+ISR_ENTRY_NO_CODE(18)
+ISR_ENTRY_NO_CODE(19)
+ISR_ENTRY_NO_CODE(20)
+ISR_ENTRY_NO_CODE(21)
+ISR_ENTRY_NO_CODE(22)
+ISR_ENTRY_NO_CODE(23)
+ISR_ENTRY_NO_CODE(24)
+ISR_ENTRY_NO_CODE(25)
+ISR_ENTRY_NO_CODE(26)
+ISR_ENTRY_NO_CODE(27)
+ISR_ENTRY_NO_CODE(28)
+ISR_ENTRY_NO_CODE(29)
+ISR_ENTRY_CODE(30)
+ISR_ENTRY_NO_CODE(31)
 
 IRQ_ENTRY(0)
 IRQ_ENTRY(1)
