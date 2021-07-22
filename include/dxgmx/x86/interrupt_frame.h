@@ -18,11 +18,10 @@ _ATTR_PACKED S_InterruptFrame
     uint32_t ecx;
     uint32_t eax;
 
-    uint16_t code;
+    uint32_t code;
 
     uint32_t eip;
-    uint16_t padding;
-    uint16_t cs;
+    uint32_t cs;
     uint32_t eflags;
 } InterruptFrame;
 
