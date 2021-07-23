@@ -1,6 +1,7 @@
 
 
 #include<dxgmx/x86/sysidt.h>
+#include<dxgmx/x86/sysgdt.h>
 #include<dxgmx/x86/idt.h>
 #include<dxgmx/kprintf.h>
 #include<dxgmx/x86/portio.h>
@@ -176,7 +177,7 @@ void sysidt_init()
     {
         idt_encode_entry(
             (uint32_t)isrs[i],
-            0x8,
+            SYSGDT_KERNEL_CS,
             IDT_GATE_TYPE_TRAP_32 | IDT_DESC_PRIV_0 | IDT_INT_PRESENT,
             &idt[i]
         );
@@ -187,7 +188,7 @@ void sysidt_init()
     {
         idt_encode_entry(
             (uint32_t)irqs[i],
-            0x8, 
+            SYSGDT_KERNEL_CS, 
             IDT_GATE_TYPE_INT_32 | IDT_DESC_PRIV_0 | IDT_INT_PRESENT,
             &idt[i + MASTER_PIC_OFFSET]
         );

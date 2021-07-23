@@ -4,6 +4,7 @@
 */
 
 #include<dxgmx/x86/gdt.h>
+#include<dxgmx/x86/sysgdt.h>
 #include<stdint.h>
 #include<stdbool.h>
 
@@ -13,17 +14,17 @@ void gdt_load(
 {
     asm volatile(
         "lgdt (%0)                \n"
-        "ljmp $0x8, $reload_segs  \n"
-        "\n"
-        "reload_segs:  \n"
-        "  movw $0x10, %%ax \n"
-        "  movw %%ax, %%ds  \n"
-        "  movw %%ax, %%es  \n"
-        "  movw %%ax, %%fs  \n"
-        "  movw %%ax, %%gs  \n"
-        "  movw %%ax, %%ss  \n"
+        "ljmp %1, $reload_segs    \n"
+        "                         \n"
+        "reload_segs:             \n"
+        "  movw %2, %%ax       \n"
+        "  movw %%ax, %%ds        \n"
+        "  movw %%ax, %%es        \n"
+        "  movw %%ax, %%fs        \n"
+        "  movw %%ax, %%gs        \n"
+        "  movw %%ax, %%ss        \n"
         : 
-        : "b"(gdtr)
+        : "b"(gdtr), "i"(SYSGDT_KERNEL_CS), "i"(SYSGDT_KERNEL_DS)
     );
 }
 
