@@ -10,7 +10,7 @@
 #include<dxgmx/abandon_ship.h>
 #include<dxgmx/mem/pageframe.h>
 #include<dxgmx/mem/pagesize.h>
-#include<dxgmx/mem/kpagedir.h>
+#include<dxgmx/mem/kpaging.h>
 #include<dxgmx/kprintf.h>
 #include<stdint.h>
 
@@ -65,7 +65,7 @@ int kinit_stage1(const BootInfo *bootinfo)
 
     sysgdt_init();
     sysidt_init();
-    kpagedir_init();
+    kpaging_init();
 
     return 0;
 }

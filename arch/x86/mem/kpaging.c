@@ -1,5 +1,5 @@
 
-#include<dxgmx/mem/kpagedir.h>
+#include<dxgmx/mem/kpaging.h>
 #include<dxgmx/mem/pagedir.h>
 #include<dxgmx/mem/pagetable.h>
 #include<dxgmx/mem/paging.h>
@@ -17,7 +17,7 @@ PageDirectory *kpagedir_get()
     return &pagedir;
 }
 
-int kpagedir_init()
+int kpaging_init()
 {
     pagedir_init(&pagedir);
     pagetable_init(&pagetables);
