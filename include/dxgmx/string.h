@@ -9,6 +9,9 @@
 #include<stddef.h>
 #include<dxgmx/attrs.h>
 
+int strcmp(const char *str1, const char *str2)
+_ATTR_PURE;
+
 int memcmp(const void *str1, const void *str2, size_t n)
 _ATTR_PURE;
 

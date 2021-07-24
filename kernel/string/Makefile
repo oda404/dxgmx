@@ -7,3 +7,4 @@ kernel/string/strlen.o \
 kernel/string/memset.o \
 kernel/string/strncat.o \
 kernel/string/memcpy.o \
+kernel/string/strcmp.o \
