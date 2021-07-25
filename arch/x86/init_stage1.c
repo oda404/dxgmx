@@ -1,7 +1,7 @@
 
 #include<dxgmx/x86/sysidt.h>
 #include<dxgmx/x86/sysgdt.h>
-#include<dxgmx/x86/mboot.h>
+#include<dxgmx/x86/multiboot.h>
 #include<dxgmx/video/tty.h>
 #include<dxgmx/bootinfo.h>
 #include<dxgmx/mem/map.h>
@@ -24,7 +24,7 @@ int kinit_stage1(const BootInfo *bootinfo)
     kprintf("           |___/                \n");
     kprintf("\n");
 
-    if(bootinfo->blmagic != MBOOT_BOOTLOADER_MAGIC)
+    if(bootinfo->blmagic != MULTIBOOT_BOOTLOADER_MAGIC)
         abandon_ship("Not booted by a multiboot compliant bootloader\n");
 
     kprintf(
@@ -40,16 +40,16 @@ int kinit_stage1(const BootInfo *bootinfo)
 
     mmap_init();
 
-    mboot_mbi *mbi = (mboot_mbi *)bootinfo->blinfo_base;
-    mboot_mmap *mmap;
+    MultibootMBI *mbi = (MultibootMBI *)bootinfo->blinfo_base;
+    MultibootMMAP *mmap;
 
     for(
-        mmap = (mboot_mmap *)mbi->mmap_base_addr;
-        (uint32_t)mmap < mbi->mmap_base_addr + mbi->mmap_length;
-        mmap = (mboot_mmap *)((uint32_t)mmap + mmap->size + sizeof(mmap->size))
+        mmap = (MultibootMMAP *)mbi->mmap_base;
+        (uint32_t)mmap < mbi->mmap_base + mbi->mmap_length;
+        mmap = (MultibootMMAP *)((uint32_t)mmap + mmap->size + sizeof(mmap->size))
     )
     {
-        mmap_entry_add(mmap->base_addr, mmap->length, mmap->type);
+        mmap_entry_add(mmap->base, mmap->length, mmap->type);
     }
 
     /* mark the kernel itself as kreserved */
