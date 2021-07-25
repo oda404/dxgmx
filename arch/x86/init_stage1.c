@@ -38,6 +38,7 @@ int kinit_stage1(const BootInfo *bootinfo)
         bootinfo->kstack_bot
     );
 
+    cpu_identify();
     mmap_init();
 
     MultibootMBI *mbi = (MultibootMBI *)bootinfo->blinfo_base;

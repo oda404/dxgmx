@@ -33,5 +33,7 @@ typedef enum E_CR0Flags
 uint32_t cpu_get_cr2();
 uint32_t cpu_get_cr0();
 void cpu_set_cr0(uint32_t val);
+/** Tries to identify the CPU and it's features. */
+int cpu_identify();
 
 #endif // _DXGMX_CPU_H
