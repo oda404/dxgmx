@@ -40,16 +40,11 @@ elif [ -z "$BOOT_SPEC" ]; then
 	exit 4
 fi
 
-if [ "$BOOT_SPEC" -eq "standalone" ]; then
-	echo idk we ll see
-else
+mkdir -p $SYSROOT_DIR/boot/grub
 
-	mkdir -p $SYSROOT_DIR/boot/grub
-	cat > $SYSROOT_DIR/boot/grub/grub.cfg << EOF
-menuentry "$BIN_NAME" {
-	"$BOOT_SPEC" /boot/$BIN_NAME
-}
-EOF
+echo "timeout=0"                    >> $SYSROOT_DIR/boot/grub/grub.cfg
+echo "menuentry \"$BIN_NAME\" {"    >> $SYSROOT_DIR/boot/grub/grub.cfg
+echo "	$BOOT_SPEC /boot/$BIN_NAME" >> $SYSROOT_DIR/boot/grub/grub.cfg
+echo "}"                            >> $SYSROOT_DIR/boot/grub/grub.cfg
 
-	grub-mkrescue -o $OUT_ISO_PATH $SYSROOT_DIR
-fi	
+grub-mkrescue -o $OUT_ISO_PATH $SYSROOT_DIR
