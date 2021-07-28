@@ -31,7 +31,7 @@ int kinit_stage1(const BootInfo *bootinfo)
     kprintf("\n");
 
     if(bootinfo->blmagic != MULTIBOOT_BOOTLOADER_MAGIC)
-        klog(KLOG_FATAL, "Not booted by a multiboot compliant bootloader\n");
+        abandon_ship("Not booted by a multiboot compliant bootloader\n");
 
     klog(
         KLOG_INFO,
