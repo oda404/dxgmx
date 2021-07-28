@@ -3,7 +3,7 @@
 #include<stdint.h>
 #include<dxgmx/x86/cpuid.h>
 #include<dxgmx/abandon_ship.h>
-#include<dxgmx/kprintf.h>
+#include<dxgmx/klog.h>
 #include<dxgmx/string.h>
 
 static char vendor_str[12];
@@ -26,7 +26,7 @@ int cpu_identify()
     cpuid_get_vendor_str(vendor_str);
     eax_max = cpuid_get_eax_max();
 
-    kprintf("CPU vendor: %s\n", vendor_str);
+    klog(KLOG_INFO, "CPU vendor: %s\n", vendor_str);
 
     if(strcmp(vendor_str, CPU_VENDOR_AMD_STR) == 0)
     {

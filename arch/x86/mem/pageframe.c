@@ -2,7 +2,7 @@
 #include<dxgmx/mem/pageframe.h>
 #include<dxgmx/mem/pagesize.h>
 #include<dxgmx/mem/map.h>
-#include<dxgmx/kprintf.h>
+#include<dxgmx/klog.h>
 #include<dxgmx/abandon_ship.h>
 #include<dxgmx/bitwise.h>
 #include<stdint.h>
@@ -40,7 +40,7 @@ static void pageframe_add_available(const MemoryMapEntry *area)
     {
         if(frame > PAGE_SIZE * 1024 * 64)
         {
-            kprintf("Tried to add out of range page with base 0x%llX\n", frame);
+            klog(KLOG_WARN, "Tried to add out of range page with base 0x%llX\n", frame);
             return;
         }
         pageframe_free(frame);
@@ -68,7 +68,8 @@ void pageframe_alloc_init()
     if(pageframes_avail_cnt == 0)
         abandon_ship("No free page frames have been registered.\n");
 
-    kprintf(
+    klog(
+        KLOG_INFO, 
         "Using %ld free, %d byte sized page frames.\n",
         pageframes_avail_cnt,
         PAGE_SIZE

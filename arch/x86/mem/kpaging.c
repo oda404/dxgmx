@@ -4,7 +4,7 @@
 #include<dxgmx/mem/pagetable.h>
 #include<dxgmx/mem/paging.h>
 #include<dxgmx/mem/pagesize.h>
-#include<dxgmx/kprintf.h>
+#include<dxgmx/klog.h>
 #include<dxgmx/attrs.h>
 #include<stddef.h>
 #include<stdbool.h>
@@ -43,7 +43,7 @@ int kpaging_init()
     pagedir_load(&pagedir);
     paging_enable();
 
-    kprintf("Entering paging prison...\n");
+    klog(KLOG_INFO, "Entering paging prison...\n");
 
     return 0;
 }

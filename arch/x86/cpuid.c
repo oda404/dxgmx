@@ -2,7 +2,6 @@
 #include<dxgmx/x86/cpuid.h>
 #include<dxgmx/string.h>
 #include<stdint.h>
-#include<dxgmx/kprintf.h>
 
 #define CPUID_VENDOR_STR 0
 #define CPUID_MAX_EAX    0

@@ -1,6 +1,7 @@
 
 #include<dxgmx/mem/map.h>
 #include<dxgmx/abandon_ship.h>
+#include<dxgmx/klog.h>
 #include<dxgmx/kprintf.h>
 #include<dxgmx/bitwise.h>
 #include<dxgmx/attrs.h>
@@ -108,7 +109,7 @@ static int mmap_entry_shrink(
 static int mmap_enlarge(size_t n)
 {
     if(mmap.entries_cnt + n > MMAP_MAX_ENTRIES_CNT)
-        kprintf("Exceeded MMAP_MAX_ENTRIES_CNT when enlarging mmap.");
+        abandon_ship("Exceeded MMAP_MAX_ENTRIES_CNT when enlarging mmap.");
     mmap.entries_cnt += n;
     return n;
 }
@@ -185,7 +186,8 @@ static int __log_fatal_overlap_and_die(
     const MemoryMapEntry *entry2
 )
 {
-    kprintf(
+    klog(
+        KLOG_FATAL,
         "Refusing to fix overlap for (base 0x%lX size 0x%lX type %ld) (base 0x%lX size 0x%lX type %ld)\n",
         (uint32_t)entry1->base,
         (uint32_t)entry1->size,
@@ -297,7 +299,7 @@ void mmap_dump()
     {
         const MemoryMapEntry *tmp = &mmap.entries[i];
         kprintf(
-            "base 0x%08lX size 0x%08lX type %ld\n", 
+            "  base 0x%08lX size 0x%08lX type %ld\n", 
             (uint32_t)tmp->base, 
             (uint32_t)tmp->size, 
             tmp->type

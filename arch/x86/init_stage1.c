@@ -12,27 +12,35 @@
 #include<dxgmx/mem/pagesize.h>
 #include<dxgmx/mem/kpaging.h>
 #include<dxgmx/kprintf.h>
+#include<dxgmx/klog.h>
 #include<stdint.h>
 
 int kinit_stage1(const BootInfo *bootinfo)
 {
+    const KLogConfig config = {
+        .loglevel = KLOG_FATAL
+    };
+    klog_init(&config);
+
     kprintf("     _                          \n");
     kprintf("  __| |_  ____ _ _ __ ___ __  __\n");
     kprintf(" / _` \\ \\/ / _` | '_ ` _ \\\\ \\/ /\n");
     kprintf("| (_| |>  < (_| | | | | | |>  <\n");
-    kprintf(" \\__,_/_/\\_\\__, |_| |_| |_/_/\\_\\ %s ~ %d.%d.%d\n",_DXGMX_CODENAME_, _DXGMX_VER_MAJ_, _DXGMX_VER_MIN_, _DXGMX_PATCH_N_);
+    kprintf(" \\__,_/_/\\_\\__, |_| |_| |_/_/\\_\\ %s ~ %d.%d.%d\n", _DXGMX_CODENAME_, _DXGMX_VER_MAJ_, _DXGMX_VER_MIN_, _DXGMX_PATCH_N_);
     kprintf("           |___/                \n");
     kprintf("\n");
 
     if(bootinfo->blmagic != MULTIBOOT_BOOTLOADER_MAGIC)
-        abandon_ship("Not booted by a multiboot compliant bootloader\n");
+        klog(KLOG_FATAL, "Not booted by a multiboot compliant bootloader\n");
 
-    kprintf(
+    klog(
+        KLOG_INFO,
         "Kernel physical base: 0x%lX, size: 0x%lX\n",
         bootinfo->kernel_base,
         bootinfo->kernel_end - bootinfo->kernel_base
     );
-    kprintf(
+    klog(
+        KLOG_INFO,
         "Kernel physical stack top: 0x%lX, bottom: 0x%lX\n",
         bootinfo->kstack_top,
         bootinfo->kstack_bot
