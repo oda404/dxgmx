@@ -8,6 +8,7 @@
 #include<dxgmx/x86/pic.h>
 #include<dxgmx/x86/interrupt_frame.h>
 #include<dxgmx/attrs.h>
+#include<dxgmx/string.h>
 #include<stdint.h>
 
 asm(
@@ -169,6 +170,17 @@ static IDTR idtr;
 #define MASTER_PIC_OFFSET 32
 #define SLAVE_PIC_OFFSET  (MASTER_PIC_OFFSET + 8)
 
+typedef struct
+S_InterruptCallbacks
+{
+#define CALLBACKS_MAX 8
+    interrupt_callback callbacks[CALLBACKS_MAX];
+    uint8_t            callbacks_count;
+} InterruptCallbacks;
+
+#define INTS_CALLBACKS_MAX 48
+static InterruptCallbacks g_interrupts_callbacks[INTS_CALLBACKS_MAX];
+
 void sysidt_init()
 {
     asm volatile("cli");
@@ -201,6 +213,19 @@ void sysidt_init()
     idt_load(&idtr);
 
     asm volatile("sti");
+}
+
+int sysidt_register_callback(uint8_t interrupt_n, interrupt_callback callback)
+{
+    if(interrupt_n >= INTS_CALLBACKS_MAX)
+        return 1;
+
+    InterruptCallbacks *cbs = &g_interrupts_callbacks[interrupt_n];
+    if(cbs->callbacks_count >= CALLBACKS_MAX)
+        return 2;
+    
+    cbs->callbacks[cbs->callbacks_count] = callback;
+    return cbs->callbacks_count++;
 }
 
 void isr0_handler(const _ATTR_MAYBE_UNUSED InterruptFrame* frame)
@@ -416,6 +441,10 @@ void irq7_handler(const _ATTR_MAYBE_UNUSED InterruptFrame* frame)
 /* CMOS RTC */
 void irq8_handler(const _ATTR_MAYBE_UNUSED InterruptFrame* frame)
 {
+    const InterruptCallbacks *cbs = &g_interrupts_callbacks[IRQ8];
+    for(size_t i = 0; i < cbs->callbacks_count; ++i)
+        cbs->callbacks[i](frame, NULL);
+    
     pic8259_signal_eoi(1);
 }
 
