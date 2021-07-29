@@ -61,3 +61,18 @@ size_t klog(uint8_t lvl, const char *fmt, ...)
 
     return written;
 }
+
+size_t klog_notag(uint8_t lvl, const char *fmt, ...)
+{
+     if(lvl > g_klogconfig.loglevel)
+        return 0;
+
+    size_t written = 0;
+
+    va_list valist;
+    va_start(valist, fmt);
+    written += vkprintf(fmt, valist);
+    va_end(valist);
+
+    return written;
+}
