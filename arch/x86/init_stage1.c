@@ -13,6 +13,7 @@
 #include<dxgmx/mem/kpaging.h>
 #include<dxgmx/kprintf.h>
 #include<dxgmx/klog.h>
+#include<dxgmx/x86/rtc.h>
 #include<stdint.h>
 
 int kinit_stage1(const BootInfo *bootinfo)
@@ -22,16 +23,19 @@ int kinit_stage1(const BootInfo *bootinfo)
     };
     klog_init(&config);
 
-    kprintf("     _                          \n");
-    kprintf("  __| |_  ____ _ _ __ ___ __  __\n");
-    kprintf(" / _` \\ \\/ / _` | '_ ` _ \\\\ \\/ /\n");
-    kprintf("| (_| |>  < (_| | | | | | |>  <\n");
-    kprintf(" \\__,_/_/\\_\\__, |_| |_| |_/_/\\_\\ %s ~ %d.%d.%d\n", _DXGMX_CODENAME_, _DXGMX_VER_MAJ_, _DXGMX_VER_MIN_, _DXGMX_PATCH_N_);
-    kprintf("           |___/                \n");
-    kprintf("\n");
+    klog_notag(KLOG_INFO, "     _                          \n");
+    klog_notag(KLOG_INFO, "  __| |_  ____ _ _ __ ___ __  __\n");
+    klog_notag(KLOG_INFO, " / _` \\ \\/ / _` | '_ ` _ \\\\ \\/ /\n");
+    klog_notag(KLOG_INFO, "| (_| |>  < (_| | | | | | |>  <\n");
+    klog_notag(KLOG_INFO, " \\__,_/_/\\_\\__, |_| |_| |_/_/\\_\\ %s ~ %d.%d.%d\n", _DXGMX_CODENAME_, _DXGMX_VER_MAJ_, _DXGMX_VER_MIN_, _DXGMX_PATCH_N_);
+    klog_notag(KLOG_INFO, "           |___/                \n\n");
 
     if(bootinfo->blmagic != MULTIBOOT_BOOTLOADER_MAGIC)
         abandon_ship("Not booted by a multiboot compliant bootloader\n");
+
+    sysgdt_init();
+    sysidt_init();
+    rtc_init();
 
     klog(
         KLOG_INFO,
@@ -71,9 +75,6 @@ int kinit_stage1(const BootInfo *bootinfo)
     mmap_dump();
 
     pageframe_alloc_init();
-
-    sysgdt_init();
-    sysidt_init();
     kpaging_init();
 
     return 0;
