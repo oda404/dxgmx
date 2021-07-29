@@ -5,6 +5,7 @@
 #include<dxgmx/attrs.h>
 #include<stdint.h>
 #include<stddef.h>
+#include<stdarg.h>
 
 /** 
  * When you set a log level. Only it and any levels who'se values are
@@ -35,5 +36,9 @@ _ATTR_FMT_PRINTF(2, 3);
  */
 size_t klog_notag(uint8_t lvl, const char *fmt, ...)
 _ATTR_FMT_PRINTF(2, 3);
+
+size_t kvlog(uint8_t lvl, const char *fmt, va_list list);
+
+size_t kvlog_notag(uint8_t lvl, const char *fmt, va_list list);
 
 #endif //_DXGMX_KLOG_H

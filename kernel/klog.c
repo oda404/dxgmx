@@ -25,7 +25,7 @@ int klog_set_max_level(uint8_t lvl)
     return lvl;
 }
 
-size_t klog(uint8_t lvl, const char *fmt, ...)
+size_t kvlog(uint8_t lvl, const char *fmt, va_list valist)
 {
     if(lvl > g_klogconfig.loglevel)
         return 0;
@@ -54,9 +54,25 @@ size_t klog(uint8_t lvl, const char *fmt, ...)
         return 0;
     }
 
+    written += vkprintf(fmt, valist);
+
+    return written;
+}
+
+size_t kvlog_notag(uint8_t lvl, const char *fmt, va_list valist)
+{
+    if(lvl > g_klogconfig.loglevel)
+        return 0;
+
+    size_t written = vkprintf(fmt, valist);
+    return written;
+}
+
+size_t klog(uint8_t lvl, const char *fmt, ...)
+{
     va_list valist;
     va_start(valist, fmt);
-    written += vkprintf(fmt, valist);
+    size_t written = kvlog(lvl, fmt, valist);
     va_end(valist);
 
     return written;
@@ -64,14 +80,9 @@ size_t klog(uint8_t lvl, const char *fmt, ...)
 
 size_t klog_notag(uint8_t lvl, const char *fmt, ...)
 {
-     if(lvl > g_klogconfig.loglevel)
-        return 0;
-
-    size_t written = 0;
-
     va_list valist;
     va_start(valist, fmt);
-    written += vkprintf(fmt, valist);
+    size_t written = kvlog_notag(lvl, fmt, valist);
     va_end(valist);
 
     return written;
