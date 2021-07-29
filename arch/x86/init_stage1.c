@@ -2,6 +2,8 @@
 #include<dxgmx/x86/sysidt.h>
 #include<dxgmx/x86/sysgdt.h>
 #include<dxgmx/x86/multiboot.h>
+#include<dxgmx/x86/rtc.h>
+#include<dxgmx/x86/acpi.h>
 #include<dxgmx/video/tty.h>
 #include<dxgmx/bootinfo.h>
 #include<dxgmx/mem/map.h>
@@ -13,7 +15,6 @@
 #include<dxgmx/mem/kpaging.h>
 #include<dxgmx/kprintf.h>
 #include<dxgmx/klog.h>
-#include<dxgmx/x86/rtc.h>
 #include<stdint.h>
 
 int kinit_stage1(const BootInfo *bootinfo)
@@ -35,6 +36,7 @@ int kinit_stage1(const BootInfo *bootinfo)
 
     sysgdt_init();
     sysidt_init();
+    acpi_init();
     rtc_init();
 
     klog(
