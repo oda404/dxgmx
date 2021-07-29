@@ -2,7 +2,6 @@
 #include<dxgmx/mem/map.h>
 #include<dxgmx/abandon_ship.h>
 #include<dxgmx/klog.h>
-#include<dxgmx/kprintf.h>
 #include<dxgmx/bitwise.h>
 #include<dxgmx/attrs.h>
 #include<stddef.h>
@@ -294,12 +293,13 @@ const MemoryMap *mmap_get_mmap()
 
 void mmap_dump()
 {
-    kprintf("System memory map:\n");
+    klog_notag(KLOG_INFO, "System memory map:\n");
     for(size_t i = 0; i < mmap.entries_cnt; ++i)
     {
         const MemoryMapEntry *tmp = &mmap.entries[i];
-        kprintf(
-            "  base 0x%08lX size 0x%08lX type %ld\n", 
+        klog_notag(
+            KLOG_INFO,
+            "base 0x%08lX size 0x%08lX type %ld\n", 
             (uint32_t)tmp->base, 
             (uint32_t)tmp->size, 
             tmp->type

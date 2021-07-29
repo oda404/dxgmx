@@ -5,18 +5,18 @@
 
 #include<dxgmx/abandon_ship.h>
 #include<dxgmx/kabort.h>
-#include<dxgmx/kprintf.h>
+#include<dxgmx/klog.h>
 #include<stdarg.h>
 
 void abandon_ship(const char *lastmsg, ...)
 {
-    kprintf("Abandoning ship");
+    klog_notag(KLOG_FATAL, "Abandoning ship");
     if(lastmsg)
     {
-        kprintf(": ");
+        klog_notag(KLOG_FATAL, ": ");
         va_list list;
         va_start(list, lastmsg);
-        vkprintf(lastmsg, list);
+        kvlog_notag(KLOG_FATAL, lastmsg, list);
         va_end(list);
     }
     /* shit and cum my final message goodbye */
