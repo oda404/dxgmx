@@ -39,7 +39,10 @@ static void bcd_to_binary(uint8_t *val)
 
 static RTCTimeInfo g_rtc_timeinfo;
 
-void rtc_int_handler(const InterruptFrame *frame, const void *data)
+void rtc_int_handler(
+    const InterruptFrame _ATTR_MAYBE_UNUSED *frame, 
+    const void _ATTR_MAYBE_UNUSED *data
+)
 {
     cmos_disable_nmi();
     asm volatile("cli");
@@ -55,7 +58,7 @@ void rtc_int_handler(const InterruptFrame *frame, const void *data)
         g_rtc_timeinfo.hours    = cmos_port_inb(RTC_REG_HOURS);
         g_rtc_timeinfo.weekday  = cmos_port_inb(RTC_REG_WEEKDAY);
         g_rtc_timeinfo.monthday = cmos_port_inb(RTC_REG_MONTHDAY);
-        g_rtc_timeinfo.month    = cmos_port_inb(RTC_REG_MONTHDAY);
+        g_rtc_timeinfo.month    = cmos_port_inb(RTC_REG_MONTH);
         g_rtc_timeinfo.year     = cmos_port_inb(RTC_REG_YEAR);
 
         if(!(b & RTC_REG_B_BINARY_MODE))
