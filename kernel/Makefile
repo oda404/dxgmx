@@ -11,3 +11,4 @@ include $(KERNEL_DIR)/errno/Makefile
 include $(KERNEL_DIR)/stdlib/Makefile
 include $(KERNEL_DIR)/string/Makefile
 include $(KERNEL_DIR)/mem/Makefile
+include $(KERNEL_DIR)/video/Makefile
