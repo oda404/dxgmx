@@ -3,7 +3,7 @@
     Distributed under the MIT license.
 */
 
-#include<dxgmx/video/vga_text.h>
+#include<dxgmx/x86/vga_text.h>
 #include<dxgmx/x86/portio.h>
 
 #define VGA_CURSOR_START_REG 0x0A

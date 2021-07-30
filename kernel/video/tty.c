@@ -4,7 +4,7 @@
 */
 
 #include<dxgmx/video/tty.h>
-#include<dxgmx/video/vga_text.h>
+#include<dxgmx/x86/vga_text.h>
 #include<dxgmx/string.h>
 #include<stdint.h>
 
