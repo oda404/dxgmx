@@ -10,6 +10,6 @@
 
 void tty_init();
 void tty_clear();
-int tty_print(const char *str, size_t n);
+size_t tty_print(const char *str, size_t n);
 
 #endif // _DXGMX_VIDEO_TTY_H

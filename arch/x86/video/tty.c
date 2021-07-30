@@ -8,12 +8,12 @@
 #include<dxgmx/string.h>
 #include<stdint.h>
 
-static uint16_t current_row;
-static uint16_t current_col;
+static uint16_t g_current_row;
+static uint16_t g_current_col;
 
 void tty_init()
 {
-    vga_init();
+    vga_init(80, 25);
     vga_disable_cursor();
     tty_clear();
 }
@@ -21,33 +21,27 @@ void tty_init()
 void tty_clear()
 {
     size_t i;
-    for(i = 0; i < VGA_MAX_HEIGHT; ++i)
+    for(i = 0; i < vga_get_max_height(); ++i)
     {
         vga_clear_row(i);
     }
-    current_col = 0;
-    current_row = 0;
+    g_current_col = 0;
+    g_current_row = 0;
 }
 
-int tty_print(const char *str, size_t n)
+size_t tty_print(const char *str, size_t n)
 {
     size_t len = strlen(str);
     if(n > len)
-        return -1;
-    size_t i;
-    for(i = 0; i < n; ++i)
-    {
-        if(current_col >= VGA_MAX_WIDTH)
-        {
-            current_col = 0;
-            ++current_row;
-        }
+        n = len;
 
+    for(size_t i = 0; i < n; ++i)
+    {
         switch(str[i])
         {
         case '\n':
-            current_col = 0;
-            ++current_row;
+            g_current_col = 0;
+            ++g_current_row;
             break;
         
         default:
@@ -55,11 +49,24 @@ int tty_print(const char *str, size_t n)
                 str[i], 
                 VGA_COLOR_WHITE, 
                 VGA_COLOR_BLACK,
-                current_row,
-                current_col
+                g_current_row,
+                g_current_col
             );
-            ++current_col;
+            ++g_current_col;
             break;
+        }
+
+        if(g_current_col >= vga_get_max_width())
+        {
+            g_current_col = 0;
+            ++g_current_row;
+        }
+
+        if(g_current_row >= vga_get_max_height())
+        {
+            vga_scroll(1);
+            --g_current_row;
+            g_current_col = 0;
         }
     }
 

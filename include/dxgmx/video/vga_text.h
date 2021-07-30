@@ -14,8 +14,6 @@
 #define VGA_ERR_INVALID_HEIGHT 2
 #define VGA_ERR_INVALID_FG     3
 #define VGA_ERR_INVALID_BG     4
-#define VGA_MAX_WIDTH        80
-#define VGA_MAX_HEIGHT       25
 
 enum VGAColor
 {
@@ -37,11 +35,14 @@ enum VGAColor
     VGA_COLOR_WHITE   = 0xF
 };
 
-void vga_init();
+void vga_init(uint8_t w, uint8_t h);
 void vga_enable_cursor();
 void vga_disable_cursor();
 int vga_clear_row(uint8_t row);
 int vga_put_char(char c, uint8_t fg, uint8_t bg, uint8_t row, uint8_t col);
 int vga_clear_char(uint8_t row, uint8_t col);
+uint8_t vga_get_max_width();
+uint8_t vga_get_max_height();
+void vga_scroll(size_t lines);
 
 #endif // _DXGMX_VIDEO_VGA_TEXT_H
