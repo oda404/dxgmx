@@ -97,6 +97,7 @@ MAKEFLAGS         += --no-print-directory
 OBJS_ARCH         := 
 OBJS_INIT         := 
 OBJS_KERNEL       := 
+LD_SCRIPT         := $(ARCH_DIR)/linker.ld
 
 # set objs recursively
 include $(ARCH_DIR)/Makefile
@@ -115,7 +116,7 @@ $(SYSROOT_DIR)/usr/include/dxgmx
 SYSROOT_HEADERS   := $(shell find include -name "*.h" -type f)
 SYSROOT_HEADERS   := $(addprefix $(SYSROOT_DIR)/usr/, $(SYSROOT_HEADERS))
 
-DXGMX_DEPS        := $(SYSROOT) $(SYSROOT_HEADERS) $(OBJS) Makefile
+DXGMX_DEPS        := $(SYSROOT) $(SYSROOT_HEADERS) $(OBJS) $(LD_SCRIPT) Makefile
 
 PHONY             :=
 
@@ -124,9 +125,7 @@ all: $(FULL_BIN_PATH)
 
 $(FULL_BIN_PATH): $(DXGMX_DEPS)
 	@$(OUTPUT_FORMATTED) LD $(notdir $(FULL_BIN_NAME))
-
-	@$(CC) -T arch/$(SRCARCH)/boot/linker.ld \
-	$(OBJS) $(LDFLAGS) -o $(FULL_BIN_PATH)
+	@$(CC) -T $(LD_SCRIPT) $(OBJS) $(LDFLAGS) -o $(FULL_BIN_PATH)
 
 	@cp $(FULL_BIN_PATH) $(SYSROOT_DIR)/boot/
 
