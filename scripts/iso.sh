@@ -12,13 +12,17 @@ do
 			BIN_NAME="$2"
 			shift 2
 		;;
-		"-o"|"--out-iso-path")
-			OUT_ISO_PATH="$2"
+		"-i"|"--iso-path")
+			ISO_PATH="$2"
 			shift 2
 		;;
 		"-B"|"--boot-spec")
 			BOOT_SPEC="$2"
 			shift 2
+		;;
+		"-r"|"--run")
+			RUN=1
+			shift
 		;;
 		*)
 			shift
@@ -29,8 +33,8 @@ done
 if [ -z "$SYSROOT_DIR" ]; then
 	echo "[iso.sh] SYSROOT_DIR unset"
 	exit 1
-elif [ -z "$OUT_ISO_PATH" ]; then
-	echo "[iso.sh] OUT_ISO_PATH unset"
+elif [ -z "$ISO_PATH" ]; then
+	echo "[iso.sh] ISO_PATH unset"
 	exit 2
 elif [ -z "$BIN_NAME" ]; then
 	echo "[iso.sh] BIN_NAME unset"
@@ -47,4 +51,9 @@ echo "menuentry \"$BIN_NAME\" {"    >> $SYSROOT_DIR/boot/grub/grub.cfg
 echo "	$BOOT_SPEC /boot/$BIN_NAME" >> $SYSROOT_DIR/boot/grub/grub.cfg
 echo "}"                            >> $SYSROOT_DIR/boot/grub/grub.cfg
 
-grub-mkrescue -o $OUT_ISO_PATH $SYSROOT_DIR
+grub-mkrescue -o $ISO_PATH $SYSROOT_DIR
+
+if [[ $RUN -eq 1 ]]; then
+	qemu-system-x86_64 -cdrom $ISO_PATH
+fi
+

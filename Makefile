@@ -200,15 +200,18 @@ iso:
 	$(SCRIPTSDIR)/iso.sh \
 	--sysroot-dir $(SYSROOTDIR) \
 	--bin-name $(BIN_NAME) \
-	--out-iso-path $(ISO_PATH) \
+	--iso-path $(ISO_PATH) \
 	--boot-spec multiboot
 
 PHONY += iso-run 
 iso-run:
 	$(MAKE) iso
-	$(SCRIPTSDIR)/iso-run.sh \
+	$(SCRIPTSDIR)/iso.sh \
+	--sysroot-dir $(SYSROOTDIR) \
+	--bin-name $(BIN_NAME) \
 	--iso-path $(ISO_PATH) \
-	--arch $(ARCH)
+	--boot-spec multiboot \
+	--run
 
 PHONY += run 
 run:
@@ -226,7 +229,6 @@ PHONY += mrclean
 mrclean:
 	$(MAKE) clean
 	@rm -f $$(ls | grep -Eo '^dxgmx-[0-9]+.[0-9]+.[0-9]+(.iso)?$$')
-	@rm -rf $(SYSROOTDIR)
-	@rmdir -p $(shell find $(BUILDDIR) -type d 2> /dev/null) 2> /dev/null || true
+	@rm -rf $(BUILDDIR) # yikes
 
 .PHONY: $(PHONY)
