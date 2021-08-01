@@ -20,7 +20,7 @@ S_RTCTimeInfo
 int rtc_init();
 void rtc_enable_irq8();
 void rtc_signal_eoi();
-void rtc_dump_time_info();
-const RTCTimeInfo *rtc_get_time_info();
+void rtc_dump_timeinfo();
+const RTCTimeInfo *rtc_get_timeinfo();
 
 #endif //_DXGMX_X86_RTC_H

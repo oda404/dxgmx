@@ -95,7 +95,7 @@ int rtc_init()
     // read the C register so we make sure future IRQs will fire.
     cmos_port_inb(RTC_REG_C);
 
-    rtc_dump_time_info();
+    rtc_dump_timeinfo();
 
     return 0;
 }
@@ -114,12 +114,12 @@ void rtc_enable_irq8()
     asm volatile("sti");
 }
 
-void rtc_dump_time_info()
+void rtc_dump_timeinfo()
 {
     while(!g_rtc_timeinfo.isvalid);
     klog(
         KLOG_INFO,
-        "[RTC] Current date: %d:%d:%d %d/%d/%d\n",
+        "[RTC] Current date: %02d:%02d:%02d %02d/%02d/20%d\n",
         g_rtc_timeinfo.hours,
         g_rtc_timeinfo.minutes,
         g_rtc_timeinfo.seconds,
@@ -127,4 +127,9 @@ void rtc_dump_time_info()
         g_rtc_timeinfo.month,
         g_rtc_timeinfo.year
     );
+}
+
+const RTCTimeInfo *rtc_get_timeinfo()
+{
+    return &g_rtc_timeinfo;
 }
