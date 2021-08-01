@@ -1,3 +1,3 @@
 
-OBJS_INIT += \
-init/main.o
+INIT_SRC += \
+init/main.c

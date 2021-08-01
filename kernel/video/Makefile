@@ -1,3 +1,3 @@
 
-OBJS_KERNEL += \
-kernel/video/tty.o \
+KERNEL_SRC += \
+kernel/video/tty.c \

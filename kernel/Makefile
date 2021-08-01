@@ -1,14 +1,14 @@
 
-OBJS_KERNEL += \
-kernel/abandon_ship.o \
-kernel/bitwise.o \
-kernel/kprintf.o \
-kernel/kabort.o \
-kernel/klog.o \
+KERNEL_SRC += \
+kernel/abandon_ship.c \
+kernel/bitwise.c \
+kernel/kprintf.c \
+kernel/kabort.c \
+kernel/klog.c \
 
-include $(KERNEL_DIR)/ctype/Makefile
-include $(KERNEL_DIR)/errno/Makefile
-include $(KERNEL_DIR)/stdlib/Makefile
-include $(KERNEL_DIR)/string/Makefile
-include $(KERNEL_DIR)/mem/Makefile
-include $(KERNEL_DIR)/video/Makefile
+include $(KERNEL_SRCDIR)/ctype/Makefile
+include $(KERNEL_SRCDIR)/errno/Makefile
+include $(KERNEL_SRCDIR)/stdlib/Makefile
+include $(KERNEL_SRCDIR)/string/Makefile
+include $(KERNEL_SRCDIR)/mem/Makefile
+include $(KERNEL_SRCDIR)/video/Makefile

@@ -1,3 +1,3 @@
 
-OBJS_KERNEL += \
-kernel/errno/errno.o \
+KERNEL_SRC += \
+kernel/errno/errno.c \

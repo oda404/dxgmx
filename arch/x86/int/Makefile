@@ -1,6 +1,5 @@
 
-
-OBJS_ARCH += \
-arch/x86/int/idt.o \
-arch/x86/int/pic.o \
-arch/x86/int/sysidt.o \
+ARCH_SRC += \
+arch/x86/int/idt.c \
+arch/x86/int/pic.c \
+arch/x86/int/sysidt.c \

@@ -1,3 +1,3 @@
 
-OBJS_KERNEL += \
-kernel/mem/map.o
+KERNEL_SRC += \
+kernel/mem/map.c
