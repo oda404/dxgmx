@@ -5,7 +5,7 @@
 #include<dxgmx/klog.h>
 #include<stddef.h>
 
-RSDP *acpi_find_rsdp()
+static RSDP *acpi_find_rsdp()
 {
     uint32_t ebda_hopefully = 0;
     memcpy(&ebda_hopefully, (void *)0x40E, 2);
@@ -26,7 +26,7 @@ RSDP *acpi_find_rsdp()
     return NULL;
 }
 
-int acpi_is_rsdp_valid(const RSDP *rsdp)
+static int acpi_is_rsdp_valid(const RSDP *rsdp)
 {
     if(!rsdp)
         return 0;
@@ -38,7 +38,7 @@ int acpi_is_rsdp_valid(const RSDP *rsdp)
         sum += *((uint8_t *)rsdp + i);
     }
 
-    if(rsdp->rsdp_v1.revision == 2)
+    if(rsdp->rsdp_v1.rev == 2)
     {
         for(size_t i = sizeof(RSDPV1); i < sizeof(RSDPV2); ++i)
         {
@@ -49,7 +49,7 @@ int acpi_is_rsdp_valid(const RSDP *rsdp)
     return !(sum & 0xFF);
 }
 
-int acpi_is_sdt_header_valid(const SDTHeader *header)
+static int acpi_is_sdt_header_valid(const SDTHeader *header)
 {
     uint32_t sum = 0;
 
@@ -59,6 +59,18 @@ int acpi_is_sdt_header_valid(const SDTHeader *header)
     }
 
     return !(sum & 0xFF);
+}
+
+static HPETT *g_hpett = NULL;
+
+static void acpi_parse_hpet(SDTHeader *header)
+{
+    g_hpett = (HPETT*)header;
+}
+
+HPETT* acpi_get_hpett()
+{
+    return g_hpett;
 }
 
 int acpi_init()
@@ -82,13 +94,17 @@ int acpi_init()
         SDTHeader *header = ((void *)(rsdt->tables) + offset);
         offset += header->len;
 
-        char sig[5] = { 0 };
-        memcpy(sig, header->signature, 4);
-
         if(acpi_is_sdt_header_valid(header))
-            klog(KLOG_INFO, "[ACPI] Found header '%s'.\n", sig);
+        {
+            klog(KLOG_INFO, "[ACPI] Found header '%.4s'.\n", header->signature);
+
+            if(memcmp(header->signature, "HPET", 4) == 0)
+                acpi_parse_hpet(header);
+        }
         else
+        {
             klog(KLOG_WARN, "[ACPI] Found invalid header at 0x%lX.\n", (uint32_t)header);
+        }
     }
 
     return 0;
