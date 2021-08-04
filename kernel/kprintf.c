@@ -4,6 +4,7 @@
 #include<dxgmx/string.h>
 #include<dxgmx/video/tty.h>
 #include<dxgmx/ctype.h>
+#include<dxgmx/todo.h>
 #include<stdint.h>
 #include<stddef.h>
 #include<limits.h>
@@ -194,6 +195,7 @@ int vkprintf(const char *fmt, va_list arglist)
     uint8_t length;
     uint8_t flags;
     uint16_t width;
+    int64_t precision;
 
     for(; *fmt != '\0'; ++fmt)
     {
@@ -209,12 +211,33 @@ int vkprintf(const char *fmt, va_list arglist)
         length = PRINTF_LEN_NONE;
         flags  = PRINTF_FLAG_NONE;
         width = 0;
+        precision = -1;
 
         while(printf_parse_flags(*(fmt + 1), &flags) == PRINTF_PARSE_CONTINUE)
             ++fmt;
 
         while(printf_parse_width(*(fmt + 1), &width) == PRINTF_PARSE_CONTINUE)
             ++fmt;
+
+        /* precision */
+        if(*(fmt + 1) == '.')
+        {
+            ++fmt;
+
+            if(*(fmt + 1) == '*')
+            {
+                precision = va_arg(arglist, size_t);
+            }
+            else
+            {
+                precision = 0;
+                while(isdigit(*(fmt + 1)))
+                {
+                    precision = precision * 10 + (*(fmt + 1) - '0');
+                    ++fmt;
+                }
+            }
+        }
         
 reprocess_length:
         switch(printf_parse_length(*(fmt + 1), &length))
@@ -311,7 +334,7 @@ reprocess_length:
         case 's':
         {
             const char *val = va_arg(arglist, const char*);
-            size_t len = strlen(val);
+            size_t len = precision != -1 ? precision : strlen(val);
 
             if(written + len > WRITE_CAP)
             {
