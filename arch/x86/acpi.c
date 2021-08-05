@@ -5,7 +5,7 @@
 #include<dxgmx/klog.h>
 #include<stddef.h>
 
-static RSDP *acpi_find_rsdp()
+static ACPIRSDP *acpi_find_rsdp()
 {
     uint32_t ebda_hopefully = 0;
     memcpy(&ebda_hopefully, (void *)0x40E, 2);
@@ -14,33 +14,33 @@ static RSDP *acpi_find_rsdp()
     for(size_t i = ebda_hopefully; i < ebda_hopefully + 0x400; i += 16)
     {
         if(memcmp((void *)i, "RSD PTR ", 8) == 0)
-            return (RSDP *)i;
+            return (ACPIRSDP *)i;
     }
 
     for(size_t i = 0xE0000; i < 0xFFFFF; i += 16)
     {
         if(memcmp((void *)i, "RSD PTR ", 8) == 0)
-            return (RSDP *)i;
+            return (ACPIRSDP *)i;
     }
 
     return NULL;
 }
 
-static int acpi_is_rsdp_valid(const RSDP *rsdp)
+static int acpi_is_rsdp_valid(const ACPIRSDP *rsdp)
 {
     if(!rsdp)
         return 0;
 
     uint32_t sum = 0;
 
-    for(size_t i = 0; i < sizeof(RSDPV1); ++i)
+    for(size_t i = 0; i < sizeof(ACPIRSDPV1); ++i)
     {
         sum += *((uint8_t *)rsdp + i);
     }
 
     if(rsdp->rsdp_v1.rev == 2)
     {
-        for(size_t i = sizeof(RSDPV1); i < sizeof(RSDPV2); ++i)
+        for(size_t i = sizeof(ACPIRSDPV1); i < sizeof(ACPIRSDPV2); ++i)
         {
             sum += *((uint8_t *)rsdp + i);
         }
@@ -49,7 +49,7 @@ static int acpi_is_rsdp_valid(const RSDP *rsdp)
     return !(sum & 0xFF);
 }
 
-static int acpi_is_sdt_header_valid(const SDTHeader *header)
+static int acpi_is_sdt_header_valid(const ACPISDTHeader *header)
 {
     uint32_t sum = 0;
 
@@ -61,28 +61,28 @@ static int acpi_is_sdt_header_valid(const SDTHeader *header)
     return !(sum & 0xFF);
 }
 
-static HPETT *g_hpett = NULL;
+static ACPIHPETT *g_hpett = NULL;
 
-static void acpi_parse_hpet(SDTHeader *header)
+static void acpi_parse_hpet(ACPISDTHeader *header)
 {
-    g_hpett = (HPETT*)header;
+    g_hpett = (ACPIHPETT*)header;
 }
 
-HPETT* acpi_get_hpett()
+ACPIHPETT* acpi_get_hpett()
 {
     return g_hpett;
 }
 
 int acpi_init()
 {
-    RSDP *rsdp = acpi_find_rsdp();
+    ACPIRSDP *rsdp = acpi_find_rsdp();
 
     if(acpi_is_rsdp_valid(rsdp))
         klog(KLOG_INFO, "[ACPI] Found RSDP at 0x%lX.\n", (uint32_t)rsdp);
     else
         abandon_ship("[ACPI] RSDP at 0x%lX is invalid. Not proceeding.\n", (uint32_t)rsdp);
 
-    RSDT *rsdt = (RSDT *)rsdp->rsdp_v1.rsdt_base;
+    ACPIRSDT *rsdt = (ACPIRSDT *)rsdp->rsdp_v1.rsdt_base;
     if(!acpi_is_sdt_header_valid(&rsdt->header))
         abandon_ship("[ACPI] RSDT at 0x%lX is invalid. Not proceeding.\n", (uint32_t)rsdt);
 
@@ -91,7 +91,7 @@ int acpi_init()
     uint32_t offset = 0;
     for(size_t i = 0; i < rsdt_max_tables; ++i)
     {
-        SDTHeader *header = ((void *)(rsdt->tables) + offset);
+        ACPISDTHeader *header = ((void *)(rsdt->tables) + offset);
         offset += header->len;
 
         if(acpi_is_sdt_header_valid(header))
