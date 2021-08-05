@@ -208,39 +208,39 @@ int vkprintf(const char *fmt, va_list arglist)
             ++written;
             continue;
         }
+        // jump over the '%'
+        ++fmt;
         length = PRINTF_LEN_NONE;
         flags  = PRINTF_FLAG_NONE;
         width = 0;
         precision = -1;
 
-        while(printf_parse_flags(*(fmt + 1), &flags) == PRINTF_PARSE_CONTINUE)
+        while(printf_parse_flags(*fmt, &flags) == PRINTF_PARSE_CONTINUE)
             ++fmt;
 
-        while(printf_parse_width(*(fmt + 1), &width) == PRINTF_PARSE_CONTINUE)
+        while(printf_parse_width(*fmt, &width) == PRINTF_PARSE_CONTINUE)
             ++fmt;
 
         /* precision */
-        if(*(fmt + 1) == '.')
+        if(*fmt == '.')
         {
             ++fmt;
-
-            if(*(fmt + 1) == '*')
+            if(*fmt == '*')
             {
                 precision = va_arg(arglist, size_t);
             }
             else
             {
                 precision = 0;
-                while(isdigit(*(fmt + 1)))
+                while(isdigit(*fmt))
                 {
-                    precision = precision * 10 + (*(fmt + 1) - '0');
-                    ++fmt;
+                    precision = precision * 10 + (*fmt++ - '0');
                 }
             }
         }
         
 reprocess_length:
-        switch(printf_parse_length(*(fmt + 1), &length))
+        switch(printf_parse_length(*fmt, &length))
         {
         case PRINTF_PARSE_INVALID:
             continue;
@@ -252,7 +252,7 @@ reprocess_length:
         }
 
         // specifier
-        switch(*(fmt + 1))
+        switch(*fmt)
         {
         /* int %i %d */
         case 'i':
@@ -359,7 +359,6 @@ reprocess_length:
         }
         
         }
-        ++fmt;
     }
 
     return written;
