@@ -195,23 +195,20 @@ kernel_headers:
 	@cp -ru $(INCLUDEDIR)/* $(SYSROOTDIR)/usr/include
 
 PHONY += iso 
-iso:
+iso: $(ISO_PATH)
+$(ISO_PATH): $(BIN_PATH)
 	$(MAKE)
-	$(SCRIPTSDIR)/iso.sh \
-	--sysroot-dir $(SYSROOTDIR) \
-	--bin-name $(BIN_NAME) \
-	--iso-path $(ISO_PATH) \
-	--boot-spec multiboot
+	@mkdir -p $(SYSROOTDIR)/boot/grub
+	@echo "timeout=0"                      >> $(SYSROOTDIR)/boot/grub/grub.cfg
+	@echo "menuentry \"$(BIN_NAME)\" {"    >> $(SYSROOTDIR)/boot/grub/grub.cfg
+	@echo "	multiboot /boot/$(BIN_NAME)"   >> $(SYSROOTDIR)/boot/grub/grub.cfg
+	@echo "}"                              >> $(SYSROOTDIR)/boot/grub/grub.cfg
+	@grub-mkrescue -o $(ISO_PATH) $(SYSROOTDIR)
 
 PHONY += iso-run 
 iso-run:
 	$(MAKE) iso
-	$(SCRIPTSDIR)/iso.sh \
-	--sysroot-dir $(SYSROOTDIR) \
-	--bin-name $(BIN_NAME) \
-	--iso-path $(ISO_PATH) \
-	--boot-spec multiboot \
-	--run
+	qemu-system-x86_64 -cdrom $(ISO_PATH)
 
 PHONY += run 
 run:
