@@ -8,6 +8,8 @@
 typedef struct
 _ATTR_PACKED S_ACPIGenericAddress
 {
+#define ACPI_GAS_ADDR_SPACE_ID_MEM 0
+#define ACPI_GAS_ADDR_SPACE_ID_IO  1
     uint8_t address_space_id;
     uint8_t register_bit_width;
     uint8_t register_bit_offset;
