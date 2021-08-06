@@ -10,5 +10,6 @@ include $(KERNEL_SRCDIR)/ctype/Makefile
 include $(KERNEL_SRCDIR)/errno/Makefile
 include $(KERNEL_SRCDIR)/stdlib/Makefile
 include $(KERNEL_SRCDIR)/string/Makefile
+include $(KERNEL_SRCDIR)/math/Makefile
 include $(KERNEL_SRCDIR)/mem/Makefile
 include $(KERNEL_SRCDIR)/video/Makefile
