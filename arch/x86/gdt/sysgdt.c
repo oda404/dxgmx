@@ -1,3 +1,7 @@
+/**
+ * Copyright 2021 Alexandru Olaru.
+ * Distributed under the MIT license.
+*/
 
 #include<dxgmx/x86/sysgdt.h>
 #include<dxgmx/x86/gdt.h>

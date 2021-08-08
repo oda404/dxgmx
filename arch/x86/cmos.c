@@ -1,3 +1,7 @@
+/**
+ * Copyright 2021 Alexandru Olaru.
+ * Distributed under the MIT license.
+*/
 
 #include<dxgmx/x86/cmos.h>
 #include<dxgmx/x86/portio.h>

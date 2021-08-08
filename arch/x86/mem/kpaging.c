@@ -1,3 +1,7 @@
+/**
+ * Copyright 2021 Alexandru Olaru.
+ * Distributed under the MIT license.
+*/
 
 #include<dxgmx/mem/kpaging.h>
 #include<dxgmx/mem/pagedir.h>

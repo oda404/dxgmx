@@ -1,3 +1,7 @@
+/**
+ * Copyright 2021 Alexandru Olaru.
+ * Distributed under the MIT license.
+*/
 
 #ifndef _DXGMX_X86_CPUID_H
 #define _DXGMX_X86_CPUID_H

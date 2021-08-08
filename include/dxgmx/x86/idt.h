@@ -1,6 +1,6 @@
-/*
-    Copyright (C) Alexandru Olaru.
-    Distributed under the MIT license.
+/**
+ * Copyright 2021 Alexandru Olaru.
+ * Distributed under the MIT license.
 */
 
 #ifndef _DXGMX_X86_IDT_H

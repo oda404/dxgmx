@@ -1,3 +1,7 @@
+/**
+ * Copyright 2021 Alexandru Olaru.
+ * Distributed under the MIT license.
+*/
 
 #include<dxgmx/kprintf.h>
 #include<dxgmx/stdlib.h>

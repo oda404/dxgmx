@@ -1,4 +1,7 @@
-
+/**
+ * Copyright 2021 Alexandru Olaru.
+ * Distributed under the MIT license.
+*/
 
 int kinit_stage2()
 {

@@ -1,3 +1,7 @@
+/**
+ * Copyright 2021 Alexandru Olaru.
+ * Distributed under the MIT license.
+*/
 
 #ifndef _DXMGX_X86_INTERRUPTS_H
 #define _DXMGX_X86_INTERRUPTS_H

@@ -1,3 +1,7 @@
+/**
+ * Copyright 2021 Alexandru Olaru.
+ * Distributed under the MIT license.
+*/
 
 #ifndef _DXMGMX_KPRINTF_H
 #define _DXMGMX_KPRINTF_H

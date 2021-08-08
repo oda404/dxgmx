@@ -1,4 +1,7 @@
-
+/**
+ * Copyright 2021 Alexandru Olaru.
+ * Distributed under the MIT license.
+*/
 
 /* specify the entry point */
 ENTRY(_start)

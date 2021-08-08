@@ -1,6 +1,6 @@
-/*
-    Copyright Alexandru Olaru.
-    Distributed under the MIT license.
+/**
+ * Copyright 2021 Alexandru Olaru.
+ * Distributed under the MIT license.
 */
 
 #include<dxgmx/abandon_ship.h>

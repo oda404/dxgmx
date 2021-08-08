@@ -1,8 +1,7 @@
-/*
-    Copyright Alexandru Olaru.
-    Distributed under the MIT license.
+/**
+ * Copyright 2021 Alexandru Olaru.
+ * Distributed under the MIT license.
 */
-
 
 #ifndef _DXGMX_VIDEO_VGA_TEXT_H
 #define _DXGMX_VIDEO_VGA_TEXT_H

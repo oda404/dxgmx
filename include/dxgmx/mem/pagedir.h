@@ -1,3 +1,7 @@
+/**
+ * Copyright 2021 Alexandru Olaru.
+ * Distributed under the MIT license.
+*/
 
 #ifndef _DXGMX_PAGING_PAGEDIR_H
 #define _DXGMX_PAGING_PAGEDIR_H
