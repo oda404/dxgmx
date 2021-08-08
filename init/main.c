@@ -3,15 +3,13 @@
     Distributed under the MIT license.
 */
 
-#include<dxgmx/abandon_ship.h>
 #include<dxgmx/bootinfo.h>
-#include<dxgmx/video/tty.h>
-#include<stdint.h>
+#include<dxgmx/types.h>
 
-extern uint32_t _kernel_base;
-extern uint32_t _kernel_end;
-extern uint32_t _kstack_top;
-extern uint32_t _kstack_bot;
+extern u32 _kernel_base;
+extern u32 _kernel_end;
+extern u32 _kstack_top;
+extern u32 _kstack_bot;
 
 /* 
  * This function initiates core hardware and 
@@ -26,16 +24,14 @@ int kinit_stage1(const BootInfo *bootinfo);
  */
 int kinit_stage2();
 
-void kmain(uint32_t blmagic, uint32_t blinfo_base)
+void kmain(u32 blmagic, u32 blinfo_base)
 {
-    tty_init();
-
     {
         BootInfo bootinfo;
-        bootinfo.kernel_base = (uint32_t)&_kernel_base;
-        bootinfo.kernel_end  = (uint32_t)&_kernel_end;
-        bootinfo.kstack_top  = (uint32_t)&_kstack_top;
-        bootinfo.kstack_bot  = (uint32_t)&_kstack_bot;
+        bootinfo.kernel_base = (u32)&_kernel_base;
+        bootinfo.kernel_end  = (u32)&_kernel_end;
+        bootinfo.kstack_top  = (u32)&_kstack_top;
+        bootinfo.kstack_bot  = (u32)&_kstack_bot;
         bootinfo.blmagic     = blmagic;
         bootinfo.blinfo_base = blinfo_base;
 

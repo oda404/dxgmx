@@ -20,6 +20,7 @@
 int kinit_stage1(const BootInfo *bootinfo)
 {
     /* klog is not initiated yet and I would not recommend using it until it is. */
+    tty_init();
     sysgdt_init();
     sysidt_init();
     rtc_init();
