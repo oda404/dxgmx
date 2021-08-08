@@ -19,6 +19,11 @@
 
 int kinit_stage1(const BootInfo *bootinfo)
 {
+    /* klog is not initiated yet and I would not recommend using it until it is. */
+    sysgdt_init();
+    sysidt_init();
+    rtc_init();
+
     const KLogConfig config = {
         .loglevel = KLOG_FATAL
     };
@@ -34,20 +39,18 @@ int kinit_stage1(const BootInfo *bootinfo)
     if(bootinfo->blmagic != MULTIBOOT_BOOTLOADER_MAGIC)
         abandon_ship("Not booted by a multiboot compliant bootloader\n");
 
-    sysgdt_init();
-    sysidt_init();
+    rtc_dump_time_and_date();
     acpi_init();
-    rtc_init();
 
     klog(
         KLOG_INFO,
-        "Kernel physical base: 0x%lX, size: 0x%lX\n",
+        "Kernel physical base: 0x%08lX, size: 0x%08lX\n",
         bootinfo->kernel_base,
         bootinfo->kernel_end - bootinfo->kernel_base
     );
     klog(
         KLOG_INFO,
-        "Kernel physical stack top: 0x%lX, bottom: 0x%lX\n",
+        "Kernel physical stack top: 0x%08lX, bottom: 0x%08lX\n",
         bootinfo->kstack_top,
         bootinfo->kstack_bot
     );
