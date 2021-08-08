@@ -5,6 +5,8 @@
 #include<dxgmx/video/tty.h>
 #include<dxgmx/ctype.h>
 #include<dxgmx/todo.h>
+#include<dxgmx/math.h>
+#include<dxgmx/types.h>
 #include<stdint.h>
 #include<stddef.h>
 #include<limits.h>
@@ -314,6 +316,53 @@ reprocess_length:
                 utoa(va_arg(arglist, unsigned), buf, 16);
                 break;
             }
+            }
+
+            size_t len = printf_apply_flags_and_width(buf, 21, flags, width);
+
+            if(written + len > WRITE_CAP)
+            {
+                tty_print(buf, written + len - WRITE_CAP);
+                return WRITE_CAP;
+            }
+
+            written += len;
+
+            tty_print(buf, len);
+            break;
+        }
+
+        case 'u':
+        {
+            char buf[21] = { 0 };
+            switch(length)
+            {
+            case PRINTF_LEN_hh:
+                utoa(va_arg(arglist, unsigned int), buf, 10);
+                break;
+            case PRINTF_LEN_h:
+                utoa(va_arg(arglist, unsigned int), buf, 10);
+                break;
+            case PRINTF_LEN_l:
+                ultoa(va_arg(arglist, unsigned long int), buf, 10);
+                break;
+            case PRINTF_LEN_ll:
+                ulltoa(va_arg(arglist, unsigned long long int), buf, 10);
+                break;
+            case PRINTF_LEN_j:
+                TODO();
+                break;
+            case PRINTF_LEN_z:
+                TODO();
+                break;
+            case PRINTF_LEN_t:
+                TODO();
+                break;
+            case PRINTF_LEN_L:
+                break;
+            default:
+                utoa(va_arg(arglist, unsigned int), buf, 10);
+                break;
             }
 
             size_t len = printf_apply_flags_and_width(buf, 21, flags, width);
