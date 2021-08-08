@@ -7,8 +7,8 @@
 
 #define CLOCKS_PER_SEC 1000000
 
-typedef i64 clock_t;
-typedef i64 time_t;
+typedef i32 clock_t;
+typedef i32 time_t;
 
 struct tm {
    int tm_sec;
