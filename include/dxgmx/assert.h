@@ -5,7 +5,7 @@
 #include<dxgmx/abandon_ship.h>
 
 #define ASSERT(x) \
-if(!x)            \
+if(!(x))            \
 {                 \
     abandon_ship("Assertion failed '%s' in %s at %s:%d.\n", #x, __FILE__, __FUNCTION__, __LINE__); \
 }
