@@ -7,7 +7,6 @@
 typedef struct
 S_RTCTimeInfo
 {
-    uint8_t isvalid;
     uint8_t seconds;
     uint8_t minutes;
     uint8_t hours;
@@ -19,7 +18,6 @@ S_RTCTimeInfo
 
 int rtc_init();
 void rtc_enable_irq8();
-void rtc_signal_eoi();
 void rtc_dump_timeinfo();
 const RTCTimeInfo *rtc_get_timeinfo();
 
