@@ -9,6 +9,8 @@
 #include<dxgmx/attrs.h>
 
 double modf(double x, double *whole);
+float modff(float x, float *whole);
+long double modfl(long double x, long double *whole);
 double pow(double x, double y)
 _ATTR_PURE;
 

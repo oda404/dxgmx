@@ -8,6 +8,6 @@
 
 double modf(double x, double *whole)
 {
-    *whole = (i64)x;
+    *whole = (doublewhole)x;
     return x - *whole;
 }
