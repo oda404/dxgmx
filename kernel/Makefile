@@ -5,6 +5,7 @@ kernel/bitwise.c \
 kernel/kprintf.c \
 kernel/kabort.c \
 kernel/klog.c \
+kernel/stack_chk.c \
 
 include $(KERNEL_SRCDIR)/ctype/Makefile
 include $(KERNEL_SRCDIR)/errno/Makefile

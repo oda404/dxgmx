@@ -63,6 +63,7 @@ AS                ?= as
 ### FLAGS ###
 CFLAGS            := -MD -MP -m32 -ffreestanding \
 -isystem=/usr/include --sysroot=$(SYSROOTDIR) \
+-fstack-protector-strong
 
 CXXFLAGS          := $(CFLAGS) \
 
