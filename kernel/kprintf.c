@@ -383,6 +383,59 @@ reprocess_length:
             break;
         }
 
+        case 'F': /* what does %F exactly do ?? */
+        case 'f':
+        {
+            char buf[__LDBL_DIG__ + __LDBL_DECIMAL_DIG__ + 3] = { 0 };
+            long double val = length == PRINTF_LEN_L ? 
+                va_arg(arglist, long double) : 
+                va_arg(arglist, double);
+
+            long double whole, frac;
+            frac = modfl(val, &whole);
+
+            lltoa((long long)whole, buf, 10);
+
+            size_t digits = precision != -1 ? precision : 6;
+            if(digits > 0)
+            {
+                /* Don't try to write more than 20 digits. */
+                if(digits > __LDBL_DECIMAL_DIG__)
+                    digits = __LDBL_DECIMAL_DIG__;
+
+                if(frac < 0)
+                    frac *= -1;
+
+                strcat(buf, ".");
+                size_t idx = strlen(buf);
+                while(digits--)
+                {
+                    frac *= 10;
+                    lltoa((long long)(frac), buf + idx++, 10);
+                    frac -= (long long)frac;
+                }
+            }
+
+            size_t len = printf_apply_flags_and_width(
+                buf, 
+                __LDBL_DIG__ + __LDBL_DECIMAL_DIG__ + 3, 
+                flags, 
+                width
+            );
+
+            if(written + len > WRITE_CAP)
+            {
+                tty_print(buf, written + len - WRITE_CAP);
+                return WRITE_CAP;
+            }
+
+            written += len;
+
+            tty_print(buf, len);
+            
+            break;
+        }
+
         /* string %s */
         case 's':
         {
