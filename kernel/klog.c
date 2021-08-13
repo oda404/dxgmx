@@ -58,7 +58,7 @@ size_t kvlog(uint8_t lvl, const char *fmt, va_list valist)
         return 0;
     }
 
-    written += vkprintf(fmt, valist);
+    written += kvprintf(fmt, valist);
 
     return written;
 }
@@ -68,7 +68,7 @@ size_t kvlog_notag(uint8_t lvl, const char *fmt, va_list valist)
     if(lvl > g_klogconfig.loglevel)
         return 0;
 
-    size_t written = vkprintf(fmt, valist);
+    size_t written = kvprintf(fmt, valist);
     return written;
 }
 

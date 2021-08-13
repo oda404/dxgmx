@@ -52,7 +52,7 @@ int kprintf(const char *fmt, ...)
 {
     va_list arglist;
     va_start(arglist, fmt);
-    size_t written = vkprintf(fmt, arglist);
+    size_t written = kvprintf(fmt, arglist);
     va_end(arglist);
     return written;
 }
@@ -195,7 +195,7 @@ static size_t printf_apply_flags_and_width(
     return strlen(buf);
 }
 
-int vkprintf(const char *fmt, va_list arglist)
+int kvprintf(const char *fmt, va_list arglist)
 {
     size_t written = 0;
     uint8_t length;

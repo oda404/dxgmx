@@ -12,7 +12,7 @@
 int kprintf(const char *fmt, ...)
 _ATTR_FMT_PRINTF(1, 2) _ATTR_NONNULL(1);
 
-int vkprintf(const char *fmt, va_list arg)
+int kvprintf(const char *fmt, va_list arg)
 _ATTR_NONNULL(1);
 
 #endif //_DXMGMX_KPRINTF_H
