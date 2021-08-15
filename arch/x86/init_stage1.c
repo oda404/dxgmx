@@ -20,7 +20,6 @@
 #include<dxgmx/mem/kpaging.h>
 #include<dxgmx/kprintf.h>
 #include<dxgmx/klog.h>
-#include<stdint.h>
 
 int kinit_stage1(const BootInfo *bootinfo)
 {
@@ -72,8 +71,8 @@ int kinit_stage1(const BootInfo *bootinfo)
 
     for(
         mmap = (MultibootMMAP *)mbi->mmap_base;
-        (uint32_t)mmap < mbi->mmap_base + mbi->mmap_length;
-        mmap = (MultibootMMAP *)((uint32_t)mmap + mmap->size + sizeof(mmap->size))
+        (ptr)mmap < mbi->mmap_base + mbi->mmap_length;
+        mmap = (MultibootMMAP *)((ptr)mmap + mmap->size + sizeof(mmap->size))
     )
     {
         mmap_entry_add(mmap->base, mmap->length, mmap->type);
