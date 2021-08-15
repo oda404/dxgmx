@@ -8,6 +8,7 @@
 #include<dxgmx/x86/multiboot.h>
 #include<dxgmx/x86/rtc.h>
 #include<dxgmx/x86/acpi.h>
+#include<dxgmx/x86/interrupts.h>
 #include<dxgmx/video/tty.h>
 #include<dxgmx/bootinfo.h>
 #include<dxgmx/mem/map.h>
@@ -24,6 +25,9 @@
 int kinit_stage1(const BootInfo *bootinfo)
 {
     /* klog is not initiated yet and I would not recommend using it until it is. */
+    /* disable interrupts until a proper idt is set up. */
+    interrupts_disable();
+
     tty_init();
     sysgdt_init();
     sysidt_init();
