@@ -235,3 +235,12 @@ uint8_t pic8259_get_pics_count()
 {
     return 2;
 }
+
+uint16_t pic8259_get_mask()
+{
+    uint16_t mask;
+    mask = port_inb(PIC_SLAVE_PORT_DATA);
+    mask <<= 8;
+    mask |= port_inb(PIC_MASTER_PORT_DATA);
+    return mask;
+}

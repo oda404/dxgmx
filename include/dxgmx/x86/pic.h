@@ -51,5 +51,9 @@ void pic8259_disable(uint8_t pic);
  * returns 2 hardcoded.
  */
 uint8_t pic8259_get_pics_count();
+/**
+ * Get the current irqmask from both PICs.
+*/
+uint16_t pic8259_get_mask();
 
 #endif // _DXGMX_X86_PIC8259_H
