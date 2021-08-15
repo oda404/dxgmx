@@ -6,6 +6,7 @@
 #include<dxgmx/x86/rtc.h>
 #include<dxgmx/x86/cmos.h>
 #include<dxgmx/x86/sysidt.h>
+#include<dxgmx/x86/interrupts.h>
 #include<dxgmx/klog.h>
 #include<dxgmx/todo.h>
 #include<dxgmx/types.h>
@@ -27,7 +28,8 @@
 typedef enum
 E_RTCRegisterCFlags
 {
-    RTC_REG_C_UPDATE_DONE = (1 << 4)
+    RTC_REG_C_UPDATE_DONE  = (1 << 4),
+    RTC_REG_C_PERIODIC_INT = (1 << 6)
 } RTCRegisterCFlags;
 
 typedef enum
@@ -37,34 +39,79 @@ E_RTCRegisterBFlags
     RTC_REG_B_BINARY_MODE = (1 << 2)
 } RTCRegisterBFlags;
 
+typedef enum
+E_RTCFreq
+{
+    RTC_FREQ_0HZ,
+    RTC_FREQ_32KHZ,
+    RTC_FREQ_16KHZ,
+    RTC_FREQ_8KHZ,
+    RTC_FREQ_4KHZ, 
+    RTC_FREQ_2KHZ,
+    RTC_FREQ_1KHZ,
+    RTC_FREQ_512HZ,
+    RTC_FREQ_256HZ,
+    RTC_FREQ_128HZ,
+    RTC_FREQ_64HZ,
+    RTC_FREQ_32HZ,
+    RTC_FREQ_16HZ,
+    RTC_FREQ_8HZ,
+    RTC_FREQ_4HZ,
+    RTC_FREQ_2HZ
+} RTCFreq;
+
 static void bcd_to_binary(int *val)
 {
     *val = ((*val & 0xF0) >> 1) + ((*val & 0xF0) >> 3) + (*val & 0xF);
 }
 
-static u16 rtc_calculate_freq()
+static u16 rtc_calculate_running_freq()
 {
     u8 a = cmos_port_inb(RTC_REG_A, NMIENABLED);
-    /* The default freq is 1024Hz which is fine. */
     return 32768 >> ((a & 0b1111) - 1);
 }
 
-static struct tm   g_rtc_tm;
-static u16         g_rtc_freq;
-static Timespec    g_rtc_ts;
+static u16 rtc_set_freq(u8 freq)
+{
+    /**
+     * The RTC gives trash results if it's set to fire irq's at
+     * 16KHZ or 32KHZ so we cap it at 8KHz. 
+    */
+    if(freq == RTC_FREQ_16KHZ || freq == RTC_FREQ_32KHZ)
+        freq = RTC_FREQ_8KHZ;
 
-void rtc_int_handler(
+    u8 a = cmos_port_inb(RTC_REG_A, NMIDISABLED);
+    a = freq & 1 ? a | 1 : a & ~1;
+    a = freq & 2 ? a | 2 : a & ~2;
+    a = freq & 4 ? a | 4 : a & ~4;
+    a = freq & 8 ? a | 8 : a & ~8;
+    cmos_port_outb(a, RTC_REG_A, NMIENABLED);
+
+    return freq;
+}
+
+static struct tm g_rtc_tm;
+static u16       g_rtc_running_freq;
+static u16       g_rtc_base_freq;
+static Timespec  g_rtc_ts;
+
+static void rtc_int_handler(
     const InterruptFrame _ATTR_MAYBE_UNUSED *frame, 
     const void _ATTR_MAYBE_UNUSED *data
 )
 {
-    asm volatile("cli");
+    u8 c = cmos_port_inb(RTC_REG_C, NMIENABLED);
 
-    u8 b = cmos_port_inb(RTC_REG_B, NMIDISABLED);
-    u8 c = cmos_port_inb(RTC_REG_C, NMIDISABLED);
+    if(c & RTC_REG_C_PERIODIC_INT)
+    {
+        timespec_add(1.f / g_rtc_running_freq * 1000000000.0, &g_rtc_ts);
+    }
 
     if(c & RTC_REG_C_UPDATE_DONE)
     {
+        /* Hang interrupts so we make sure the time is read correctly. */
+        interrupts_disable();
+
         g_rtc_tm.tm_sec  = cmos_port_inb(RTC_REG_SECONDS,  NMIDISABLED);
         g_rtc_tm.tm_min  = cmos_port_inb(RTC_REG_MINUTES,  NMIDISABLED);
         g_rtc_tm.tm_hour = cmos_port_inb(RTC_REG_HOURS,    NMIDISABLED);
@@ -74,6 +121,8 @@ void rtc_int_handler(
         g_rtc_tm.tm_year = cmos_port_inb(RTC_REG_YEAR,     NMIDISABLED);
         g_rtc_tm.tm_yday = 0; //FIXME
         g_rtc_tm.tm_isdst = 0; //FIXME
+
+        u8 b = cmos_port_inb(RTC_REG_B, NMIDISABLED);
 
         if(!(b & RTC_REG_B_BINARY_MODE))
         {
@@ -101,21 +150,20 @@ void rtc_int_handler(
             }
         }
 
+        /* The time has been read and set, interrupts can be turned back on. */
         cmos_enable_nmi();
+        interrupts_enable();
     }
-    else
-    {
-        timespec_add(1.f / g_rtc_freq * 1000000000, &g_rtc_ts);
-    }
-
-    asm volatile("sti");
 }
 
 int rtc_init()
 {
     memset(&g_rtc_tm, 0, sizeof(struct tm));
     memset(&g_rtc_ts, 0, sizeof(Timespec));
-    g_rtc_freq = rtc_calculate_freq();
+
+    rtc_set_freq(RTC_FREQ_8KHZ);
+    g_rtc_running_freq = rtc_calculate_running_freq();
+    g_rtc_base_freq = 32768;
 
     sysidt_register_callback(IRQ8, rtc_int_handler);
     rtc_enable_irq8();
@@ -128,17 +176,15 @@ int rtc_init()
 
 void rtc_enable_irq8()
 {
-    asm volatile("cli");
-    
     // to enable irq8 we need to set bit 6 of the B status register.
-    u8 val = cmos_port_inb(0xB, NMIENABLED);
+    u8 val = cmos_port_inb(0xB, NMIDISABLED);
     cmos_port_outb(val | (1 << 6), 0xB, NMIENABLED);
-
-    asm volatile("sti");
 }
 
 void rtc_dump_time_and_date()
 {
+    interrupts_disable();
+    cmos_disable_nmi();
     klog(
         KLOG_INFO,
         "[RTC] Current time and date: %02d:%02d:%02d %02d/%02d/%d.\n",
@@ -149,6 +195,8 @@ void rtc_dump_time_and_date()
         g_rtc_tm.tm_mon + 1,
         1900 + g_rtc_tm.tm_year
     );
+    cmos_enable_nmi();
+    interrupts_enable();
 }
 
 const Timespec *rtc_get_running_ts()
@@ -159,4 +207,14 @@ const Timespec *rtc_get_running_ts()
 const struct tm *rtc_get_tm()
 {
     return &g_rtc_tm;
+}
+
+u16 rtc_get_running_freq()
+{
+    return g_rtc_running_freq;
+}
+
+u16 rtc_get_base_freq()
+{
+    return g_rtc_base_freq;
 }
