@@ -10,6 +10,7 @@
 #include<dxgmx/x86/portio.h>
 #include<dxgmx/x86/pic.h>
 #include<dxgmx/x86/interrupt_frame.h>
+#include<dxgmx/x86/interrupts.h>
 #include<dxgmx/attrs.h>
 #include<dxgmx/string.h>
 #include<stdint.h>
@@ -186,7 +187,7 @@ static InterruptCallbacks g_interrupts_callbacks[INTS_CALLBACKS_MAX];
 
 void sysidt_init()
 {
-    asm volatile("cli");
+    interrupts_disable();
 
     for(uint8_t i = 0; i < 32; ++i)
     {
@@ -215,7 +216,7 @@ void sysidt_init()
     pic8259_remap(MASTER_PIC_OFFSET, SLAVE_PIC_OFFSET);
     idt_load(&idtr);
 
-    asm volatile("sti");
+    interrupts_enable();
 }
 
 int sysidt_register_callback(uint8_t interrupt_n, interrupt_callback callback)
