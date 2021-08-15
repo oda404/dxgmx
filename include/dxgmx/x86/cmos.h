@@ -20,14 +20,21 @@ E_NMIState
     NMIDISABLED = 1,
     /* NMIs are kept the way they are */
     NMIKEEP     = 2,
-    /* NMIs state is manually specified in the 'value' argument. */
-    MMIMAN      = 3
 } NMIState;
 
 void cmos_disable_nmi();
 void cmos_enable_nmi();
-int cmos_is_nmi_enabled();
+/** 
+ * Safe way to read from a cmos register.
+ * The parameter 'nmistate' is what the NMI state will be
+ * after the value is read, see enum E_NMIState.
+*/
 uint8_t cmos_port_inb(uint8_t port, int nmistate);
+/** 
+ * Safe way to write to a cmos register.
+ * The parameter 'nmistate' is what the NMI state will be
+ * after the value is written, see enum E_NMIState.
+*/
 void cmos_port_outb(uint8_t value, uint8_t port, int nmistate);
 
 #endif //_DXGMX_X86_CMOS_H
