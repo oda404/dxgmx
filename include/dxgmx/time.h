@@ -51,32 +51,10 @@ size_t strftime(char *str, size_t maxsize, const char *fmt, const struct tm *tim
 /* Encodes the current calendar time into 'timer'. */
 time_t time(time_t *timer);
 
-/* Here begin the extras. */
-
-#ifndef __suseconds_t_defined
-#ifdef __suseconds_t
-typedef __suseconds_t suseconds_t;
-#else
-typedef i32 __suseconds_t;
-typedef __suseconds_t suseconds_t;
-#endif __suseconds_t
-#define __suseconds_t_defined
-#endif // __suseconds_t_defined
-
-typedef struct
-S_Timeval
+struct timespec
 {
-    time_t sec;
-    suseconds_t usec;
-} Timeval;
-
-typedef struct
-S_Timespec
-{
-    time_t sec;
-    time_t nsec;
-} Timespec;
-
-void timespec_add(time_t nsec, Timespec *ts);
+   time_t tv_sec;
+   time_t tv_nsec;
+};
 
 #endif //_DXGMX_TIME_H

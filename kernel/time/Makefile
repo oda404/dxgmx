@@ -1,6 +1,5 @@
 
 KERNEL_SRC += \
-kernel/time/timespec_add.c \
 kernel/time/asctime.c \
 kernel/time/clock.c \
 kernel/time/ctime.c \
