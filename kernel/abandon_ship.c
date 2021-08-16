@@ -10,13 +10,13 @@
 
 void abandon_ship(const char *lastmsg, ...)
 {
-    klog_notag(KLOG_FATAL, "Abandoning ship");
+    klog(KLOG_FATAL, "Abandoning ship");
     if(lastmsg)
     {
-        klog_notag(KLOG_FATAL, ": ");
+        klog(KLOG_FATAL, ": ");
         va_list list;
         va_start(list, lastmsg);
-        kvlog_notag(KLOG_FATAL, lastmsg, list);
+        kvlog(KLOG_FATAL, lastmsg, list);
         va_end(list);
     }
     /* shit and cum my final message goodbye */

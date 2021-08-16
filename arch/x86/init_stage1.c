@@ -37,12 +37,12 @@ int kinit_stage1(const BootInfo *bootinfo)
     };
     klog_init(&config);
 
-    klog_notag(KLOG_INFO, "     _                          \n");
-    klog_notag(KLOG_INFO, "  __| |_  ____ _ _ __ ___ __  __\n");
-    klog_notag(KLOG_INFO, " / _` \\ \\/ / _` | '_ ` _ \\\\ \\/ /\n");
-    klog_notag(KLOG_INFO, "| (_| |>  < (_| | | | | | |>  <\n");
-    klog_notag(KLOG_INFO, " \\__,_/_/\\_\\__, |_| |_| |_/_/\\_\\ %s ~ %d.%d.%d\n", _DXGMX_CODENAME_, _DXGMX_VER_MAJ_, _DXGMX_VER_MIN_, _DXGMX_PATCH_N_);
-    klog_notag(KLOG_INFO, "           |___/                \n\n");
+    klog(KLOG_INFO, "     _                          \n");
+    klog(KLOG_INFO, "  __| |_  ____ _ _ __ ___ __  __\n");
+    klog(KLOG_INFO, " / _` \\ \\/ / _` | '_ ` _ \\\\ \\/ /\n");
+    klog(KLOG_INFO, "| (_| |>  < (_| | | | | | |>  <\n");
+    klog(KLOG_INFO, " \\__,_/_/\\_\\__, |_| |_| |_/_/\\_\\ %s ~ %d.%d.%d\n", _DXGMX_CODENAME_, _DXGMX_VER_MAJ_, _DXGMX_VER_MIN_, _DXGMX_PATCH_N_);
+    klog(KLOG_INFO, "           |___/                \n");
 
     if(bootinfo->blmagic != MULTIBOOT_BOOTLOADER_MAGIC)
         abandon_ship("Not booted by a multiboot compliant bootloader\n");

@@ -297,13 +297,13 @@ const MemoryMap *mmap_get_mmap()
 
 void mmap_dump()
 {
-    klog_notag(KLOG_INFO, "System memory map:\n");
+    klog(KLOG_INFO, "System memory map:\n");
     for(size_t i = 0; i < mmap.entries_cnt; ++i)
     {
         const MemoryMapEntry *tmp = &mmap.entries[i];
-        klog_notag(
+        klog(
             KLOG_INFO,
-            "base 0x%08lX size 0x%08lX type %ld\n", 
+            "  base 0x%08lX size 0x%08lX type %ld\n", 
             (uint32_t)tmp->base, 
             (uint32_t)tmp->size, 
             tmp->type
