@@ -257,6 +257,11 @@ reprocess_length:
             break;
         }
 
+        char *outbuf = NULL;
+        size_t outbuf_len = 0;
+
+        char tmpbuf[50] = { 0 };
+
         // specifier
         switch(*fmt)
         {
@@ -264,37 +269,32 @@ reprocess_length:
         case 'i':
         case 'd':
         {
-            char buf[21] = { 0 };
             switch(length)
             {
             case PRINTF_LEN_l:
             {
-                ltoa(va_arg(arglist, long), buf, 10);
+                ltoa(va_arg(arglist, long), tmpbuf, 10);
                 break;
             }
             case PRINTF_LEN_ll:
             {
-                lltoa(va_arg(arglist, long long), buf, 10);
+                lltoa(va_arg(arglist, long long), tmpbuf, 10);
                 break;
             }
             default:
             {
-                itoa(va_arg(arglist, int), buf, 10);
+                itoa(va_arg(arglist, int), tmpbuf, 10);
                 break;
             }
             }
             
-            size_t len = printf_apply_flags_and_width(buf, 21, flags, width);
-
-            if(written + len > WRITE_CAP)
-            {
-                tty_print(buf, written + len - WRITE_CAP);
-                return WRITE_CAP;
-            }
-                
-            written += len;
-            
-            tty_print(buf, len);
+            outbuf_len = printf_apply_flags_and_width(
+                tmpbuf, 
+                21, 
+                flags, 
+                width
+            );
+            outbuf = tmpbuf;
             break;
         }
 
@@ -302,56 +302,50 @@ reprocess_length:
         case 'x':
         case 'X':
         {
-            char buf[21] = { 0 };
             switch(length)
             {
             case PRINTF_LEN_l:
             {
-                ultoa(va_arg(arglist, unsigned long), buf, 16);
+                ultoa(va_arg(arglist, unsigned long), tmpbuf, 16);
                 break;
             }
             case PRINTF_LEN_ll:
             {
-                ulltoa(va_arg(arglist, unsigned long long), buf, 16);
+                ulltoa(va_arg(arglist, unsigned long long), tmpbuf, 16);
                 break;
             }
             default:
             {
-                utoa(va_arg(arglist, unsigned), buf, 16);
+                utoa(va_arg(arglist, unsigned), tmpbuf, 16);
                 break;
             }
             }
 
-            size_t len = printf_apply_flags_and_width(buf, 21, flags, width);
-
-            if(written + len > WRITE_CAP)
-            {
-                tty_print(buf, written + len - WRITE_CAP);
-                return WRITE_CAP;
-            }
-
-            written += len;
-
-            tty_print(buf, len);
+            outbuf_len = printf_apply_flags_and_width(
+                tmpbuf, 
+                21, 
+                flags, 
+                width
+            );
+            outbuf = tmpbuf;
             break;
         }
 
         case 'u':
         {
-            char buf[21] = { 0 };
             switch(length)
             {
             case PRINTF_LEN_hh:
-                utoa(va_arg(arglist, unsigned int), buf, 10);
+                utoa(va_arg(arglist, unsigned int), tmpbuf, 10);
                 break;
             case PRINTF_LEN_h:
-                utoa(va_arg(arglist, unsigned int), buf, 10);
+                utoa(va_arg(arglist, unsigned int), tmpbuf, 10);
                 break;
             case PRINTF_LEN_l:
-                ultoa(va_arg(arglist, unsigned long int), buf, 10);
+                ultoa(va_arg(arglist, unsigned long int), tmpbuf, 10);
                 break;
             case PRINTF_LEN_ll:
-                ulltoa(va_arg(arglist, unsigned long long int), buf, 10);
+                ulltoa(va_arg(arglist, unsigned long long int), tmpbuf, 10);
                 break;
             case PRINTF_LEN_j:
                 TODO();
@@ -365,28 +359,23 @@ reprocess_length:
             case PRINTF_LEN_L:
                 break;
             default:
-                utoa(va_arg(arglist, unsigned int), buf, 10);
+                utoa(va_arg(arglist, unsigned int), tmpbuf, 10);
                 break;
             }
 
-            size_t len = printf_apply_flags_and_width(buf, 21, flags, width);
-
-            if(written + len > WRITE_CAP)
-            {
-                tty_print(buf, written + len - WRITE_CAP);
-                return WRITE_CAP;
-            }
-
-            written += len;
-
-            tty_print(buf, len);
+            outbuf_len = printf_apply_flags_and_width(
+                tmpbuf, 
+                21, 
+                flags, 
+                width
+            );
+            outbuf = tmpbuf;
             break;
         }
 
         case 'F': /* what does %F exactly do ?? */
         case 'f':
         {
-            char buf[__LDBL_DIG__ + __LDBL_DECIMAL_DIG__ + 3] = { 0 };
             long double val = length == PRINTF_LEN_L ? 
                 va_arg(arglist, long double) : 
                 va_arg(arglist, double);
@@ -394,7 +383,7 @@ reprocess_length:
             long double whole, frac;
             frac = modfl(val, &whole);
 
-            lltoa((long long)whole, buf, 10);
+            lltoa((long long)whole, tmpbuf, 10);
 
             size_t digits = precision != -1 ? precision : 6;
             if(digits > 0)
@@ -406,32 +395,23 @@ reprocess_length:
                 if(frac < 0)
                     frac *= -1;
 
-                strcat(buf, ".");
-                size_t idx = strlen(buf);
+                strcat(tmpbuf, ".");
+                size_t idx = strlen(tmpbuf);
                 while(digits--)
                 {
                     frac *= 10;
-                    lltoa((long long)(frac), buf + idx++, 10);
+                    lltoa((long long)(frac), tmpbuf + idx++, 10);
                     frac -= (long long)frac;
                 }
             }
 
-            size_t len = printf_apply_flags_and_width(
-                buf, 
+            outbuf_len = printf_apply_flags_and_width(
+                tmpbuf, 
                 __LDBL_DIG__ + __LDBL_DECIMAL_DIG__ + 3, 
                 flags, 
                 width
             );
-
-            if(written + len > WRITE_CAP)
-            {
-                tty_print(buf, written + len - WRITE_CAP);
-                return WRITE_CAP;
-            }
-
-            written += len;
-
-            tty_print(buf, len);
+            outbuf = tmpbuf;
             
             break;
         }
@@ -439,32 +419,31 @@ reprocess_length:
         /* string %s */
         case 's':
         {
-            const char *val = va_arg(arglist, const char*);
-            size_t len = precision != -1 ? precision : strlen(val);
-
-            if(written + len > WRITE_CAP)
-            {
-                tty_print(val, written + len - WRITE_CAP);
-                return WRITE_CAP;
-            }
-
-            written += len;
-
-            tty_print(val, len);
+            outbuf = va_arg(arglist, char*);
+            if(precision != -1 && precision <= strlen(outbuf))
+                outbuf_len = precision;
+            else
+                outbuf_len = strlen(outbuf);
+                
             break;
         }
 
         /* char %c */
         case 'c':
         {
-            char val = va_arg(arglist, int);
-            ++written;
-
-            tty_print(&val, 1);
+            *outbuf = va_arg(arglist, int);
+            outbuf_len = 1;
             break;
         }
-        
         }
+
+        if(written + outbuf_len > WRITE_CAP)
+        {
+            tty_print(outbuf, written + outbuf_len - WRITE_CAP);
+            return WRITE_CAP;
+        }
+        written += outbuf_len;
+        tty_print(outbuf, outbuf_len);
     }
 
     return written;
