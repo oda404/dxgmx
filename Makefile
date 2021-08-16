@@ -6,7 +6,7 @@ APPNAME           := dxgmx
 
 VER_MAJ           := 0
 VER_MIN           := 8
-PATCH_N           := 3
+PATCH_N           := 4
 CODENAME          := angel_attack
 
 # The makefile expects to find a makefile-like file named 'buildconfig'
