@@ -90,10 +90,10 @@ static u16 rtc_set_freq(u8 freq)
     return freq;
 }
 
-static struct tm g_rtc_tm;
-static u16       g_rtc_running_freq;
-static u16       g_rtc_base_freq;
-static Timespec  g_rtc_ts;
+static struct tm       g_rtc_tm;
+static u16             g_rtc_running_freq;
+static u16             g_rtc_base_freq;
+static struct timespec g_rtc_ts;
 
 static void rtc_int_handler(
     const InterruptFrame _ATTR_MAYBE_UNUSED *frame, 
@@ -104,7 +104,12 @@ static void rtc_int_handler(
 
     if(c & RTC_REG_C_PERIODIC_INT)
     {
-        timespec_add(1.f / g_rtc_running_freq * 1000000000.0, &g_rtc_ts);
+        g_rtc_ts.tv_nsec += 1.f / g_rtc_running_freq * 1000000000;
+        while(g_rtc_ts.tv_nsec >= 1000000000)
+        {
+            ++g_rtc_ts.tv_sec;
+            g_rtc_ts.tv_nsec -= 1000000000;
+        }
     }
 
     if(c & RTC_REG_C_UPDATE_DONE)
@@ -159,7 +164,7 @@ static void rtc_int_handler(
 int rtc_init()
 {
     memset(&g_rtc_tm, 0, sizeof(struct tm));
-    memset(&g_rtc_ts, 0, sizeof(Timespec));
+    memset(&g_rtc_ts, 0, sizeof(struct timespec));
 
     rtc_set_freq(RTC_FREQ_8KHZ);
     g_rtc_running_freq = rtc_calculate_running_freq();
@@ -199,7 +204,7 @@ void rtc_dump_time_and_date()
     interrupts_enable();
 }
 
-const Timespec *rtc_get_running_ts()
+const struct timespec *rtc_get_running_ts()
 {
     return &g_rtc_ts;
 }

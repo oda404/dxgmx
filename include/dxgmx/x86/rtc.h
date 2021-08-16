@@ -16,7 +16,7 @@ void rtc_dump_time_and_date();
  * Returns a ptr to the running Timespec struct which is 
  * updated every 1 / rtc_freq seconds.
 */
-const Timespec *rtc_get_running_ts();
+const struct timespec *rtc_get_running_ts();
 const struct tm *rtc_get_tm();
 u16 rtc_get_running_freq();
 u16 rtc_get_base_freq();
