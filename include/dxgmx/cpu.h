@@ -6,7 +6,9 @@
 #ifndef _DXGMX_CPU_H
 #define _DXGMX_CPU_H
 
-#include<stdint.h>
+#include<dxgmx/types.h>
+
+#if defined(_X86_)
 
 typedef enum E_CR0Flags
 {
@@ -36,8 +38,23 @@ typedef enum E_CR0Flags
 
 uint32_t cpu_get_cr2();
 uint32_t cpu_get_cr0();
-void cpu_set_cr0(uint32_t val);
+void cpu_set_cr0(u32 val);
+
+typedef struct
+S_CPUInfo
+{
+    char vendorstr[13];
+    u32  cpuid_eaxmax;
+    u8   stepping;
+    u8   model;
+    u8   family;
+    u8   local_apic_id;
+} CPUInfo;
+
+#endif // defined(_X86_)
+
 /** Tries to identify the CPU and it's features. */
 int cpu_identify();
+const CPUInfo *cpu_get_info();
 
 #endif // _DXGMX_CPU_H
