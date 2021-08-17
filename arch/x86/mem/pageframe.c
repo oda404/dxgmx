@@ -5,7 +5,7 @@
 
 #include<dxgmx/mem/pageframe.h>
 #include<dxgmx/mem/pagesize.h>
-#include<dxgmx/mem/map.h>
+#include<dxgmx/mem/mmap.h>
 #include<dxgmx/klog.h>
 #include<dxgmx/abandon_ship.h>
 #include<dxgmx/bitwise.h>

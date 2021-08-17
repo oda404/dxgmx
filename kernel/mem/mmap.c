@@ -3,7 +3,7 @@
  * Distributed under the MIT license.
 */
 
-#include<dxgmx/mem/map.h>
+#include<dxgmx/mem/mmap.h>
 #include<dxgmx/abandon_ship.h>
 #include<dxgmx/klog.h>
 #include<dxgmx/bitwise.h>
