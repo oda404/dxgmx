@@ -27,28 +27,31 @@ int kinit_stage1(const BootInfo *bootinfo)
     /* disable interrupts until a proper idt is set up. */
     interrupts_disable();
 
-    tty_init();
     sysgdt_init();
     sysidt_init();
     rtc_init();
 
+    interrupts_enable();
+
+    tty_init();
     const KLogConfig config = {
         .loglevel = KLOG_FATAL
     };
     klog_init(&config);
 
-    klog(KLOG_INFO, "     _                          \n");
+    klog(KLOG_INFO, "     _\n");
     klog(KLOG_INFO, "  __| |_  ____ _ _ __ ___ __  __\n");
     klog(KLOG_INFO, " / _` \\ \\/ / _` | '_ ` _ \\\\ \\/ /\n");
     klog(KLOG_INFO, "| (_| |>  < (_| | | | | | |>  <\n");
-    klog(KLOG_INFO, " \\__,_/_/\\_\\__, |_| |_| |_/_/\\_\\ %s ~ %d.%d.%d\n", _DXGMX_CODENAME_, _DXGMX_VER_MAJ_, _DXGMX_VER_MIN_, _DXGMX_PATCH_N_);
-    klog(KLOG_INFO, "           |___/                \n");
+    klog(KLOG_INFO, " \\__,_/_/\\_\\__, |_| |_| |_/_/\\_\\ %s - %d.%d.%d\n", _DXGMX_CODENAME_, _DXGMX_VER_MAJ_, _DXGMX_VER_MIN_, _DXGMX_PATCH_N_);
+    klog(KLOG_INFO, "           |___/\n");
 
     if(bootinfo->blmagic != MULTIBOOT_BOOTLOADER_MAGIC)
         abandon_ship("Not booted by a multiboot compliant bootloader\n");
 
     rtc_dump_time_and_date();
     acpi_init();
+    cpu_identify();
 
     klog(
         KLOG_INFO,
@@ -63,7 +66,6 @@ int kinit_stage1(const BootInfo *bootinfo)
         bootinfo->kstack_bot
     );
 
-    cpu_identify();
     mmap_init();
 
     MultibootMBI *mbi = (MultibootMBI *)bootinfo->blinfo_base;
