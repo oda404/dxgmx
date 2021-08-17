@@ -190,7 +190,7 @@ $(SYSROOT_DIRS):
 	@mkdir -p $(SYSROOT_DIRS)
 
 $(SYSROOTDIR)/usr/%.h: %.h
-	@mkdir $(dir $@) 2> /dev/null || true
+	@mkdir -p $(dir $@) 2> /dev/null || true
 	@cp -ru $< $@
 
 PHONY += kernel_headers 
