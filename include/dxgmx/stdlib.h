@@ -9,11 +9,6 @@
 #include<dxgmx/attrs.h>
 #include<stddef.h>
 
-void kfree(void *ptr);
-
-void *kmalloc(size_t size)
-_ATTR_MALLOC(free) _ATTR_ALLOC_SIZE(1);
-
 long int strtol(const char *__restrict str, char **__restrict endptr, int base);
 
 int abs(int n)
