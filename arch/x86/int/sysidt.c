@@ -11,9 +11,9 @@
 #include<dxgmx/x86/pic.h>
 #include<dxgmx/x86/interrupt_frame.h>
 #include<dxgmx/x86/interrupts.h>
+#include<dxgmx/types.h>
 #include<dxgmx/attrs.h>
 #include<dxgmx/string.h>
-#include<stdint.h>
 
 asm(
     ".type isr_exit, @function                       \n"
@@ -108,60 +108,6 @@ IRQ_ENTRY(13)
 IRQ_ENTRY(14)
 IRQ_ENTRY(15)
 
-typedef void (*isr_entrypoint)(void);
-static isr_entrypoint isrs[] = {
-    &isr0,
-    &isr1,
-    &isr2,
-    &isr3,
-    &isr4,
-    &isr5,
-    &isr6,
-    &isr7,
-    &isr8,
-    &isr9,
-    &isr10,
-    &isr11,
-    &isr12,
-    &isr13,
-    &isr14,
-    &isr15,
-    &isr16,
-    &isr17,
-    &isr18,
-    &isr19,
-    &isr20,
-    &isr21,
-    &isr22,
-    &isr23,
-    &isr24,
-    &isr25,
-    &isr26,
-    &isr27,
-    &isr28,
-    &isr29,
-    &isr30,
-    &isr31
-};
-static isr_entrypoint irqs[] = {
-    &irq0,
-    &irq1,
-    &irq2,
-    &irq3,
-    &irq4,
-    &irq5,
-    &irq6,
-    &irq7,
-    &irq8,
-    &irq9,
-    &irq10,
-    &irq11,
-    &irq12,
-    &irq13,
-    &irq14,
-    &irq15
-};
-
 static IDTEntry idt[256];
 static IDTR idtr;
 
@@ -177,38 +123,81 @@ static IDTR idtr;
 typedef struct
 S_InterruptCallbacks
 {
-#define CALLBACKS_MAX 8
-    interrupt_callback callbacks[CALLBACKS_MAX];
-    uint8_t            callbacks_count;
+    interrupt_callback cb;
 } InterruptCallbacks;
 
 #define INTS_CALLBACKS_MAX 48
-static InterruptCallbacks g_interrupts_callbacks[INTS_CALLBACKS_MAX];
+static InterruptCallbacks g_int_cbs[INTS_CALLBACKS_MAX];
+
+static void dummy_cb(
+    const InterruptFrame _ATTR_MAYBE_UNUSED *frame, 
+    const void _ATTR_MAYBE_UNUSED *data
+)
+{
+    static u32 trashcan = 0;
+    ++trashcan;
+}
 
 void sysidt_init()
 {
     interrupts_disable();
+    
+    for(size_t i = 0; i < INTS_CALLBACKS_MAX; ++i)
+        g_int_cbs[i].cb = dummy_cb;
 
-    for(uint8_t i = 0; i < 32; ++i)
-    {
-        idt_encode_entry(
-            (uint32_t)isrs[i],
-            SYSGDT_KERNEL_CS,
-            IDT_GATE_TYPE_TRAP_32 | IDT_DESC_PRIV_0 | IDT_INT_PRESENT,
-            &idt[i]
-        );
-    }
+#define COMMON_TRAP_GATE IDT_GATE_TYPE_TRAP_32 | IDT_DESC_PRIV_0 | IDT_INT_PRESENT
 
-    /* ISA interrupts */
-    for(uint8_t i = 0; i < 16; ++i)
-    {
-        idt_encode_entry(
-            (uint32_t)irqs[i],
-            SYSGDT_KERNEL_CS, 
-            IDT_GATE_TYPE_INT_32 | IDT_DESC_PRIV_0 | IDT_INT_PRESENT,
-            &idt[i + MASTER_PIC_OFFSET]
-        );
-    }
+    idt_encode_entry((ptr)isr0, SYSGDT_KERNEL_CS, COMMON_TRAP_GATE, &idt[0]);
+    idt_encode_entry((ptr)isr1, SYSGDT_KERNEL_CS, COMMON_TRAP_GATE, &idt[1]);
+    idt_encode_entry((ptr)isr2, SYSGDT_KERNEL_CS, COMMON_TRAP_GATE, &idt[2]);
+    idt_encode_entry((ptr)isr3, SYSGDT_KERNEL_CS, COMMON_TRAP_GATE, &idt[3]);
+    idt_encode_entry((ptr)isr4, SYSGDT_KERNEL_CS, COMMON_TRAP_GATE, &idt[4]);
+    idt_encode_entry((ptr)isr5, SYSGDT_KERNEL_CS, COMMON_TRAP_GATE, &idt[5]);
+    idt_encode_entry((ptr)isr6, SYSGDT_KERNEL_CS, COMMON_TRAP_GATE, &idt[6]);
+    idt_encode_entry((ptr)isr7, SYSGDT_KERNEL_CS, COMMON_TRAP_GATE, &idt[7]);
+    idt_encode_entry((ptr)isr8, SYSGDT_KERNEL_CS, COMMON_TRAP_GATE, &idt[8]);
+    idt_encode_entry((ptr)isr9, SYSGDT_KERNEL_CS, COMMON_TRAP_GATE, &idt[9]);
+    idt_encode_entry((ptr)isr10, SYSGDT_KERNEL_CS, COMMON_TRAP_GATE, &idt[10]);
+    idt_encode_entry((ptr)isr11, SYSGDT_KERNEL_CS, COMMON_TRAP_GATE, &idt[11]);
+    idt_encode_entry((ptr)isr12, SYSGDT_KERNEL_CS, COMMON_TRAP_GATE, &idt[12]);
+    idt_encode_entry((ptr)isr13, SYSGDT_KERNEL_CS, COMMON_TRAP_GATE, &idt[13]);
+    idt_encode_entry((ptr)isr14, SYSGDT_KERNEL_CS, COMMON_TRAP_GATE, &idt[14]);
+    idt_encode_entry((ptr)isr15, SYSGDT_KERNEL_CS, COMMON_TRAP_GATE, &idt[15]);
+    idt_encode_entry((ptr)isr16, SYSGDT_KERNEL_CS, COMMON_TRAP_GATE, &idt[16]);
+    idt_encode_entry((ptr)isr17, SYSGDT_KERNEL_CS, COMMON_TRAP_GATE, &idt[17]);
+    idt_encode_entry((ptr)isr18, SYSGDT_KERNEL_CS, COMMON_TRAP_GATE, &idt[18]);
+    idt_encode_entry((ptr)isr19, SYSGDT_KERNEL_CS, COMMON_TRAP_GATE, &idt[19]);
+    idt_encode_entry((ptr)isr20, SYSGDT_KERNEL_CS, COMMON_TRAP_GATE, &idt[20]);
+    idt_encode_entry((ptr)isr21, SYSGDT_KERNEL_CS, COMMON_TRAP_GATE, &idt[21]);
+    idt_encode_entry((ptr)isr22, SYSGDT_KERNEL_CS, COMMON_TRAP_GATE, &idt[22]);
+    idt_encode_entry((ptr)isr23, SYSGDT_KERNEL_CS, COMMON_TRAP_GATE, &idt[23]);
+    idt_encode_entry((ptr)isr24, SYSGDT_KERNEL_CS, COMMON_TRAP_GATE, &idt[24]);
+    idt_encode_entry((ptr)isr25, SYSGDT_KERNEL_CS, COMMON_TRAP_GATE, &idt[25]);
+    idt_encode_entry((ptr)isr26, SYSGDT_KERNEL_CS, COMMON_TRAP_GATE, &idt[26]);
+    idt_encode_entry((ptr)isr27, SYSGDT_KERNEL_CS, COMMON_TRAP_GATE, &idt[27]);
+    idt_encode_entry((ptr)isr28, SYSGDT_KERNEL_CS, COMMON_TRAP_GATE, &idt[28]);
+    idt_encode_entry((ptr)isr29, SYSGDT_KERNEL_CS, COMMON_TRAP_GATE, &idt[29]);
+    idt_encode_entry((ptr)isr30, SYSGDT_KERNEL_CS, COMMON_TRAP_GATE, &idt[30]);
+    idt_encode_entry((ptr)isr31, SYSGDT_KERNEL_CS, COMMON_TRAP_GATE, &idt[31]);
+
+#define COMMON_IRQ_GATE IDT_GATE_TYPE_INT_32 | IDT_DESC_PRIV_0 | IDT_INT_PRESENT
+
+    idt_encode_entry((ptr)irq0, SYSGDT_KERNEL_CS, COMMON_IRQ_GATE, &idt[0 + MASTER_PIC_OFFSET]);
+    idt_encode_entry((ptr)irq1, SYSGDT_KERNEL_CS, COMMON_IRQ_GATE, &idt[1 + MASTER_PIC_OFFSET]);
+    idt_encode_entry((ptr)irq2, SYSGDT_KERNEL_CS, COMMON_IRQ_GATE, &idt[2 + MASTER_PIC_OFFSET]);
+    idt_encode_entry((ptr)irq3, SYSGDT_KERNEL_CS, COMMON_IRQ_GATE, &idt[3 + MASTER_PIC_OFFSET]);
+    idt_encode_entry((ptr)irq4, SYSGDT_KERNEL_CS, COMMON_IRQ_GATE, &idt[4 + MASTER_PIC_OFFSET]);
+    idt_encode_entry((ptr)irq5, SYSGDT_KERNEL_CS, COMMON_IRQ_GATE, &idt[5 + MASTER_PIC_OFFSET]);
+    idt_encode_entry((ptr)irq6, SYSGDT_KERNEL_CS, COMMON_IRQ_GATE, &idt[6 + MASTER_PIC_OFFSET]);
+    idt_encode_entry((ptr)irq7, SYSGDT_KERNEL_CS, COMMON_IRQ_GATE, &idt[7 + MASTER_PIC_OFFSET]);
+    idt_encode_entry((ptr)irq8, SYSGDT_KERNEL_CS, COMMON_IRQ_GATE, &idt[8 + MASTER_PIC_OFFSET]);
+    idt_encode_entry((ptr)irq9, SYSGDT_KERNEL_CS, COMMON_IRQ_GATE, &idt[9 + MASTER_PIC_OFFSET]);
+    idt_encode_entry((ptr)irq10, SYSGDT_KERNEL_CS, COMMON_IRQ_GATE, &idt[10 + MASTER_PIC_OFFSET]);
+    idt_encode_entry((ptr)irq11, SYSGDT_KERNEL_CS, COMMON_IRQ_GATE, &idt[11 + MASTER_PIC_OFFSET]);
+    idt_encode_entry((ptr)irq12, SYSGDT_KERNEL_CS, COMMON_IRQ_GATE, &idt[12 + MASTER_PIC_OFFSET]);
+    idt_encode_entry((ptr)irq13, SYSGDT_KERNEL_CS, COMMON_IRQ_GATE, &idt[13 + MASTER_PIC_OFFSET]);
+    idt_encode_entry((ptr)irq14, SYSGDT_KERNEL_CS, COMMON_IRQ_GATE, &idt[14 + MASTER_PIC_OFFSET]);
+    idt_encode_entry((ptr)irq15, SYSGDT_KERNEL_CS, COMMON_IRQ_GATE, &idt[15 + MASTER_PIC_OFFSET]);
 
     idtr.base = idt;
     idtr.limit = sizeof(idt) - 1;
@@ -224,272 +213,280 @@ int sysidt_register_callback(uint8_t interrupt_n, interrupt_callback callback)
     if(interrupt_n >= INTS_CALLBACKS_MAX)
         return 1;
 
-    InterruptCallbacks *cbs = &g_interrupts_callbacks[interrupt_n];
-    if(cbs->callbacks_count >= CALLBACKS_MAX)
-        return 2;
-    
-    cbs->callbacks[cbs->callbacks_count] = callback;
-    return cbs->callbacks_count++;
+    g_int_cbs[interrupt_n].cb = callback;
+
+    return 0;
 }
 
-void isr0_handler(const _ATTR_MAYBE_UNUSED InterruptFrame* frame)
+void isr0_handler(const InterruptFrame* frame)
 {
-
+    g_int_cbs[ISR0].cb(frame, NULL);
 }
 
-void isr1_handler(const _ATTR_MAYBE_UNUSED InterruptFrame* frame)
+void isr1_handler(const InterruptFrame* frame)
 {
-
+    g_int_cbs[ISR1].cb(frame, NULL);
 }
 
-void isr2_handler(const _ATTR_MAYBE_UNUSED InterruptFrame* frame)
+void isr2_handler(const InterruptFrame* frame)
 {
-
+    g_int_cbs[ISR2].cb(frame, NULL);
 }
 
-void isr3_handler(const _ATTR_MAYBE_UNUSED InterruptFrame* frame)
+void isr3_handler(const InterruptFrame* frame)
 {
-
+    g_int_cbs[ISR3].cb(frame, NULL);
 }
 
-void isr4_handler(const _ATTR_MAYBE_UNUSED InterruptFrame* frame)
+void isr4_handler(const InterruptFrame* frame)
 {
-
+    g_int_cbs[ISR4].cb(frame, NULL);
 }
 
-void isr5_handler(const _ATTR_MAYBE_UNUSED InterruptFrame* frame)
+void isr5_handler(const InterruptFrame* frame)
 {
-
+    g_int_cbs[ISR5].cb(frame, NULL);
 }
 
-void isr6_handler(const _ATTR_MAYBE_UNUSED InterruptFrame* frame)
+void isr6_handler(const InterruptFrame* frame)
 {
-
+    g_int_cbs[ISR6].cb(frame, NULL);
 }
 
-void isr7_handler(const _ATTR_MAYBE_UNUSED InterruptFrame* frame)
+void isr7_handler(const InterruptFrame* frame)
 {
-
+    g_int_cbs[ISR7].cb(frame, NULL);
 }
 
-void isr8_handler(const _ATTR_MAYBE_UNUSED InterruptFrame* frame)
+void isr8_handler(const InterruptFrame* frame)
 {
-
+    g_int_cbs[ISR8].cb(frame, NULL);
 }
 
-void isr9_handler(const _ATTR_MAYBE_UNUSED InterruptFrame* frame)
+void isr9_handler(const InterruptFrame* frame)
 {
-
+    g_int_cbs[ISR9].cb(frame, NULL);
 }
 
-void isr10_handler(const _ATTR_MAYBE_UNUSED InterruptFrame* frame)
+void isr10_handler(const InterruptFrame* frame)
 {
-
+    g_int_cbs[ISR10].cb(frame, NULL);
 }
 
-void isr11_handler(const _ATTR_MAYBE_UNUSED InterruptFrame* frame)
+void isr11_handler(const InterruptFrame* frame)
 {
-
+    g_int_cbs[ISR11].cb(frame, NULL);
 }
 
-void isr12_handler(const _ATTR_MAYBE_UNUSED InterruptFrame* frame)
+void isr12_handler(const InterruptFrame* frame)
 {
-
+    g_int_cbs[ISR12].cb(frame, NULL);
 }
 
-void isr13_handler(const _ATTR_MAYBE_UNUSED InterruptFrame* frame)
+void isr13_handler(const InterruptFrame* frame)
 {
-
+    g_int_cbs[ISR13].cb(frame, NULL);
 }
 
-void isr14_handler(const _ATTR_MAYBE_UNUSED InterruptFrame* frame)
+void isr14_handler(const InterruptFrame* frame)
 {
-
+    g_int_cbs[ISR14].cb(frame, NULL);
 }
 
-void isr15_handler(const _ATTR_MAYBE_UNUSED InterruptFrame* frame)
+void isr15_handler(const InterruptFrame* frame)
 {
-
+    g_int_cbs[ISR15].cb(frame, NULL);
 }
 
-void isr16_handler(const _ATTR_MAYBE_UNUSED InterruptFrame* frame)
+void isr16_handler(const InterruptFrame* frame)
 {
-
+    g_int_cbs[ISR16].cb(frame, NULL);
 }
 
-void isr17_handler(const _ATTR_MAYBE_UNUSED InterruptFrame* frame)
+void isr17_handler(const InterruptFrame* frame)
 {
-
+    g_int_cbs[ISR17].cb(frame, NULL);
 }
 
-void isr18_handler(const _ATTR_MAYBE_UNUSED InterruptFrame* frame)
+void isr18_handler(const InterruptFrame* frame)
 {
-
+    g_int_cbs[ISR18].cb(frame, NULL);
 }
 
-void isr19_handler(const _ATTR_MAYBE_UNUSED InterruptFrame* frame)
+void isr19_handler(const InterruptFrame* frame)
 {
-
+    g_int_cbs[ISR19].cb(frame, NULL);
 }
 
-void isr20_handler(const _ATTR_MAYBE_UNUSED InterruptFrame* frame)
+void isr20_handler(const InterruptFrame* frame)
 {
-
+    g_int_cbs[ISR20].cb(frame, NULL);
 }
 
-void isr21_handler(const _ATTR_MAYBE_UNUSED InterruptFrame* frame)
+void isr21_handler(const InterruptFrame* frame)
 {
-
+    g_int_cbs[ISR21].cb(frame, NULL);
 }
 
-void isr22_handler(const _ATTR_MAYBE_UNUSED InterruptFrame* frame)
+void isr22_handler(const InterruptFrame* frame)
 {
-
+    g_int_cbs[ISR22].cb(frame, NULL);
 }
 
-void isr23_handler(const _ATTR_MAYBE_UNUSED InterruptFrame* frame)
+void isr23_handler(const InterruptFrame* frame)
 {
-
+    g_int_cbs[ISR23].cb(frame, NULL);
 }
 
-void isr24_handler(const _ATTR_MAYBE_UNUSED InterruptFrame* frame)
+void isr24_handler(const InterruptFrame* frame)
 {
-
+    g_int_cbs[ISR24].cb(frame, NULL);
 }
 
-void isr25_handler(const _ATTR_MAYBE_UNUSED InterruptFrame* frame)
+void isr25_handler(const InterruptFrame* frame)
 {
-
+    g_int_cbs[ISR25].cb(frame, NULL);
 }
 
-void isr26_handler(const _ATTR_MAYBE_UNUSED InterruptFrame* frame)
+void isr26_handler(const InterruptFrame* frame)
 {
-
+    g_int_cbs[ISR26].cb(frame, NULL);
 }
 
-void isr27_handler(const _ATTR_MAYBE_UNUSED InterruptFrame* frame)
+void isr27_handler(const InterruptFrame* frame)
 {
-
+    g_int_cbs[ISR27].cb(frame, NULL);
 }
 
-void isr28_handler(const _ATTR_MAYBE_UNUSED InterruptFrame* frame)
+void isr28_handler(const InterruptFrame* frame)
 {
-
+    g_int_cbs[ISR28].cb(frame, NULL);
 }
 
-void isr29_handler(const _ATTR_MAYBE_UNUSED InterruptFrame* frame)
+void isr29_handler(const InterruptFrame* frame)
 {
-
+    g_int_cbs[ISR29].cb(frame, NULL);
 }
 
-void isr30_handler(const _ATTR_MAYBE_UNUSED InterruptFrame* frame)
+void isr30_handler(const InterruptFrame* frame)
 {
-
+    g_int_cbs[ISR30].cb(frame, NULL);
 }
 
-void isr31_handler(const _ATTR_MAYBE_UNUSED InterruptFrame* frame)
+void isr31_handler(const InterruptFrame* frame)
 {
-
+    g_int_cbs[ISR31].cb(frame, NULL);
 }
 
 /* PIT */
-void irq0_handler(const _ATTR_MAYBE_UNUSED InterruptFrame* frame)
+void irq0_handler(const InterruptFrame* frame)
 {
+    g_int_cbs[IRQ0].cb(frame, NULL);
     pic8259_signal_eoi(0);
 }
 
 /* keyboard */
-void irq1_handler(const _ATTR_MAYBE_UNUSED InterruptFrame* frame)
+void irq1_handler(const InterruptFrame* frame)
 {
     unsigned char scan_code = port_inb(0x60); 
-    kprintf("%d ", scan_code);
+    g_int_cbs[IRQ1].cb(frame, NULL);
     pic8259_signal_eoi(0);
 }
 
 /* used internally by the 2 PICs */
-void irq2_handler(const _ATTR_MAYBE_UNUSED InterruptFrame* frame)
+void irq2_handler(const InterruptFrame* frame)
 {
+    g_int_cbs[IRQ2].cb(frame, NULL);
     pic8259_signal_eoi(0);
 }
 
 /* COM2 */
-void irq3_handler(const _ATTR_MAYBE_UNUSED InterruptFrame* frame)
+void irq3_handler(const InterruptFrame* frame)
 {
+    g_int_cbs[IRQ3].cb(frame, NULL);
     pic8259_signal_eoi(0);
 }
 
 /* COM1 */
-void irq4_handler(const _ATTR_MAYBE_UNUSED InterruptFrame* frame)
+void irq4_handler(const InterruptFrame* frame)
 {
+    g_int_cbs[IRQ4].cb(frame, NULL);
     pic8259_signal_eoi(0);
 }
 
 /* LPT2 */
-void irq5_handler(const _ATTR_MAYBE_UNUSED InterruptFrame* frame)
+void irq5_handler(const InterruptFrame* frame)
 {
+    g_int_cbs[IRQ5].cb(frame, NULL);
     pic8259_signal_eoi(0);
 }
 
 /* floppy disk */
-void irq6_handler(const _ATTR_MAYBE_UNUSED InterruptFrame* frame)
+void irq6_handler(const InterruptFrame* frame)
 {
+    g_int_cbs[IRQ6].cb(frame, NULL);
     pic8259_signal_eoi(0);
 }
 
 /* LPT1 */
-void irq7_handler(const _ATTR_MAYBE_UNUSED InterruptFrame* frame)
+void irq7_handler(const InterruptFrame* frame)
 {
+    g_int_cbs[IRQ7].cb(frame, NULL);
     pic8259_signal_eoi(0);
 }
 
 /* CMOS RTC */
-void irq8_handler(const _ATTR_MAYBE_UNUSED InterruptFrame* frame)
+void irq8_handler(const InterruptFrame* frame)
 {
-    const InterruptCallbacks *cbs = &g_interrupts_callbacks[IRQ8];
-    for(size_t i = 0; i < cbs->callbacks_count; ++i)
-        cbs->callbacks[i](frame, NULL);
-    
+    g_int_cbs[IRQ8].cb(frame, NULL);
     pic8259_signal_eoi(1);
 }
 
 /* free for peripherals */
-void irq9_handler(const _ATTR_MAYBE_UNUSED InterruptFrame* frame)
+void irq9_handler(const InterruptFrame* frame)
 {
+    g_int_cbs[IRQ9].cb(frame, NULL);
     pic8259_signal_eoi(1);
 }
 
 /* free for peripherals */
-void irq10_handler(const _ATTR_MAYBE_UNUSED InterruptFrame* frame)
+void irq10_handler(const InterruptFrame* frame)
 {
+    g_int_cbs[IRQ10].cb(frame, NULL);
     pic8259_signal_eoi(1);
 }
 
 /* free for peripherals */
-void irq11_handler(const _ATTR_MAYBE_UNUSED InterruptFrame* frame)
+void irq11_handler(const InterruptFrame* frame)
 {
+    g_int_cbs[IRQ11].cb(frame, NULL);
     pic8259_signal_eoi(1);
 }
 
 /* PS2 mouse */
-void irq12_handler(const _ATTR_MAYBE_UNUSED InterruptFrame* frame)
+void irq12_handler(const InterruptFrame* frame)
 {
+    g_int_cbs[IRQ12].cb(frame, NULL);
     pic8259_signal_eoi(1);
 }
 
 /* FPU/co-CPU/inter-CPU */
-void irq13_handler(const _ATTR_MAYBE_UNUSED InterruptFrame* frame)
+void irq13_handler(const InterruptFrame* frame)
 {
+    g_int_cbs[IRQ13].cb(frame, NULL);
     pic8259_signal_eoi(1);
 }
 
 /* primary ATA hard disk */
-void irq14_handler(const _ATTR_MAYBE_UNUSED InterruptFrame* frame)
+void irq14_handler(const InterruptFrame* frame)
 {
+    g_int_cbs[IRQ14].cb(frame, NULL);
     pic8259_signal_eoi(1);
 }
 
 /* secondary ATA hard disk */
-void irq15_handler(const _ATTR_MAYBE_UNUSED InterruptFrame* frame)
+void irq15_handler(const InterruptFrame* frame)
 {
+    g_int_cbs[IRQ15].cb(frame, NULL);
     pic8259_signal_eoi(1);
 }
