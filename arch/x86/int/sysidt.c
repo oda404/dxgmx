@@ -6,14 +6,12 @@
 #include<dxgmx/x86/sysidt.h>
 #include<dxgmx/x86/sysgdt.h>
 #include<dxgmx/x86/idt.h>
-#include<dxgmx/kprintf.h>
 #include<dxgmx/x86/portio.h>
 #include<dxgmx/x86/pic.h>
 #include<dxgmx/x86/interrupt_frame.h>
 #include<dxgmx/x86/interrupts.h>
 #include<dxgmx/types.h>
 #include<dxgmx/attrs.h>
-#include<dxgmx/string.h>
 
 asm(
     ".type isr_exit, @function                       \n"
