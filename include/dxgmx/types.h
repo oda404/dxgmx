@@ -6,6 +6,7 @@
 #ifndef _DXGMX_TYPES_H
 #define _DXGMX_TYPES_H
 
+#include<stddef.h>
 #include<stdint.h>
 
 #if __SIZEOF_FLOAT__ == __SIZEOF_INT__
