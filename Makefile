@@ -56,14 +56,14 @@ KERNEL_SRCDIR     := kernel
 
 CC                ?= gcc
 CXX               ?= g++
-LD                ?= ld
-AR                ?= ar
-AS                ?= as
+LD                ?= g++
+AS                ?= gcc
 
 ### FLAGS ###
-CFLAGS            := -MD -MP -m32 -ffreestanding \
--isystem=/usr/include --sysroot=$(SYSROOTDIR) \
--fstack-protector-strong
+CFLAGS            :=                                \
+-march=i686 -MD -MP -m32 -isystem=/usr/include      \
+--sysroot=$(SYSROOTDIR) -fstack-protector-strong    \
+-fno-omit-frame-pointer -ffreestanding -fno-builtin \
 
 CXXFLAGS          := $(CFLAGS) \
 
@@ -163,7 +163,7 @@ all: $(BIN_PATH)
 
 $(BIN_PATH): $(DXGMX_DEPS)
 	@$(OUTPUT_FORMATTED) LD $(notdir $(BIN_NAME))
-	@$(CXX) -T $(LDSCRIPT) $(COBJS) $(CXXOBJS) $(ASMOBJS) $(LDFLAGS) -o $(BIN_PATH)
+	@$(LD) -T $(LDSCRIPT) $(COBJS) $(CXXOBJS) $(ASMOBJS) $(LDFLAGS) -Wl,-Map,$(BUILDDIR)/$(BIN_NAME).map -o $(BIN_PATH)
 
 	@cp $(BIN_PATH) $(SYSROOTDIR)/boot/
 
@@ -184,7 +184,7 @@ $(BUILDDIR)/%_$(BUILD_TARGET).cpp.o: %.cpp Makefile
 $(BUILDDIR)/%_$(BUILD_TARGET).S.o: %.S Makefile
 	@mkdir -p $(dir $@)
 	@$(OUTPUT_FORMATTED) AS $<
-	@$(CC) -c $< $(CFLAGS) -o $@
+	@$(AS) -c $< $(CFLAGS) -o $@
 
 $(SYSROOT_DIRS):
 	@mkdir -p $(SYSROOT_DIRS)
