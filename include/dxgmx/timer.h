@@ -16,7 +16,7 @@ E_TimerInternalType
     TIMER_INTERNAL_RTC,
 } TimerInternalType;
 
-typedef const struct timespec*(*timer_ts_getter)();
+typedef const volatile struct timespec*(*timer_ts_getter)();
 
 typedef struct
 S_Timer

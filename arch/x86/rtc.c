@@ -90,10 +90,10 @@ static u16 rtc_set_freq(u8 freq)
     return freq;
 }
 
-static struct tm       g_rtc_tm;
-static u16             g_rtc_running_freq;
-static u16             g_rtc_base_freq;
-static struct timespec g_rtc_ts;
+static volatile struct tm       g_rtc_tm;
+static u16                      g_rtc_running_freq;
+static u16                      g_rtc_base_freq;
+static volatile struct timespec g_rtc_ts;
 
 static void rtc_int_handler(
     const InterruptFrame _ATTR_MAYBE_UNUSED *frame, 
@@ -131,13 +131,14 @@ static void rtc_int_handler(
 
         if(!(b & RTC_REG_B_BINARY_MODE))
         {
-            bcd_to_binary(&g_rtc_tm.tm_sec);
-            bcd_to_binary(&g_rtc_tm.tm_min);
-            bcd_to_binary(&g_rtc_tm.tm_hour);
-            bcd_to_binary(&g_rtc_tm.tm_wday);
-            bcd_to_binary(&g_rtc_tm.tm_mday);
-            bcd_to_binary(&g_rtc_tm.tm_mon);
-            bcd_to_binary(&g_rtc_tm.tm_year);
+            /* It's ok to cast them to int* becuase we know they won't change. */
+            bcd_to_binary((int*)&g_rtc_tm.tm_sec);
+            bcd_to_binary((int*)&g_rtc_tm.tm_min);
+            bcd_to_binary((int*)&g_rtc_tm.tm_hour);
+            bcd_to_binary((int*)&g_rtc_tm.tm_wday);
+            bcd_to_binary((int*)&g_rtc_tm.tm_mday);
+            bcd_to_binary((int*)&g_rtc_tm.tm_mon);
+            bcd_to_binary((int*)&g_rtc_tm.tm_year);
         }
 
         /** 
@@ -163,8 +164,8 @@ static void rtc_int_handler(
 
 int rtc_init()
 {
-    memset(&g_rtc_tm, 0, sizeof(struct tm));
-    memset(&g_rtc_ts, 0, sizeof(struct timespec));
+    memset((void*)&g_rtc_tm, 0, sizeof(struct tm));
+    memset((void*)&g_rtc_ts, 0, sizeof(struct timespec));
 
     rtc_set_freq(RTC_FREQ_8KHZ);
     g_rtc_running_freq = rtc_calculate_running_freq();
@@ -204,12 +205,12 @@ void rtc_dump_time_and_date()
     interrupts_enable();
 }
 
-const struct timespec *rtc_get_running_ts()
+const volatile struct timespec *rtc_get_running_ts()
 {
     return &g_rtc_ts;
 }
 
-const struct tm *rtc_get_tm()
+const volatile struct tm *rtc_get_tm()
 {
     return &g_rtc_tm;
 }
