@@ -1,6 +1,5 @@
 
 KERNEL_SRC += \
-kernel/abandon_ship.c \
 kernel/bitwise.c \
 kernel/kprintf.c \
 kernel/kabort.c \
