@@ -1,0 +1,10 @@
+
+DBT_CFLAGS   := -fstack-protector-strong -g -O0
+
+DBT_CXXFLAGS := $(DBT_CFLAGS)
+
+DBT_LDFLAGS  := 
+
+DBT_MACROS   := -D_DXGMX_DEBUG_ 
+
+DBT_WARNINGS := 

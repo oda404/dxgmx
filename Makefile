@@ -35,8 +35,10 @@ SYSROOTDIR        := $(BUILDDIR)/sysroot
 SCRIPTSDIR        := scripts
 
 TARGET_TRIPLET    ?= x86-dxgmx-elf
-BUILD_TARGET      ?= debug
 IS_CROSS_COMP     ?= 1
+
+BUILD_TARGET      ?= debug
+include $(BUILDDIR)/targets/$(BUILD_TARGET).dbt
 
 ARCH              := $(shell $(SCRIPTSDIR)/target-triplet-to-arch.sh $(TARGET_TRIPLET))
 ifeq ($(ARCH), undefined)
@@ -50,7 +52,6 @@ endif
 
 ### SRC/INCLUDE DIRECTORIES ###
 ARCH_SRCDIR       := arch/$(SRCARCH)
-ARCH_INCLUDEDIR   := $(ARCH_DIR)/include
 INIT_SRCDIR       := init
 KERNEL_SRCDIR     := kernel
 
@@ -60,52 +61,32 @@ LD                ?= g++
 AS                ?= gcc
 
 ### FLAGS ###
-CFLAGS            :=                                \
--march=i686 -MD -MP -m32 -isystem=/usr/include      \
---sysroot=$(SYSROOTDIR) -fstack-protector-strong    \
--fno-omit-frame-pointer -ffreestanding -fno-builtin \
+CFLAGS            :=                                      \
+-march=i686 -MD -MP -m32 -isystem=/usr/include            \
+--sysroot=$(SYSROOTDIR) -fno-omit-frame-pointer           \
+-ffreestanding -fno-builtin $(DBT_CFLAGS)                 \
 
-CXXFLAGS          := $(CFLAGS) \
+CXXFLAGS          := $(CFLAGS) $(DBT_CXXFLAGS)            \
 
-LDFLAGS           := -nostdlib -lgcc
+LDFLAGS           := -nostdlib -lgcc $(DBT_LDFLAGS)       \
 
-EXTRA_CFLAGS      ?= 
-EXTRA_LDFLAGS     ?= 
-EXTRA_CXXFLAGS    ?=
-
-DEBUG_CFLAGS      := -g -D_DXGMX_DEBUG_
-RELEASE_CFLAGS    := -O2 -D_DXGMX_RELEASE_
-DEBUG_CXXFLAGS    := $(DEBUG_CFLAGS)
-RELEASE_CXXFLAGS  := $(RELEASE_CFLAGS)
-
-MACROS            := \
--D__dxgmx__ -D_DXGMX_ -D_DXGMX_VER_MAJ_=$(VER_MAJ) \
+MACROS            :=                                      \
+-D__dxgmx__ -D_DXGMX_ -D_DXGMX_VER_MAJ_=$(VER_MAJ)        \
 -D_DXGMX_VER_MIN_=$(VER_MIN) -D_DXGMX_PATCH_N_=$(PATCH_N) \
--D_DXGMX_CODENAME_='"$(CODENAME)"' 
+-D_DXGMX_CODENAME_='"$(CODENAME)"' $(DBT_MACROS)          \
+
+WARNINGS          := -Wall -Wextra                        \
+-Werror-implicit-function-declaration $(DBT_WARNINGS)     \
 
 ifeq ($(SRCARCH), x86)
 	MACROS += -D_X86_
 endif
-
-WARNINGS          := -Wall -Wextra \
--Werror-implicit-function-declaration
 
 MAKEFLAGS         += --no-print-directory
 
 CFLAGS            += $(EXTRA_CFLAGS) $(WARNINGS) $(MACROS)
 CXXFLAGS          += $(EXTRA_CXXFLAGS) $(WARNINGS) $(MACROS)
 LDFLAGS           += $(EXTRA_LDFLAGS)
-
-# Set release or debug specific CFLAGS.
-ifeq ($(BUILD_TARGET), debug)
-    CFLAGS += $(DEBUG_CFLAGS)
-	CXXFLAGS += $(DEBUG_CXXFLAGS)
-else ifeq ($(BUILD_TARGET), release)
-    CFLAGS += $(RELEASE_CFLAGS)
-	CXXFLAGS += $(RELEASE_CFLAGS)
-else
-    $(error Unknown BUILD_TARGET=$(BUILD_TARGET))
-endif
 
 # At this point CFLAGS, CXXFLAGS and LDFLAGS should be in their final forms.
 
@@ -230,6 +211,7 @@ PHONY += mrclean
 mrclean:
 	$(MAKE) clean
 	@rm -f $$(ls | grep -Eo '^dxgmx-[0-9]+.[0-9]+.[0-9]+(.iso)?$$')
-	@rm -rf $(BUILDDIR) # yikes
+	@rm -rf $(BUILDDIR)/arch $(BUILDDIR)/init $(BUILDDIR)/kernel \
+	$(BUILDDIR)/sysroot
 
 .PHONY: $(PHONY)
