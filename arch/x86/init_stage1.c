@@ -35,7 +35,7 @@ int kinit_stage1(const BootInfo *bootinfo)
 
     tty_init();
     const KLogConfig config = {
-        .loglevel = KLOG_FATAL
+        .loglevel = _DXGMX_LOGLVL_
     };
     klog_init(&config);
 
