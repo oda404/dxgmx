@@ -5,6 +5,7 @@ kernel/kprintf.c \
 kernel/kabort.c \
 kernel/klog.c \
 kernel/stack_chk.c \
+kernel/kinit_stage2.c \
 
 include $(KERNEL_SRCDIR)/ctype/Makefile
 include $(KERNEL_SRCDIR)/errno/Makefile
