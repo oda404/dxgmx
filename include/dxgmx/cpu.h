@@ -55,6 +55,10 @@ S_CPUInfo
 
 /** Tries to identify the CPU and it's features. */
 int cpu_identify();
+/** Suspends CPU execution. Note that the CPU might resume 
+ * execution due to various architecture specific reasons.
+*/
+void cpu_suspend();
 const CPUInfo *cpu_get_info();
 
 #endif // _DXGMX_CPU_H

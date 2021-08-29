@@ -104,3 +104,8 @@ void cpu_set_cr0(uint32_t val)
 {
     asm volatile("movl %0, %%cr0": :"a"(val));
 }
+
+void cpu_suspend()
+{
+    asm volatile("hlt");
+}
