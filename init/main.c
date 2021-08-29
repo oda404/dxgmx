@@ -5,6 +5,7 @@
 
 #include<dxgmx/bootinfo.h>
 #include<dxgmx/types.h>
+#include<dxgmx/attrs.h>
 
 extern u32 _kernel_base;
 extern u32 _kernel_end;
@@ -14,17 +15,18 @@ extern u32 _kstack_bot;
 /* 
  * This function initiates core hardware and 
  * brings the machine in an operational state.
- * It s implementation is architecture specific 
- * and can be found in arch/<arch>/init_stage1.c .
+ * It's implementation is architecture specific 
+ * and can be found in arch/<arch>/kinit_stage1.c.
  */
-int kinit_stage1(const BootInfo *bootinfo);
+extern int kinit_stage1(const BootInfo *bootinfo);
 /* This function expects the hardware to be initialized
  * and in working order. It is responsible for initiating
- * kernel specific stuff.
+ * kernel specific stuff. It's implementation can be found in 
+ * kernel/kinit_stage2.c
  */
-int kinit_stage2();
+extern int kinit_stage2();
 
-void kmain(u32 blmagic, u32 blinfo_base)
+_ATTR_NORETURN void kmain(u32 blmagic, u32 blinfo_base)
 {
     {
         BootInfo bootinfo;
@@ -38,8 +40,14 @@ void kmain(u32 blmagic, u32 blinfo_base)
         kinit_stage1(&bootinfo);
     }
 
+    /**
+     * FIXME: kinit_stage2 is not marked with _ATTR_NORETURN,
+     * even though it (or some other kinit_stage3 function ?) should.
+    */
     kinit_stage2();
-    
-    for(;;)
-        asm volatile("hlt");
+    /**
+     * kmain should never return. Worst case scenario abandon_ship
+     * gets called in kinit_stage2.
+    */
+    __builtin_unreachable();
 }
