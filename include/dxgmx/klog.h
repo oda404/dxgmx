@@ -12,16 +12,21 @@
 #include<stdarg.h>
 
 /** 
- * When you set a log level. Only it and any levels who'se values are
- * bigger than it will get logged.
+ * When setting a log level, only it and levels who'se values
+ * are smaller than it's value will be logged.
+ * If the log level is set to 0, nothing will be logged.
+ * For example, setting the log level to KLOG_WARN means that
+ * calling klog with KLOG_(WARN/ERR/FATAL) will work but calling 
+ * it with KLOG_INFO will not.
 */
 typedef enum E_LogLevels
 {
-    KLOG_QUIET,
-    KLOG_INFO,
-    KLOG_WARN,
+    KLOG_FATAL = 1,
     KLOG_ERR,
-    KLOG_FATAL,
+    KLOG_WARN,
+    KLOG_INFO,
+
+    KLOG_ENUM_END // do not remove
 } LogLevels;
 
 typedef struct
