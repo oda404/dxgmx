@@ -1,6 +1,6 @@
 
 ARCH_SRC += \
-arch/x86/init_stage1.c \
+arch/x86/kinit_stage1.c \
 arch/x86/init_stage2.c \
 arch/x86/cpu.c \
 arch/x86/cpuid.c \
