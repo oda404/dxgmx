@@ -6,6 +6,7 @@
 #ifndef _DXGMX_CPU_H
 #define _DXGMX_CPU_H
 
+#include<dxgmx/attrs.h>
 #include<dxgmx/types.h>
 
 #if defined(_X86_)
@@ -59,6 +60,10 @@ int cpu_identify();
  * execution due to various architecture specific reasons.
 */
 void cpu_suspend();
+/**
+ * Terminates cpu execution. This function will never return.
+*/
+_ATTR_NORETURN void cpu_hang();
 const CPUInfo *cpu_get_info();
 
 #endif // _DXGMX_CPU_H

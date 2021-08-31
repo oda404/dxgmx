@@ -6,6 +6,8 @@
 #include<dxgmx/cpu.h>
 #include<stdint.h>
 #include<dxgmx/x86/cpuid.h>
+#include<dxgmx/x86/cmos.h>
+#include<dxgmx/x86/interrupts.h>
 #include<dxgmx/abandon_ship.h>
 #include<dxgmx/klog.h>
 #include<dxgmx/string.h>
@@ -108,4 +110,20 @@ void cpu_set_cr0(uint32_t val)
 void cpu_suspend()
 {
     asm volatile("hlt");
+}
+
+void cpu_hang()
+{
+    while(1)
+    {
+        /** 
+         * CPU should remain suspended after the first iteration...
+         * but I'm paranoid.
+        */
+        cmos_disable_nmi();
+        interrupts_disable();
+
+        cpu_suspend();
+    }
+    __builtin_unreachable();
 }
