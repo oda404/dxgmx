@@ -81,17 +81,6 @@ static int printf_parse_flags(char c, uint8_t *flags)
     }
 }
 
-static int printf_parse_width(char c, uint16_t *width)
-{
-    if(isdigit(c))
-    {
-        *width = *width * 10 + (c - '0');
-        return PRINTF_PARSE_CONTINUE;
-    }
-
-    return PRINTF_PARSE_DONE;
-}
-
 static int printf_parse_length(char c, uint8_t *length)
 {
     switch(c)
@@ -224,8 +213,20 @@ int kvprintf(const char *fmt, va_list arglist)
         while(printf_parse_flags(*fmt, &flags) == PRINTF_PARSE_CONTINUE)
             ++fmt;
 
-        while(printf_parse_width(*fmt, &width) == PRINTF_PARSE_CONTINUE)
+        /* width */
+        if(*fmt == '*')
+        {
+            width = va_arg(arglist, int);
             ++fmt;
+        }
+        else
+        {
+            while(isdigit(*fmt))
+            {
+                width = width * 10 + (*fmt - '0');
+                ++fmt;
+            }
+        }
 
         /* precision */
         if(*fmt == '.')
