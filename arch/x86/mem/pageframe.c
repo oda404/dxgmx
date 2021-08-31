@@ -33,7 +33,7 @@ static const MemoryMap *mmap_sys;
 /* Adds any complete PAGE_FRAME_SIZE sized frames from the given area. */
 static void pageframe_add_available(const MemoryMapEntry *area)
 {
-    if(area->type != MMAP_ENTRY_AVAILABLE)
+    if(area->type != MMAP_AVAILABLE)
         return;
 
     for(

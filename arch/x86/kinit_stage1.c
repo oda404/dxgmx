@@ -50,44 +50,37 @@ int kinit_stage1(const BootInfo *bootinfo)
         abandon_ship("Not booted by a multiboot compliant bootloader\n");
 
     rtc_dump_time_and_date();
-    acpi_init();
     cpu_identify();
-
-    klog(
-        KLOG_INFO,
-        "Kernel physical base: 0x%08lX, size: 0x%08lX\n",
-        bootinfo->kernel_base,
-        bootinfo->kernel_end - bootinfo->kernel_base
-    );
-    klog(
-        KLOG_INFO,
-        "Kernel physical stack top: 0x%08lX, bottom: 0x%08lX\n",
-        bootinfo->kstack_top,
-        bootinfo->kstack_bot
-    );
-
+    
     mmap_init();
 
     MultibootMBI *mbi = (MultibootMBI *)bootinfo->blinfo_base;
-    MultibootMMAP *mmap;
 
     for(
-        mmap = (MultibootMMAP *)mbi->mmap_base;
+        MultibootMMAP *mmap = (MultibootMMAP *)mbi->mmap_base;
         (ptr)mmap < mbi->mmap_base + mbi->mmap_length;
         mmap = (MultibootMMAP *)((ptr)mmap + mmap->size + sizeof(mmap->size))
     )
     {
-        mmap_entry_add(mmap->base, mmap->length, mmap->type);
+        mmap_add_entry(mmap->base, mmap->length, mmap->type);
     }
 
+    klog(KLOG_INFO, "Memory map provided by BIOS:\n");
+    mmap_dump();
+
     /* mark the kernel itself as kreserved */
-    mmap_area_mark_kreserved(bootinfo->kernel_base, bootinfo->kernel_end - bootinfo->kernel_base);
+    mmap_update_entry_type(
+        bootinfo->kernel_base, 
+        bootinfo->kernel_end - bootinfo->kernel_base, 
+        MMAP_KRESERVED
+    );
     /* 
      * i lose a bit of available physical memory by aligning 
      * the available areas but gain a lot of mental health
      */
-    mmap_entries_align(PAGE_SIZE);
-    mmap_dump();
+    mmap_align_entries(PAGE_SIZE);
+
+    acpi_init();
 
     pageframe_alloc_init();
     kpaging_init();
