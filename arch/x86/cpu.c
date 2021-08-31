@@ -21,7 +21,7 @@ static CPUInfo g_cpuinfo;
 #define CPU_VENDORSTR_INTEL "GenuineIntel"
 #define CPU_VENDORSTR_AMD   "AuthenticAMD"
 
-#define KLOGF(lvl, fmt, ...) klog(lvl, "[CPU] " fmt, ##__VA_ARGS__);
+#define KLOGF(lvl, fmt, ...) klog(lvl, "cpu: " fmt, ##__VA_ARGS__);
 
 static void cpu_handle_amd_cpuid()
 {
@@ -47,7 +47,7 @@ static void cpu_handle_amd_cpuid()
         g_cpuinfo.model = f1eax.ext_model * 0x10 + f1eax.base_model;
     }
 
-    KLOGF(KLOG_INFO, "UID: %d.%d.%d\n", g_cpuinfo.family, g_cpuinfo.model, g_cpuinfo.stepping);
+    KLOGF(KLOG_INFO, "UID is %d.%d.%d.\n", g_cpuinfo.family, g_cpuinfo.model, g_cpuinfo.stepping);
 }
 
 static void cpu_handle_intel_cpuid()
@@ -71,7 +71,7 @@ int cpu_identify()
         *(u32*)&g_cpuinfo.vendorstr[4]
     );
 
-    KLOGF(KLOG_INFO, "Vendor: %s\n", g_cpuinfo.vendorstr);
+    KLOGF(KLOG_INFO, "Vendor is \"%s\".\n", g_cpuinfo.vendorstr);
 
     if(strcmp(g_cpuinfo.vendorstr, CPU_VENDORSTR_AMD) == 0)
         cpu_handle_amd_cpuid();

@@ -9,6 +9,8 @@
 #include<dxgmx/klog.h>
 #include<stddef.h>
 
+#define KLOGF(lvl, fmt, ...) klog(lvl, "acpi: " fmt, ##__VA_ARGS__)
+
 static ACPIRSDP *acpi_find_rsdp()
 {
     uint32_t ebda_hopefully = 0;
@@ -82,13 +84,13 @@ int acpi_init()
     ACPIRSDP *rsdp = acpi_find_rsdp();
 
     if(acpi_is_rsdp_valid(rsdp))
-        klog(KLOG_INFO, "[ACPI] Found RSDP at 0x%lX.\n", (uint32_t)rsdp);
+        KLOGF(KLOG_INFO, "Found RSDP at 0x%lX.\n", (uint32_t)rsdp);
     else
-        abandon_ship("[ACPI] RSDP at 0x%lX is invalid. Not proceeding.\n", (uint32_t)rsdp);
+        abandon_ship("ACPI: RSDP at 0x%lX is invalid. Not proceeding.\n", (uint32_t)rsdp);
 
     ACPIRSDT *rsdt = (ACPIRSDT *)rsdp->rsdp_v1.rsdt_base;
     if(!acpi_is_sdt_header_valid(&rsdt->header))
-        abandon_ship("[ACPI] RSDT at 0x%lX is invalid. Not proceeding.\n", (uint32_t)rsdt);
+        abandon_ship("ACPI: RSDT at 0x%lX is invalid. Not proceeding.\n", (uint32_t)rsdt);
 
     size_t rsdt_max_tables = (rsdt->header.len - sizeof(rsdt->header)) / 4;
 
@@ -100,14 +102,14 @@ int acpi_init()
 
         if(acpi_is_sdt_header_valid(header))
         {
-            klog(KLOG_INFO, "[ACPI] Found header '%.4s'.\n", header->signature);
+            KLOGF(KLOG_INFO, "Found header '%.4s'.\n", header->signature);
 
             if(memcmp(header->signature, "HPET", 4) == 0)
                 acpi_parse_hpet(header);
         }
         else
         {
-            klog(KLOG_WARN, "[ACPI] Found invalid header at 0x%lX.\n", (uint32_t)header);
+            KLOGF(KLOG_WARN, "Found invalid header at 0x%lX.\n", (uint32_t)header);
         }
     }
 

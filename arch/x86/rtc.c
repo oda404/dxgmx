@@ -13,6 +13,8 @@
 #include<dxgmx/string.h>
 #include<dxgmx/time.h>
 
+#define KLOGF(lvl, fmt, ...) klog(lvl, "rtc: " fmt, ##__VA_ARGS__)
+
 #define RTC_REG_A 0xA
 #define RTC_REG_B 0xB
 #define RTC_REG_C 0xC
@@ -191,9 +193,9 @@ void rtc_dump_time_and_date()
 {
     interrupts_disable();
     cmos_disable_nmi();
-    klog(
+    KLOGF(
         KLOG_INFO,
-        "[RTC] Current time and date: %02d:%02d:%02d %02d/%02d/%d.\n",
+        "Current date is %02d:%02d:%02d %02d/%02d/%d.\n",
         g_rtc_tm.tm_hour,
         g_rtc_tm.tm_min,
         g_rtc_tm.tm_sec,
