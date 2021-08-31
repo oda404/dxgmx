@@ -3,10 +3,10 @@
  * Distributed under the MIT license.
 */
 
-#include<dxgmx/kabort.h>
+#include<dxgmx/cpu.h>
 
 void kabort()
 {
-    asm volatile ("1: cli; hlt; jmp 1b");
+    cpu_hang();
     __builtin_unreachable();
 }
