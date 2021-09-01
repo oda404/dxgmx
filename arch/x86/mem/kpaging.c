@@ -22,7 +22,7 @@ static void paging_int_handler(
     const void _ATTR_MAYBE_UNUSED *data
 )
 {
-    ptr faultaddr = cpu_get_cr2();
+    ptr faultaddr = cpu_read_cr2();
     if(faultaddr == 0)
         abandon_ship("NULL dereference in ring 0 :(\n");
     else if(faultaddr < PAGE_SIZE)

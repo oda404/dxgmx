@@ -37,8 +37,8 @@ typedef enum E_CR0Flags
     CR0FLAG_PG = (1 << 31)
 } CR0Flags;
 
-uint32_t cpu_get_cr2();
-uint32_t cpu_get_cr0();
+uint32_t cpu_read_cr2();
+uint32_t cpu_read_cr0();
 void cpu_set_cr0(u32 val);
 
 typedef struct

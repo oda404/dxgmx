@@ -101,14 +101,14 @@ const CPUInfo *cpu_get_info()
     return &g_cpuinfo;   
 }
 
-uint32_t cpu_get_cr2()
+uint32_t cpu_read_cr2()
 {
     uint32_t ret;
     asm volatile("movl %%cr2, %0": "=a"(ret));
     return ret;
 }
 
-uint32_t cpu_get_cr0()
+uint32_t cpu_read_cr0()
 {
     uint32_t ret;
     asm volatile("movl %%cr0, %0": "=a"(ret));
