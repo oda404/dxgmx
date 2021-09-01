@@ -25,7 +25,7 @@ static CPUInfo g_cpuinfo;
 
 static void cpu_handle_amd_cpuid()
 {
-    uint32_t eax, ebx, ecx, edx;
+    uint32_t eax, ebx, ecx, edx, dead;
     CPUID(1, eax, ebx, ecx, edx);
 
 #include<dxgmx/bits/x86/cpuid_amd.h>
@@ -52,7 +52,20 @@ static void cpu_handle_amd_cpuid()
 
 static void cpu_handle_intel_cpuid()
 {
-    TODO_FATAL();
+    u32 eax, ebx, ecx, edx, dead;
+
+#include<dxgmx/bits/x86/cpuid_intel.h>
+
+    //https://www.microbe.cz/docs/CPUID.pdf
+
+    CPUID(1, eax, ebx, ecx, edx);
+    IntelCPUIDFunc1EDX f1eax = *(IntelCPUIDFunc1EDX*)&eax;
+
+    g_cpuinfo.family = f1eax.extended_family + f1eax.family_code;
+    g_cpuinfo.model = (f1eax.extended_model << 4) + f1eax.model_number;
+    g_cpuinfo.stepping = f1eax.stepping_id;
+
+    KLOGF(KLOG_INFO, "UID is %d.%d.%d.\n", g_cpuinfo.family, g_cpuinfo.model, g_cpuinfo.stepping);
 }
 
 int cpu_identify()
