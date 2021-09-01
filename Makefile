@@ -193,7 +193,7 @@ $(ISO_PATH): $(BIN_PATH)
 PHONY += iso-run 
 iso-run:
 	$(MAKE) iso
-	qemu-system-x86_64 -cdrom $(ISO_PATH)
+	qemu-system-x86_64 --enable-kvm -m 2G -cpu host -cdrom $(ISO_PATH)
 
 PHONY += run 
 run:
