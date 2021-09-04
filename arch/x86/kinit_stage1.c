@@ -72,7 +72,7 @@ int kinit_stage1(const BootInfo *bootinfo)
     mmap_update_entry_type(
         bootinfo->kernel_base, 
         bootinfo->kernel_end - bootinfo->kernel_base, 
-        MMAP_KRESERVED
+        MMAP_RESERVED
     );
     /* 
      * i lose a bit of available physical memory by aligning 

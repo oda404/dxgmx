@@ -33,8 +33,6 @@ static const char *mmap_entry_type_to_str(u32 type)
         return "ACPI NVS";
     case MMAP_BADRAM:
         return "badram";
-    case MMAP_KRESERVED:
-        return "kernel reserved";
     default:
         return "???";
     }

@@ -13,7 +13,6 @@
 #define MMAP_ACPI_RECLAIMABLE 3
 #define MMAP_NVS              4
 #define MMAP_BADRAM           5
-#define MMAP_KRESERVED        6
 
 #define MMAP_MAX_ENTRIES_CNT  15
 
