@@ -37,35 +37,7 @@ size_t kvlog(uint8_t lvl, const char *fmt, va_list valist)
     if(lvl > g_klogconfig.loglevel || lvl == 0)
         return 0;
 
-    size_t written = 0;
-
-    double sec = timer_get_ellapsed_sec(&g_klogtimer);
-
-    switch(lvl)
-    {
-    case KLOG_INFO:
-        written += kprintf("[%f] ", sec);
-        break;
-
-    case KLOG_WARN:
-        written += kprintf("[%f] ", sec);
-        break;
-
-    case KLOG_ERR:
-        written += kprintf("[%f] ", sec);
-        break;
-
-    case KLOG_FATAL:
-        written += kprintf("[%f] ", sec);
-        break;
-
-    default:
-        return 0;
-    }
-
-    written += kvprintf(fmt, valist);
-
-    return written;
+    return kprintf("[%f] ", timer_get_ellapsed_sec(&g_klogtimer)) + kvprintf(fmt, valist);
 }
 
 size_t klog(uint8_t lvl, const char *fmt, ...)
