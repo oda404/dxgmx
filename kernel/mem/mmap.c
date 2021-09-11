@@ -254,10 +254,8 @@ int mmap_update_entry_type(
     {
         KLOGF(
             KLOG_INFO,
-            "updating [mem 0x%0*lX-0x%0*lX] %s -> %s.\n",
-            sizeof(ptr) == 4 ? 8 : 16, 
+            "updating " _MEM_AREA_FMT " %s -> %s.\n",
             (ptr)base, 
-            sizeof(ptr) == 4 ? 8 : 16,
             /* FIXME klog doesn't yet support 64 bit numbers but 
             tmp->base + tmp->size might be 64 bits wide even in 32 bit mode. */
             (ptr)(base + size),
@@ -284,10 +282,8 @@ void mmap_dump()
         const MemoryMapEntry *tmp = &g_mmap.entries[i];
         KLOGF(
             KLOG_INFO,
-            "[mem 0x%0*lX-0x%0*lX] %s.\n",
-            sizeof(ptr) == 4 ? 8 : 16, 
+            _MEM_AREA_FMT " %s.\n",
             (ptr)tmp->base, 
-            sizeof(ptr) == 4 ? 8 : 16,
             /* FIXME klog doesn't yet support 64 bit numbers but 
             tmp->base + tmp->size might be 64 bits wide even in 32 bit mode. */
             (ptr)(tmp->base + tmp->size),
