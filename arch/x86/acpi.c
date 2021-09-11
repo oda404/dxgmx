@@ -7,6 +7,7 @@
 #include<dxgmx/string.h>
 #include<dxgmx/abandon_ship.h>
 #include<dxgmx/klog.h>
+#include<dxgmx/mem/mmap.h>
 #include<stddef.h>
 
 #define KLOGF(lvl, fmt, ...) klog(lvl, "acpi: " fmt, ##__VA_ARGS__)
@@ -67,14 +68,16 @@ static int acpi_is_sdt_header_valid(const ACPISDTHeader *header)
     return !(sum & 0xFF);
 }
 
-static ACPIHPETT *g_hpett = NULL;
+static volatile ACPIHPETT *g_hpett = NULL;
 
 static void acpi_parse_hpet(ACPISDTHeader *header)
 {
+    KLOGF(KLOG_INFO, "Reserving HPET table at " _PTR_FMT ".\n", (ptr)header);
+    mmap_update_entry_type((ptr)header, sizeof(ACPIHPETT), MMAP_RESERVED);
     g_hpett = (ACPIHPETT*)header;
 }
 
-ACPIHPETT* acpi_get_hpett()
+volatile ACPIHPETT* acpi_get_hpett()
 {
     return g_hpett;
 }
@@ -83,9 +86,7 @@ int acpi_init()
 {
     ACPIRSDP *rsdp = acpi_find_rsdp();
 
-    if(acpi_is_rsdp_valid(rsdp))
-        KLOGF(KLOG_INFO, "Found RSDP at 0x%lX.\n", (uint32_t)rsdp);
-    else
+    if(!acpi_is_rsdp_valid(rsdp))
         abandon_ship("ACPI: RSDP at 0x%lX is invalid. Not proceeding.\n", (uint32_t)rsdp);
 
     ACPIRSDT *rsdt = (ACPIRSDT *)rsdp->rsdp_v1.rsdt_base;
@@ -102,8 +103,6 @@ int acpi_init()
 
         if(acpi_is_sdt_header_valid(header))
         {
-            KLOGF(KLOG_INFO, "Found header '%.4s'.\n", header->signature);
-
             if(memcmp(header->signature, "HPET", 4) == 0)
                 acpi_parse_hpet(header);
         }

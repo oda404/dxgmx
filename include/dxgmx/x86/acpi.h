@@ -81,6 +81,6 @@ _ATTR_PACKED S_ACPIRSDT
 } ACPIRSDT;
 
 int acpi_init();
-ACPIHPETT *acpi_get_hpett();
+volatile ACPIHPETT *acpi_get_hpett();
 
 #endif //_DXGMX_X86_ACPI_H
