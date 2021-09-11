@@ -35,8 +35,10 @@ typedef long long longdoublewhole;
 
 #if defined(_X86_)
 typedef uint32_t ptr;
+#define _PTR_DIG 8
 #elif defined(_X86_64_)
 typedef uint64_t ptr;
+#define _PTR_DIG 16
 #endif //_X86_
 
 typedef uint8_t  u8;
