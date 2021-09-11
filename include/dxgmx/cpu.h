@@ -37,22 +37,31 @@ typedef enum E_CR0Flags
     CR0FLAG_PG = (1 << 31)
 } CR0Flags;
 
+typedef enum E_CPUVendor
+{
+    CPU_VENDOR_INTEL,
+    CPU_VENDOR_AMD,
+} CPUVendor;
+
 uint32_t cpu_read_cr2();
 uint32_t cpu_read_cr0();
 void cpu_set_cr0(u32 val);
 
+#endif // defined(_X86_)
+
 typedef struct
 S_CPUInfo
 {
+#if defined(_X86_)
+    u8   vendor;
     char vendorstr[13];
     u32  cpuid_eaxmax;
     u8   stepping;
     u8   model;
     u8   family;
     u8   local_apic_id;
+#endif //defined(_X86_)
 } CPUInfo;
-
-#endif // defined(_X86_)
 
 /** Tries to identify the CPU and it's features. */
 int cpu_identify();
@@ -64,6 +73,10 @@ void cpu_suspend();
  * Terminates cpu execution. This function will never return.
 */
 _ATTR_NORETURN void cpu_hang();
+/**
+ * Returns a const* to a CPUInfo struct with architecture specific info.
+ * If cpu_identify was not called prior to this function, it will return NULL.
+*/
 const CPUInfo *cpu_get_info();
 
 #endif // _DXGMX_CPU_H

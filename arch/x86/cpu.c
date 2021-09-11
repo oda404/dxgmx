@@ -14,9 +14,7 @@
 #include<dxgmx/todo.h>
 
 static CPUInfo g_cpuinfo;
-
-#define CPU_AMD   0x0
-#define CPU_INTEL 0x1
+static int g_cpu_identified = 0;
 
 #define CPU_VENDORSTR_INTEL "GenuineIntel"
 #define CPU_VENDORSTR_AMD   "AuthenticAMD"
@@ -25,8 +23,10 @@ static CPUInfo g_cpuinfo;
 
 static void cpu_handle_amd_cpuid()
 {
-    uint32_t eax, ebx, ecx, edx, dead;
+    uint32_t eax, ebx, ecx, edx;
     CPUID(1, eax, ebx, ecx, edx);
+
+    g_cpuinfo.vendor = CPU_VENDOR_AMD;
 
 #include<dxgmx/bits/x86/cpuid_amd.h>
 
@@ -52,7 +52,8 @@ static void cpu_handle_amd_cpuid()
 
 static void cpu_handle_intel_cpuid()
 {
-    u32 eax, ebx, ecx, edx, dead;
+    u32 eax, ebx, ecx, edx;
+    g_cpuinfo.vendor = CPU_VENDOR_INTEL;
 
 #include<dxgmx/bits/x86/cpuid_intel.h>
 
@@ -84,7 +85,7 @@ int cpu_identify()
         *(u32*)&g_cpuinfo.vendorstr[4]
     );
 
-    KLOGF(KLOG_INFO, "Vendor is \"%s\".\n", g_cpuinfo.vendorstr);
+    KLOGF(KLOG_INFO, "Vendor string is \"%s\".\n", g_cpuinfo.vendorstr);
 
     if(strcmp(g_cpuinfo.vendorstr, CPU_VENDORSTR_AMD) == 0)
         cpu_handle_amd_cpuid();
@@ -93,12 +94,17 @@ int cpu_identify()
     else
         abandon_ship("Unknown CPU vendor '%s'. Not proceeding.\n", g_cpuinfo.vendorstr);
 
+    g_cpu_identified = 1;
+
     return 0;
 }
 
 const CPUInfo *cpu_get_info()
 {
-    return &g_cpuinfo;   
+    if(!g_cpu_identified)
+        return NULL;
+        
+    return &g_cpuinfo;
 }
 
 uint32_t cpu_read_cr2()
