@@ -121,9 +121,21 @@ uint32_t cpu_read_cr0()
     return ret;
 }
 
+u32 cpu_read_cr4()
+{
+    u32 ret;
+    asm volatile("movl %%cr4, %0": "=a"(ret));
+    return ret;
+}
+
 void cpu_set_cr0(uint32_t val)
 {
     asm volatile("movl %0, %%cr0": :"a"(val));
+}
+
+void cpu_set_cr4(u32 val)
+{
+    asm volatile("movl %0, %%cr4": : "a"(val));
 }
 
 void cpu_suspend()

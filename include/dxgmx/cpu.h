@@ -45,7 +45,9 @@ typedef enum E_CPUVendor
 
 uint32_t cpu_read_cr2();
 uint32_t cpu_read_cr0();
+u32 cpu_read_cr4();
 void cpu_set_cr0(u32 val);
+void cpu_set_cr4(u32 val);
 
 #endif // defined(_X86_)
 
