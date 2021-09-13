@@ -33,20 +33,12 @@
   .long VIDEO_HEIGHT
   .long VIDEO_DEPTH
 
-.section .bss          # stack for the initial kernel thread
-  .global _kstack_top
-  .global _kstack_bot
-  .align 16
-_kstack_bot:
-  .skip 16384
-_kstack_top:
-
 .section .text 
   .global _start
   .type _start, @function
 
 _start:                  # kernel entry point
-  movl $_kstack_top, %esp  # put stack_top address into the stack_ptr reg
+  movl _kstack_top, %esp  # put stack_top address into the stack_ptr reg
 
   # clear eflags
   pushl $0               # push 0 on the stack

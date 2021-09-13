@@ -6,11 +6,10 @@
 #include<dxgmx/bootinfo.h>
 #include<dxgmx/types.h>
 #include<dxgmx/attrs.h>
+#include<dxgmx/kstack.h>
 
 extern u32 _kernel_base;
 extern u32 _kernel_end;
-extern u32 _kstack_top;
-extern u32 _kstack_bot;
 
 /* 
  * This function initiates core hardware and 
@@ -32,8 +31,8 @@ _ATTR_NORETURN void kmain(u32 blmagic, u32 blinfo_base)
         BootInfo bootinfo;
         bootinfo.kernel_base = (u32)&_kernel_base;
         bootinfo.kernel_end  = (u32)&_kernel_end;
-        bootinfo.kstack_top  = (u32)&_kstack_top;
-        bootinfo.kstack_bot  = (u32)&_kstack_bot;
+        bootinfo.kstack_top  = _kstack_top;
+        bootinfo.kstack_bot  = _kstack_bot;
         bootinfo.blmagic     = blmagic;
         bootinfo.blinfo_base = blinfo_base;
 
