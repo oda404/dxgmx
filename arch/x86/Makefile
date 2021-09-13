@@ -6,8 +6,8 @@ arch/x86/cpuid.c \
 arch/x86/cmos.c \
 arch/x86/rtc.c \
 arch/x86/acpi.c \
-arch/x86/timer.c \
 arch/x86/abandon_ship.c \
+arch/x86/clocksource.c \
 
 LDSCRIPT := \
 arch/x86/linker.ld
