@@ -67,6 +67,10 @@ __attribute__((naked))
 #define _ATTR_ALIGNED(n) \
 __attribute__((aligned(n)))
 
+/* https://gcc.gnu.org/onlinedocs/gcc/Common-Variable-Attributes.html#index-section-variable-attribute */
+#define _ATTR_SECTION(x) \
+__attribute__((section(x)))
+
 #endif // __GNUC__
 
 #endif // _DXGMX_ATTRS_H
