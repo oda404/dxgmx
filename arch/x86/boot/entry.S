@@ -3,36 +3,6 @@
  * Distributed under the MIT license.
 */
 
-#define _ASM
-
-#include<dxgmx/x86/multiboot.h>
-
-.set FLAGS, MULTIBOOT_FLAG_MOD_PAGE_ALIGN | MULTIBOOT_FLAG_MEM_INFO | MULTIBOOT_FLAG_VIDEO
-.set CHECKSUM, -(MULTIBOOT_HEADER_MAGIC + FLAGS)
-.set HEADER_ADDR,     0
-.set LOAD_ADDR,       0
-.set LOAD_END_ADDR,   0
-.set BSS_END_ADDR,    0
-.set ENTRY_ADDR,      0
-.set VIDEO_MODE_TYPE, 1
-.set VIDEO_WIDTH,     0
-.set VIDEO_HEIGHT,    0
-.set VIDEO_DEPTH,     0
-
-.section .multiboot
-  .long MULTIBOOT_HEADER_MAGIC
-  .long FLAGS
-  .long CHECKSUM
-  .long HEADER_ADDR
-  .long LOAD_ADDR
-  .long LOAD_END_ADDR
-  .long BSS_END_ADDR
-  .long ENTRY_ADDR
-  .long VIDEO_MODE_TYPE
-  .long VIDEO_WIDTH
-  .long VIDEO_HEIGHT
-  .long VIDEO_DEPTH
-
 .section .text 
   .global _start
   .type _start, @function

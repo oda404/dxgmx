@@ -11,9 +11,13 @@ SECTIONS
     . = 1M; /* start putting sections at 1Mib */
     _kernel_base = .;
 
+    .bootloader ALIGN(4K) : /* bootloader specific section */
+    {
+        KEEP(*(.bootloader))
+    }
+
     .text ALIGN(4K) : /* text section */
     {
-        KEEP(*(.multiboot))
         *(.text)
     }
 
