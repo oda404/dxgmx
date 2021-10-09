@@ -1,0 +1,2 @@
+
+include $(INCLUDEDIR)/dxgmx/Makefile

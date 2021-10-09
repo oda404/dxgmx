@@ -51,22 +51,22 @@ INIT_SRCDIR       := init
 KERNEL_SRCDIR     := kernel
 
 ### BASE FLAGS ###
-CFLAGS            :=                                      \
--march=i686 -MD -MP -m32 -isystem=/usr/include            \
---sysroot=$(SYSROOTDIR) -fno-omit-frame-pointer           \
--ffreestanding -fno-builtin $(BT_CFLAGS)                \
+CFLAGS            := \
+-MD -MP -m32 -isystem=/usr/include               \
+--sysroot=$(SYSROOTDIR) -fno-omit-frame-pointer  \
+-ffreestanding -fno-builtin $(BT_CFLAGS)         \
 
-CXXFLAGS          := $(CFLAGS) $(BT_CXXFLAGS)          \
+CXXFLAGS          := $(CFLAGS) $(BT_CXXFLAGS)
 
-LDFLAGS           := -nostdlib -lgcc $(BT_LDFLAGS)       \
+LDFLAGS           := -nostdlib -lgcc $(BT_LDFLAGS)
 
-MACROS            :=                                      \
--D_DXGMX_ -D_DXGMX_VER_MAJ_=$(VER_MAJ)        \
+MACROS            := \
+-D_DXGMX_ -D_DXGMX_VER_MAJ_=$(VER_MAJ)                    \
 -D_DXGMX_VER_MIN_=$(VER_MIN) -D_DXGMX_PATCH_N_=$(PATCH_N) \
--D_DXGMX_CODENAME_='"$(CODENAME)"' $(BT_MACROS)          \
+-D_DXGMX_CODENAME_='"$(CODENAME)"' $(BT_MACROS)           \
 
-WARNINGS          := -Wall -Wextra                        \
--Werror-implicit-function-declaration $(BT_WARNINGS)     \
+WARNINGS          := -Wall -Wextra                   \
+-Werror-implicit-function-declaration $(BT_WARNINGS) \
 
 ### CONFIGURATION ###
 
@@ -95,6 +95,8 @@ else ifeq ($(CONFIG_STACK_PROT),all)
 endif
 
 ifeq ($(SRCARCH),x86)
+	# assume i686 if building for x86
+	CFLAGS += -march=i686
 	MACROS += -D_X86_
 endif
 
@@ -121,12 +123,14 @@ ARCH_SRC          :=
 INIT_SRC          :=
 KERNEL_SRC        :=
 LDSCRIPT          :=
+HEADERS           :=
 
 # The above variables will be populated recursively by
 # these included makefiles.
 include $(ARCH_SRCDIR)/Makefile
 include $(INIT_SRCDIR)/Makefile
 include $(KERNEL_SRCDIR)/Makefile
+include $(INCLUDEDIR)/Makefile
 
 COBJS             := $(filter %.c, $(ARCH_SRC) $(INIT_SRC) $(KERNEL_SRC))
 COBJS             := $(COBJS:%.c=%_$(BT_NAME).c.o)
@@ -147,10 +151,8 @@ ASMDEPS           := $(ASMOBJS:%.o=%.d)
 
 SYSROOT_DIRS      := \
 $(SYSROOTDIR) $(SYSROOTDIR)/boot \
-$(SYSROOTDIR)/usr/include/dxgmx
 
-SYSROOT_HEADERS   := $(shell find include -name "*.h" -type f)
-SYSROOT_HEADERS   := $(addprefix $(SYSROOTDIR)/usr/, $(SYSROOT_HEADERS))
+SYSROOT_HEADERS   := $(HEADERS:$(INCLUDEDIR)/%=$(SYSROOTDIR)/usr/include/%)
 
 DXGMX_DEPS        := $(SYSROOT_DIRS) $(SYSROOT_HEADERS) \
 $(COBJS) $(CXXOBJS) $(ASMOBJS) $(LD_SCRIPT) Makefile
@@ -187,7 +189,7 @@ $(BUILDDIR)/%_$(BT_NAME).S.o: %.S Makefile
 $(SYSROOT_DIRS):
 	@mkdir -p $(SYSROOT_DIRS)
 
-$(SYSROOTDIR)/usr/%.h: %.h
+$(SYSROOTDIR)/usr/include/%.h: $(INCLUDEDIR)/%.h
 	@mkdir -p $(dir $@) 2> /dev/null || true
 	@cp -ru $< $@
 
@@ -223,6 +225,6 @@ PHONY += mrclean
 mrclean:
 	$(MAKE) clean
 	@rm -f $$(ls | grep -Eo '^dxgmx-[0-9]+.[0-9]+.[0-9]+(.iso)?$$')
-	@rm -rf $(BUILDDIR)
+	@rm -r $(BUILDDIR) 2> /dev/null || true
 
 .PHONY: $(PHONY)
