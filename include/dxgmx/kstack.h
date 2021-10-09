@@ -6,7 +6,7 @@
 #include<dxgmx/attrs.h>
 
 /* The size of the kernel stack in bytes. */
-#define _KSTACK_SIZE (1024 * 4)
+#define KSTACK_SIZE (1024 * 4)
 
 extern const ptr _kstack_top;
 extern const ptr _kstack_bot;
