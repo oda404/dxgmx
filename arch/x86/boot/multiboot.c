@@ -1,8 +1,6 @@
 
 #include<dxgmx/attrs.h>
 
-#if defined(_DXGMX_BOOTLOADER_GRUB_)
-
 #include<dxgmx/x86/multiboot.h>
 
 #define FLAGS (MULTIBOOT_FLAG_MOD_PAGE_ALIGN | MULTIBOOT_FLAG_MEM_INFO | MULTIBOOT_FLAG_VIDEO)
@@ -31,5 +29,3 @@ _ATTR_SECTION(".bootloader") long mbootconfig[] = {
     VIDEO_HEIGHT,
     VIDEO_DEPTH
 };
-
-#endif //defined(_DXGMX_BOOTLOADER_GRUB_)

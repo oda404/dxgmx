@@ -1,8 +1,8 @@
 
-build/*
-!build/targets
+build
 .d
 .o
 dxgmx-*
 .vscode
 buildconfig
+*.buildtarget

@@ -4,8 +4,11 @@ kernel/bitwise.c \
 kernel/kprintf.c \
 kernel/kabort.c \
 kernel/klog.c \
-kernel/stack_chk.c \
 kernel/kinit_stage2.c \
+
+ifdef CONFIG_STACK_PROT
+	KERNEL_SRC += kernel/stack_chk.c 
+endif
 
 include $(KERNEL_SRCDIR)/ctype/Makefile
 include $(KERNEL_SRCDIR)/errno/Makefile

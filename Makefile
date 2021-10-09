@@ -1,7 +1,6 @@
 # Copyright 2021 Alexandru Olaru.
 # Distributed under the MIT license.
 
-
 APPNAME           := dxgmx
 
 VER_MAJ           := 0
@@ -9,36 +8,32 @@ VER_MIN           := 8
 PATCH_N           := 6
 CODENAME          := angel_attack
 
-# The makefile expects to find a makefile-like file named 'buildconfig'
-# that sets config/toolchain varaibles. If none is found the makefile 
-# will fallback on defaults that will not work especially when cross compiling.
-# buildconfig example:
-#
-# HAS_BUILDCONFIG := 1
-# IS_CROSS_COMP   := 1
-# TARGET_TRIPLET  := x86-dxgmx-elf
-# CC              := <CC path>
-# BUILD_TARGET    := debug
+ifdef BUILDCONFIG
+-include $(BUILDCONFIG)
+else
 -include buildconfig
+endif
 
-HAS_BUILDCONFIG   ?= 0
+ifdef BUILDTARGET
+-include $(BUILDTARGET)
+endif
+
 ifeq ($(MAKECMDGOALS),)
-    ifeq ($(HAS_BUILDCONFIG), 0)
-        $(warning Building without a buildconfig file...)
+	ifneq ($(HAS_BUILDCONFIG), 1)
+		$(error No buildconfig file was found. See docs/buildsystem.md)
+	endif
+    ifneq ($(HAS_BUILDTARGET), 1)
+        $(warning Building without a *.buildtarget file. See docs/buildsystem.md)
     endif
 endif
+
+# TODO: validate buildconfig and buildtarget ??
 
 ### DIRECTORIES ###
 INCLUDEDIR        := include
 BUILDDIR          := build
 SYSROOTDIR        := $(BUILDDIR)/sysroot
 SCRIPTSDIR        := scripts
-
-TARGET_TRIPLET    ?= x86-dxgmx-elf
-IS_CROSS_COMP     ?= 1
-
-BUILD_TARGET      ?= debug
-include $(BUILDDIR)/targets/$(BUILD_TARGET).dbt
 
 ARCH              := $(shell $(SCRIPTSDIR)/target-triplet-to-arch.sh $(TARGET_TRIPLET))
 ifeq ($(ARCH), undefined)
@@ -55,40 +50,63 @@ ARCH_SRCDIR       := arch/$(SRCARCH)
 INIT_SRCDIR       := init
 KERNEL_SRCDIR     := kernel
 
-CC                ?= gcc
-CXX               ?= g++
-LD                ?= g++
-AS                ?= gcc
-
-### FLAGS ###
+### BASE FLAGS ###
 CFLAGS            :=                                      \
 -march=i686 -MD -MP -m32 -isystem=/usr/include            \
 --sysroot=$(SYSROOTDIR) -fno-omit-frame-pointer           \
--ffreestanding -fno-builtin $(DBT_CFLAGS)                 \
+-ffreestanding -fno-builtin $(BT_CFLAGS)                \
 
-CXXFLAGS          := $(CFLAGS) $(DBT_CXXFLAGS)            \
+CXXFLAGS          := $(CFLAGS) $(BT_CXXFLAGS)          \
 
-LDFLAGS           := -nostdlib -lgcc $(DBT_LDFLAGS)       \
+LDFLAGS           := -nostdlib -lgcc $(BT_LDFLAGS)       \
 
 MACROS            :=                                      \
--D__dxgmx__ -D_DXGMX_ -D_DXGMX_VER_MAJ_=$(VER_MAJ)        \
+-D_DXGMX_ -D_DXGMX_VER_MAJ_=$(VER_MAJ)        \
 -D_DXGMX_VER_MIN_=$(VER_MIN) -D_DXGMX_PATCH_N_=$(PATCH_N) \
--D_DXGMX_CODENAME_='"$(CODENAME)"' $(DBT_MACROS)          \
+-D_DXGMX_CODENAME_='"$(CODENAME)"' $(BT_MACROS)          \
 
 WARNINGS          := -Wall -Wextra                        \
--Werror-implicit-function-declaration $(DBT_WARNINGS)     \
+-Werror-implicit-function-declaration $(BT_WARNINGS)     \
 
-ifeq ($(SRCARCH), x86)
+### CONFIGURATION ###
+
+ifeq ($(shell test '$(CONFIG_OPTIMIZATIONS)' -eq '$(CONFIG_OPTIMIZATIONS)' 2> /dev/null && echo 0 || echo 1),0)
+	CFLAGS += -O$(CONFIG_OPTIMIZATIONS)
+	CXXFLAGS += -O$(CONFIG_OPTIMIZATIONS)
+endif
+
+ifeq ($(CONFIG_DEBUG_SYMS),1)
+	CFLAGS += -g
+	CXXFLAGS += -g
+endif
+
+ifeq ($(shell test '$(CONFIG_LOGLVL)' -eq '$(CONFIG_LOGLVL)' 2> /dev/null && echo 0 || echo 1),0)
+	MACROS += -D_DXGMX_LOGLVL_=$(CONFIG_LOGLVL)
+endif
+
+ifeq ($(CONFIG_STACK_PROT),none)
+	CFLAGS += -fno-stack-protector
+else ifeq ($(CONFIG_STACK_PROT),normal)
+	CFLAGS += -fstack-protector
+else ifeq ($(CONFIG_STACK_PROT),strong)
+	CFLAGS += -fstack-protector-strong
+else ifeq ($(CONFIG_STACK_PROT),all)
+	CFLAGS += -fstack-protector-all
+endif
+
+ifeq ($(SRCARCH),x86)
 	MACROS += -D_X86_
 endif
 
-MAKEFLAGS         += --no-print-directory
+### CONFIGURATION END ###
 
-CFLAGS            += $(EXTRA_CFLAGS) $(WARNINGS) $(MACROS)
 CXXFLAGS          += $(EXTRA_CXXFLAGS) $(WARNINGS) $(MACROS)
+CFLAGS            += $(EXTRA_CFLAGS) $(WARNINGS) $(MACROS)
 LDFLAGS           += $(EXTRA_LDFLAGS)
 
 # At this point CFLAGS, CXXFLAGS and LDFLAGS should be in their final forms.
+
+MAKEFLAGS         += --no-print-directory
 
 ### BINARY/ISO PATHS ###
 BIN_NAME          ?= dxgmx-$(VER_MAJ).$(VER_MIN).$(PATCH_N)
@@ -111,13 +129,13 @@ include $(INIT_SRCDIR)/Makefile
 include $(KERNEL_SRCDIR)/Makefile
 
 COBJS             := $(filter %.c, $(ARCH_SRC) $(INIT_SRC) $(KERNEL_SRC))
-COBJS             := $(COBJS:%.c=%_$(BUILD_TARGET).c.o)
+COBJS             := $(COBJS:%.c=%_$(BT_NAME).c.o)
 
 CXXOBJS           := $(filter %.cpp, $(ARCH_SRC) $(INIT_SRC) $(KERNEL_SRC))
-CXXOBJS           := $(CXXOBJS:%.cpp=%_$(BUILD_TARGET).cpp.o)
+CXXOBJS           := $(CXXOBJS:%.cpp=%_$(BT_NAME).cpp.o)
 
 ASMOBJS           := $(filter %.S, $(ARCH_SRC) $(INIT_SRC) $(KERNEL_SRC))
-ASMOBJS           := $(ASMOBJS:%.S=%_$(BUILD_TARGET).S.o)
+ASMOBJS           := $(ASMOBJS:%.S=%_$(BT_NAME).S.o)
 
 COBJS             := $(addprefix $(BUILDDIR)/, $(COBJS))
 CXXOBJS           := $(addprefix $(BUILDDIR)/, $(CXXOBJS))
@@ -148,21 +166,20 @@ $(BIN_PATH): $(DXGMX_DEPS)
 
 	@cp $(BIN_PATH) $(SYSROOTDIR)/boot/
 
-
 -include $(CDEPS)
-$(BUILDDIR)/%_$(BUILD_TARGET).c.o: %.c Makefile
+$(BUILDDIR)/%_$(BT_NAME).c.o: %.c Makefile
 	@mkdir -p $(dir $@)
 	@$(OUTPUT_FORMATTED) CC $<
 	@$(CC) -c $< $(CFLAGS) -o $@
 
 -include $(CXXDEPS)
-$(BUILDDIR)/%_$(BUILD_TARGET).cpp.o: %.cpp Makefile
+$(BUILDDIR)/%_$(BT_NAME).cpp.o: %.cpp Makefile
 	@mkdir -p $(dir $@)
 	@$(OUTPUT_FORMATTED) CXX $<
 	@$(CXX) -c $< $(CXXFLAGS) -o $@
 
 -include $(ASMDEPS)
-$(BUILDDIR)/%_$(BUILD_TARGET).S.o: %.S Makefile
+$(BUILDDIR)/%_$(BT_NAME).S.o: %.S Makefile
 	@mkdir -p $(dir $@)
 	@$(OUTPUT_FORMATTED) AS $<
 	@$(AS) -c $< $(CFLAGS) -o $@
@@ -173,11 +190,6 @@ $(SYSROOT_DIRS):
 $(SYSROOTDIR)/usr/%.h: %.h
 	@mkdir -p $(dir $@) 2> /dev/null || true
 	@cp -ru $< $@
-
-PHONY += kernel_headers 
-# kernel headers 
-kernel_headers: 
-	@cp -ru $(INCLUDEDIR)/* $(SYSROOTDIR)/usr/include
 
 PHONY += iso 
 iso: $(ISO_PATH)
@@ -211,7 +223,6 @@ PHONY += mrclean
 mrclean:
 	$(MAKE) clean
 	@rm -f $$(ls | grep -Eo '^dxgmx-[0-9]+.[0-9]+.[0-9]+(.iso)?$$')
-	@rm -rf $(BUILDDIR)/arch $(BUILDDIR)/init $(BUILDDIR)/kernel \
-	$(BUILDDIR)/sysroot
+	@rm -rf $(BUILDDIR)
 
 .PHONY: $(PHONY)
