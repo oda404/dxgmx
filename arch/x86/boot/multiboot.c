@@ -1,6 +1,6 @@
 
 #include<dxgmx/attrs.h>
-
+#include<dxgmx/types.h>
 #include<dxgmx/x86/multiboot.h>
 
 #define FLAGS (MULTIBOOT_FLAG_MOD_PAGE_ALIGN | MULTIBOOT_FLAG_MEM_INFO | MULTIBOOT_FLAG_VIDEO)
@@ -29,3 +29,6 @@ _ATTR_SECTION(".bootloader") long mbootconfig[] = {
     VIDEO_HEIGHT,
     VIDEO_DEPTH
 };
+
+const ptr _multiboot_magic = 0;
+const u32 _multiboot_info_struct_base = 0;

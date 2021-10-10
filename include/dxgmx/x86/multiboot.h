@@ -21,45 +21,45 @@
 #ifndef _ASM
 
 #include<dxgmx/attrs.h>
-#include<stdint.h>
+#include<dxgmx/types.h>
 
 typedef struct
 _ATTR_PACKED S_MultibootMBI
 {
-    uint32_t flags;
-    uint32_t mem_lower;
-    uint32_t mem_upper;
-    uint32_t boot_device;
-    uint32_t cmdline;
-    uint32_t mods_count;
-    uint32_t mods_base;
-    uint32_t syms[4];
-    uint32_t mmap_length;
-    uint32_t mmap_base;
-    uint32_t drives_length;
-    uint32_t drives_base;
-    uint32_t config_table;
-    uint32_t bootloader_name_base;
-    uint32_t apm_table_base;
+    u32 flags;
+    u32 mem_lower;
+    u32 mem_upper;
+    u32 boot_device;
+    u32 cmdline;
+    u32 mods_count;
+    u32 mods_base;
+    u32 syms[4];
+    u32 mmap_length;
+    u32 mmap_base;
+    u32 drives_length;
+    u32 drives_base;
+    u32 config_table;
+    u32 bootloader_name_base;
+    u32 apm_table_base;
     
     struct
     {
-        uint32_t control_info;
-        uint32_t mode_info;
-        uint16_t mode;
-        uint16_t interface_seg;
-        uint16_t interface_off;
-        uint16_t interface_len;
+        u32 control_info;
+        u32 mode_info;
+        u16 mode;
+        u16 interface_seg;
+        u16 interface_off;
+        u16 interface_len;
     } vbe;
 
     struct 
     {
-        uint64_t base;
-        uint32_t pitch;
-        uint32_t width;
-        uint32_t height;
-        uint8_t  bpp;
-        uint8_t  type;
+        u64 base;
+        u32 pitch;
+        u32 width;
+        u32 height;
+        u8  bpp;
+        u8  type;
         /**
          * Since this is an union only one of these structs will be valid at a time.
          * If MultibootMBI::fb::type is 0, the first struct will be valid.
@@ -70,17 +70,17 @@ _ATTR_PACKED S_MultibootMBI
         {
             struct
             {
-                uint32_t pallete_base;
-                uint16_t pallete_colors_count;
+                u32 pallete_base;
+                u16 pallete_colors_count;
             };
             struct
             {
-                uint8_t red_field_pos;
-                uint8_t red_mask_size;
-                uint8_t green_field_pos;
-                uint8_t green_mask_size;
-                uint8_t blue_field_pos;
-                uint8_t blue_mask_size;
+                u8 red_field_pos;
+                u8 red_mask_size;
+                u8 green_field_pos;
+                u8 green_mask_size;
+                u8 blue_field_pos;
+                u8 blue_mask_size;
             };
         };
     } fb;
@@ -96,11 +96,14 @@ _ATTR_PACKED S_MultibootMBI
 typedef struct
 _ATTR_PACKED S_MultibootMMAP
 {
-    uint32_t size;
-    uint64_t base;
-    uint64_t length;
-    uint32_t type;
+    u32 size;
+    u64 base;
+    u64 length;
+    u32 type;
 } MultibootMMAP;
+
+extern const u32 _multiboot_magic;
+extern const ptr _multiboot_info_struct_base;
 
 #endif // _ASM
 

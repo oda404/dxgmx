@@ -5,6 +5,7 @@ kernel/kprintf.c \
 kernel/kabort.c \
 kernel/klog.c \
 kernel/kinit_stage2.c \
+kernel/kinfo.c \
 
 ifdef CONFIG_STACK_PROT
 	KERNEL_SRC += kernel/stack_chk.c 

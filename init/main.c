@@ -3,13 +3,7 @@
  * Distributed under the MIT license.
 */
 
-#include<dxgmx/bootinfo.h>
-#include<dxgmx/types.h>
 #include<dxgmx/attrs.h>
-#include<dxgmx/kstack.h>
-
-extern u32 _kernel_base;
-extern u32 _kernel_end;
 
 /* 
  * This function initiates core hardware and 
@@ -17,7 +11,7 @@ extern u32 _kernel_end;
  * It's implementation is architecture specific 
  * and can be found in arch/<arch>/kinit_stage1.c.
  */
-extern int kinit_stage1(const BootInfo *bootinfo);
+extern int kinit_stage1();
 /* This function expects the hardware to be initialized
  * and in working order. It is responsible for initiating
  * kernel specific stuff. It's implementation can be found in 
@@ -25,19 +19,9 @@ extern int kinit_stage1(const BootInfo *bootinfo);
  */
 extern int kinit_stage2();
 
-_ATTR_NORETURN void kmain(u32 blmagic, u32 blinfo_base)
+_ATTR_NORETURN void kmain()
 {
-    {
-        BootInfo bootinfo;
-        bootinfo.kernel_base = (u32)&_kernel_base;
-        bootinfo.kernel_end  = (u32)&_kernel_end;
-        bootinfo.kstack_top  = _kstack_top;
-        bootinfo.kstack_bot  = _kstack_bot;
-        bootinfo.blmagic     = blmagic;
-        bootinfo.blinfo_base = blinfo_base;
-
-        kinit_stage1(&bootinfo);
-    }
+    kinit_stage1();
 
     /**
      * FIXME: kinit_stage2 is not marked with _ATTR_NORETURN,

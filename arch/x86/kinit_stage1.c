@@ -10,7 +10,6 @@
 #include<dxgmx/x86/acpi.h>
 #include<dxgmx/x86/interrupts.h>
 #include<dxgmx/video/tty.h>
-#include<dxgmx/bootinfo.h>
 #include<dxgmx/mem/mmap.h>
 #include<dxgmx/cpu.h>
 #include<dxgmx/kdefs.h>
@@ -20,8 +19,9 @@
 #include<dxgmx/mem/kpaging.h>
 #include<dxgmx/kprintf.h>
 #include<dxgmx/klog.h>
+#include<dxgmx/kinfo.h>
 
-int kinit_stage1(const BootInfo *bootinfo)
+int kinit_stage1()
 {
     /* klog is not initiated yet and I would not recommend using it until it is. */
     /* disable interrupts until a proper idt is set up. */
@@ -46,7 +46,7 @@ int kinit_stage1(const BootInfo *bootinfo)
     klog(KLOG_INFO, " \\__,_/_/\\_\\__, |_| |_| |_/_/\\_\\ %s - %d.%d.%d\n", _DXGMX_CODENAME_, _DXGMX_VER_MAJ_, _DXGMX_VER_MIN_, _DXGMX_PATCH_N_);
     klog(KLOG_INFO, "           |___/\n");
 
-    if(bootinfo->blmagic != MULTIBOOT_BOOTLOADER_MAGIC)
+    if(_multiboot_magic != MULTIBOOT_BOOTLOADER_MAGIC)
         abandon_ship("Not booted by a multiboot compliant bootloader\n");
 
     rtc_dump_time_and_date();
@@ -54,7 +54,7 @@ int kinit_stage1(const BootInfo *bootinfo)
     
     mmap_init();
 
-    MultibootMBI *mbi = (MultibootMBI *)bootinfo->blinfo_base;
+    MultibootMBI *mbi = (MultibootMBI *)_multiboot_info_struct_base;
 
     for(
         MultibootMMAP *mmap = (MultibootMMAP *)mbi->mmap_base;
@@ -69,11 +69,7 @@ int kinit_stage1(const BootInfo *bootinfo)
     mmap_dump();
 
     /* mark the kernel itself as kreserved */
-    mmap_update_entry_type(
-        bootinfo->kernel_base, 
-        bootinfo->kernel_end - bootinfo->kernel_base, 
-        MMAP_RESERVED
-    );
+    mmap_update_entry_type(_kbase, _kend - _kbase, MMAP_RESERVED);
     /* 
      * i lose a bit of available physical memory by aligning 
      * the available areas but gain a lot of mental health

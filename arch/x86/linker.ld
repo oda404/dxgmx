@@ -9,7 +9,7 @@ ENTRY(_start)
 SECTIONS
 {
     . = 1M; /* start putting sections at 1Mib */
-    _kernel_base = .;
+    _sym_kbase = .;
 
     .bootloader ALIGN(4K) : /* bootloader specific section */
     {
@@ -36,5 +36,11 @@ SECTIONS
         *(COMMON)
         *(.bss)
     }
-    _kernel_end = .;
+
+    /DISCARD/ :
+    {
+        *(*)
+    }
+
+    _sym_kend = .;
 }

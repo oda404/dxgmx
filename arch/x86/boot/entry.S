@@ -4,8 +4,21 @@
 */
 
 .section .text 
-  .global _start
-  .type _start, @function
+
+.global _kstack_top
+.type _kstack_top, @object
+
+.global _multiboot_magic
+.type _multiboot_magic, @object
+
+.global _multiboot_info_struct_base
+.type _multiboot_info_struct_base, @object
+
+.global kmain
+.type kmain, @function
+
+.global _start
+.type _start, @function
 
 _start:                  # kernel entry point
   movl _kstack_top, %esp  # put stack_top address into the stack_ptr reg
@@ -14,9 +27,8 @@ _start:                  # kernel entry point
   pushl $0               # push 0 on the stack
   popf                   # pop 0 off the stack and store it into EFLAGS
 
-  # prepare args for kmain
-  pushl %ebx             # push the multiboot struct addr on the stack
-  pushl %eax             # push the magic number on the stack
+  movl %ebx, _multiboot_info_struct_base
+  movl %eax, _multiboot_magic
   
   call kmain             # less go
 

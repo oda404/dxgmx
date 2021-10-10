@@ -4,7 +4,6 @@ $(INCLUDEDIR)/dxgmx/abandon_ship.h \
 $(INCLUDEDIR)/dxgmx/assert.h \
 $(INCLUDEDIR)/dxgmx/attrs.h \
 $(INCLUDEDIR)/dxgmx/bitwise.h \
-$(INCLUDEDIR)/dxgmx/bootinfo.h \
 $(INCLUDEDIR)/dxgmx/clocksource.h \
 $(INCLUDEDIR)/dxgmx/cpu.h \
 $(INCLUDEDIR)/dxgmx/ctype.h \
@@ -20,6 +19,7 @@ $(INCLUDEDIR)/dxgmx/string.h \
 $(INCLUDEDIR)/dxgmx/time.h \
 $(INCLUDEDIR)/dxgmx/todo.h \
 $(INCLUDEDIR)/dxgmx/types.h \
+$(INCLUDEDIR)/dxgmx/kinfo.h \
 
 include $(INCLUDEDIR)/dxgmx/bits/Makefile
 include $(INCLUDEDIR)/dxgmx/mem/Makefile
