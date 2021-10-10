@@ -1,3 +1,3 @@
 
 KERNEL_SRC += \
-kernel/errno/errno.c \
+$(KERNEL_SRCDIR)/errno/errno.c \

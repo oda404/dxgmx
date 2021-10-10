@@ -1,3 +1,3 @@
 
 INIT_SRC += \
-init/main.c
+$(INIT_SRCDIR)/main.c

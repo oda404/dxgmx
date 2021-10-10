@@ -1,12 +1,12 @@
 
 KERNEL_SRC += \
-kernel/stdlib/abs.c \
-kernel/stdlib/labs.c \
-kernel/stdlib/llabs.c \
-kernel/stdlib/itoa.c \
-kernel/stdlib/strtol.c \
-kernel/stdlib/ltoa.c \
-kernel/stdlib/ultoa.c \
-kernel/stdlib/ulltoa.c \
-kernel/stdlib/utoa.c \
-kernel/stdlib/lltoa.c \
+$(KERNEL_SRCDIR)/stdlib/abs.c \
+$(KERNEL_SRCDIR)/stdlib/labs.c \
+$(KERNEL_SRCDIR)/stdlib/llabs.c \
+$(KERNEL_SRCDIR)/stdlib/itoa.c \
+$(KERNEL_SRCDIR)/stdlib/strtol.c \
+$(KERNEL_SRCDIR)/stdlib/ltoa.c \
+$(KERNEL_SRCDIR)/stdlib/ultoa.c \
+$(KERNEL_SRCDIR)/stdlib/ulltoa.c \
+$(KERNEL_SRCDIR)/stdlib/utoa.c \
+$(KERNEL_SRCDIR)/stdlib/lltoa.c \

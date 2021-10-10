@@ -1,14 +1,14 @@
 
 KERNEL_SRC += \
-kernel/bitwise.c \
-kernel/kprintf.c \
-kernel/kabort.c \
-kernel/klog.c \
-kernel/kinit_stage2.c \
-kernel/kinfo.c \
+$(KERNEL_SRCDIR)/bitwise.c \
+$(KERNEL_SRCDIR)/kprintf.c \
+$(KERNEL_SRCDIR)/kabort.c \
+$(KERNEL_SRCDIR)/klog.c \
+$(KERNEL_SRCDIR)/kinit_stage2.c \
+$(KERNEL_SRCDIR)/kinfo.c \
 
 ifdef CONFIG_STACK_PROT
-	KERNEL_SRC += kernel/stack_chk.c 
+	KERNEL_SRC += $(KERNEL_SRCDIR)/stack_chk.c 
 endif
 
 include $(KERNEL_SRCDIR)/ctype/Makefile

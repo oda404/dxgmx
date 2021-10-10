@@ -1,3 +1,3 @@
 
 KERNEL_SRC += \
-kernel/video/tty.c \
+$(KERNEL_SRCDIR)/video/tty.c \

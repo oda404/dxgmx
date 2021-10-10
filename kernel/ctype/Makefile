@@ -1,5 +1,5 @@
 
 KERNEL_SRC += \
-kernel/ctype/isdigit.c \
-kernel/ctype/isspace.c \
-kernel/ctype/isxdigit.c \
+$(KERNEL_SRCDIR)/ctype/isdigit.c \
+$(KERNEL_SRCDIR)/ctype/isspace.c \
+$(KERNEL_SRCDIR)/ctype/isxdigit.c \

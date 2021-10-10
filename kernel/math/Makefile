@@ -1,6 +1,6 @@
 
 KERNEL_SRC += \
-kernel/math/modf.c \
-kernel/math/pow.c \
-kernel/math/modff.c \
-kernel/math/modfl.c \
+$(KERNEL_SRCDIR)/math/modf.c \
+$(KERNEL_SRCDIR)/math/pow.c \
+$(KERNEL_SRCDIR)/math/modff.c \
+$(KERNEL_SRCDIR)/math/modfl.c \

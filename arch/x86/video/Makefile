@@ -1,3 +1,3 @@
 
 ARCH_SRC += \
-arch/x86/video/vga_text.c \
+$(ARCH_SRCDIR)/video/vga_text.c \

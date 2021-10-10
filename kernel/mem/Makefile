@@ -1,3 +1,3 @@
 
 KERNEL_SRC += \
-kernel/mem/mmap.c
+$(KERNEL_SRCDIR)/mem/mmap.c

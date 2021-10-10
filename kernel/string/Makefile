@@ -1,10 +1,10 @@
 
 KERNEL_SRC += \
-kernel/string/memcmp.c \
-kernel/string/strcat.c \
-kernel/string/strcpy.c \
-kernel/string/strlen.c \
-kernel/string/memset.c \
-kernel/string/strncat.c \
-kernel/string/memcpy.c \
-kernel/string/strcmp.c \
+$(KERNEL_SRCDIR)/string/memcmp.c \
+$(KERNEL_SRCDIR)/string/strcat.c \
+$(KERNEL_SRCDIR)/string/strcpy.c \
+$(KERNEL_SRCDIR)/string/strlen.c \
+$(KERNEL_SRCDIR)/string/memset.c \
+$(KERNEL_SRCDIR)/string/strncat.c \
+$(KERNEL_SRCDIR)/string/memcpy.c \
+$(KERNEL_SRCDIR)/string/strcmp.c \
