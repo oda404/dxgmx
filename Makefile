@@ -22,9 +22,9 @@ ifeq ($(MAKECMDGOALS),)
 	ifneq ($(HAS_BUILDCONFIG), 1)
 		$(error No buildconfig file was found. See docs/buildsystem.md)
 	endif
-    ifneq ($(HAS_BUILDTARGET), 1)
-        $(warning Building without a *.buildtarget file. See docs/buildsystem.md)
-    endif
+	ifneq ($(HAS_BUILDTARGET), 1)
+		$(warning Building without a *.buildtarget file. See docs/buildsystem.md)
+	endif
 endif
 
 # TODO: validate buildconfig and buildtarget ??
