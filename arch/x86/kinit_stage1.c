@@ -70,6 +70,7 @@ int kinit_stage1()
     klog(KLOG_INFO, "Memory map provided by BIOS:\n");
     mmap_dump();
 
+    mmap_update_entry_type(0, PAGE_SIZE, MMAP_RESERVED);
     /* mark the kernel itself as kreserved */
     mmap_update_entry_type(
         kinfo_get_kbase(), 
