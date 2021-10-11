@@ -71,7 +71,11 @@ int kinit_stage1()
     mmap_dump();
 
     /* mark the kernel itself as kreserved */
-    mmap_update_entry_type(_kbase, _kend - _kbase, MMAP_RESERVED);
+    mmap_update_entry_type(
+        kinfo_get_kbase(), 
+        kinfo_get_kend() - kinfo_get_kbase(), 
+        MMAP_RESERVED
+    );
     /* 
      * i lose a bit of available physical memory by aligning 
      * the available areas but gain a lot of mental health

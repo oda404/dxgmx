@@ -5,7 +5,9 @@
 #include<dxgmx/kstack.h>
 #include<dxgmx/types.h>
 
-extern const ptr _kbase;
-extern const ptr _kend;
+ptr kinfo_get_kbase();
+ptr kinfo_get_kend();
+ptr kinfo_get_kstack_top();
+ptr kinfo_get_kstack_bot();
 
 #endif //!_DXGMX_KINFO_H
