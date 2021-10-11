@@ -49,6 +49,8 @@ int kinit_stage1()
     if(_multiboot_magic != MULTIBOOT_BOOTLOADER_MAGIC)
         abandon_ship("Not booted by a multiboot compliant bootloader\n");
 
+    klog(KLOG_INFO, "kernel stack: 0x%08lX-0x%08lX\n", _kstack_top, _kstack_bot);
+
     rtc_dump_time_and_date();
     cpu_identify();
     
