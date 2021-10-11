@@ -8,6 +8,7 @@
 
 #include<stddef.h>
 #include<stdint.h>
+#include<stdbool.h>
 
 #if __SIZEOF_FLOAT__ == __SIZEOF_INT__
 typedef int floatwhole;

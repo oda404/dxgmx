@@ -10,7 +10,6 @@ $(INCLUDEDIR)/dxgmx/x86/interrupts.h \
 $(INCLUDEDIR)/dxgmx/x86/pic.h \
 $(INCLUDEDIR)/dxgmx/x86/portio.h \
 $(INCLUDEDIR)/dxgmx/x86/rtc.h \
-$(INCLUDEDIR)/dxgmx/x86/sysgdt.h \
 $(INCLUDEDIR)/dxgmx/x86/tsc.h \
 $(INCLUDEDIR)/dxgmx/x86/vga_text.h \
 

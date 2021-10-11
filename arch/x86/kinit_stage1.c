@@ -4,7 +4,7 @@
 */
 
 #include<dxgmx/x86/idt.h>
-#include<dxgmx/x86/sysgdt.h>
+#include<dxgmx/x86/gdt.h>
 #include<dxgmx/x86/multiboot.h>
 #include<dxgmx/x86/rtc.h>
 #include<dxgmx/x86/acpi.h>
@@ -27,7 +27,7 @@ int kinit_stage1()
     /* disable interrupts until a proper idt is set up. */
     interrupts_disable();
 
-    sysgdt_init();
+    gdt_init();
     idt_init();
     rtc_init();
 

@@ -6,7 +6,6 @@
 #include<dxgmx/x86/idt.h>
 #include<dxgmx/x86/pic.h>
 #include<dxgmx/x86/gdt.h>
-#include<dxgmx/x86/sysgdt.h>
 #include<dxgmx/x86/interrupt_frame.h>
 #include<dxgmx/x86/interrupts.h>
 #include<dxgmx/x86/portio.h>
@@ -171,59 +170,59 @@ void idt_init()
 
 #define COMMON_TRAP_GATE IDT_GATE_TYPE_TRAP_32 | IDT_DESC_PRIV_0 | IDT_INT_PRESENT
 
-    idt_encode_entry((ptr)trap0, SYSGDT_KERNEL_CS, COMMON_TRAP_GATE, &g_idt[0]);
-    idt_encode_entry((ptr)trap1, SYSGDT_KERNEL_CS, COMMON_TRAP_GATE, &g_idt[1]);
-    idt_encode_entry((ptr)trap2, SYSGDT_KERNEL_CS, COMMON_TRAP_GATE, &g_idt[2]);
-    idt_encode_entry((ptr)trap3, SYSGDT_KERNEL_CS, COMMON_TRAP_GATE, &g_idt[3]);
-    idt_encode_entry((ptr)trap4, SYSGDT_KERNEL_CS, COMMON_TRAP_GATE, &g_idt[4]);
-    idt_encode_entry((ptr)trap5, SYSGDT_KERNEL_CS, COMMON_TRAP_GATE, &g_idt[5]);
-    idt_encode_entry((ptr)trap6, SYSGDT_KERNEL_CS, COMMON_TRAP_GATE, &g_idt[6]);
-    idt_encode_entry((ptr)trap7, SYSGDT_KERNEL_CS, COMMON_TRAP_GATE, &g_idt[7]);
-    idt_encode_entry((ptr)trap8, SYSGDT_KERNEL_CS, COMMON_TRAP_GATE, &g_idt[8]);
-    idt_encode_entry((ptr)trap9, SYSGDT_KERNEL_CS, COMMON_TRAP_GATE, &g_idt[9]);
-    idt_encode_entry((ptr)trap10, SYSGDT_KERNEL_CS, COMMON_TRAP_GATE, &g_idt[10]);
-    idt_encode_entry((ptr)trap11, SYSGDT_KERNEL_CS, COMMON_TRAP_GATE, &g_idt[11]);
-    idt_encode_entry((ptr)trap12, SYSGDT_KERNEL_CS, COMMON_TRAP_GATE, &g_idt[12]);
-    idt_encode_entry((ptr)trap13, SYSGDT_KERNEL_CS, COMMON_TRAP_GATE, &g_idt[13]);
-    idt_encode_entry((ptr)trap14, SYSGDT_KERNEL_CS, COMMON_TRAP_GATE, &g_idt[14]);
-    idt_encode_entry((ptr)trap15, SYSGDT_KERNEL_CS, COMMON_TRAP_GATE, &g_idt[15]);
-    idt_encode_entry((ptr)trap16, SYSGDT_KERNEL_CS, COMMON_TRAP_GATE, &g_idt[16]);
-    idt_encode_entry((ptr)trap17, SYSGDT_KERNEL_CS, COMMON_TRAP_GATE, &g_idt[17]);
-    idt_encode_entry((ptr)trap18, SYSGDT_KERNEL_CS, COMMON_TRAP_GATE, &g_idt[18]);
-    idt_encode_entry((ptr)trap19, SYSGDT_KERNEL_CS, COMMON_TRAP_GATE, &g_idt[19]);
-    idt_encode_entry((ptr)trap20, SYSGDT_KERNEL_CS, COMMON_TRAP_GATE, &g_idt[20]);
-    idt_encode_entry((ptr)trap21, SYSGDT_KERNEL_CS, COMMON_TRAP_GATE, &g_idt[21]);
-    idt_encode_entry((ptr)trap22, SYSGDT_KERNEL_CS, COMMON_TRAP_GATE, &g_idt[22]);
-    idt_encode_entry((ptr)trap23, SYSGDT_KERNEL_CS, COMMON_TRAP_GATE, &g_idt[23]);
-    idt_encode_entry((ptr)trap24, SYSGDT_KERNEL_CS, COMMON_TRAP_GATE, &g_idt[24]);
-    idt_encode_entry((ptr)trap25, SYSGDT_KERNEL_CS, COMMON_TRAP_GATE, &g_idt[25]);
-    idt_encode_entry((ptr)trap26, SYSGDT_KERNEL_CS, COMMON_TRAP_GATE, &g_idt[26]);
-    idt_encode_entry((ptr)trap27, SYSGDT_KERNEL_CS, COMMON_TRAP_GATE, &g_idt[27]);
-    idt_encode_entry((ptr)trap28, SYSGDT_KERNEL_CS, COMMON_TRAP_GATE, &g_idt[28]);
-    idt_encode_entry((ptr)trap29, SYSGDT_KERNEL_CS, COMMON_TRAP_GATE, &g_idt[29]);
-    idt_encode_entry((ptr)trap30, SYSGDT_KERNEL_CS, COMMON_TRAP_GATE, &g_idt[30]);
-    idt_encode_entry((ptr)trap31, SYSGDT_KERNEL_CS, COMMON_TRAP_GATE, &g_idt[31]);
+    idt_encode_entry((ptr)trap0, GDT_KERNEL_CS, COMMON_TRAP_GATE, &g_idt[0]);
+    idt_encode_entry((ptr)trap1, GDT_KERNEL_CS, COMMON_TRAP_GATE, &g_idt[1]);
+    idt_encode_entry((ptr)trap2, GDT_KERNEL_CS, COMMON_TRAP_GATE, &g_idt[2]);
+    idt_encode_entry((ptr)trap3, GDT_KERNEL_CS, COMMON_TRAP_GATE, &g_idt[3]);
+    idt_encode_entry((ptr)trap4, GDT_KERNEL_CS, COMMON_TRAP_GATE, &g_idt[4]);
+    idt_encode_entry((ptr)trap5, GDT_KERNEL_CS, COMMON_TRAP_GATE, &g_idt[5]);
+    idt_encode_entry((ptr)trap6, GDT_KERNEL_CS, COMMON_TRAP_GATE, &g_idt[6]);
+    idt_encode_entry((ptr)trap7, GDT_KERNEL_CS, COMMON_TRAP_GATE, &g_idt[7]);
+    idt_encode_entry((ptr)trap8, GDT_KERNEL_CS, COMMON_TRAP_GATE, &g_idt[8]);
+    idt_encode_entry((ptr)trap9, GDT_KERNEL_CS, COMMON_TRAP_GATE, &g_idt[9]);
+    idt_encode_entry((ptr)trap10, GDT_KERNEL_CS, COMMON_TRAP_GATE, &g_idt[10]);
+    idt_encode_entry((ptr)trap11, GDT_KERNEL_CS, COMMON_TRAP_GATE, &g_idt[11]);
+    idt_encode_entry((ptr)trap12, GDT_KERNEL_CS, COMMON_TRAP_GATE, &g_idt[12]);
+    idt_encode_entry((ptr)trap13, GDT_KERNEL_CS, COMMON_TRAP_GATE, &g_idt[13]);
+    idt_encode_entry((ptr)trap14, GDT_KERNEL_CS, COMMON_TRAP_GATE, &g_idt[14]);
+    idt_encode_entry((ptr)trap15, GDT_KERNEL_CS, COMMON_TRAP_GATE, &g_idt[15]);
+    idt_encode_entry((ptr)trap16, GDT_KERNEL_CS, COMMON_TRAP_GATE, &g_idt[16]);
+    idt_encode_entry((ptr)trap17, GDT_KERNEL_CS, COMMON_TRAP_GATE, &g_idt[17]);
+    idt_encode_entry((ptr)trap18, GDT_KERNEL_CS, COMMON_TRAP_GATE, &g_idt[18]);
+    idt_encode_entry((ptr)trap19, GDT_KERNEL_CS, COMMON_TRAP_GATE, &g_idt[19]);
+    idt_encode_entry((ptr)trap20, GDT_KERNEL_CS, COMMON_TRAP_GATE, &g_idt[20]);
+    idt_encode_entry((ptr)trap21, GDT_KERNEL_CS, COMMON_TRAP_GATE, &g_idt[21]);
+    idt_encode_entry((ptr)trap22, GDT_KERNEL_CS, COMMON_TRAP_GATE, &g_idt[22]);
+    idt_encode_entry((ptr)trap23, GDT_KERNEL_CS, COMMON_TRAP_GATE, &g_idt[23]);
+    idt_encode_entry((ptr)trap24, GDT_KERNEL_CS, COMMON_TRAP_GATE, &g_idt[24]);
+    idt_encode_entry((ptr)trap25, GDT_KERNEL_CS, COMMON_TRAP_GATE, &g_idt[25]);
+    idt_encode_entry((ptr)trap26, GDT_KERNEL_CS, COMMON_TRAP_GATE, &g_idt[26]);
+    idt_encode_entry((ptr)trap27, GDT_KERNEL_CS, COMMON_TRAP_GATE, &g_idt[27]);
+    idt_encode_entry((ptr)trap28, GDT_KERNEL_CS, COMMON_TRAP_GATE, &g_idt[28]);
+    idt_encode_entry((ptr)trap29, GDT_KERNEL_CS, COMMON_TRAP_GATE, &g_idt[29]);
+    idt_encode_entry((ptr)trap30, GDT_KERNEL_CS, COMMON_TRAP_GATE, &g_idt[30]);
+    idt_encode_entry((ptr)trap31, GDT_KERNEL_CS, COMMON_TRAP_GATE, &g_idt[31]);
 
 #define COMMON_IRQ_GATE IDT_GATE_TYPE_INT_32 | IDT_DESC_PRIV_0 | IDT_INT_PRESENT
 #define MASTER_PIC_OFFSET 32
 #define SLAVE_PIC_OFFSET  (MASTER_PIC_OFFSET + 8)
 
-    idt_encode_entry((ptr)irq0, SYSGDT_KERNEL_CS, COMMON_IRQ_GATE, &g_idt[0 + MASTER_PIC_OFFSET]);
-    idt_encode_entry((ptr)irq1, SYSGDT_KERNEL_CS, COMMON_IRQ_GATE, &g_idt[1 + MASTER_PIC_OFFSET]);
-    idt_encode_entry((ptr)irq2, SYSGDT_KERNEL_CS, COMMON_IRQ_GATE, &g_idt[2 + MASTER_PIC_OFFSET]);
-    idt_encode_entry((ptr)irq3, SYSGDT_KERNEL_CS, COMMON_IRQ_GATE, &g_idt[3 + MASTER_PIC_OFFSET]);
-    idt_encode_entry((ptr)irq4, SYSGDT_KERNEL_CS, COMMON_IRQ_GATE, &g_idt[4 + MASTER_PIC_OFFSET]);
-    idt_encode_entry((ptr)irq5, SYSGDT_KERNEL_CS, COMMON_IRQ_GATE, &g_idt[5 + MASTER_PIC_OFFSET]);
-    idt_encode_entry((ptr)irq6, SYSGDT_KERNEL_CS, COMMON_IRQ_GATE, &g_idt[6 + MASTER_PIC_OFFSET]);
-    idt_encode_entry((ptr)irq7, SYSGDT_KERNEL_CS, COMMON_IRQ_GATE, &g_idt[7 + MASTER_PIC_OFFSET]);
-    idt_encode_entry((ptr)irq8, SYSGDT_KERNEL_CS, COMMON_IRQ_GATE, &g_idt[8 + MASTER_PIC_OFFSET]);
-    idt_encode_entry((ptr)irq9, SYSGDT_KERNEL_CS, COMMON_IRQ_GATE, &g_idt[9 + MASTER_PIC_OFFSET]);
-    idt_encode_entry((ptr)irq10, SYSGDT_KERNEL_CS, COMMON_IRQ_GATE, &g_idt[10 + MASTER_PIC_OFFSET]);
-    idt_encode_entry((ptr)irq11, SYSGDT_KERNEL_CS, COMMON_IRQ_GATE, &g_idt[11 + MASTER_PIC_OFFSET]);
-    idt_encode_entry((ptr)irq12, SYSGDT_KERNEL_CS, COMMON_IRQ_GATE, &g_idt[12 + MASTER_PIC_OFFSET]);
-    idt_encode_entry((ptr)irq13, SYSGDT_KERNEL_CS, COMMON_IRQ_GATE, &g_idt[13 + MASTER_PIC_OFFSET]);
-    idt_encode_entry((ptr)irq14, SYSGDT_KERNEL_CS, COMMON_IRQ_GATE, &g_idt[14 + MASTER_PIC_OFFSET]);
-    idt_encode_entry((ptr)irq15, SYSGDT_KERNEL_CS, COMMON_IRQ_GATE, &g_idt[15 + MASTER_PIC_OFFSET]);
+    idt_encode_entry((ptr)irq0, GDT_KERNEL_CS, COMMON_IRQ_GATE, &g_idt[0 + MASTER_PIC_OFFSET]);
+    idt_encode_entry((ptr)irq1, GDT_KERNEL_CS, COMMON_IRQ_GATE, &g_idt[1 + MASTER_PIC_OFFSET]);
+    idt_encode_entry((ptr)irq2, GDT_KERNEL_CS, COMMON_IRQ_GATE, &g_idt[2 + MASTER_PIC_OFFSET]);
+    idt_encode_entry((ptr)irq3, GDT_KERNEL_CS, COMMON_IRQ_GATE, &g_idt[3 + MASTER_PIC_OFFSET]);
+    idt_encode_entry((ptr)irq4, GDT_KERNEL_CS, COMMON_IRQ_GATE, &g_idt[4 + MASTER_PIC_OFFSET]);
+    idt_encode_entry((ptr)irq5, GDT_KERNEL_CS, COMMON_IRQ_GATE, &g_idt[5 + MASTER_PIC_OFFSET]);
+    idt_encode_entry((ptr)irq6, GDT_KERNEL_CS, COMMON_IRQ_GATE, &g_idt[6 + MASTER_PIC_OFFSET]);
+    idt_encode_entry((ptr)irq7, GDT_KERNEL_CS, COMMON_IRQ_GATE, &g_idt[7 + MASTER_PIC_OFFSET]);
+    idt_encode_entry((ptr)irq8, GDT_KERNEL_CS, COMMON_IRQ_GATE, &g_idt[8 + MASTER_PIC_OFFSET]);
+    idt_encode_entry((ptr)irq9, GDT_KERNEL_CS, COMMON_IRQ_GATE, &g_idt[9 + MASTER_PIC_OFFSET]);
+    idt_encode_entry((ptr)irq10, GDT_KERNEL_CS, COMMON_IRQ_GATE, &g_idt[10 + MASTER_PIC_OFFSET]);
+    idt_encode_entry((ptr)irq11, GDT_KERNEL_CS, COMMON_IRQ_GATE, &g_idt[11 + MASTER_PIC_OFFSET]);
+    idt_encode_entry((ptr)irq12, GDT_KERNEL_CS, COMMON_IRQ_GATE, &g_idt[12 + MASTER_PIC_OFFSET]);
+    idt_encode_entry((ptr)irq13, GDT_KERNEL_CS, COMMON_IRQ_GATE, &g_idt[13 + MASTER_PIC_OFFSET]);
+    idt_encode_entry((ptr)irq14, GDT_KERNEL_CS, COMMON_IRQ_GATE, &g_idt[14 + MASTER_PIC_OFFSET]);
+    idt_encode_entry((ptr)irq15, GDT_KERNEL_CS, COMMON_IRQ_GATE, &g_idt[15 + MASTER_PIC_OFFSET]);
 
     g_idtr.base = g_idt;
     g_idtr.limit = sizeof(g_idt) - 1;
