@@ -71,6 +71,8 @@ __attribute__((aligned(n)))
 #define _ATTR_SECTION(x) \
 __attribute__((section(x)))
 
+#define _ATTR_UNUSED _ATTR_MAYBE_UNUSED
+
 #endif // __GNUC__
 
 #endif // _DXGMX_ATTRS_H
