@@ -8,7 +8,7 @@
 /* The size of the kernel stack in bytes. */
 #define KSTACK_SIZE (1024 * 4)
 
-extern const ptr _kstack_top;
-extern const ptr _kstack_bot;
+ptr kstack_get_top();
+ptr kstack_get_bot();
 
 #endif //!_DXGMX_KSTACK_H
