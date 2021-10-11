@@ -2,5 +2,4 @@
 ARCH_SRC += \
 $(ARCH_SRCDIR)/int/idt.c \
 $(ARCH_SRCDIR)/int/pic.c \
-$(ARCH_SRCDIR)/int/sysidt.c \
 $(ARCH_SRCDIR)/int/interrupts.c \

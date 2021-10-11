@@ -5,7 +5,7 @@
 
 #include<dxgmx/x86/rtc.h>
 #include<dxgmx/x86/cmos.h>
-#include<dxgmx/x86/sysidt.h>
+#include<dxgmx/x86/idt.h>
 #include<dxgmx/x86/interrupts.h>
 #include<dxgmx/klog.h>
 #include<dxgmx/todo.h>
@@ -173,7 +173,7 @@ int rtc_init()
     g_rtc_running_freq = rtc_calculate_running_freq();
     g_rtc_base_freq = 32768;
 
-    sysidt_register_callback(IRQ8, rtc_int_handler);
+    idt_register_isr(IRQ8, rtc_int_handler);
     rtc_enable_irq8();
     // read the C register so we make sure future IRQs will fire.
     cmos_port_inb(RTC_REG_C, NMIENABLED);

@@ -3,7 +3,7 @@
  * Distributed under the MIT license.
 */
 
-#include<dxgmx/x86/sysidt.h>
+#include<dxgmx/x86/idt.h>
 #include<dxgmx/x86/sysgdt.h>
 #include<dxgmx/x86/multiboot.h>
 #include<dxgmx/x86/rtc.h>
@@ -28,7 +28,7 @@ int kinit_stage1()
     interrupts_disable();
 
     sysgdt_init();
-    sysidt_init();
+    idt_init();
     rtc_init();
 
     interrupts_enable();
@@ -48,8 +48,6 @@ int kinit_stage1()
 
     if(_multiboot_magic != MULTIBOOT_BOOTLOADER_MAGIC)
         abandon_ship("Not booted by a multiboot compliant bootloader\n");
-
-    klog(KLOG_INFO, "kernel stack: 0x%08lX-0x%08lX\n", _kstack_top, _kstack_bot);
 
     rtc_dump_time_and_date();
     cpu_identify();

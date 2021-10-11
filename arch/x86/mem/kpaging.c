@@ -3,7 +3,7 @@
  * Distributed under the MIT license.
 */
 
-#include<dxgmx/x86/sysidt.h>
+#include<dxgmx/x86/idt.h>
 #include<dxgmx/cpu.h>
 #include<dxgmx/abandon_ship.h>
 #include<dxgmx/mem/kpaging.h>
@@ -59,7 +59,7 @@ int kpaging_init()
 
     pagedir_load(&pagedir);
 
-    sysidt_register_callback(ISR14, paging_int_handler);
+    idt_register_isr(TRAP14, paging_int_handler);
 
     paging_enable();
 
