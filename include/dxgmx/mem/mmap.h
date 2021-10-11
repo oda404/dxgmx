@@ -78,4 +78,6 @@ const MemoryMap *mmap_get_mmap();
 */
 void mmap_dump();
 
+bool mmap_is_addr_inside_entry(ptr addr, const MemoryMapEntry *entry);
+
 #endif // _DXGMX_MEM_MAP_H

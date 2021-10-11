@@ -171,14 +171,6 @@ static void mmap_fix_new_overlaps(const MemoryMapEntry *e)
     }
 }
 
-static _ATTR_ALWAYS_INLINE int mmap_is_addr_inside_entry(
-    uint64_t addr,
-    const MemoryMapEntry *entry
-)
-{
-    return (addr > entry->base && addr < entry->base + entry->size);
-}
-
 void mmap_add_entry(
     u64 base,
     u64 size,
@@ -290,4 +282,10 @@ void mmap_dump()
             mmap_entry_type_to_str(tmp->type)
         );
     }
+}
+
+_ATTR_ALWAYS_INLINE bool 
+mmap_is_addr_inside_entry(ptr addr, const MemoryMapEntry *entry)
+{
+    return (addr > entry->base && addr < entry->base + entry->size);
 }
