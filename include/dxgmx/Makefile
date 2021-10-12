@@ -25,3 +25,4 @@ include $(INCLUDEDIR)/dxgmx/bits/Makefile
 include $(INCLUDEDIR)/dxgmx/mem/Makefile
 include $(INCLUDEDIR)/dxgmx/video/Makefile
 include $(INCLUDEDIR)/dxgmx/$(SRCARCH)/Makefile
+include $(INCLUDEDIR)/dxgmx/utils/Makefile

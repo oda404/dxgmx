@@ -19,3 +19,4 @@ include $(KERNEL_SRCDIR)/math/Makefile
 include $(KERNEL_SRCDIR)/mem/Makefile
 include $(KERNEL_SRCDIR)/video/Makefile
 include $(KERNEL_SRCDIR)/time/Makefile
+include $(KERNEL_SRCDIR)/utils/Makefile
