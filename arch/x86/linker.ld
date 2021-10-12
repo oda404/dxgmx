@@ -23,7 +23,7 @@ SECTIONS
 
     .rodata ALIGN(4K) : /* read only section */
     {
-        *(.rodata)
+        *(.rodata*)
     }
 
     .data ALIGN(4K) : /* r/w section */
