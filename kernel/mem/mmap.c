@@ -287,5 +287,5 @@ void mmap_dump()
 _ATTR_ALWAYS_INLINE bool 
 mmap_is_addr_inside_entry(ptr addr, const MemoryMapEntry *entry)
 {
-    return (addr > entry->base && addr < entry->base + entry->size);
+    return (addr >= entry->base && addr < entry->base + entry->size);
 }
