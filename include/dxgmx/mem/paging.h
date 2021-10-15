@@ -6,6 +6,6 @@
 #ifndef _DXGMX_PAGING_H
 #define _DXGMX_PAGING_H
 
-void paging_enable();
+void paging_init();
 
 #endif //_DXGMX_PAGING_H

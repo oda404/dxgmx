@@ -16,7 +16,7 @@
 #include<dxgmx/abandon_ship.h>
 #include<dxgmx/mem/pageframe.h>
 #include<dxgmx/mem/pagesize.h>
-#include<dxgmx/mem/kpaging.h>
+#include<dxgmx/mem/paging.h>
 #include<dxgmx/kprintf.h>
 #include<dxgmx/klog.h>
 #include<dxgmx/kinfo.h>
@@ -86,7 +86,7 @@ int kinit_stage1()
     acpi_init();
 
     pageframe_alloc_init();
-    kpaging_init();
+    paging_init();
 
     return 0;
 }
