@@ -36,7 +36,7 @@ enum PrintfFlags
     PRINTF_FLAG_FORCE_SIGN     = 0x2,
     PRINTF_FLAG_WHITESPACE     = 0x4,
     PRINTF_FLAG_HASHTAG        = 0x8,
-    PRITNF_FLAG_PAD_ZERO       = 0x10
+    PRINTF_FLAG_PAD_ZERO       = 0x10
 };
 
 enum PrintfParseStatus
@@ -74,7 +74,7 @@ static int printf_parse_flags(char c, uint8_t *flags)
         *flags  |= PRINTF_FLAG_HASHTAG;
         return PRINTF_PARSE_CONTINUE;
     case '0':
-        *flags  |= PRITNF_FLAG_PAD_ZERO;
+        *flags  |= PRINTF_FLAG_PAD_ZERO;
         return PRINTF_PARSE_CONTINUE;
     default:
         return PRINTF_PARSE_DONE;
@@ -172,7 +172,7 @@ static size_t printf_apply_flags_and_width(
 
     if(width > buflen)
     {
-        const char c = (flags & PRITNF_FLAG_PAD_ZERO) ? '0' : ' ';
+        const char c = (flags & PRINTF_FLAG_PAD_ZERO) ? '0' : ' ';
         for(size_t i = 0; i < width - buflen; ++i)
         {
             for(size_t k = buflen + i; k > 0; --k)
