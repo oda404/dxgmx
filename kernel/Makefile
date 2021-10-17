@@ -21,3 +21,4 @@ include $(KERNEL_SRCDIR)/video/Makefile
 include $(KERNEL_SRCDIR)/time/Makefile
 include $(KERNEL_SRCDIR)/utils/Makefile
 include $(KERNEL_SRCDIR)/stdio/Makefile
+include $(KERNEL_SRCDIR)/crypto/Makefile
