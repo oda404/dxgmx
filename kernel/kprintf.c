@@ -4,18 +4,9 @@
 */
 
 #include<dxgmx/kprintf.h>
-#include<dxgmx/stdio.h>
-#include<dxgmx/stdlib.h>
 #include<dxgmx/string.h>
 #include<dxgmx/video/tty.h>
-#include<dxgmx/ctype.h>
-#include<dxgmx/todo.h>
-#include<dxgmx/math.h>
-#include<dxgmx/types.h>
-#include<stdint.h>
-#include<stddef.h>
-#include<limits.h>
-#include<stdarg.h>
+#include<dxgmx/stdio.h>
 
 int kprintf(const char *fmt, ...)
 {
