@@ -20,6 +20,7 @@ $(INCLUDEDIR)/dxgmx/time.h \
 $(INCLUDEDIR)/dxgmx/todo.h \
 $(INCLUDEDIR)/dxgmx/types.h \
 $(INCLUDEDIR)/dxgmx/kinfo.h \
+$(INCLUDEDIR)/dxgmx/stdio.h \
 
 include $(INCLUDEDIR)/dxgmx/bits/Makefile
 include $(INCLUDEDIR)/dxgmx/mem/Makefile
