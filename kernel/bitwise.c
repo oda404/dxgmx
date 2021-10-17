@@ -51,3 +51,15 @@ bw_is64_wide(uint64_t n)
 {
     return (n >> 32);
 }
+
+_ATTR_ALWAYS_INLINE u32 
+bw_u32_rotl(u32 n, u8 rot)
+{
+    return ((n << rot) | (n >> (32 - rot)));
+}
+
+_ATTR_ALWAYS_INLINE u32
+bw_u32_flip_endianness(u32 n)
+{
+    return ((n >> 24) & 0XFF) | ((n << 8) & 0xFF0000) | ((n >> 8) & 0xFF00) | ((n << 24) & 0xFF000000);
+}
