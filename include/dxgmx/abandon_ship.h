@@ -8,8 +8,8 @@
 
 #include<dxgmx/attrs.h>
 
-/* immediately halts the cpu */
-void abandon_ship(const char *lastwords, ...);
-_ATTR_FMT_PRINTF(1, 2) _ATTR_NORETURN;
+/* The Unix equivalent of panic. */
+_ATTR_NORETURN _ATTR_FMT_PRINTF(1, 2) void 
+abandon_ship(const char *lastwords, ...);
 
 #endif // _DXGMX_ABANDON_SHIP_H
