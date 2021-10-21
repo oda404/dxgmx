@@ -4,6 +4,7 @@
 */
 
 #include<dxgmx/attrs.h>
+#include<dxgmx/abandon_ship.h>
 
 /* 
  * This function initiates core hardware and 
@@ -23,14 +24,7 @@ _ATTR_NORETURN void kmain()
 {
     kinit_stage1();
 
-    /**
-     * FIXME: kinit_stage2 is not marked with _ATTR_NORETURN,
-     * even though it (or some other kinit_stage3 function ?) should.
-    */
     kinit_stage2();
-    /**
-     * kmain should never return. Worst case scenario abandon_ship
-     * gets called in kinit_stage2.
-    */
-    __builtin_unreachable();
+
+    abandon_ship("Tried to return from kmain. Not proceeding.\n");
 }
