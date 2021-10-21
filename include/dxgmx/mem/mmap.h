@@ -51,7 +51,7 @@ void mmap_init();
 void mmap_add_entry(
     u64 base,
     u64 size,
-    u32 type
+    u32 typeu64
 );
 
 int mmap_update_entry_type(
@@ -79,5 +79,12 @@ const MemoryMap *mmap_get_mmap();
 void mmap_dump();
 
 bool mmap_is_addr_inside_entry(ptr addr, const MemoryMapEntry *entry);
+
+#define FOR_EACH_MMAP_ENTRY(entry) \
+for( \
+    const MemoryMapEntry *entry = mmap_get_mmap()->entries; \
+    (ptr)entry < (ptr)mmap_get_mmap()->entries + mmap_get_mmap()->entries_cnt * sizeof(MemoryMapEntry); \
+    ++entry \
+)
 
 #endif // _DXGMX_MEM_MAP_H
