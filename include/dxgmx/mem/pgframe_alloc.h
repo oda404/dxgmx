@@ -6,11 +6,11 @@
 #ifndef _DXGMX_PAGING_FRAME_H
 #define _DXGMX_PAGING_FRAME_H
 
-#include<stdint.h>
+#include<dxgmx/types.h>
 
-void pageframe_alloc_init();
-uint64_t pageframe_alloc();
-uint32_t pageframe_get_avail_frames_cnt();
-void pageframe_free(uint64_t pageframe_base);
+void pgframe_alloc_init();
+ptr pgframe_alloc();
+u32 pgframe_alloc_get_free_pages();
+void pgframe_free(ptr frame);
 
 #endif // _DXGMX_PAGING_FRAME_H

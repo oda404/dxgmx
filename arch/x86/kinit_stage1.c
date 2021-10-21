@@ -14,13 +14,12 @@
 #include<dxgmx/cpu.h>
 #include<dxgmx/kdefs.h>
 #include<dxgmx/abandon_ship.h>
-#include<dxgmx/mem/pageframe.h>
+#include<dxgmx/mem/pgframe_alloc.h>
 #include<dxgmx/mem/pagesize.h>
 #include<dxgmx/mem/paging.h>
 #include<dxgmx/kprintf.h>
 #include<dxgmx/klog.h>
 #include<dxgmx/kinfo.h>
-#include<dxgmx/kmalloc.h>
 
 int kinit_stage1()
 {
@@ -81,9 +80,8 @@ int kinit_stage1()
     /* Init ACPI while paging is not yet enabled, because acpi needs to look around different parts of memory. */
     acpi_init();
 
-    pageframe_alloc_init();
+    pgframe_alloc_init();
     paging_init();
-    kmalloc_init();
 
     rtc_dump_time_and_date();
     cpu_identify();
