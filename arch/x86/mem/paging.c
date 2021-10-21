@@ -41,7 +41,7 @@ static void paging_isr(
     }
 
     if(faultaddr < PAGE_SIZE)
-        abandon_ship("Possible NULL dereference in ring 0 :(. Not proceeding.\n", PAGE_SIZE);
+        abandon_ship("Possible NULL dereference in ring 0 :(. Not proceeding.\n");
 }
 
 static int paging_identity_map_area(ptr base, ptr end)
