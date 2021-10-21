@@ -20,18 +20,20 @@
 #include<dxgmx/kprintf.h>
 #include<dxgmx/klog.h>
 #include<dxgmx/kinfo.h>
+#include<dxgmx/kmalloc.h>
 
 int kinit_stage1()
 {
-    /* klog is not initiated yet and I would not recommend using it until it is. */
-    /* disable interrupts until a proper idt is set up. */
+    /* Hang interrupt until a predictable gdt/idt is set up. */
     interrupts_disable();
 
     gdt_init();
     idt_init();
-    rtc_init();
 
+    /* Back in business. */
     interrupts_enable();
+    
+    rtc_init();
 
     tty_init();
     const KLogConfig config = {
@@ -49,11 +51,6 @@ int kinit_stage1()
     if(_multiboot_magic != MULTIBOOT_BOOTLOADER_MAGIC)
         abandon_ship("Not booted by a multiboot compliant bootloader\n");
 
-    klog(KLOG_INFO, "Kernel stack: 0x%08lX-0x%08lX\n", kstack_get_top(), kstack_get_bot());
-
-    rtc_dump_time_and_date();
-    cpu_identify();
-    
     mmap_init();
 
     MultibootMBI *mbi = (MultibootMBI *)_multiboot_info_struct_base;
@@ -70,23 +67,26 @@ int kinit_stage1()
     klog(KLOG_INFO, "Memory map provided by BIOS:\n");
     mmap_dump();
 
+    /* Mark the first page as reserved. */
     mmap_update_entry_type(0, PAGE_SIZE, MMAP_RESERVED);
-    /* mark the kernel itself as kreserved */
+    /* Mark the kernel image as reserved. */
     mmap_update_entry_type(
         kinfo_get_kbase(), 
         kinfo_get_kend() - kinfo_get_kbase(), 
         MMAP_RESERVED
     );
-    /* 
-     * i lose a bit of available physical memory by aligning 
-     * the available areas but gain a lot of mental health
-     */
+    /* Align all entries' bases on PAGE_SIZE bytes */
     mmap_align_entries(PAGE_SIZE);
 
+    /* Init ACPI while paging is not yet enabled, because acpi needs to look around different parts of memory. */
     acpi_init();
 
     pageframe_alloc_init();
     paging_init();
+    kmalloc_init();
+
+    rtc_dump_time_and_date();
+    cpu_identify();
 
     return 0;
 }
