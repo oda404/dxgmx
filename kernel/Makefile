@@ -8,7 +8,9 @@ $(KERNEL_SRCDIR)/kinit_stage2.c \
 $(KERNEL_SRCDIR)/kinfo.c \
 
 ifdef CONFIG_STACK_PROT
-	KERNEL_SRC += $(KERNEL_SRCDIR)/stack_chk.c 
+	ifneq ($(CONFIG_STACK_PROT),none)
+		KERNEL_SRC += $(KERNEL_SRCDIR)/stack_chk.c
+	endif 
 endif
 
 include $(KERNEL_SRCDIR)/ctype/Makefile
