@@ -37,10 +37,20 @@ SECTIONS
         *(.bss)
     }
 
+    .ro_after_stage1 ALIGN(4K) :
+    {
+        *(.ro_after_stage1)
+    }
+
+    .init :
+    {
+        *(.init)
+    }
+
+    _sym_kend = .;
+
     /DISCARD/ :
     {
         *(*)
     }
-
-    _sym_kend = .;
 }
