@@ -4,7 +4,7 @@ $(INCLUDEDIR)/dxgmx/abandon_ship.h \
 $(INCLUDEDIR)/dxgmx/assert.h \
 $(INCLUDEDIR)/dxgmx/attrs.h \
 $(INCLUDEDIR)/dxgmx/bitwise.h \
-$(INCLUDEDIR)/dxgmx/clocksource.h \
+$(INCLUDEDIR)/dxgmx/timer.h \
 $(INCLUDEDIR)/dxgmx/cpu.h \
 $(INCLUDEDIR)/dxgmx/ctype.h \
 $(INCLUDEDIR)/dxgmx/errno.h \

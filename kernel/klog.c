@@ -6,10 +6,10 @@
 #include<dxgmx/klog.h>
 #include<dxgmx/string.h>
 #include<dxgmx/kprintf.h>
-#include<dxgmx/clocksource.h>
+#include<dxgmx/timer.h>
 
 static KLogConfig  g_klogconfig;
-static ClockSource g_clocksource;
+static Timer g_timer;
 
 int klog_init(const KLogConfig *kconfig)
 {
@@ -18,8 +18,7 @@ int klog_init(const KLogConfig *kconfig)
     else
         klog_set_max_level(kconfig->loglevel);
 
-    clocksource_init(&g_clocksource);
-    clocksource_start(&g_clocksource);
+    timer_start(&g_timer);
 
     return 0;
 }
@@ -39,7 +38,7 @@ size_t kvlog(uint8_t lvl, const char *fmt, va_list valist)
 
     return kprintf(
         "[%f] ", 
-        clocksource_ellapsed_sec(&g_clocksource)
+        timer_ellapsed_sec(&g_timer)
     ) + kvprintf(fmt, valist);
 }
 

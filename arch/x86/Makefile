@@ -7,7 +7,7 @@ $(ARCH_SRCDIR)/cmos.c \
 $(ARCH_SRCDIR)/rtc.c \
 $(ARCH_SRCDIR)/acpi.c \
 $(ARCH_SRCDIR)/abandon_ship.c \
-$(ARCH_SRCDIR)/clocksource.c \
+$(ARCH_SRCDIR)/timer.c \
 $(ARCH_SRCDIR)/gdt.c \
 
 LDSCRIPT := \
