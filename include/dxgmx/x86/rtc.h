@@ -6,19 +6,22 @@
 #ifndef _DXGMX_X86_RTC_H
 #define _DXGMX_X86_RTC_H
 
-#include<stdint.h>
 #include<dxgmx/time.h>
 
 int rtc_init();
-void rtc_enable_irq8();
-void rtc_dump_time_and_date();
-/**
- * Returns a ptr to the running Timespec struct which is 
- * updated every 1 / rtc_freq seconds.
-*/
-const volatile struct timespec *rtc_get_running_ts();
-const volatile struct tm *rtc_get_tm();
-u16 rtc_get_running_freq();
-u16 rtc_get_base_freq();
+/* Enables periodic interrupts on IRQ line 8. */
+void rtc_enable_periodic_int();
+/* Disable periodic interrupts. */
+void rtc_disable_periodic_int();
+/* Returns a timespec struct with an arbitrary timestamp
+used for meassuring time passage. If periodic interrupts are disabled,
+the RTC can't give a 'now' timestamp, and the returned timespec is
+zero'd out. */ 
+struct timespec rtc_now();
+/* Retunss a tm struct with the current date. If periodic interrupts are 
+enabled the tm that was last updated in an IRQ is returned, else the
+date is calculated right then. */
+struct tm rtc_date();
+void rtc_dump_date();
 
 #endif //_DXGMX_X86_RTC_H

@@ -20,6 +20,7 @@
 #include<dxgmx/kprintf.h>
 #include<dxgmx/klog.h>
 #include<dxgmx/kinfo.h>
+#include<dxgmx/timer.h>
 
 int kinit_stage1()
 {
@@ -33,6 +34,8 @@ int kinit_stage1()
     interrupts_enable();
     
     rtc_init();
+    rtc_enable_periodic_int();
+    timer_find_src();
 
     tty_init();
     const KLogConfig config = {
@@ -83,7 +86,7 @@ int kinit_stage1()
     pgframe_alloc_init();
     paging_init();
 
-    rtc_dump_time_and_date();
+    rtc_dump_date();
     cpu_identify();
 
     return 0;
