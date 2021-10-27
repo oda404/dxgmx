@@ -4,7 +4,6 @@
 */
 
 #include<dxgmx/klog.h>
-#include<dxgmx/string.h>
 #include<dxgmx/kprintf.h>
 #include<dxgmx/timer.h>
 
@@ -31,15 +30,20 @@ int klog_set_max_level(uint8_t lvl)
     return lvl;
 }
 
-size_t kvlog(uint8_t lvl, const char *fmt, va_list valist)
+size_t kvlog(uint8_t lvl, const char *fmt, va_list list)
 {
     if(lvl > g_klogconfig.loglevel || lvl == 0)
         return 0;
 
-    return kprintf(
-        "[%f] ", 
-        timer_ellapsed_sec(&g_timer)
-    ) + kvprintf(fmt, valist);
+    double secs = timer_ellapsed_sec(&g_timer);
+    if(UNLIKELY(secs < 0))
+    {
+        secs = 0;
+        /* Try to start the timer once more, for the next kvlog call. */
+        timer_start(&g_timer);   
+    }
+
+    return kprintf("[%f] ", secs) + kvprintf(fmt, list);
 }
 
 size_t klog(uint8_t lvl, const char *fmt, ...)
