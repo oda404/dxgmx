@@ -77,12 +77,32 @@ __attribute__((section(x)))
 #define _ATTR_COLD __attribute__((cold))
 
 /* Signals that the function is only used during initialization
-and can be discrded once that is done. */
+and can be discarded once that is done. */
 #define _INIT _ATTR_COLD _ATTR_SECTION(".init")
 
 /* The variable will become read only at the end of the 
 kinit_stage1 function. */
 #define _RO_AFTER_STAGE_1 _ATTR_SECTION(".ro_after_stage1")
+
+#undef LIKELY
+#undef UNLIKELY
+
+#ifdef __has_builtin
+#   if __has_builtin(__builtin_expect)
+        /* https://gcc.gnu.org/onlinedocs/gcc/Other-Builtins.html#index-g_t_005f_005fbuiltin_005fexpect-4159 */
+#       define LIKELY(x)   __builtin_expect(x, 1)
+        /* https://gcc.gnu.org/onlinedocs/gcc/Other-Builtins.html#index-g_t_005f_005fbuiltin_005fexpect-4159 */
+#       define UNLIKELY(x) __builtin_expect(x, 0)
+#   endif
+#endif // __has_builtin
+
+#ifndef LIKELY(x)
+#define LIKELY(x) x
+#endif //!LIKELY(x)
+
+#ifndef UNLIKELY(x)
+#define UNLIKELY(x) x
+#endif //!UNLIKELY(x)
 
 #endif // __GNUC__
 
