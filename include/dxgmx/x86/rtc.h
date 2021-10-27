@@ -13,6 +13,7 @@ int rtc_init();
 void rtc_enable_periodic_int();
 /* Disable periodic interrupts. */
 void rtc_disable_periodic_int();
+bool rtc_periodic_ints_enabled();
 /* Returns a timespec struct with an arbitrary timestamp
 used for meassuring time passage. If periodic interrupts are disabled,
 the RTC can't give a 'now' timestamp, and the returned timespec is

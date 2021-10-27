@@ -207,3 +207,8 @@ void rtc_dump_date()
         1900 + date.tm_year
     );
 }
+
+bool rtc_periodic_ints_enabled()
+{
+    return g_periodic_int_enabled;
+}
