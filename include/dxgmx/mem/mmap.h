@@ -7,6 +7,7 @@
 #define _DXGMX_MEM_MAP_H
 
 #include<dxgmx/types.h>
+#include<dxgmx/mem/memrange.h>
 
 #define MMAP_AVAILABLE        1
 #define MMAP_RESERVED         2
@@ -15,14 +16,6 @@
 #define MMAP_BADRAM           5
 
 #define MMAP_MAX_ENTRIES_CNT  15
-
-#if _PTR_DIG == 8
-#   define _PTR_FMT "0x%08lX"
-#elif _PTR_DIG == 16
-#   define _PTR_FMT "0x%016lX"
-#endif
-
-#define _MEM_AREA_FMT "[mem " _PTR_FMT "-" _PTR_FMT "]"
 
 typedef struct S_MemoryMapEntry
 {
