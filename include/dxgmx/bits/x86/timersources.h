@@ -6,6 +6,7 @@ typedef enum
 E_TimerSources
 {
     TIMERSOURCE_RTC,
+    TIMERSOURCE_PIT,
 } TimerSources;
 
 #endif //!_DXGMX_BITS_X86_TIMERSOURCES_H

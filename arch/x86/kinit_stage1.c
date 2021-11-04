@@ -9,6 +9,7 @@
 #include<dxgmx/x86/rtc.h>
 #include<dxgmx/x86/acpi.h>
 #include<dxgmx/x86/interrupts.h>
+#include<dxgmx/x86/pit.h>
 #include<dxgmx/video/tty.h>
 #include<dxgmx/mem/mmap.h>
 #include<dxgmx/cpu.h>
@@ -33,6 +34,8 @@ int kinit_stage1()
     /* Back in business. */
     interrupts_enable();
     
+    pit_init();
+    pit_enable_periodic_int();
     rtc_init();
     rtc_enable_periodic_int();
     timer_find_src();

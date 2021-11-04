@@ -4,20 +4,33 @@
 #include<dxgmx/todo.h>
 #include<dxgmx/string.h>
 #include<dxgmx/stdlib.h>
+#include<dxgmx/x86/pit.h>
 
 static u8 g_timersrc;
 static u8 g_timesrc_ready = false;
+
+static void pit_set_timesource(u8 timersrc)
+{
+    g_timersrc = timersrc;
+    g_timesrc_ready = true;
+}
 
 _INIT int timer_find_src()
 {
     /* the RTC can only be used as a timer if periodic
     interrupts are enabled. */
+    if(pit_periodic_ints_enabled())
+    {
+        pit_set_timesource(TIMERSOURCE_PIT);
+        return 0;
+    }
     if(rtc_periodic_ints_enabled())
     {
-        g_timersrc = TIMERSOURCE_RTC;
-        g_timesrc_ready = true;
+        pit_set_timesource(TIMERSOURCE_RTC);
+        return 0;
     }
-    return 0;
+
+    return 1;
 }
 
 bool timer_is_ready(const Timer *t)
@@ -30,7 +43,7 @@ int timer_start(Timer *t)
     memset(t, 0, sizeof(t));
     t->_is_ready = false;
 
-    if(UNLIKELY(!g_timesrc_ready) && timer_find_src() != 0)
+    if(UNLIKELY(!g_timesrc_ready))
         return TIMER_START_NO_TIMESOURCE;
 
     t->_src = g_timersrc;
@@ -38,6 +51,10 @@ int timer_start(Timer *t)
     {
     case TIMERSOURCE_RTC:
         t->_now = rtc_now;
+        break;
+
+    case TIMERSOURCE_PIT:
+        t->_now = pit_now;
         break;
 
     default:

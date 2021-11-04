@@ -9,6 +9,7 @@ $(ARCH_SRCDIR)/acpi.c \
 $(ARCH_SRCDIR)/abandon_ship.c \
 $(ARCH_SRCDIR)/timer.c \
 $(ARCH_SRCDIR)/gdt.c \
+$(ARCH_SRCDIR)/pit.c \
 
 LDSCRIPT := \
 $(ARCH_SRCDIR)/linker.ld
