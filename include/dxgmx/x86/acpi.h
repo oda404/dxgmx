@@ -7,38 +7,39 @@
 #define _DXGMX_X86_ACPI_H
 
 #include<dxgmx/attrs.h>
-#include<stdint.h>
+#include<dxgmx/mem/mmap.h>
+#include<dxgmx/types.h>
 
 typedef struct
 _ATTR_PACKED S_ACPIGenericAddress
 {
 #define ACPI_GAS_ADDR_SPACE_ID_MEM 0
 #define ACPI_GAS_ADDR_SPACE_ID_IO  1
-    uint8_t address_space_id;
-    uint8_t register_bit_width;
-    uint8_t register_bit_offset;
-    uint8_t reserved;
-    uint64_t address;
+    u8 address_space_id;
+    u8 register_bit_width;
+    u8 register_bit_offset;
+    u8 reserved;
+    u64 address;
 } ACPIGenericAddress;
 
 typedef struct
 _ATTR_PACKED S_ACPIRSDPV1
 {
-    uint8_t signature[8];
-    uint8_t checksum;
-    uint8_t oem_id[6];
-    uint8_t rev;
-    uint32_t rsdt_base;
+    u8 signature[8];
+    u8 checksum;
+    u8 oem_id[6];
+    u8 rev;
+    u32 rsdt_base;
 } ACPIRSDPV1;
 
 typedef struct
 _ATTR_PACKED S_ACPIRSDPV2
 {
     ACPIRSDPV1 rsdp_v1;
-    uint32_t len;
-    uint64_t xsdt_base;
-    uint8_t ext_checksum;
-    uint8_t reserved[3];
+    u32 len;
+    u64 xsdt_base;
+    u8 ext_checksum;
+    u8 reserved[3];
 } ACPIRSDPV2;
 
 typedef ACPIRSDPV2 ACPIRSDP;
@@ -46,41 +47,41 @@ typedef ACPIRSDPV2 ACPIRSDP;
 typedef struct 
 _ATTR_PACKED S_ACPISDTHeader
 {
-    uint8_t signature[4];
-    uint32_t len;
-    uint8_t rev;
-    uint8_t checksum;
-    uint8_t oem_id[6];
-    uint8_t oem_table_id[8];
-    uint32_t oem_revision;
-    uint32_t creator_id;
-    uint32_t creator_revision;
+    u8 signature[4];
+    u32 len;
+    u8 rev;
+    u8 checksum;
+    u8 oem_id[6];
+    u8 oem_table_id[8];
+    u32 oem_revision;
+    u32 creator_id;
+    u32 creator_revision;
 } ACPISDTHeader;
 
 typedef struct 
 _ATTR_PACKED S_ACPIHPETT
 {
     ACPISDTHeader      header;
-    uint8_t        hw_rev_id;
-    uint8_t        comparator_count:   5;
-    uint8_t        counter_size:       1;
-    uint8_t        reserved:           1;
-    uint8_t        legacy_replacement: 1;
+    u8        hw_rev_id;
+    u8        comparator_count:   5;
+    u8        counter_size:       1;
+    u8        reserved:           1;
+    u8        legacy_replacement: 1;
     uint16_t       pci_vendor_id;
     ACPIGenericAddress address;
-    uint8_t        hpet_number;
+    u8        hpet_number;
     uint16_t       min_tick;
-    uint8_t        page_prot;
+    u8        page_prot;
 } ACPIHPETT;
 
 typedef struct
 _ATTR_PACKED S_ACPIRSDT
 {
     ACPISDTHeader header;
-    uint32_t *tables;
+    u32 *tables;
 } ACPIRSDT;
 
-int acpi_init();
+int acpi_reserve_tables();
 volatile ACPIHPETT *acpi_get_hpett();
 
 #endif //_DXGMX_X86_ACPI_H

@@ -7,14 +7,14 @@
 #include<dxgmx/string.h>
 #include<dxgmx/abandon_ship.h>
 #include<dxgmx/klog.h>
-#include<dxgmx/mem/mmap.h>
+#include<dxgmx/mem/mmanager.h>
 #include<stddef.h>
 
 #define KLOGF(lvl, fmt, ...) klog(lvl, "acpi: " fmt, ##__VA_ARGS__)
 
 static ACPIRSDP *acpi_find_rsdp()
 {
-    uint32_t ebda_hopefully = 0;
+    u32 ebda_hopefully = 0;
     memcpy(&ebda_hopefully, (void *)0x40E, 2);
     ebda_hopefully <<= 4;
 
@@ -38,18 +38,18 @@ static int acpi_is_rsdp_valid(const ACPIRSDP *rsdp)
     if(!rsdp)
         return 0;
 
-    uint32_t sum = 0;
+    u32 sum = 0;
 
     for(size_t i = 0; i < sizeof(ACPIRSDPV1); ++i)
     {
-        sum += *((uint8_t *)rsdp + i);
+        sum += *((const u8 *)rsdp + i);
     }
 
     if(rsdp->rsdp_v1.rev == 2)
     {
         for(size_t i = sizeof(ACPIRSDPV1); i < sizeof(ACPIRSDPV2); ++i)
         {
-            sum += *((uint8_t *)rsdp + i);
+            sum += *((const u8 *)rsdp + i);
         }
     }
 
@@ -58,11 +58,11 @@ static int acpi_is_rsdp_valid(const ACPIRSDP *rsdp)
 
 static int acpi_is_sdt_header_valid(const ACPISDTHeader *header)
 {
-    uint32_t sum = 0;
+    u32 sum = 0;
 
     for(size_t i = 0; i < header->len; ++i)
     {
-        sum += *((uint8_t *)header + i);
+        sum += *((const u8 *)header + i);
     }
 
     return !(sum & 0xFF);
@@ -73,7 +73,7 @@ static volatile ACPIHPETT *g_hpett = NULL;
 static void acpi_parse_hpet(ACPISDTHeader *header)
 {
     KLOGF(KLOG_INFO, "Reserving HPET table at " PTR_FMT ".\n", (ptr)header);
-    mmap_update_entry_type((ptr)header, sizeof(ACPIHPETT), MMAP_RESERVED);
+    mmanager_reserve_acpi_range((ptr)header, sizeof(ACPIHPETT));
     g_hpett = (ACPIHPETT*)header;
 }
 
@@ -82,23 +82,25 @@ volatile ACPIHPETT* acpi_get_hpett()
     return g_hpett;
 }
 
-int acpi_init()
+static const ACPIRSDT *g_rsdt = NULL;
+
+int acpi_reserve_tables()
 {
     ACPIRSDP *rsdp = acpi_find_rsdp();
 
     if(!acpi_is_rsdp_valid(rsdp))
-        abandon_ship("ACPI: RSDP at 0x%lX is invalid. Not proceeding.\n", (uint32_t)rsdp);
+        abandon_ship("ACPI: RSDP at 0x%lX is invalid. Not proceeding.\n", (u32)g_rsdt);
 
-    ACPIRSDT *rsdt = (ACPIRSDT *)rsdp->rsdp_v1.rsdt_base;
-    if(!acpi_is_sdt_header_valid(&rsdt->header))
-        abandon_ship("ACPI: RSDT at 0x%lX is invalid. Not proceeding.\n", (uint32_t)rsdt);
+    g_rsdt = (ACPIRSDT *)rsdp->rsdp_v1.rsdt_base;
+    if(!acpi_is_sdt_header_valid(&g_rsdt->header))
+        abandon_ship("ACPI: RSDT at 0x%lX is invalid. Not proceeding.\n", (u32)g_rsdt);
 
-    size_t rsdt_max_tables = (rsdt->header.len - sizeof(rsdt->header)) / 4;
+    size_t rsdt_max_tables = (g_rsdt->header.len - sizeof(g_rsdt->header)) / 4;
 
-    uint32_t offset = 0;
+    u32 offset = 0;
     for(size_t i = 0; i < rsdt_max_tables; ++i)
     {
-        ACPISDTHeader *header = ((void *)(rsdt->tables) + offset);
+        ACPISDTHeader *header = ((void *)(g_rsdt->tables) + offset);
         offset += header->len;
 
         if(acpi_is_sdt_header_valid(header))
@@ -107,9 +109,7 @@ int acpi_init()
                 acpi_parse_hpet(header);
         }
         else
-        {
-            KLOGF(KLOG_WARN, "Found invalid header at 0x%lX.\n", (uint32_t)header);
-        }
+            KLOGF(KLOG_WARN, "Found invalid header at 0x%lX.\n", (u32)header);
     }
 
     return 0;
