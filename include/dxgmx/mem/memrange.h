@@ -9,15 +9,15 @@
 typedef struct 
 S_MemRange
 {
-    ptr base;
-    size_t size;
+    u64 base;
+    u64 size;
 } MemRange;
 
 typedef struct
 S_MemRangeTyped
 {
-    ptr base;
-    size_t size;
+    u64 base;
+    u64 size;
     u8 type;
 } MemRangeTyped;
 
