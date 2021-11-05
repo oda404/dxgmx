@@ -2,6 +2,7 @@
 #include<dxgmx/mem/mmanager.h>
 #include<dxgmx/mem/mmap.h>
 #include<dxgmx/x86/multiboot.h>
+#include<dxgmx/x86/acpi.h>
 #include<dxgmx/types.h>
 #include<dxgmx/klog.h>
 #include<dxgmx/mem/pagesize.h>
@@ -43,6 +44,9 @@ _INIT int mmanager_init()
 
     mmap_align_entries(MMAP_AVAILABLE, PAGE_SIZE, &g_sys_mmap);
 
+    /* ACPI could potentially modify the sys mmap 
+    before we lock it down. */
+    acpi_reserve_tables();
     g_sys_mmap_locked = true;
 
     pgframe_alloc_init();
