@@ -7,6 +7,7 @@
 #define _DXGMX_MEM_MAP_H
 
 #include<dxgmx/types.h>
+#include<dxgmx/attrs.h>
 #include<dxgmx/mem/memrange.h>
 
 #define MMAP_AVAILABLE        1
@@ -15,25 +16,17 @@
 #define MMAP_NVS              4
 #define MMAP_BADRAM           5
 
-#define MMAP_MAX_ENTRIES_CNT  15
-
-typedef struct S_MemoryMapEntry
-{
-    u64 base;
-    u64 size;
-    u32 type;
-} MemoryMapEntry;
-
 typedef struct S_MemoryMap
 {
-    uint32_t entries_cnt;
-    MemoryMapEntry entries[MMAP_MAX_ENTRIES_CNT];
+#define MMAP_MAX_ENTRIES_CNT 15
+    size_t entries_cnt;
+    MemRangeTyped entries[MMAP_MAX_ENTRIES_CNT];
 } MemoryMap;
 
 /* 
  * Initiate the memory map.
  */
-void mmap_init();
+_INIT void mmap_init(MemoryMap *mmap);
 
 /*
  * Adds a new entry to the memory map.
@@ -41,42 +34,27 @@ void mmap_init();
  * @param size How big is the area.
  * @param type Type of area.
  */
-void mmap_add_entry(
-    u64 base,
-    u64 size,
-    u32 typeu64
-);
+_INIT void mmap_add_entry(u64 base, u64 size, u8 type, MemoryMap *mmap);
 
-int mmap_update_entry_type(
-    u64 base,
-    u64 size,
-    u32 type
-);
+_INIT int mmap_update_entry_type(u64 base, u64 size, u8 type, MemoryMap *mmap);
 /*
     Aligns all the available areas' on 'bytes' boundaries,
     shrinking if needed.
     @param bytes Alignment.
 */
-void mmap_align_entries(
-    u32 bytes
-);
-
-/*
- * Get the full memory map.
- */
-const MemoryMap *mmap_get_mmap();
+_INIT void mmap_align_entries(u8 type, u32 align, MemoryMap *mmap);
 
 /*
  * Print all entries.
 */
-void mmap_dump();
+void mmap_dump(const MemoryMap *mmap);
 
-bool mmap_is_addr_inside_entry(ptr addr, const MemoryMapEntry *entry);
+bool mmap_is_addr_inside_entry(u64 addr, const MemRangeTyped *entry);
 
-#define FOR_EACH_MMAP_ENTRY(entry) \
+#define FOR_EACH_MMAP_ENTRY(entry, mmap) \
 for( \
-    const MemoryMapEntry *entry = mmap_get_mmap()->entries; \
-    (ptr)entry < (ptr)mmap_get_mmap()->entries + mmap_get_mmap()->entries_cnt * sizeof(MemoryMapEntry); \
+    MemRangeTyped *entry = mmap.entries; \
+    (ptr)entry < (ptr)mmap.entries + mmap.entries_cnt * sizeof(MemRangeTyped); \
     ++entry \
 )
 

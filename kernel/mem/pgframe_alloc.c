@@ -6,6 +6,8 @@
 #include<dxgmx/mem/pgframe_alloc.h>
 #include<dxgmx/mem/pagesize.h>
 #include<dxgmx/mem/mmap.h>
+#include<dxgmx/mem/memrange.h>
+#include<dxgmx/mem/mmanager.h>
 #include<dxgmx/klog.h>
 #include<dxgmx/abandon_ship.h>
 #include<dxgmx/bitwise.h>
@@ -27,7 +29,7 @@ static u64 g_pgframe_pool[PAGEFRAME_POOL_SIZE] = { UINT64_MAX };
 static u32 g_pgframes_cnt = 0;
 
 /* Adds any complete PAGE_FRAME_SIZE sized frames from the given area. */
-static void pageframe_add_available(const MemoryMapEntry *e)
+static void pageframe_add_available(const MemRangeTyped *e)
 {
     if(e->type != MMAP_AVAILABLE)
         return;
@@ -40,7 +42,7 @@ static void pageframe_add_available(const MemoryMapEntry *e)
 
 void pgframe_alloc_init()
 {
-    FOR_EACH_MMAP_ENTRY(entry)
+    FOR_EACH_MMAP_ENTRY(entry, mmanager_get_sys_mmap())
         pageframe_add_available(entry);
 
     if(g_pgframes_cnt == 0)
