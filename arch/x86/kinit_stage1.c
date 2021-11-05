@@ -7,14 +7,12 @@
 #include<dxgmx/x86/gdt.h>
 #include<dxgmx/x86/multiboot.h>
 #include<dxgmx/x86/rtc.h>
-#include<dxgmx/x86/acpi.h>
 #include<dxgmx/x86/interrupts.h>
 #include<dxgmx/x86/pit.h>
 #include<dxgmx/video/tty.h>
 #include<dxgmx/cpu.h>
 #include<dxgmx/kdefs.h>
 #include<dxgmx/abandon_ship.h>
-#include<dxgmx/kprintf.h>
 #include<dxgmx/klog.h>
 #include<dxgmx/kinfo.h>
 #include<dxgmx/timer.h>
@@ -52,9 +50,6 @@ int kinit_stage1()
 
     if(_multiboot_magic != MULTIBOOT_BOOTLOADER_MAGIC)
         abandon_ship("Not booted by a multiboot compliant bootloader\n");
-
-    /* Init ACPI while paging is not yet enabled, because acpi needs to look around different parts of memory. */
-    acpi_init();
 
     mmanager_init();
 
