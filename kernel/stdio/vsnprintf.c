@@ -318,6 +318,22 @@ reprocess_length:
             break;
         }
 
+        case 'p':
+        {
+            ultoa(va_arg(arglist, ptr), tmpbuf, 16);
+            flags = PRITNF_FLAG_PAD_ZERO;
+            width = PTR_DIG;
+
+            outbuf_len = printf_apply_flags_and_width(
+                tmpbuf, 
+                21, 
+                flags, 
+                width
+            );
+            outbuf = tmpbuf;
+            break;
+        }
+
         case 'u':
         {
             switch(length)
