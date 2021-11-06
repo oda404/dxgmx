@@ -3,8 +3,8 @@
  * Distributed under the MIT license.
 */
 
-#ifndef _DXGMX_PAGING_PAGETABLE_H
-#define _DXGMX_PAGING_PAGETABLE_H
+#ifndef _DXGMX_X86_PAGING_PAGETABLE_H
+#define _DXGMX_X86_PAGING_PAGETABLE_H
 
 #include<stdint.h>
 #include<dxgmx/compiler_attrs.h>
@@ -72,4 +72,4 @@ int pagetable_entry_get_pat_memtype(PageTableEntry *entry);
 int pagetable_entry_get_global(PageTableEntry *entry);
 uint32_t pagetable_entry_get_frame_base(PageTableEntry *entry);
 
-#endif //_DXGMX_PAGING_PAGETABLE_H
+#endif //_DXGMX_X86_PAGING_PAGETABLE_H

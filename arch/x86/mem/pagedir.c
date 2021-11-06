@@ -3,8 +3,8 @@
  * Distributed under the MIT license.
 */
 
-#include<dxgmx/mem/pagedir.h>
-#include<dxgmx/mem/pagetable.h>
+#include<dxgmx/x86/pagedir.h>
+#include<dxgmx/x86/pagetable.h>
 #include<dxgmx/mem/pagesize.h>
 #include<dxgmx/bitwise.h>
 #include<dxgmx/string.h>

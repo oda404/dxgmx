@@ -4,8 +4,8 @@
 */
 
 #include<dxgmx/mem/paging.h>
-#include<dxgmx/mem/pagedir.h>
-#include<dxgmx/mem/pagetable.h>
+#include<dxgmx/x86/pagedir.h>
+#include<dxgmx/x86/pagetable.h>
 #include<dxgmx/x86/interrupt_frame.h>
 #include<dxgmx/x86/idt.h>
 #include<dxgmx/compiler_attrs.h>

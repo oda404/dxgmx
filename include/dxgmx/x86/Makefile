@@ -13,6 +13,9 @@ $(INCLUDEDIR)/dxgmx/x86/rtc.h \
 $(INCLUDEDIR)/dxgmx/x86/tsc.h \
 $(INCLUDEDIR)/dxgmx/x86/vga_text.h \
 $(INCLUDEDIR)/dxgmx/x86/pit.h \
+$(INCLUDEDIR)/dxgmx/x86/pagedir.h \
+$(INCLUDEDIR)/dxgmx/x86/pagetable.h \
+
 
 ifeq ($(CONFIG_BOOTSPEC),multiboot)
 	HEADERS += $(INCLUDEDIR)/dxgmx/x86/multiboot.h 

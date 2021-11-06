@@ -3,12 +3,12 @@
  * Distributed under the MIT license.
 */
 
-#ifndef _DXGMX_PAGING_PAGEDIR_H
-#define _DXGMX_PAGING_PAGEDIR_H
+#ifndef _DXGMX_X86_PAGING_PAGEDIR_H
+#define _DXGMX_X86_PAGING_PAGEDIR_H
 
 #include<stdint.h>
 #include<dxgmx/compiler_attrs.h>
-#include<dxgmx/mem/pagetable.h>
+#include<dxgmx/x86/pagetable.h>
 
 /*
  * Structure of a page directory entry
@@ -77,4 +77,4 @@ int pagedir_entry_get_accessed(const PageDirectoryEntry *entry);
 int pagedir_entry_get_page_size(const PageDirectoryEntry *entry);
 PageTable *pagedir_entry_get_table_base(const PageDirectoryEntry *entry);
 
-#endif // _DXGMX_PAGING_PAGEDIR_H
+#endif // _DXGMX_X86_PAGING_PAGEDIR_H
