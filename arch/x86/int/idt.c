@@ -24,7 +24,7 @@ asm(
 
 /* TRAP entry that has the status code pushed on to the stack. */
 #define TRAP_ENTRY_CODE(id)                                     \
-_ATTR_NAKED void trap##id() {                                   \
+_ATTR_NAKED static void trap##id() {                                   \
     asm volatile(                                              \
         "pusha                                             \n" \
         "pushl %esp              # set the InterruptFrame* \n" \
@@ -35,7 +35,7 @@ _ATTR_NAKED void trap##id() {                                   \
 
 /* TRAP entry that pushes a dummy status code on to the stack. */
 #define TRAP_ENTRY_NO_CODE(id)                                 \
-_ATTR_NAKED void trap##id() {                                  \
+_ATTR_NAKED static void trap##id() {                                  \
     asm volatile(                                             \
         "pushl $0                #push a fake code        \n" \
         "pusha                                            \n" \
@@ -46,7 +46,7 @@ _ATTR_NAKED void trap##id() {                                  \
 }
 
 #define IRQ_ENTRY(id)                 \
-_ATTR_NAKED void irq##id() {          \
+_ATTR_NAKED static void irq##id() {          \
     asm volatile(                     \
         "pushl $0                 \n" \
         "pusha                    \n" \
@@ -234,181 +234,64 @@ _INIT void idt_init()
     interrupts_enable();
 }
 
-bool idt_register_isr(u8 irq, isr cb)
+_INIT bool idt_register_isr(u8 irq, isr cb)
 {
     g_isrs[irq] = cb;
     return true;
 }
 
-void trap0_handler(const InterruptFrame* frame)
-{
-    g_isrs[TRAP0](frame, NULL);
+#define TRAP_HANDLER_NO_DATA(n) \
+_ATTR_MAYBE_UNUSED static void \
+trap##n##_handler(const InterruptFrame *frame) { \
+    g_isrs[TRAP##n](frame, NULL); \
 }
 
-void trap1_handler(const InterruptFrame* frame)
-{
-    g_isrs[TRAP1](frame, NULL);
-}
+TRAP_HANDLER_NO_DATA(0);
+TRAP_HANDLER_NO_DATA(1);
+TRAP_HANDLER_NO_DATA(2);
+TRAP_HANDLER_NO_DATA(3);
+TRAP_HANDLER_NO_DATA(4);
+TRAP_HANDLER_NO_DATA(5);
+TRAP_HANDLER_NO_DATA(6);
+TRAP_HANDLER_NO_DATA(7);
+TRAP_HANDLER_NO_DATA(8);
+TRAP_HANDLER_NO_DATA(9);
+TRAP_HANDLER_NO_DATA(10);
+TRAP_HANDLER_NO_DATA(11);
+TRAP_HANDLER_NO_DATA(12);
+TRAP_HANDLER_NO_DATA(13);
+TRAP_HANDLER_NO_DATA(14);
+TRAP_HANDLER_NO_DATA(15);
+TRAP_HANDLER_NO_DATA(16);
+TRAP_HANDLER_NO_DATA(17);
+TRAP_HANDLER_NO_DATA(18);
+TRAP_HANDLER_NO_DATA(19);
+TRAP_HANDLER_NO_DATA(20);
+TRAP_HANDLER_NO_DATA(21);
+TRAP_HANDLER_NO_DATA(22);
+TRAP_HANDLER_NO_DATA(23);
+TRAP_HANDLER_NO_DATA(24);
+TRAP_HANDLER_NO_DATA(25);
+TRAP_HANDLER_NO_DATA(26);
+TRAP_HANDLER_NO_DATA(27);
+TRAP_HANDLER_NO_DATA(28);
+TRAP_HANDLER_NO_DATA(29);
+TRAP_HANDLER_NO_DATA(30);
+TRAP_HANDLER_NO_DATA(31);
 
-void trap2_handler(const InterruptFrame* frame)
-{
-    g_isrs[TRAP2](frame, NULL);
-}
-
-void trap3_handler(const InterruptFrame* frame)
-{
-    g_isrs[TRAP3](frame, NULL);
-}
-
-void trap4_handler(const InterruptFrame* frame)
-{
-    g_isrs[TRAP4](frame, NULL);
-}
-
-void trap5_handler(const InterruptFrame* frame)
-{
-    g_isrs[TRAP5](frame, NULL);
-}
-
-void trap6_handler(const InterruptFrame* frame)
-{
-    g_isrs[TRAP6](frame, NULL);
-}
-
-void trap7_handler(const InterruptFrame* frame)
-{
-    g_isrs[TRAP7](frame, NULL);
-}
-
-void trap8_handler(const InterruptFrame* frame)
-{
-    g_isrs[TRAP8](frame, NULL);
-}
-
-void trap9_handler(const InterruptFrame* frame)
-{
-    g_isrs[TRAP9](frame, NULL);
-}
-
-void trap10_handler(const InterruptFrame* frame)
-{
-    g_isrs[TRAP10](frame, NULL);
-}
-
-void trap11_handler(const InterruptFrame* frame)
-{
-    g_isrs[TRAP11](frame, NULL);
-}
-
-void trap12_handler(const InterruptFrame* frame)
-{
-    g_isrs[TRAP12](frame, NULL);
-}
-
-void trap13_handler(const InterruptFrame* frame)
-{
-    g_isrs[TRAP13](frame, NULL);
-}
-
-void trap14_handler(const InterruptFrame* frame)
-{
-    g_isrs[TRAP14](frame, NULL);
-}
-
-void trap15_handler(const InterruptFrame* frame)
-{
-    g_isrs[TRAP15](frame, NULL);
-}
-
-void trap16_handler(const InterruptFrame* frame)
-{
-    g_isrs[TRAP16](frame, NULL);
-}
-
-void trap17_handler(const InterruptFrame* frame)
-{
-    g_isrs[TRAP17](frame, NULL);
-}
-
-void trap18_handler(const InterruptFrame* frame)
-{
-    g_isrs[TRAP18](frame, NULL);
-}
-
-void trap19_handler(const InterruptFrame* frame)
-{
-    g_isrs[TRAP19](frame, NULL);
-}
-
-void trap20_handler(const InterruptFrame* frame)
-{
-    g_isrs[TRAP20](frame, NULL);
-}
-
-void trap21_handler(const InterruptFrame* frame)
-{
-    g_isrs[TRAP21](frame, NULL);
-}
-
-void trap22_handler(const InterruptFrame* frame)
-{
-    g_isrs[TRAP22](frame, NULL);
-}
-
-void trap23_handler(const InterruptFrame* frame)
-{
-    g_isrs[TRAP23](frame, NULL);
-}
-
-void trap24_handler(const InterruptFrame* frame)
-{
-    g_isrs[TRAP24](frame, NULL);
-}
-
-void trap25_handler(const InterruptFrame* frame)
-{
-    g_isrs[TRAP25](frame, NULL);
-}
-
-void trap26_handler(const InterruptFrame* frame)
-{
-    g_isrs[TRAP26](frame, NULL);
-}
-
-void trap27_handler(const InterruptFrame* frame)
-{
-    g_isrs[TRAP27](frame, NULL);
-}
-
-void trap28_handler(const InterruptFrame* frame)
-{
-    g_isrs[TRAP28](frame, NULL);
-}
-
-void trap29_handler(const InterruptFrame* frame)
-{
-    g_isrs[TRAP29](frame, NULL);
-}
-
-void trap30_handler(const InterruptFrame* frame)
-{
-    g_isrs[TRAP30](frame, NULL);
-}
-
-void trap31_handler(const InterruptFrame* frame)
-{
-    g_isrs[TRAP31](frame, NULL);
+#define IRQ_HANDLER_NO_DATA(n) \
+_ATTR_MAYBE_UNUSED static void \
+irq##n##_handler(const InterruptFrame *frame) { \
+    g_isrs[IRQ##n](frame, NULL); \
+    pic8259_signal_eoi(n < 8 ? 0 : 1); \
 }
 
 /* PIT */
-void irq0_handler(const InterruptFrame* frame)
-{
-    g_isrs[IRQ0](frame, NULL);
-    pic8259_signal_eoi(0);
-}
+IRQ_HANDLER_NO_DATA(0)
 
-/* keyboard */
-void irq1_handler(const InterruptFrame* frame)
+/* PS2 keyboard */
+_ATTR_MAYBE_UNUSED static void 
+irq1_handler(const InterruptFrame* frame)
 {
     unsigned char scan_code = port_inb(0x60); 
     g_isrs[IRQ1](frame, NULL);
@@ -416,99 +299,43 @@ void irq1_handler(const InterruptFrame* frame)
 }
 
 /* used internally by the 2 PICs */
-void irq2_handler(const InterruptFrame* frame)
-{
-    g_isrs[IRQ2](frame, NULL);
-    pic8259_signal_eoi(0);
-}
+IRQ_HANDLER_NO_DATA(2)
 
 /* COM2 */
-void irq3_handler(const InterruptFrame* frame)
-{
-    g_isrs[IRQ3](frame, NULL);
-    pic8259_signal_eoi(0);
-}
+IRQ_HANDLER_NO_DATA(3)
 
 /* COM1 */
-void irq4_handler(const InterruptFrame* frame)
-{
-    g_isrs[IRQ4](frame, NULL);
-    pic8259_signal_eoi(0);
-}
+IRQ_HANDLER_NO_DATA(4)
 
 /* LPT2 */
-void irq5_handler(const InterruptFrame* frame)
-{
-    g_isrs[IRQ5](frame, NULL);
-    pic8259_signal_eoi(0);
-}
+IRQ_HANDLER_NO_DATA(5)
 
 /* floppy disk */
-void irq6_handler(const InterruptFrame* frame)
-{
-    g_isrs[IRQ6](frame, NULL);
-    pic8259_signal_eoi(0);
-}
+IRQ_HANDLER_NO_DATA(6)
 
 /* LPT1 */
-void irq7_handler(const InterruptFrame* frame)
-{
-    g_isrs[IRQ7](frame, NULL);
-    pic8259_signal_eoi(0);
-}
+IRQ_HANDLER_NO_DATA(7)
 
 /* CMOS RTC */
-void irq8_handler(const InterruptFrame* frame)
-{
-    g_isrs[IRQ8](frame, NULL);
-    pic8259_signal_eoi(1);
-}
+IRQ_HANDLER_NO_DATA(8)
 
 /* free for peripherals */
-void irq9_handler(const InterruptFrame* frame)
-{
-    g_isrs[IRQ9](frame, NULL);
-    pic8259_signal_eoi(1);
-}
+IRQ_HANDLER_NO_DATA(9)
 
 /* free for peripherals */
-void irq10_handler(const InterruptFrame* frame)
-{
-    g_isrs[IRQ10](frame, NULL);
-    pic8259_signal_eoi(1);
-}
+IRQ_HANDLER_NO_DATA(10)
 
 /* free for peripherals */
-void irq11_handler(const InterruptFrame* frame)
-{
-    g_isrs[IRQ11](frame, NULL);
-    pic8259_signal_eoi(1);
-}
+IRQ_HANDLER_NO_DATA(11)
 
 /* PS2 mouse */
-void irq12_handler(const InterruptFrame* frame)
-{
-    g_isrs[IRQ12](frame, NULL);
-    pic8259_signal_eoi(1);
-}
+IRQ_HANDLER_NO_DATA(12)
 
 /* FPU/co-CPU/inter-CPU */
-void irq13_handler(const InterruptFrame* frame)
-{
-    g_isrs[IRQ13](frame, NULL);
-    pic8259_signal_eoi(1);
-}
+IRQ_HANDLER_NO_DATA(13)
 
 /* primary ATA hard disk */
-void irq14_handler(const InterruptFrame* frame)
-{
-    g_isrs[IRQ14](frame, NULL);
-    pic8259_signal_eoi(1);
-}
+IRQ_HANDLER_NO_DATA(14)
 
 /* secondary ATA hard disk */
-void irq15_handler(const InterruptFrame* frame)
-{
-    g_isrs[IRQ15](frame, NULL);
-    pic8259_signal_eoi(1);
-}
+IRQ_HANDLER_NO_DATA(15)
