@@ -21,6 +21,7 @@ $(INCLUDEDIR)/dxgmx/todo.h \
 $(INCLUDEDIR)/dxgmx/types.h \
 $(INCLUDEDIR)/dxgmx/kinfo.h \
 $(INCLUDEDIR)/dxgmx/stdio.h \
+$(INCLUDEDIR)/dxgmx/compiler_attrs.h \
 
 include $(INCLUDEDIR)/dxgmx/bits/Makefile
 include $(INCLUDEDIR)/dxgmx/mem/Makefile
