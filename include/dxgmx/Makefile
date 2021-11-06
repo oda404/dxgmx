@@ -19,7 +19,6 @@ $(INCLUDEDIR)/dxgmx/string.h \
 $(INCLUDEDIR)/dxgmx/time.h \
 $(INCLUDEDIR)/dxgmx/todo.h \
 $(INCLUDEDIR)/dxgmx/types.h \
-$(INCLUDEDIR)/dxgmx/kinfo.h \
 $(INCLUDEDIR)/dxgmx/stdio.h \
 $(INCLUDEDIR)/dxgmx/compiler_attrs.h \
 
