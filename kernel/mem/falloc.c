@@ -3,7 +3,7 @@
  * Distributed under the MIT license.
 */
 
-#include<dxgmx/mem/pgframe_alloc.h>
+#include<dxgmx/mem/falloc.h>
 #include<dxgmx/mem/pagesize.h>
 #include<dxgmx/mem/mmap.h>
 #include<dxgmx/mem/memrange.h>
@@ -13,8 +13,9 @@
 #include<dxgmx/bitwise.h>
 #include<dxgmx/types.h>
 #include<dxgmx/utils/bytes.h>
+#include<dxgmx/todo.h>
 
-#define KLOGF(lvl, fmt, ...) klog(lvl, "pgframe_alloc: " fmt, ##__VA_ARGS__)
+#define KLOGF(lvl, fmt, ...) klog(lvl, "falloc: " fmt, ##__VA_ARGS__)
 
 /* 
  * This whole page frame allocator is not really following
@@ -36,17 +37,17 @@ static void pageframe_add_available(const MemRangeTyped *e)
 
     for(ptr frame = e->base; frame < e->base + e->size; frame += PAGE_SIZE)
     {
-        pgframe_free(frame);
+        ffree(frame, 1);
     }
 }
 
-void pgframe_alloc_init()
+int falloc_init()
 {
     FOR_EACH_MMAP_ENTRY(entry, mmanager_get_sys_mmap())
         pageframe_add_available(entry);
 
     if(g_pgframes_cnt == 0)
-        abandon_ship("pgframe_alloc: No free page frames have been registered.\n");
+        abandon_ship("falloc: No free page frames have been registered.\n");
 
     char unit[4];
     KLOGF(
@@ -56,11 +57,19 @@ void pgframe_alloc_init()
         (int)bytes_to_human_readable(PAGE_SIZE, unit),
         unit
     );
+
+    return 0;
 }
 
 /* Returns a free page's address */
-ptr pgframe_alloc()
+ptr falloc(size_t n)
 {
+    if(!n)
+        return 0;
+
+    if(n > 1)
+        TODO_FATAL();
+    
     // TODO: implement some sort of cache so we don't iterate over the whole pool everytime.
     for(size_t i = 0; i < PAGEFRAME_POOL_SIZE; ++i)
     {
@@ -78,14 +87,20 @@ ptr pgframe_alloc()
     return 0;
 }
 
-u32 pgframe_alloc_get_free_pages()
+size_t falloc_get_free_frames_count()
 {
     return g_pgframes_cnt;
 }
 
-void pgframe_free(ptr frame_base)
+void ffree(ptr base, size_t n)
 {
-    u64 pageframe_n = frame_base / PAGE_SIZE;
+    if(!n)
+        return;
+
+    if(n > 1)
+        TODO_FATAL();
+
+    u64 pageframe_n = base / PAGE_SIZE;
     u16 pageframe_pool_i = pageframe_n / 64;
     pageframe_n -= pageframe_pool_i * 64;
 

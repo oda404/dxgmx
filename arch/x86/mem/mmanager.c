@@ -6,7 +6,7 @@
 #include<dxgmx/types.h>
 #include<dxgmx/klog.h>
 #include<dxgmx/mem/pagesize.h>
-#include<dxgmx/mem/pgframe_alloc.h>
+#include<dxgmx/mem/falloc.h>
 #include<dxgmx/mem/paging.h>
 #include<dxgmx/kinfo.h>
 #include<dxgmx/mem/memrange.h>
@@ -50,7 +50,7 @@ _INIT int mmanager_init()
     acpi_reserve_tables();
     g_sys_mmap_locked = true;
 
-    pgframe_alloc_init();
+    falloc_init();
     paging_init();
 
     return 0;
