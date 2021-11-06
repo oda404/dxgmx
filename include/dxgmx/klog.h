@@ -6,10 +6,9 @@
 #ifndef _DXGMX_KLOG_H
 #define _DXGMX_KLOG_H
 
-#include<dxgmx/compiler_attrs.h>
-#include<stdint.h>
-#include<stddef.h>
 #include<stdarg.h>
+#include<dxgmx/compiler_attrs.h>
+#include<dxgmx/types.h>
 
 /** 
  * When setting a log level, only it and levels who'se values
@@ -37,9 +36,14 @@ S_KLogConfig
 
 int klog_init(const KLogConfig *config);
 int klog_set_max_level(KLogLevel lvl);
-size_t klog(KLogLevel lvl, const char *fmt, ...)
-_ATTR_FMT_PRINTF(2, 3);
+
+_ATTR_FMT_PRINTF(2, 3) size_t 
+klogln(KLogLevel lvl, const char *fmt, ...);
+
+_ATTR_FMT_PRINTF(2, 3) size_t 
+klog(KLogLevel lvl, const char *fmt, ...);
 
 size_t kvlog(KLogLevel lvl, const char *fmt, va_list list);
+size_t kvlogln(KLogLevel lvl, const char *fmt, va_list list);
 
 #endif //_DXGMX_KLOG_H

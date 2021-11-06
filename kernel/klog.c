@@ -47,11 +47,28 @@ size_t kvlog(KLogLevel lvl, const char *fmt, va_list list)
     return kprintf("[%f] ", secs) + kvprintf(fmt, list);
 }
 
+size_t kvlogln(KLogLevel lvl, const char *fmt, va_list list)
+{
+    size_t written = kvlog(lvl, fmt, list);
+    written += kprintf("\n");
+    return written;
+}
+
 size_t klog(KLogLevel lvl, const char *fmt, ...)
 {
     va_list valist;
     va_start(valist, fmt);
     size_t written = kvlog(lvl, fmt, valist);
+    va_end(valist);
+
+    return written;
+}
+
+size_t klogln(KLogLevel lvl, const char *fmt, ...)
+{
+    va_list valist;
+    va_start(valist, fmt);
+    size_t written = kvlogln(lvl, fmt, valist);
     va_end(valist);
 
     return written;
