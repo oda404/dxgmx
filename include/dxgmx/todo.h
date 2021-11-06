@@ -10,7 +10,7 @@
 #include<dxgmx/abandon_ship.h>
 
 #define TODO() \
-klog(KLOG_WARN, "Hit TODO in %s at %s:%d.", __FILE__, __FUNCTION__, __LINE__);
+klog(WARN, "Hit TODO in %s at %s:%d.", __FILE__, __FUNCTION__, __LINE__);
 
 #define TODO_FATAL() \
 abandon_ship("Hit TODO_FATAL in %s at %s:%d.", __FILE__, __FUNCTION__, __LINE__);

@@ -14,7 +14,7 @@ static Timer g_timer;
 int klog_init(const KLogConfig *kconfig)
 {
     if(!kconfig)
-        klog_set_max_level(KLOG_INFO); // default to KLOG_INFO if kconfig is NULL.
+        klog_set_max_level(INFO); // default to INFO if kconfig is NULL.
     else
         klog_set_max_level(kconfig->loglevel);
 
@@ -23,7 +23,7 @@ int klog_init(const KLogConfig *kconfig)
     return 0;
 }
 
-int klog_set_max_level(uint8_t lvl)
+int klog_set_max_level(KLogLevel lvl)
 {
     if(lvl >= KLOG_ENUM_END)
         lvl = KLOG_ENUM_END - 1;
@@ -31,7 +31,7 @@ int klog_set_max_level(uint8_t lvl)
     return lvl;
 }
 
-size_t kvlog(uint8_t lvl, const char *fmt, va_list list)
+size_t kvlog(KLogLevel lvl, const char *fmt, va_list list)
 {
     if(lvl > g_klogconfig.loglevel || lvl == 0)
         return 0;
@@ -47,7 +47,7 @@ size_t kvlog(uint8_t lvl, const char *fmt, va_list list)
     return kprintf("[%f] ", secs) + kvprintf(fmt, list);
 }
 
-size_t klog(uint8_t lvl, const char *fmt, ...)
+size_t klog(KLogLevel lvl, const char *fmt, ...)
 {
     va_list valist;
     va_start(valist, fmt);

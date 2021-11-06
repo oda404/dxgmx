@@ -31,7 +31,7 @@ _INIT int mmanager_init()
         mmap_add_entry(mmap->base, mmap->length, mmap->type, &g_sys_mmap);
     }
 
-    KLOGF(KLOG_INFO, "Memory map provided by BIOS:\n");
+    KLOGF(INFO, "Memory map provided by BIOS:\n");
     mmap_dump(&g_sys_mmap);
 
     mmap_update_entry_type(0, PAGE_SIZE, MMAP_RESERVED, &g_sys_mmap);

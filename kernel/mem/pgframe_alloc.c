@@ -50,7 +50,7 @@ void pgframe_alloc_init()
 
     char unit[4];
     KLOGF(
-        KLOG_INFO, 
+        INFO, 
         "Using %lu free %d%s page frames.\n",
         g_pgframes_cnt,
         (int)bytes_to_human_readable(PAGE_SIZE, unit),

@@ -15,17 +15,17 @@ void abandon_ship(const char *lastmsg, ...)
     cmos_disable_nmi();
     interrupts_disable();
 
-    klog(KLOG_FATAL, "---[ start of abandon ship ]---\n");
+    klog(FATAL, "---[ start of abandon ship ]---\n");
     if(lastmsg)
     {
         va_list list;
         va_start(list, lastmsg);
-        kvlog(KLOG_FATAL, lastmsg, list);
+        kvlog(FATAL, lastmsg, list);
         va_end(list);
     }
     else
-        klog(KLOG_FATAL, "nothing to say...\n");
-    klog(KLOG_FATAL, "---[ end of abandon ship ]---\n");
+        klog(FATAL, "nothing to say...\n");
+    klog(FATAL, "---[ end of abandon ship ]---\n");
     /* shit and cum my final message goodbye */
     kabort();
 }

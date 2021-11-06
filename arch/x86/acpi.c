@@ -72,7 +72,7 @@ static volatile ACPIHPETT *g_hpett = NULL;
 
 static void acpi_parse_hpet(ACPISDTHeader *header)
 {
-    KLOGF(KLOG_INFO, "Reserving HPET table at " PTR_FMT ".\n", (ptr)header);
+    KLOGF(INFO, "Reserving HPET table at " PTR_FMT ".\n", (ptr)header);
     mmanager_reserve_acpi_range((ptr)header, sizeof(ACPIHPETT));
     g_hpett = (ACPIHPETT*)header;
 }
@@ -109,7 +109,7 @@ int acpi_reserve_tables()
                 acpi_parse_hpet(header);
         }
         else
-            KLOGF(KLOG_WARN, "Found invalid header at 0x%lX.\n", (u32)header);
+            KLOGF(WARN, "Found invalid header at 0x%lX.\n", (u32)header);
     }
 
     return 0;

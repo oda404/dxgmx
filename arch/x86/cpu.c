@@ -47,7 +47,7 @@ static void cpu_handle_amd_cpuid()
         g_cpuinfo.model = f1eax.ext_model * 0x10 + f1eax.base_model;
     }
 
-    KLOGF(KLOG_INFO, "UID is %d.%d.%d.\n", g_cpuinfo.family, g_cpuinfo.model, g_cpuinfo.stepping);
+    KLOGF(INFO, "UID is %d.%d.%d.\n", g_cpuinfo.family, g_cpuinfo.model, g_cpuinfo.stepping);
 }
 
 static void cpu_handle_intel_cpuid()
@@ -66,7 +66,7 @@ static void cpu_handle_intel_cpuid()
     g_cpuinfo.model = (f1eax.extended_model << 4) + f1eax.model_number;
     g_cpuinfo.stepping = f1eax.stepping_id;
 
-    KLOGF(KLOG_INFO, "UID is %d.%d.%d.\n", g_cpuinfo.family, g_cpuinfo.model, g_cpuinfo.stepping);
+    KLOGF(INFO, "UID is %d.%d.%d.\n", g_cpuinfo.family, g_cpuinfo.model, g_cpuinfo.stepping);
 }
 
 int cpu_identify()
@@ -85,7 +85,7 @@ int cpu_identify()
         *(u32*)&g_cpuinfo.vendorstr[4]
     );
 
-    KLOGF(KLOG_INFO, "Vendor string is \"%s\".\n", g_cpuinfo.vendorstr);
+    KLOGF(INFO, "Vendor string is \"%s\".\n", g_cpuinfo.vendorstr);
 
     if(strcmp(g_cpuinfo.vendorstr, CPU_VENDORSTR_AMD) == 0)
         cpu_handle_amd_cpuid();

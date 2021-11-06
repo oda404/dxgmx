@@ -178,7 +178,7 @@ void mmap_add_entry(
 {
     if(bw_is64_wide(base) || bw_is64_wide(size))
     {
-        klog(KLOG_INFO, "ass\n");
+        klog(INFO, "ass\n");
         return;
     }
 
@@ -245,7 +245,7 @@ int mmap_update_entry_type(
     if(overlap && type != overlap->type)
     {
         KLOGF(
-            KLOG_INFO,
+            INFO,
             "updating [mem 0x%p-0x%p] %s -> %s.\n",
             (void *)(ptr)base, 
             (void *)(ptr)(base + size - 1),
@@ -266,7 +266,7 @@ void mmap_dump(const MemoryMap *mmap)
     {
         const MemRangeTyped *tmp = &mmap->entries[i];
         KLOGF(
-            KLOG_INFO,
+            INFO,
             "[mem 0x%p-0x%p] %s.\n",
             (void *)(ptr)tmp->base, 
             (void *)(ptr)(tmp->base + tmp->size - 1),

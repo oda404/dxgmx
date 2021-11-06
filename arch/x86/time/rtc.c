@@ -197,7 +197,7 @@ void rtc_dump_date()
 {
     const struct tm date = rtc_date();
     klog(
-        KLOG_INFO,
+        INFO,
         "rtc: Current date is %02d:%02d:%02d %02d/%02d/%d.\n",
         date.tm_hour,
         date.tm_min,

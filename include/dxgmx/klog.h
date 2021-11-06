@@ -15,31 +15,31 @@
  * When setting a log level, only it and levels who'se values
  * are smaller than it's value will be logged.
  * If the log level is set to 0, nothing will be logged.
- * For example, setting the log level to KLOG_WARN means that
+ * For example, setting the log level to WARN means that
  * calling klog with KLOG_(WARN/ERR/FATAL) will work but calling 
- * it with KLOG_INFO will not.
+ * it with INFO will not.
 */
-typedef enum E_LogLevels
+typedef enum E_KLogLevel
 {
-    KLOG_FATAL = 1,
-    KLOG_ERR,
-    KLOG_WARN,
-    KLOG_INFO,
+    FATAL = 1,
+    ERR,
+    WARN,
+    INFO,
 
     KLOG_ENUM_END // do not remove
-} LogLevels;
+} KLogLevel;
 
 typedef struct
 S_KLogConfig
 {
-    uint8_t loglevel;
+    KLogLevel loglevel;
 } KLogConfig;
 
 int klog_init(const KLogConfig *config);
-int klog_set_max_level(uint8_t lvl);
-size_t klog(uint8_t lvl, const char *fmt, ...)
+int klog_set_max_level(KLogLevel lvl);
+size_t klog(KLogLevel lvl, const char *fmt, ...)
 _ATTR_FMT_PRINTF(2, 3);
 
-size_t kvlog(uint8_t lvl, const char *fmt, va_list list);
+size_t kvlog(KLogLevel lvl, const char *fmt, va_list list);
 
 #endif //_DXGMX_KLOG_H

@@ -103,5 +103,5 @@ void paging_init()
 
     paging_enable();
     
-    klog(KLOG_INFO, "paging: Enabled paging.\n");
+    klog(INFO, "paging: Enabled paging.\n");
 }
