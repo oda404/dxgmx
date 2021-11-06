@@ -7,7 +7,7 @@
 #include<dxgmx/abandon_ship.h>
 #include<dxgmx/klog.h>
 #include<dxgmx/bitwise.h>
-#include<dxgmx/attrs.h>
+#include<dxgmx/compiler_attrs.h>
 #include<stddef.h>
 
 #define KLOGF(lvl, fmt, ...) klog(lvl, "mmap: " fmt, ##__VA_ARGS__);

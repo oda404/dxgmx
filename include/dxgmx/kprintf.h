@@ -6,7 +6,7 @@
 #ifndef _DXMGMX_KPRINTF_H
 #define _DXMGMX_KPRINTF_H
 
-#include<dxgmx/attrs.h>
+#include<dxgmx/compiler_attrs.h>
 #include<stdarg.h>
 
 int kprintf(const char *fmt, ...)

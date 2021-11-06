@@ -7,7 +7,7 @@
 #define _DXGMX_PAGING_PAGEDIR_H
 
 #include<stdint.h>
-#include<dxgmx/attrs.h>
+#include<dxgmx/compiler_attrs.h>
 #include<dxgmx/mem/pagetable.h>
 
 /*

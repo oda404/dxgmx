@@ -3,7 +3,7 @@
  * Distributed under the MIT license.
 */
 
-#include<dxgmx/attrs.h>
+#include<dxgmx/compiler_attrs.h>
 #include<dxgmx/abandon_ship.h>
 
 /* 

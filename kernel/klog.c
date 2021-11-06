@@ -6,6 +6,7 @@
 #include<dxgmx/klog.h>
 #include<dxgmx/kprintf.h>
 #include<dxgmx/timer.h>
+#include<dxgmx/attrs.h>
 
 static KLogConfig  g_klogconfig;
 static Timer g_timer;

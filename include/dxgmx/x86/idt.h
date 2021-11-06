@@ -7,7 +7,7 @@
 #define _DXGMX_X86_IDT_H
 
 #include<dxgmx/x86/interrupt_frame.h>
-#include<dxgmx/attrs.h>
+#include<dxgmx/compiler_attrs.h>
 #include<dxgmx/types.h>
 
 #define TRAP0  0x0

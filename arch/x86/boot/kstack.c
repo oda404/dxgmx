@@ -1,6 +1,6 @@
 
 #include<dxgmx/kstack.h>
-#include<dxgmx/attrs.h>
+#include<dxgmx/compiler_attrs.h>
 #include<dxgmx/types.h>
 
 _ATTR_ALIGNED(4096) _ATTR_SECTION(".bss") 

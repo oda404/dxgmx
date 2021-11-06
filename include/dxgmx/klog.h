@@ -6,7 +6,7 @@
 #ifndef _DXGMX_KLOG_H
 #define _DXGMX_KLOG_H
 
-#include<dxgmx/attrs.h>
+#include<dxgmx/compiler_attrs.h>
 #include<stdint.h>
 #include<stddef.h>
 #include<stdarg.h>

@@ -20,7 +20,7 @@
 
 int kinit_stage1()
 {
-    /* Hang interrupt until a predictable gdt/idt is set up. */
+    /* Hang interrupts until a predictable gdt/idt is set up. */
     interrupts_disable();
 
     gdt_init();

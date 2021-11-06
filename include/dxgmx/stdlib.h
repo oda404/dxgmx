@@ -6,7 +6,7 @@
 #ifndef _DXGMX_STDLIB_H
 #define _DXGMX_STDLIB_H
 
-#include<dxgmx/attrs.h>
+#include<dxgmx/compiler_attrs.h>
 #include<stddef.h>
 
 long int strtol(const char *__restrict str, char **__restrict endptr, int base);

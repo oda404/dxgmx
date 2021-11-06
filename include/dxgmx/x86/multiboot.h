@@ -20,7 +20,7 @@
 
 #ifndef _ASM
 
-#include<dxgmx/attrs.h>
+#include<dxgmx/compiler_attrs.h>
 #include<dxgmx/types.h>
 
 typedef struct

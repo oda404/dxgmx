@@ -6,7 +6,7 @@
 #ifndef _DXGMX_CPU_H
 #define _DXGMX_CPU_H
 
-#include<dxgmx/attrs.h>
+#include<dxgmx/compiler_attrs.h>
 #include<dxgmx/types.h>
 
 #if defined(_X86_)

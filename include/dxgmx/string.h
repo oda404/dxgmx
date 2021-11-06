@@ -7,7 +7,7 @@
 #define _DXGMX_STRING_H
 
 #include<stddef.h>
-#include<dxgmx/attrs.h>
+#include<dxgmx/compiler_attrs.h>
 
 int strcmp(const char *str1, const char *str2)
 _ATTR_PURE;

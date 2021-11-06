@@ -10,6 +10,7 @@
 #include<dxgmx/mem/paging.h>
 #include<dxgmx/kinfo.h>
 #include<dxgmx/mem/memrange.h>
+#include<dxgmx/attrs.h>
 
 #define KLOGF(lvl, fmt, ...) klog(lvl, "mmanager: " fmt, ##__VA_ARGS__)
 

@@ -6,7 +6,7 @@
 #ifndef _DXGMX_X86_GDT_H
 #define _DXGMX_X86_GDT_H
 
-#include<dxgmx/attrs.h>
+#include<dxgmx/compiler_attrs.h>
 #include<dxgmx/types.h>
 
 /*

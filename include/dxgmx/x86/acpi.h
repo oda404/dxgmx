@@ -6,7 +6,7 @@
 #ifndef _DXGMX_X86_ACPI_H
 #define _DXGMX_X86_ACPI_H
 
-#include<dxgmx/attrs.h>
+#include<dxgmx/compiler_attrs.h>
 #include<dxgmx/mem/mmap.h>
 #include<dxgmx/types.h>
 

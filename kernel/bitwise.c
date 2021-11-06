@@ -4,7 +4,7 @@
 */
 
 #include<dxgmx/bitwise.h>
-#include<dxgmx/attrs.h>
+#include<dxgmx/compiler_attrs.h>
 
 _ATTR_ALWAYS_INLINE int 
 bw_is_aligned(uint64_t n, uint64_t align)

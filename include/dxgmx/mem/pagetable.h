@@ -7,7 +7,7 @@
 #define _DXGMX_PAGING_PAGETABLE_H
 
 #include<stdint.h>
-#include<dxgmx/attrs.h>
+#include<dxgmx/compiler_attrs.h>
 
 /*
  * Structure of a page table entry

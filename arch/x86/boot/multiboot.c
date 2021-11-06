@@ -1,5 +1,5 @@
 
-#include<dxgmx/attrs.h>
+#include<dxgmx/compiler_attrs.h>
 #include<dxgmx/types.h>
 #include<dxgmx/x86/multiboot.h>
 

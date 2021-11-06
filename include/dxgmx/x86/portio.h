@@ -6,7 +6,7 @@
 #ifndef _DXGMX_X86_PORTIO_H
 #define _DXGMX_X86_PORTIO_H
 
-#include<dxgmx/attrs.h>
+#include<dxgmx/compiler_attrs.h>
 #include<stdint.h>
 
 _ATTR_ALWAYS_INLINE

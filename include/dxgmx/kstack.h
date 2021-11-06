@@ -3,7 +3,7 @@
 #define _DXGMX_KSTACK_H
 
 #include<dxgmx/types.h>
-#include<dxgmx/attrs.h>
+#include<dxgmx/compiler_attrs.h>
 
 /* The size of the kernel stack in bytes. */
 #define KSTACK_SIZE (1024 * 4)

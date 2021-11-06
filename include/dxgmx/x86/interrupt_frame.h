@@ -6,7 +6,7 @@
 #ifndef _DXGMX_X86_INTERRUPT_FRAME_H
 #define _DXGMX_X86_INTERRUPT_FRAME_H
 
-#include<dxgmx/attrs.h>
+#include<dxgmx/compiler_attrs.h>
 #include<stdint.h>
 
 typedef struct 

@@ -1,7 +1,7 @@
 
 #include<dxgmx/x86/interrupts.h>
 #include<dxgmx/x86/pic.h>
-#include<dxgmx/attrs.h>
+#include<dxgmx/compiler_attrs.h>
 
 _ATTR_ALWAYS_INLINE void 
 interrupts_disable()

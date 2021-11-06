@@ -6,7 +6,7 @@
 #ifndef _DXGMX_MATH_H
 #define _DXGMX_MATH_H
 
-#include<dxgmx/attrs.h>
+#include<dxgmx/compiler_attrs.h>
 
 double modf(double x, double *whole);
 float modff(float x, float *whole);

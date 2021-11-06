@@ -3,7 +3,7 @@
 #include<dxgmx/x86/idt.h>
 #include<dxgmx/x86/interrupts.h>
 #include<dxgmx/x86/portio.h>
-#include<dxgmx/attrs.h>
+#include<dxgmx/compiler_attrs.h>
 #include<dxgmx/klog.h>
 #include<dxgmx/assert.h>
 #include<dxgmx/string.h>

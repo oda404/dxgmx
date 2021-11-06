@@ -8,7 +8,7 @@
 #include<dxgmx/mem/pagetable.h>
 #include<dxgmx/x86/interrupt_frame.h>
 #include<dxgmx/x86/idt.h>
-#include<dxgmx/attrs.h>
+#include<dxgmx/compiler_attrs.h>
 #include<dxgmx/mem/pagesize.h>
 #include<dxgmx/klog.h>
 #include<dxgmx/cpu.h>

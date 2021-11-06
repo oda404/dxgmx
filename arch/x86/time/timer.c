@@ -5,6 +5,7 @@
 #include<dxgmx/string.h>
 #include<dxgmx/stdlib.h>
 #include<dxgmx/x86/pit.h>
+#include<dxgmx/attrs.h>
 
 static u8 g_timersrc;
 static u8 g_timesrc_ready = false;
