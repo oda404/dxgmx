@@ -10,7 +10,7 @@
 #include<dxgmx/compiler_attrs.h>
 #include<stddef.h>
 
-#define KLOGF(lvl, fmt, ...) klog(lvl, "mmap: " fmt, ##__VA_ARGS__);
+#define KLOGF(lvl, fmt, ...) klogln(lvl, "mmap: " fmt, ##__VA_ARGS__);
 
 static const char *mmap_entry_type_to_str(u8 type)
 {
@@ -178,7 +178,6 @@ void mmap_add_entry(
 {
     if(bw_is64_wide(base) || bw_is64_wide(size))
     {
-        klog(INFO, "ass\n");
         return;
     }
 
@@ -246,7 +245,7 @@ int mmap_update_entry_type(
     {
         KLOGF(
             INFO,
-            "updating [mem 0x%p-0x%p] %s -> %s.\n",
+            "updating [mem 0x%p-0x%p] %s -> %s.",
             (void *)(ptr)base, 
             (void *)(ptr)(base + size - 1),
             mmap_entry_type_to_str(overlap->type),
@@ -267,7 +266,7 @@ void mmap_dump(const MemoryMap *mmap)
         const MemRangeTyped *tmp = &mmap->entries[i];
         KLOGF(
             INFO,
-            "[mem 0x%p-0x%p] %s.\n",
+            "[mem 0x%p-0x%p] %s.",
             (void *)(ptr)tmp->base, 
             (void *)(ptr)(tmp->base + tmp->size - 1),
             mmap_entry_type_to_str(tmp->type)

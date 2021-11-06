@@ -26,5 +26,5 @@ _ATTR_NORETURN void kmain()
 
     kinit_stage2();
 
-    abandon_ship("Tried to return from kmain. Not proceeding.\n");
+    abandon_ship("Tried to return from kmain. Not proceeding.");
 }

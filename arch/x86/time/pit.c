@@ -9,7 +9,7 @@
 #include<dxgmx/string.h>
 #include<dxgmx/attrs.h>
 
-#define KLOGF(lvl, fmt, ...) klog(lvl, "pit: " fmt, ##__VA_ARGS__)
+#define KLOGF(lvl, fmt, ...) klogln(lvl, "pit: " fmt, ##__VA_ARGS__)
 
 #define PIT_BASE_FREQ_HZ 1193181
 

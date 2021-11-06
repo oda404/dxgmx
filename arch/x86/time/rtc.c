@@ -33,6 +33,8 @@
 #define RTC_REG_B_BINARY_MODE  (1 << 2)
 #define RTC_REG_B_PERIODIC_INT_ENABLED (1 << 6)
 
+#define KLOGF(lvl, fmt, ...) klogln(lvl, "rtc: " fmt, ##__VA_ARGS__)
+
 typedef enum
 E_RTCFreq
 {
@@ -197,9 +199,9 @@ struct tm rtc_date()
 void rtc_dump_date()
 {
     const struct tm date = rtc_date();
-    klog(
+    KLOGF(
         INFO,
-        "rtc: Current date is %02d:%02d:%02d %02d/%02d/%d.\n",
+        "Current date is %02d:%02d:%02d %02d/%02d/%d.",
         date.tm_hour,
         date.tm_min,
         date.tm_sec,

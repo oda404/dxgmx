@@ -10,7 +10,7 @@
 #include<dxgmx/mem/mmanager.h>
 #include<dxgmx/attrs.h>
 
-#define KLOGF(lvl, fmt, ...) klog(lvl, "acpi: " fmt, ##__VA_ARGS__)
+#define KLOGF(lvl, fmt, ...) klogln(lvl, "acpi: " fmt, ##__VA_ARGS__)
 
 _INIT static ACPIRSDP *acpi_find_rsdp()
 {
@@ -72,7 +72,7 @@ static volatile ACPIHPETT *g_hpett = NULL;
 
 _INIT static void acpi_parse_hpet(ACPISDTHeader *header)
 {
-    KLOGF(INFO, "Reserving HPET table at " PTR_FMT ".\n", (ptr)header);
+    KLOGF(INFO, "Reserving HPET table at " PTR_FMT ".", (ptr)header);
     mmanager_reserve_acpi_range((ptr)header, sizeof(ACPIHPETT));
     g_hpett = (ACPIHPETT*)header;
 }
@@ -89,11 +89,11 @@ _INIT int acpi_reserve_tables()
     ACPIRSDP *rsdp = acpi_find_rsdp();
 
     if(!acpi_is_rsdp_valid(rsdp))
-        abandon_ship("ACPI: RSDP at 0x%lX is invalid. Not proceeding.\n", (u32)g_rsdt);
+        abandon_ship("ACPI: RSDP at 0x%lX is invalid. Not proceeding.", (u32)g_rsdt);
 
     g_rsdt = (ACPIRSDT *)rsdp->rsdp_v1.rsdt_base;
     if(!acpi_is_sdt_header_valid(&g_rsdt->header))
-        abandon_ship("ACPI: RSDT at 0x%lX is invalid. Not proceeding.\n", (u32)g_rsdt);
+        abandon_ship("ACPI: RSDT at 0x%lX is invalid. Not proceeding.", (u32)g_rsdt);
 
     size_t rsdt_max_tables = (g_rsdt->header.len - sizeof(g_rsdt->header)) / 4;
 
@@ -109,7 +109,7 @@ _INIT int acpi_reserve_tables()
                 acpi_parse_hpet(header);
         }
         else
-            KLOGF(WARN, "Found invalid header at 0x%lX.\n", (u32)header);
+            KLOGF(WARN, "Found invalid header at 0x%lX.", (u32)header);
     }
 
     return 0;

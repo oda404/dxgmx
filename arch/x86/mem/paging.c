@@ -21,6 +21,8 @@
 static PageDirectory g_pagedir _ATTR_ALIGNED(PAGE_SIZE);
 static PageTable g_pagetables[1];
 
+#define KLOGF(lvl, fmt, ...) klogln(lvl, "paging: " fmt, ##__VA_ARGS__)
+
 static void paging_isr(
     const InterruptFrame *frame, 
     const void _ATTR_MAYBE_UNUSED *data
@@ -34,14 +36,14 @@ static void paging_isr(
     if(PAGEFAULT_IS_PROT_VIOL(frame->code))
     {
         abandon_ship(
-            "Page protection violation: tried to %s 0x%08lX. Not proceeding.\n", 
+            "Page protection violation: tried to %s 0x%08lX. Not proceeding.", 
             PAGEFAULT_IS_WRITE(frame->code) ? "write to" : "read from",
             faultaddr
         );
     }
 
     if(faultaddr < PAGE_SIZE)
-        abandon_ship("Possible NULL dereference in ring 0 :(. Not proceeding.\n");
+        abandon_ship("Possible NULL dereference in ring 0 :(. Not proceeding.");
 }
 
 _INIT static int paging_identity_map_area(ptr base, ptr end)
@@ -101,5 +103,5 @@ _INIT void paging_init()
 
     cpu_set_cr0(cpu_read_cr0() | CR0FLAG_PE | CR0FLAG_PG | CR0FLAG_WP);
     
-    klog(INFO, "paging: Enabled paging.\n");
+    KLOGF(INFO, "Enabled paging.");
 }

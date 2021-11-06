@@ -16,7 +16,7 @@
 #include<dxgmx/todo.h>
 #include<dxgmx/attrs.h>
 
-#define KLOGF(lvl, fmt, ...) klog(lvl, "falloc: " fmt, ##__VA_ARGS__)
+#define KLOGF(lvl, fmt, ...) klogln(lvl, "falloc: " fmt, ##__VA_ARGS__)
 
 /* 
  * This whole page frame allocator is not really following
@@ -48,12 +48,12 @@ _INIT int falloc_init()
         pageframe_add_available(entry);
 
     if(g_pgframes_cnt == 0)
-        abandon_ship("falloc: No free page frames have been registered.\n");
+        abandon_ship("falloc: No free page frames have been registered.");
 
     char unit[4];
     KLOGF(
         INFO, 
-        "Using %lu free %d%s page frames.\n",
+        "Using %lu free %d%s page frames.",
         g_pgframes_cnt,
         (int)bytes_to_human_readable(PAGE_SIZE, unit),
         unit

@@ -8,6 +8,5 @@ ptr __stack_chk_guard = 0xFA7BA115;
 
 _ATTR_NORETURN void __stack_chk_fail()
 {
-    abandon_ship("*** Stack smashing detected in kernel mode :( ***\n");
-    __builtin_unreachable();
+    abandon_ship("Stack smashing detected in ring 0 :(");
 }

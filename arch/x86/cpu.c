@@ -19,7 +19,7 @@ static int g_cpu_identified = 0;
 #define CPU_VENDORSTR_INTEL "GenuineIntel"
 #define CPU_VENDORSTR_AMD   "AuthenticAMD"
 
-#define KLOGF(lvl, fmt, ...) klog(lvl, "cpu: " fmt, ##__VA_ARGS__);
+#define KLOGF(lvl, fmt, ...) klogln(lvl, "cpu: " fmt, ##__VA_ARGS__);
 
 _INIT static void cpu_handle_amd_cpuid()
 {
@@ -47,7 +47,7 @@ _INIT static void cpu_handle_amd_cpuid()
         g_cpuinfo.model = f1eax.ext_model * 0x10 + f1eax.base_model;
     }
 
-    KLOGF(INFO, "UID is %d.%d.%d.\n", g_cpuinfo.family, g_cpuinfo.model, g_cpuinfo.stepping);
+    KLOGF(INFO, "UID is %d.%d.%d.", g_cpuinfo.family, g_cpuinfo.model, g_cpuinfo.stepping);
 }
 
 _INIT static void cpu_handle_intel_cpuid()
@@ -66,14 +66,14 @@ _INIT static void cpu_handle_intel_cpuid()
     g_cpuinfo.model = (f1eax.extended_model << 4) + f1eax.model_number;
     g_cpuinfo.stepping = f1eax.stepping_id;
 
-    KLOGF(INFO, "UID is %d.%d.%d.\n", g_cpuinfo.family, g_cpuinfo.model, g_cpuinfo.stepping);
+    KLOGF(INFO, "UID is %d.%d.%d.", g_cpuinfo.family, g_cpuinfo.model, g_cpuinfo.stepping);
 }
 
 _INIT int cpu_identify()
 {
     if(!cpuid_is_avail())
     {
-        abandon_ship("CPUID is not available... tf are you running this thing on?\n");
+        abandon_ship("CPUID is not available... tf are you running this thing on?");
         return 1;
     }
 
@@ -85,14 +85,14 @@ _INIT int cpu_identify()
         *(u32*)&g_cpuinfo.vendorstr[4]
     );
 
-    KLOGF(INFO, "Vendor string is \"%s\".\n", g_cpuinfo.vendorstr);
+    KLOGF(INFO, "Vendor string is \"%s\".", g_cpuinfo.vendorstr);
 
     if(strcmp(g_cpuinfo.vendorstr, CPU_VENDORSTR_AMD) == 0)
         cpu_handle_amd_cpuid();
     else if(strcmp(g_cpuinfo.vendorstr, CPU_VENDORSTR_INTEL) == 0)
         cpu_handle_intel_cpuid();
     else
-        abandon_ship("Unknown CPU vendor '%s'. Not proceeding.\n", g_cpuinfo.vendorstr);
+        abandon_ship("Unknown CPU vendor '%s'. Not proceeding.", g_cpuinfo.vendorstr);
 
     g_cpu_identified = 1;
 

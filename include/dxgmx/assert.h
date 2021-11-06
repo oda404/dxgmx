@@ -11,7 +11,7 @@
 #define ASSERT(x) \
 if(!(x))            \
 {                 \
-    abandon_ship("Assertion failed '%s' in %s at %s:%d.\n", #x, __FILE__, __FUNCTION__, __LINE__); \
+    abandon_ship("Assertion failed '%s' in %s at %s:%d.", #x, __FILE__, __FUNCTION__, __LINE__); \
 }
 
 #endif //_DXGMX_ASSERT_H_
