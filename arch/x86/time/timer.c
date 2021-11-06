@@ -40,7 +40,7 @@ bool timer_is_ready(const Timer *t)
 
 int timer_start(Timer *t)
 {
-    memset(t, 0, sizeof(t));
+    memset(t, 0, sizeof(*t));
     t->_is_ready = false;
 
     if(UNLIKELY(!g_timesrc_ready))
