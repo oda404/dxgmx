@@ -8,7 +8,6 @@
 #include<dxgmx/mem/pagesize.h>
 #include<dxgmx/mem/falloc.h>
 #include<dxgmx/mem/paging.h>
-#include<dxgmx/kinfo.h>
 #include<dxgmx/mem/memrange.h>
 #include<dxgmx/attrs.h>
 
@@ -16,6 +15,9 @@
 
 static MemoryMap g_sys_mmap;
 static bool g_sys_mmap_locked = false;
+
+extern ptr _kernel_base[];
+extern ptr _kernel_end[];
 
 _INIT int mmanager_init()
 {
@@ -37,8 +39,8 @@ _INIT int mmanager_init()
     mmap_update_entry_type(0, PAGE_SIZE, MMAP_RESERVED, &g_sys_mmap);
     /* mark the kernel itself as kreserved */
     mmap_update_entry_type(
-        kinfo_get_kbase(), 
-        kinfo_get_kend() - kinfo_get_kbase(), 
+        (ptr)_kernel_base, 
+        (size_t)(_kernel_end - _kernel_base), 
         MULTIBOOT_MMAP_TYPE_RESERVED,
         &g_sys_mmap
     );

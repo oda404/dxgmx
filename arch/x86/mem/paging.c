@@ -13,7 +13,6 @@
 #include<dxgmx/klog.h>
 #include<dxgmx/cpu.h>
 #include<dxgmx/abandon_ship.h>
-#include<dxgmx/kinfo.h>
 #include<dxgmx/bitwise.h>
 #include<dxgmx/math.h>
 #include<dxgmx/todo.h>
@@ -74,6 +73,9 @@ _INIT static int paging_identity_map(ptr base, size_t pages)
     return paging_identity_map_area(base, base + pages * PAGE_SIZE);
 }
 
+extern u8 _kernel_base[];
+extern u8 _kernel_end[];
+
 _INIT void paging_init()
 {
     pagedir_init(&g_pagedir);
@@ -87,7 +89,7 @@ _INIT void paging_init()
     paging_identity_map(4096, 255);
 
     /* Identity map the kernel */
-    paging_identity_map_area(kinfo_get_kbase(), kinfo_get_kend());
+    paging_identity_map_area((ptr)_kernel_base, (ptr)_kernel_end);
 
     pagedir_entry_set_table_base(&g_pagetables[0], &g_pagedir.entries[0]);
     pagedir_entry_set_present(true, &g_pagedir.entries[0]);

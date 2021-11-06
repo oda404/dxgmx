@@ -14,7 +14,6 @@
 #include<dxgmx/kdefs.h>
 #include<dxgmx/abandon_ship.h>
 #include<dxgmx/klog.h>
-#include<dxgmx/kinfo.h>
 #include<dxgmx/timer.h>
 #include<dxgmx/mem/mmanager.h>
 
