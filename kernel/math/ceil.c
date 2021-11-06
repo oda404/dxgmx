@@ -1,6 +1,5 @@
 
 #include<dxgmx/math.h>
-#include<dxgmx/klog.h>
 
 double ceil(double x)
 {
