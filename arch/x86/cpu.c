@@ -4,7 +4,6 @@
 */
 
 #include<dxgmx/cpu.h>
-#include<stdint.h>
 #include<dxgmx/x86/cpuid.h>
 #include<dxgmx/x86/cmos.h>
 #include<dxgmx/x86/interrupts.h>
@@ -12,6 +11,7 @@
 #include<dxgmx/klog.h>
 #include<dxgmx/string.h>
 #include<dxgmx/todo.h>
+#include<dxgmx/attrs.h>
 
 static CPUInfo g_cpuinfo;
 static int g_cpu_identified = 0;
@@ -21,7 +21,7 @@ static int g_cpu_identified = 0;
 
 #define KLOGF(lvl, fmt, ...) klog(lvl, "cpu: " fmt, ##__VA_ARGS__);
 
-static void cpu_handle_amd_cpuid()
+_INIT static void cpu_handle_amd_cpuid()
 {
     uint32_t eax, ebx, ecx, edx;
     CPUID(1, eax, ebx, ecx, edx);
@@ -50,7 +50,7 @@ static void cpu_handle_amd_cpuid()
     KLOGF(INFO, "UID is %d.%d.%d.\n", g_cpuinfo.family, g_cpuinfo.model, g_cpuinfo.stepping);
 }
 
-static void cpu_handle_intel_cpuid()
+_INIT static void cpu_handle_intel_cpuid()
 {
     u32 eax, ebx, ecx, edx;
     g_cpuinfo.vendor = CPU_VENDOR_INTEL;
@@ -69,7 +69,7 @@ static void cpu_handle_intel_cpuid()
     KLOGF(INFO, "UID is %d.%d.%d.\n", g_cpuinfo.family, g_cpuinfo.model, g_cpuinfo.stepping);
 }
 
-int cpu_identify()
+_INIT int cpu_identify()
 {
     if(!cpuid_is_avail())
     {
@@ -128,12 +128,12 @@ u32 cpu_read_cr4()
     return ret;
 }
 
-void cpu_set_cr0(uint32_t val)
+_INIT void cpu_set_cr0(uint32_t val)
 {
     asm volatile("movl %0, %%cr0": :"a"(val));
 }
 
-void cpu_set_cr4(u32 val)
+_INIT void cpu_set_cr4(u32 val)
 {
     asm volatile("movl %0, %%cr4": : "a"(val));
 }

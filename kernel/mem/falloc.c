@@ -14,6 +14,7 @@
 #include<dxgmx/types.h>
 #include<dxgmx/utils/bytes.h>
 #include<dxgmx/todo.h>
+#include<dxgmx/attrs.h>
 
 #define KLOGF(lvl, fmt, ...) klog(lvl, "falloc: " fmt, ##__VA_ARGS__)
 
@@ -41,7 +42,7 @@ static void pageframe_add_available(const MemRangeTyped *e)
     }
 }
 
-int falloc_init()
+_INIT int falloc_init()
 {
     FOR_EACH_MMAP_ENTRY(entry, mmanager_get_sys_mmap())
         pageframe_add_available(entry);

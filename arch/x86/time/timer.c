@@ -10,7 +10,7 @@
 static u8 g_timersrc;
 static u8 g_timesrc_ready = false;
 
-static void pit_set_timesource(u8 timersrc)
+_INIT static void pit_set_timesource(u8 timersrc)
 {
     g_timersrc = timersrc;
     g_timesrc_ready = true;

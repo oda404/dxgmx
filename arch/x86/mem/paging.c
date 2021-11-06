@@ -17,6 +17,7 @@
 #include<dxgmx/bitwise.h>
 #include<dxgmx/math.h>
 #include<dxgmx/todo.h>
+#include<dxgmx/attrs.h>
 
 static PageDirectory g_pagedir _ATTR_ALIGNED(PAGE_SIZE);
 static PageTable g_pagetables[1];
@@ -44,7 +45,7 @@ static void paging_isr(
         abandon_ship("Possible NULL dereference in ring 0 :(. Not proceeding.\n");
 }
 
-static int paging_identity_map_area(ptr base, ptr end)
+_INIT static int paging_identity_map_area(ptr base, ptr end)
 {
     if(!bw_is_aligned(base, PAGE_SIZE))
         return 1;
@@ -68,17 +69,12 @@ static int paging_identity_map_area(ptr base, ptr end)
     return 0;
 }
 
-static int paging_identity_map(ptr base, size_t pages)
+_INIT static int paging_identity_map(ptr base, size_t pages)
 {
     return paging_identity_map_area(base, base + pages * PAGE_SIZE);
 }
 
-static void paging_enable()
-{
-    cpu_set_cr0(cpu_read_cr0() | CR0FLAG_PE | CR0FLAG_PG | CR0FLAG_WP);
-}
-
-void paging_init()
+_INIT void paging_init()
 {
     pagedir_init(&g_pagedir);
     pagetable_init(&g_pagetables[0]);
@@ -101,7 +97,7 @@ void paging_init()
 
     idt_register_isr(TRAP14, paging_isr);
 
-    paging_enable();
+    cpu_set_cr0(cpu_read_cr0() | CR0FLAG_PE | CR0FLAG_PG | CR0FLAG_WP);
     
     klog(INFO, "paging: Enabled paging.\n");
 }

@@ -5,6 +5,7 @@
 
 #include<dxgmx/x86/gdt.h>
 #include<dxgmx/types.h>
+#include<dxgmx/attrs.h>
 
 /* set to 1 by the cpu if 
  * the segment is accessed,
@@ -42,7 +43,7 @@
 /* Long mode segment. */
 #define GDT_SEG_LONG           (1 << 1)
 
-static void gdt_load(const GDTR *gdtr)
+_INIT static void gdt_load(const GDTR *gdtr)
 {
     asm volatile(
         "lgdt (%0)                \n"
@@ -60,7 +61,7 @@ static void gdt_load(const GDTR *gdtr)
     );
 }
 
-static void gdt_encode_entry(
+_INIT static void gdt_encode_entry(
     u32 base,
     u32 limit,
     u8 access_byte,
@@ -92,7 +93,7 @@ static void gdt_encode_entry(
 static GDTEntry g_gdt[GDT_ENTRIES_CNT];
 static GDTR g_gdtr;
 
-void gdt_init()
+_INIT void gdt_init()
 {
     /* null segment, needs to be here */
     gdt_encode_entry(0, 0, 0, 0, &g_gdt[0]);

@@ -11,7 +11,7 @@
 static KLogConfig  g_klogconfig;
 static Timer g_timer;
 
-int klog_init(const KLogConfig *kconfig)
+_INIT int klog_init(const KLogConfig *kconfig)
 {
     if(!kconfig)
         klog_set_max_level(INFO); // default to INFO if kconfig is NULL.
@@ -23,7 +23,7 @@ int klog_init(const KLogConfig *kconfig)
     return 0;
 }
 
-int klog_set_max_level(KLogLevel lvl)
+_INIT int klog_set_max_level(KLogLevel lvl)
 {
     if(lvl >= KLOG_ENUM_END)
         lvl = KLOG_ENUM_END - 1;

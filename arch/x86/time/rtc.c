@@ -12,6 +12,7 @@
 #include<dxgmx/string.h>
 #include<dxgmx/time.h>
 #include<dxgmx/klog.h>
+#include<dxgmx/attrs.h>
 
 #define RTC_REG_A 0xA
 #define RTC_REG_B 0xB
@@ -147,7 +148,7 @@ static void rtc_isr(
     }
 }
 
-int rtc_init()
+_INIT int rtc_init()
 {
     g_freq = rtc_set_freq(RTC_FREQ_8KHZ);
 

@@ -8,11 +8,11 @@
 #include<dxgmx/abandon_ship.h>
 #include<dxgmx/klog.h>
 #include<dxgmx/mem/mmanager.h>
-#include<stddef.h>
+#include<dxgmx/attrs.h>
 
 #define KLOGF(lvl, fmt, ...) klog(lvl, "acpi: " fmt, ##__VA_ARGS__)
 
-static ACPIRSDP *acpi_find_rsdp()
+_INIT static ACPIRSDP *acpi_find_rsdp()
 {
     u32 ebda_hopefully = 0;
     memcpy(&ebda_hopefully, (void *)0x40E, 2);
@@ -33,7 +33,7 @@ static ACPIRSDP *acpi_find_rsdp()
     return NULL;
 }
 
-static int acpi_is_rsdp_valid(const ACPIRSDP *rsdp)
+_INIT static int acpi_is_rsdp_valid(const ACPIRSDP *rsdp)
 {
     if(!rsdp)
         return 0;
@@ -56,7 +56,7 @@ static int acpi_is_rsdp_valid(const ACPIRSDP *rsdp)
     return !(sum & 0xFF);
 }
 
-static int acpi_is_sdt_header_valid(const ACPISDTHeader *header)
+_INIT static int acpi_is_sdt_header_valid(const ACPISDTHeader *header)
 {
     u32 sum = 0;
 
@@ -70,7 +70,7 @@ static int acpi_is_sdt_header_valid(const ACPISDTHeader *header)
 
 static volatile ACPIHPETT *g_hpett = NULL;
 
-static void acpi_parse_hpet(ACPISDTHeader *header)
+_INIT static void acpi_parse_hpet(ACPISDTHeader *header)
 {
     KLOGF(INFO, "Reserving HPET table at " PTR_FMT ".\n", (ptr)header);
     mmanager_reserve_acpi_range((ptr)header, sizeof(ACPIHPETT));
@@ -84,7 +84,7 @@ volatile ACPIHPETT* acpi_get_hpett()
 
 static const ACPIRSDT *g_rsdt = NULL;
 
-int acpi_reserve_tables()
+_INIT int acpi_reserve_tables()
 {
     ACPIRSDP *rsdp = acpi_find_rsdp();
 

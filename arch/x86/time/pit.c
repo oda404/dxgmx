@@ -7,6 +7,7 @@
 #include<dxgmx/klog.h>
 #include<dxgmx/assert.h>
 #include<dxgmx/string.h>
+#include<dxgmx/attrs.h>
 
 #define KLOGF(lvl, fmt, ...) klog(lvl, "pit: " fmt, ##__VA_ARGS__)
 
@@ -57,7 +58,7 @@ static void pit_isr(
     }
 }
 
-int pit_init()
+_INIT int pit_init()
 {
     return 0;
 }

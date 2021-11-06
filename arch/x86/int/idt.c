@@ -10,6 +10,7 @@
 #include<dxgmx/x86/interrupts.h>
 #include<dxgmx/x86/portio.h>
 #include<dxgmx/types.h>
+#include<dxgmx/attrs.h>
 
 /* genric TRAP exit function. */
 asm(
@@ -161,7 +162,7 @@ static IDTR g_idtr;
 
 #define IDT_INT_PRESENT       (1 << 7)
 
-void idt_init()
+_INIT void idt_init()
 {
     interrupts_disable();
     
