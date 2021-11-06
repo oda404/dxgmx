@@ -5,15 +5,12 @@
 
 #include<dxgmx/string.h>
 
-#define UC unsigned char
-
 int memcmp(const void *str1, const void *str2, size_t n)
 {
-    size_t i = 0;
-    for(; i < n; ++i)
+    for(size_t i = 0; i < n; ++i)
     {
-        UC byte1 = *(UC *)(str1 + i);
-        UC byte2 = *(UC *)(str2 + i);
+        char byte1 = ((const char *)str1)[i];
+        char byte2 = ((const char *)str2)[i];
 
         if(byte1 != byte2)
             return byte1 - byte2;
