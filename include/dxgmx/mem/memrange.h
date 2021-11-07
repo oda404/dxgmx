@@ -4,8 +4,6 @@
 
 #include<dxgmx/types.h>
 
-#define MEM_RANGE_FMT "[mem " PTR_FMT "-" PTR_FMT "]"
-
 typedef struct 
 S_MemRange
 {

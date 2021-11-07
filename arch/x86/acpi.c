@@ -72,7 +72,7 @@ static volatile ACPIHPETT *g_hpett = NULL;
 
 _INIT static void acpi_parse_hpet(ACPISDTHeader *header)
 {
-    KLOGF(INFO, "Reserving HPET table at " PTR_FMT ".", (ptr)header);
+    KLOGF(INFO, "Reserving HPET table at %p.", (void*)header);
     mmanager_reserve_acpi_range((ptr)header, sizeof(ACPIHPETT));
     g_hpett = (ACPIHPETT*)header;
 }
