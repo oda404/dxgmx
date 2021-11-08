@@ -11,9 +11,9 @@
 #define CPUID_MAX_EAX    0
 
 int cpuid_is_avail()
-{       
+{
     int ret;
-    asm volatile(
+    __asm__ volatile(
         "pushfl                                                                                   \n"
         "pushfl                                                                                   \n"
         "xorl   $0x200000, (%%esp)  # flip bit 21                                                 \n"

@@ -18,7 +18,7 @@ void pagedir_init(PageDirectory *dir)
 
 void pagedir_load(PageDirectory *dir)
 {
-    asm volatile("movl %0, %%eax; movl %%eax, %%cr3" : : "b"(dir));
+    __asm__ volatile("movl %0, %%eax; movl %%eax, %%cr3" : : "b"(dir));
 }
 
 void pagedir_entry_set_present(

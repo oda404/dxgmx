@@ -73,7 +73,7 @@
 
 void pic8259_remap(uint8_t master_offset, uint8_t slave_offset)
 {
-    asm volatile("cli");
+    __asm__ volatile("cli");
 
     uint8_t master_mask;
     uint8_t slave_mask;
@@ -112,7 +112,7 @@ void pic8259_remap(uint8_t master_offset, uint8_t slave_offset)
     port_outb(master_mask, PIC_MASTER_PORT_DATA);
     port_outb(slave_mask, PIC_SLAVE_PORT_DATA);
 
-    asm volatile("sti");
+    __asm__ volatile("sti");
 }
 
 void pic8259_mask_irq_line(uint8_t irqline)

@@ -45,7 +45,7 @@
 
 _INIT static void gdt_load(const GDTR *gdtr)
 {
-    asm volatile(
+    __asm__ volatile(
         "lgdt (%0)                \n"
         "ljmp %1, $reload_segs    \n"
         "                         \n"

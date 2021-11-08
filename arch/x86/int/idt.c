@@ -13,7 +13,7 @@
 #include<dxgmx/attrs.h>
 
 /* genric TRAP exit function. */
-asm(
+__asm__(
     ".type isr_exit, @function                       \n"
     "isr_exit:                                       \n"
     "  addl $4, %esp # jump over the InterruptFrame* \n"
@@ -25,7 +25,7 @@ asm(
 /* TRAP entry that has the status code pushed on to the stack. */
 #define TRAP_ENTRY_CODE(id)                                     \
 _ATTR_NAKED static void trap##id() {                                   \
-    asm volatile(                                              \
+    __asm__ volatile(                                              \
         "pusha                                             \n" \
         "pushl %esp              # set the InterruptFrame* \n" \
         "call  trap"#id"_handler                            \n" \
@@ -36,7 +36,7 @@ _ATTR_NAKED static void trap##id() {                                   \
 /* TRAP entry that pushes a dummy status code on to the stack. */
 #define TRAP_ENTRY_NO_CODE(id)                                 \
 _ATTR_NAKED static void trap##id() {                                  \
-    asm volatile(                                             \
+    __asm__ volatile(                                             \
         "pushl $0                #push a fake code        \n" \
         "pusha                                            \n" \
         "pushl %esp              #set the InterruptFrame* \n" \
@@ -47,7 +47,7 @@ _ATTR_NAKED static void trap##id() {                                  \
 
 #define IRQ_ENTRY(id)                 \
 _ATTR_NAKED static void irq##id() {          \
-    asm volatile(                     \
+    __asm__ volatile(                     \
         "pushl $0                 \n" \
         "pusha                    \n" \
         "pushl %esp               \n" \
@@ -126,7 +126,7 @@ static void idt_encode_entry(
 
 static void idt_load(const IDTR *idtr)
 {
-    asm volatile("lidt (%0)": : "b"(idtr));
+    __asm__ volatile("lidt (%0)": : "b"(idtr));
 }
 
 static u32 g_isr_trashcan = 0;
