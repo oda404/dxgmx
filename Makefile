@@ -52,7 +52,7 @@ KERNEL_SRCDIR     := kernel
 
 ### BASE FLAGS ###
 CFLAGS            := \
--MD -MP -m32 -isystem=/usr/include -std=c11      \
+-MD -MP -isystem=/usr/include -std=c11      \
 --sysroot=$(SYSROOTDIR) -fno-omit-frame-pointer  \
 -ffreestanding -fno-builtin $(BT_CFLAGS)         \
 
@@ -94,13 +94,16 @@ else ifeq ($(CONFIG_STACK_PROT),all)
 	CFLAGS += -fstack-protector-all
 endif
 
+### CONFIGURATION END ###
+
 ifeq ($(SRCARCH),x86)
-	# assume i686 if building for x86
-	CFLAGS += -march=i686
+	CFLAGS += -march=$(ARCH) -m32
 	MACROS += -D_X86_
 endif
 
-### CONFIGURATION END ###
+ifeq ($(LLVM),1)
+	CFLAGS += --target=$(TARGET_TRIPLET)
+endif
 
 CXXFLAGS          += $(EXTRA_CXXFLAGS) $(WARNINGS) $(MACROS)
 CFLAGS            += $(EXTRA_CFLAGS) $(WARNINGS) $(MACROS)
