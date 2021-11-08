@@ -26,6 +26,7 @@ __asm__(
 #define TRAP_ENTRY_CODE(id)                                     \
 _ATTR_NAKED static void trap##id() {                                   \
     __asm__ volatile(                                              \
+        ".local trap"#id"_handler                          \n" \
         "pusha                                             \n" \
         "pushl %esp              # set the InterruptFrame* \n" \
         "call  trap"#id"_handler                            \n" \
@@ -37,6 +38,7 @@ _ATTR_NAKED static void trap##id() {                                   \
 #define TRAP_ENTRY_NO_CODE(id)                                 \
 _ATTR_NAKED static void trap##id() {                                  \
     __asm__ volatile(                                             \
+        ".local trap"#id"_handler                          \n" \
         "pushl $0                #push a fake code        \n" \
         "pusha                                            \n" \
         "pushl %esp              #set the InterruptFrame* \n" \
@@ -48,6 +50,7 @@ _ATTR_NAKED static void trap##id() {                                  \
 #define IRQ_ENTRY(id)                 \
 _ATTR_NAKED static void irq##id() {          \
     __asm__ volatile(                     \
+        ".local irq"#id"_handler  \n" \
         "pushl $0                 \n" \
         "pusha                    \n" \
         "pushl %esp               \n" \
