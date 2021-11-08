@@ -52,7 +52,7 @@ KERNEL_SRCDIR     := kernel
 
 ### BASE FLAGS ###
 CFLAGS            := \
--MD -MP -m32 -isystem=/usr/include               \
+-MD -MP -m32 -isystem=/usr/include -std=c11      \
 --sysroot=$(SYSROOTDIR) -fno-omit-frame-pointer  \
 -ffreestanding -fno-builtin $(BT_CFLAGS)         \
 
