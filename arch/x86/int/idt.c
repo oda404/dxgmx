@@ -11,7 +11,7 @@
 #include<dxgmx/x86/portio.h>
 #include<dxgmx/types.h>
 #include<dxgmx/attrs.h>
-#include<dxgmx/abandon_ship.h>
+#include<dxgmx/panic.h>
 
 /* genric TRAP exit function. */
 __asm__(
@@ -247,7 +247,7 @@ _INIT bool idt_register_isr(u8 irq, isr cb)
 #define TRAP_HANDLER_NO_DATA(n) \
 _ATTR_MAYBE_UNUSED static void \
 trap##n##_handler(const InterruptFrame *frame) { \
-    abandon_ship("trap %d\n", n); \
+    panic("trap %d\n", n); \
     g_isrs[TRAP##n](frame, NULL); \
 }
 

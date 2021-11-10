@@ -5,7 +5,7 @@ $(ARCH_SRCDIR)/cpu.c \
 $(ARCH_SRCDIR)/cpuid.c \
 $(ARCH_SRCDIR)/cmos.c \
 $(ARCH_SRCDIR)/acpi.c \
-$(ARCH_SRCDIR)/abandon_ship.c \
+$(ARCH_SRCDIR)/panic.c \
 $(ARCH_SRCDIR)/gdt.c \
 
 LDSCRIPT := \

@@ -9,7 +9,7 @@
 #include<dxgmx/mem/memrange.h>
 #include<dxgmx/mem/mmanager.h>
 #include<dxgmx/klog.h>
-#include<dxgmx/abandon_ship.h>
+#include<dxgmx/panic.h>
 #include<dxgmx/bitwise.h>
 #include<dxgmx/types.h>
 #include<dxgmx/utils/bytes.h>
@@ -48,7 +48,7 @@ _INIT int falloc_init()
         pageframe_add_available(entry);
 
     if(g_pgframes_cnt == 0)
-        abandon_ship("falloc: No free page frames have been registered.");
+        panic("falloc: No free page frames have been registered.");
 
     char unit[4];
     KLOGF(

@@ -4,7 +4,7 @@
 */
 
 #include<dxgmx/compiler_attrs.h>
-#include<dxgmx/abandon_ship.h>
+#include<dxgmx/panic.h>
 
 /* 
  * This function initiates core hardware and 
@@ -26,5 +26,5 @@ _ATTR_NORETURN void kmain()
 
     kinit_stage2();
 
-    abandon_ship("Tried to return from kmain. Not proceeding.");
+    panic("Tried to return from kmain. Not proceeding.");
 }

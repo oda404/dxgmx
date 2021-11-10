@@ -5,17 +5,17 @@
 
 #include<dxgmx/x86/cmos.h>
 #include<dxgmx/x86/interrupts.h>
-#include<dxgmx/abandon_ship.h>
+#include<dxgmx/panic.h>
 #include<dxgmx/kabort.h>
 #include<dxgmx/klog.h>
 #include<stdarg.h>
 
-void abandon_ship(const char *lastmsg, ...)
+void panic(const char *lastmsg, ...)
 {
     cmos_disable_nmi();
     interrupts_disable();
 
-    klogln(FATAL, "---[ abandoning ship ]---");
+    klogln(FATAL, "---[ uh-oh kernel panic :( ]---");
     if(lastmsg)
     {
         va_list list;

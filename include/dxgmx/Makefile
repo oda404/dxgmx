@@ -1,6 +1,6 @@
 
 HEADERS += \
-$(INCLUDEDIR)/dxgmx/abandon_ship.h \
+$(INCLUDEDIR)/dxgmx/panic.h \
 $(INCLUDEDIR)/dxgmx/assert.h \
 $(INCLUDEDIR)/dxgmx/attrs.h \
 $(INCLUDEDIR)/dxgmx/bitwise.h \

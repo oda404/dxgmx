@@ -12,7 +12,7 @@
 #include<dxgmx/mem/pagesize.h>
 #include<dxgmx/klog.h>
 #include<dxgmx/cpu.h>
-#include<dxgmx/abandon_ship.h>
+#include<dxgmx/panic.h>
 #include<dxgmx/bitwise.h>
 #include<dxgmx/math.h>
 #include<dxgmx/todo.h>
@@ -35,7 +35,7 @@ static void paging_isr(
 
     if(PAGEFAULT_IS_PROT_VIOL(frame->code))
     {
-        abandon_ship(
+        panic(
             "Page protection violation: tried to %s 0x%08lX. Not proceeding.", 
             PAGEFAULT_IS_WRITE(frame->code) ? "write to" : "read from",
             faultaddr
@@ -43,7 +43,7 @@ static void paging_isr(
     }
 
     if(faultaddr < PAGE_SIZE)
-        abandon_ship("Possible NULL dereference in ring 0 :(. Not proceeding.");
+        panic("Possible NULL dereference in ring 0 :(. Not proceeding.");
 }
 
 _INIT static int paging_identity_map_area(ptr base, ptr end)

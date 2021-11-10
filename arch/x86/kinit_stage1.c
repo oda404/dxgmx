@@ -12,7 +12,7 @@
 #include<dxgmx/video/tty.h>
 #include<dxgmx/cpu.h>
 #include<dxgmx/kdefs.h>
-#include<dxgmx/abandon_ship.h>
+#include<dxgmx/panic.h>
 #include<dxgmx/klog.h>
 #include<dxgmx/timer.h>
 #include<dxgmx/mem/mmanager.h>
@@ -51,7 +51,7 @@ int kinit_stage1()
     klogln(INFO, "           |___/");
 
     if(_multiboot_magic != MULTIBOOT_BOOTLOADER_MAGIC)
-        abandon_ship("Not booted by a multiboot compliant bootloader.");
+        panic("Not booted by a multiboot compliant bootloader.");
 
     mmanager_init();
 

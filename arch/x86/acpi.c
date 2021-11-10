@@ -5,7 +5,7 @@
 
 #include<dxgmx/x86/acpi.h>
 #include<dxgmx/string.h>
-#include<dxgmx/abandon_ship.h>
+#include<dxgmx/panic.h>
 #include<dxgmx/klog.h>
 #include<dxgmx/mem/mmanager.h>
 #include<dxgmx/attrs.h>
@@ -89,11 +89,11 @@ _INIT int acpi_reserve_tables()
     ACPIRSDP *rsdp = acpi_find_rsdp();
 
     if(!acpi_is_rsdp_valid(rsdp))
-        abandon_ship("ACPI: RSDP at 0x%lX is invalid. Not proceeding.", (u32)g_rsdt);
+        panic("ACPI: RSDP at 0x%lX is invalid. Not proceeding.", (u32)g_rsdt);
 
     g_rsdt = (ACPIRSDT *)rsdp->rsdp_v1.rsdt_base;
     if(!acpi_is_sdt_header_valid(&g_rsdt->header))
-        abandon_ship("ACPI: RSDT at 0x%lX is invalid. Not proceeding.", (u32)g_rsdt);
+        panic("ACPI: RSDT at 0x%lX is invalid. Not proceeding.", (u32)g_rsdt);
 
     size_t rsdt_max_tables = (g_rsdt->header.len - sizeof(g_rsdt->header)) / 4;
 

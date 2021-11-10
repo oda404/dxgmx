@@ -7,7 +7,7 @@
 #include<dxgmx/x86/cpuid.h>
 #include<dxgmx/x86/cmos.h>
 #include<dxgmx/x86/interrupts.h>
-#include<dxgmx/abandon_ship.h>
+#include<dxgmx/panic.h>
 #include<dxgmx/klog.h>
 #include<dxgmx/string.h>
 #include<dxgmx/todo.h>
@@ -73,7 +73,7 @@ _INIT int cpu_identify()
 {
     if(!cpuid_is_avail())
     {
-        abandon_ship("CPUID is not available... tf are you running this thing on?");
+        panic("CPUID is not available... tf are you running this thing on?");
         return 1;
     }
 
@@ -92,7 +92,7 @@ _INIT int cpu_identify()
     else if(strcmp(g_cpuinfo.vendorstr, CPU_VENDORSTR_INTEL) == 0)
         cpu_handle_intel_cpuid();
     else
-        abandon_ship("Unknown CPU vendor '%s'. Not proceeding.", g_cpuinfo.vendorstr);
+        panic("Unknown CPU vendor '%s'. Not proceeding.", g_cpuinfo.vendorstr);
 
     g_cpu_identified = 1;
 

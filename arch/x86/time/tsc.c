@@ -49,7 +49,7 @@ int tsc_is_constant()
     default:
         /* Shouldn't really happen, as stuff like this should be
         caught by cpu_identify. */
-        abandon_ship("Unknown cpu vendor id: %u. Not proceeding.", cpuinfo->vendor);
+        panic("Unknown cpu vendor id: %u. Not proceeding.", cpuinfo->vendor);
         return 0;
     }
 

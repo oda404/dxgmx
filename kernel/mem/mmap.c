@@ -4,7 +4,7 @@
 */
 
 #include<dxgmx/mem/mmap.h>
-#include<dxgmx/abandon_ship.h>
+#include<dxgmx/panic.h>
 #include<dxgmx/klog.h>
 #include<dxgmx/bitwise.h>
 #include<dxgmx/compiler_attrs.h>
@@ -72,7 +72,7 @@ static int mmap_shrink_entry(
 static int mmap_enlarge(size_t n, MemoryMap *mmap)
 {
     if(mmap->entries_cnt + n > MMAP_MAX_ENTRIES_CNT)
-        abandon_ship("Exceeded MMAP_MAX_ENTRIES_CNT when enlarging mmap");
+        panic("Exceeded MMAP_MAX_ENTRIES_CNT when enlarging mmap");
     mmap->entries_cnt += n;
     return n;
 }
