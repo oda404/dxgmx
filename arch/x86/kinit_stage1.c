@@ -16,6 +16,7 @@
 #include<dxgmx/klog.h>
 #include<dxgmx/timer.h>
 #include<dxgmx/mem/mmanager.h>
+#include<dxgmx/x86/acpi.h>
 
 int kinit_stage1()
 {
@@ -27,6 +28,12 @@ int kinit_stage1()
 
     /* Back in business. */
     interrupts_enable();
+
+    tty_init();
+    klog_init((KLogLevel)_DXGMX_LOGLVL_);
+
+    acpi_reserve_tables();
+    cpu_identify();
     
     pit_init();
     pit_enable_periodic_int();
@@ -34,11 +41,7 @@ int kinit_stage1()
     rtc_enable_periodic_int();
     timer_find_src();
 
-    tty_init();
-    const KLogConfig config = {
-        .loglevel = _DXGMX_LOGLVL_
-    };
-    klog_init(&config);
+    klog_try_exit_early();
 
     klogln(INFO, "     _");
     klogln(INFO, "  __| |_  ____ _ _ __ ___ __  __");
@@ -53,7 +56,6 @@ int kinit_stage1()
     mmanager_init();
 
     rtc_dump_date();
-    cpu_identify();
 
     return 0;
 }
