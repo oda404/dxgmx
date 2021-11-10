@@ -12,6 +12,7 @@ ifdef BUILDCONFIG
 -include $(BUILDCONFIG)
 else
 -include buildconfig
+BUILDCONFIG := buildconfig
 endif
 
 ifdef BUILDTARGET
@@ -158,33 +159,35 @@ $(SYSROOTDIR) $(SYSROOTDIR)/boot \
 SYSROOT_HEADERS   := $(HEADERS:$(INCLUDEDIR)/%=$(SYSROOTDIR)/usr/include/%)
 
 DXGMX_DEPS        := $(SYSROOT_DIRS) $(SYSROOT_HEADERS) \
-$(COBJS) $(CXXOBJS) $(ASMOBJS) $(LD_SCRIPT) Makefile
+$(COBJS) $(CXXOBJS) $(ASMOBJS) $(LD_SCRIPT)
+
+DXGMX_COMMON_DEPS := Makefile $(BUILDCONFIG)
 
 PHONY             :=
 
 PHONY += all
 all: $(BIN_PATH)
 
-$(BIN_PATH): $(DXGMX_DEPS)
+$(BIN_PATH): $(DXGMX_DEPS) $(DXGMX_COMMON_DEPS)
 	@$(OUTPUT_FORMATTED) LD $(notdir $(BIN_NAME))
-	@$(LD) -T $(LDSCRIPT) $(COBJS) $(CXXOBJS) $(ASMOBJS) $(LDFLAGS) -Wl,-Map,$(BUILDDIR)/$(BIN_NAME).map -o $(BIN_PATH)
+	@$(LD) -T $(LDSCRIPT) $(COBJS) $(CXXOBJS) $(ASMOBJS) $(LDFLAGS) -o $(BIN_PATH)
 
 	@cp $(BIN_PATH) $(SYSROOTDIR)/boot/
 
 -include $(CDEPS)
-$(BUILDDIR)/%_$(BT_NAME).c.o: %.c Makefile
+$(BUILDDIR)/%_$(BT_NAME).c.o: %.c $(DXGMX_COMMON_DEPS)
 	@mkdir -p $(dir $@)
 	@$(OUTPUT_FORMATTED) CC $<
 	@$(CC) -c $< $(CFLAGS) -o $@
 
 -include $(CXXDEPS)
-$(BUILDDIR)/%_$(BT_NAME).cpp.o: %.cpp Makefile
+$(BUILDDIR)/%_$(BT_NAME).cpp.o: %.cpp $(DXGMX_COMMON_DEPS)
 	@mkdir -p $(dir $@)
 	@$(OUTPUT_FORMATTED) CXX $<
 	@$(CXX) -c $< $(CXXFLAGS) -o $@
 
 -include $(ASMDEPS)
-$(BUILDDIR)/%_$(BT_NAME).S.o: %.S Makefile
+$(BUILDDIR)/%_$(BT_NAME).S.o: %.S $(DXGMX_COMMON_DEPS)
 	@mkdir -p $(dir $@)
 	@$(OUTPUT_FORMATTED) AS $<
 	@$(AS) -c $< $(CFLAGS) -o $@
