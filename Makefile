@@ -59,7 +59,7 @@ CFLAGS            := \
 
 CXXFLAGS          := $(CFLAGS) $(BT_CXXFLAGS)
 
-LDFLAGS           := -nostdlib -lgcc $(BT_LDFLAGS)
+LDFLAGS           := -nostdlib $(BT_LDFLAGS)
 
 MACROS            := \
 -D_DXGMX_ -D_DXGMX_VER_MAJ_=$(VER_MAJ)                    \
