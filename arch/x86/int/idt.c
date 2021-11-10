@@ -245,8 +245,7 @@ _INIT bool idt_register_isr(u8 irq, isr cb)
 }
 
 #define TRAP_HANDLER_NO_DATA(n) \
-_ATTR_MAYBE_UNUSED static void \
-trap##n##_handler(const InterruptFrame *frame) { \
+_ATTR_USED static void trap##n##_handler(const InterruptFrame *frame) { \
     panic("trap %d\n", n); \
     g_isrs[TRAP##n](frame, NULL); \
 }
@@ -285,8 +284,7 @@ TRAP_HANDLER_NO_DATA(30);
 TRAP_HANDLER_NO_DATA(31);
 
 #define IRQ_HANDLER_NO_DATA(n) \
-_ATTR_MAYBE_UNUSED static void \
-irq##n##_handler(const InterruptFrame *frame) { \
+_ATTR_USED static void irq##n##_handler(const InterruptFrame *frame) { \
     g_isrs[IRQ##n](frame, NULL); \
     pic8259_signal_eoi(n < 8 ? 0 : 1); \
 }
@@ -295,8 +293,7 @@ irq##n##_handler(const InterruptFrame *frame) { \
 IRQ_HANDLER_NO_DATA(0)
 
 /* PS2 keyboard */
-_ATTR_MAYBE_UNUSED static void 
-irq1_handler(const InterruptFrame* frame)
+_ATTR_USED static void irq1_handler(const InterruptFrame* frame)
 {
     unsigned char scan_code = port_inb(0x60); 
     g_isrs[IRQ1](frame, NULL);
