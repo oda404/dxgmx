@@ -54,11 +54,16 @@ SECTIONS
         _ro_after_stage1_section_end = .;
     }
 
-    .init :
+    .init ALIGN(4K):
     {
         _init_section_base = .;
         *(.init)
         _init_section_end = .;
+    }
+
+    .shstrtab ALIGN(4K): 
+    {
+        *(.shstrtab*)
     }
 
     _kernel_end = .;
