@@ -210,14 +210,12 @@ $(ISO_PATH): $(BIN_PATH)
 PHONY += iso-run 
 iso-run:
 	$(MAKE) iso
-	qemu-system-x86_64 --enable-kvm -m 2G -cpu host,migratable=off -cdrom $(ISO_PATH)
+	$(SCRIPTSDIR)/run.sh -i $(ISO_PATH) -a $(ARCH)
 
 PHONY += run 
 run:
 	$(MAKE)
-	$(SCRIPTSDIR)/run.sh \
-	--kernel-path $(BIN_PATH) \
-	--arch $(ARCH)
+	$(SCRIPTSDIR)/run.sh -k $(BIN_PATH) -a $(ARCH)
 
 PHONY += clean 
 clean:
