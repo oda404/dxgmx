@@ -72,6 +72,8 @@ __attribute__((section(x)))
 /* https://gcc.gnu.org/onlinedocs/gcc/Common-Function-Attributes.html#index-cold-function-attribute */
 #define _ATTR_COLD __attribute__((cold))
 
+#define _ATTR_USED __attribute__((used))
+
 #endif // __GNUC__
 
 #endif //!_DXGMX_COMPILER_ATTRS_H
