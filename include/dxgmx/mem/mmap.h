@@ -52,10 +52,11 @@ void mmap_dump(const MemoryMap *mmap);
 bool mmap_is_addr_inside_entry(u64 addr, const MemRangeTyped *entry);
 
 #define FOR_EACH_MMAP_ENTRY(entry, mmap) \
-for( \
-    MemRangeTyped *entry = mmap.entries; \
-    (ptr)entry < (ptr)mmap.entries + mmap.entries_cnt * sizeof(MemRangeTyped); \
-    ++entry \
-)
+for(MemoryMap m = mmap; m.entries_cnt; m.entries_cnt = 0) \
+    for( \
+        MemRangeTyped *entry = m.entries; \
+        entry < &m.entries[m.entries_cnt - 1]; \
+        ++entry \
+    )
 
 #endif // _DXGMX_MEM_MAP_H
