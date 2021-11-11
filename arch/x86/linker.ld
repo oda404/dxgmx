@@ -66,11 +66,4 @@ SECTIONS
         _init_section_end = .;
     }
     _kernel_end = .;
-
-    /* discard any other seciton that hasn't 
-    been explicitly mentioned above. */
-    /DISCARD/ :
-    {
-        *(*)
-    }
 }
