@@ -40,7 +40,7 @@ _INIT int mmanager_init()
     /* mark the kernel itself as kreserved */
     mmap_update_entry_type(
         (ptr)_kernel_base, 
-        (size_t)(_kernel_end - _kernel_base), 
+        (size_t)_kernel_end - (size_t)_kernel_base, 
         MULTIBOOT_MMAP_TYPE_RESERVED,
         &g_sys_mmap
     );
