@@ -81,6 +81,53 @@ static volatile struct tm       g_periodic_int_date;
 static volatile struct timespec g_periodic_int_timespec;
 static bool                     g_periodic_int_enabled = false;
 
+static void rtc_set_date()
+{
+    /* Hang interrupts so we make sure the date is read correctly. */
+    interrupts_disable();
+    g_periodic_int_date.tm_sec  = cmos_port_inb(RTC_REG_SECONDS,  NMIKEEP);
+    g_periodic_int_date.tm_min  = cmos_port_inb(RTC_REG_MINUTES,  NMIKEEP);
+    g_periodic_int_date.tm_hour = cmos_port_inb(RTC_REG_HOURS,    NMIKEEP);
+    g_periodic_int_date.tm_wday = cmos_port_inb(RTC_REG_WEEKDAY,  NMIKEEP);
+    g_periodic_int_date.tm_mday = cmos_port_inb(RTC_REG_MONTHDAY, NMIKEEP);
+    g_periodic_int_date.tm_mon  = cmos_port_inb(RTC_REG_MONTH,    NMIKEEP);
+    g_periodic_int_date.tm_year = cmos_port_inb(RTC_REG_YEAR,     NMIKEEP);
+    g_periodic_int_date.tm_yday = 0; //FIXME
+    g_periodic_int_date.tm_isdst = 0; //FIXME
+
+    u8 b = cmos_port_inb(RTC_REG_B, NMIKEEP);
+
+    if(!(b & RTC_REG_B_BINARY_MODE))
+    {
+        /* It's ok to cast them to int* becuase we know they won't change. */
+        bcd_to_binary((int*)&g_periodic_int_date.tm_sec);
+        bcd_to_binary((int*)&g_periodic_int_date.tm_min);
+        bcd_to_binary((int*)&g_periodic_int_date.tm_hour);
+        bcd_to_binary((int*)&g_periodic_int_date.tm_wday);
+        --g_periodic_int_date.tm_wday;
+        bcd_to_binary((int*)&g_periodic_int_date.tm_mday);
+        bcd_to_binary((int*)&g_periodic_int_date.tm_mon);
+        --g_periodic_int_date.tm_mon;
+        bcd_to_binary((int*)&g_periodic_int_date.tm_year);
+    }
+
+    /** 
+     * Make g_periodic_int_date.tm_year be the years since 1900 as per spec. 
+     * Just assume we are in the 2000's. 2000 - 1900 == 100.
+    */
+    g_periodic_int_date.tm_year += 100;
+
+    if(!(b & RTC_REG_B_24HOUR_FMT))
+    {
+        if(g_periodic_int_date.tm_hour & (1 << 7))
+        {
+            //PM
+            TODO();
+        }
+    }
+    interrupts_enable();
+}
+
 static void rtc_isr(
     const InterruptFrame _ATTR_MAYBE_UNUSED *frame, 
     const void _ATTR_MAYBE_UNUSED *data
@@ -88,90 +135,34 @@ static void rtc_isr(
 {
     u8 c = cmos_port_inb(RTC_REG_C, NMIENABLED);
 
-    if(c & RTC_REG_C_PERIODIC_INT_DONE)
-    {
-        g_periodic_int_timespec.tv_nsec += 1.f / g_freq * 1000000000;
-        while(g_periodic_int_timespec.tv_nsec >= 1000000000)
-        {
-            ++g_periodic_int_timespec.tv_sec;
-            g_periodic_int_timespec.tv_nsec -= 1000000000;
-        }
-    }
-
     if(c & RTC_REG_C_DATE_UPDATE_DONE)
-    {
-        /* Hang interrupts so we make sure the time is read correctly. */
-        interrupts_disable();
-
-        g_periodic_int_date.tm_sec  = cmos_port_inb(RTC_REG_SECONDS,  NMIDISABLED);
-        g_periodic_int_date.tm_min  = cmos_port_inb(RTC_REG_MINUTES,  NMIDISABLED);
-        g_periodic_int_date.tm_hour = cmos_port_inb(RTC_REG_HOURS,    NMIDISABLED);
-        g_periodic_int_date.tm_wday = cmos_port_inb(RTC_REG_WEEKDAY,  NMIDISABLED);
-        g_periodic_int_date.tm_mday = cmos_port_inb(RTC_REG_MONTHDAY, NMIDISABLED);
-        g_periodic_int_date.tm_mon  = cmos_port_inb(RTC_REG_MONTH,    NMIDISABLED);
-        g_periodic_int_date.tm_year = cmos_port_inb(RTC_REG_YEAR,     NMIDISABLED);
-        g_periodic_int_date.tm_yday = 0; //FIXME
-        g_periodic_int_date.tm_isdst = 0; //FIXME
-
-        u8 b = cmos_port_inb(RTC_REG_B, NMIDISABLED);
-
-        if(!(b & RTC_REG_B_BINARY_MODE))
-        {
-            /* It's ok to cast them to int* becuase we know they won't change. */
-            bcd_to_binary((int*)&g_periodic_int_date.tm_sec);
-            bcd_to_binary((int*)&g_periodic_int_date.tm_min);
-            bcd_to_binary((int*)&g_periodic_int_date.tm_hour);
-            bcd_to_binary((int*)&g_periodic_int_date.tm_wday);
-            --g_periodic_int_date.tm_wday;
-            bcd_to_binary((int*)&g_periodic_int_date.tm_mday);
-            bcd_to_binary((int*)&g_periodic_int_date.tm_mon);
-            --g_periodic_int_date.tm_mon;
-            bcd_to_binary((int*)&g_periodic_int_date.tm_year);
-        }
-
-        /** 
-         * Make g_periodic_int_date.tm_year be the years since 1900 as per spec. 
-         * Just assume we are in the 2000's. 2000 - 1900 == 100.
-        */
-        g_periodic_int_date.tm_year += 100;
-
-        if(!(b & RTC_REG_B_24HOUR_FMT))
-        {
-            if(g_periodic_int_date.tm_hour & (1 << 7))
-            {
-                //PM
-                TODO();
-            }
-        }
-
-        /* The time has been read and set, interrupts can be turned back on. */
-        cmos_enable_nmi();
-        interrupts_enable();
-    }
+        rtc_set_date();
 }
 
 _INIT int rtc_init()
 {
-    g_freq = rtc_set_freq(RTC_FREQ_8KHZ);
-
+    memset((void *)&g_periodic_int_date, 0, sizeof(g_periodic_int_date));
+    rtc_set_date();
     return 0;
 }
 
 void rtc_enable_periodic_int()
 {
-    g_periodic_int_enabled = true;
-
-    memset((void*)&g_periodic_int_date, 0, sizeof(struct tm));
     memset((void*)&g_periodic_int_timespec, 0, sizeof(struct timespec));
 
+    /* Set the lowest possible frequency, as the RTC is not used
+    as a system timer. The periodic interrupts are only used for
+    safely setting the date. */
+    g_freq = rtc_set_freq(RTC_FREQ_2HZ);
+
     idt_register_isr(IRQ8, rtc_isr);
+
     u8 val = cmos_port_inb(RTC_REG_B, NMIDISABLED);
     cmos_port_outb(val | RTC_REG_B_PERIODIC_INT_ENABLED, RTC_REG_B, NMIENABLED);
     // read the C register so we make sure future IRQs will fire.
     cmos_port_inb(RTC_REG_C, NMIENABLED);
-
-    /* Wait for the first date to be updated. */
-    while(!g_periodic_int_date.tm_sec);
+    
+    g_periodic_int_enabled = true;
 }
 
 void rtc_disable_periodic_int()
