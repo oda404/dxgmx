@@ -23,6 +23,5 @@ struct timespec rtc_now();
 enabled the tm that was last updated in an IRQ is returned, else the
 date is calculated right then. */
 struct tm rtc_date();
-void rtc_dump_date();
 
 #endif //_DXGMX_X86_RTC_H

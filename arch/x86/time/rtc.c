@@ -196,21 +196,6 @@ struct tm rtc_date()
         TODO_FATAL();
 }
 
-void rtc_dump_date()
-{
-    const struct tm date = rtc_date();
-    KLOGF(
-        INFO,
-        "Current date is %02d:%02d:%02d %02d/%02d/%d.",
-        date.tm_hour,
-        date.tm_min,
-        date.tm_sec,
-        date.tm_mday,
-        date.tm_mon + 1,
-        1900 + date.tm_year
-    );
-}
-
 bool rtc_periodic_ints_enabled()
 {
     return g_periodic_int_enabled;
