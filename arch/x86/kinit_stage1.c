@@ -6,17 +6,14 @@
 #include<dxgmx/x86/idt.h>
 #include<dxgmx/x86/gdt.h>
 #include<dxgmx/x86/multiboot.h>
-#include<dxgmx/x86/rtc.h>
 #include<dxgmx/x86/interrupts.h>
-#include<dxgmx/x86/pit.h>
 #include<dxgmx/video/tty.h>
 #include<dxgmx/cpu.h>
 #include<dxgmx/kdefs.h>
 #include<dxgmx/panic.h>
 #include<dxgmx/klog.h>
-#include<dxgmx/timer.h>
 #include<dxgmx/mem/mmanager.h>
-#include<dxgmx/x86/acpi.h>
+#include<dxgmx/timekeep.h>
 
 int kinit_stage1()
 {
@@ -29,19 +26,21 @@ int kinit_stage1()
     /* Back in business. */
     interrupts_enable();
 
+    /* Initialize logging early on, so if something goes wrong we see it. */
     tty_init();
     klog_init((KLogLevel)_DXGMX_LOGLVL_);
 
-    acpi_reserve_tables();
-    cpu_identify();
-    
-    pit_init();
-    pit_enable_periodic_int();
-    rtc_init();
-    rtc_enable_periodic_int();
-    timer_find_src();
+    if(_multiboot_magic != MULTIBOOT_BOOTLOADER_MAGIC)
+        panic("Not booted by a multiboot compliant bootloader.");
 
-    klog_try_exit_early();
+    /* Set up memory management. */
+    mmanager_init();
+
+    /* Set CPU features as they may be needed for initializing system timers. */
+    cpu_identify();
+
+    /* Start timekeeping and get out of 'early' mode. */
+    timekeep_init();
 
     klogln(INFO, "     _");
     klogln(INFO, "  __| |_  ____ _ _ __ ___ __  __");
@@ -50,12 +49,10 @@ int kinit_stage1()
     klogln(INFO, " \\__,_/_/\\_\\__, |_| |_| |_/_/\\_\\ %s - %d.%d.%d", _DXGMX_CODENAME_, _DXGMX_VER_MAJ_, _DXGMX_VER_MIN_, _DXGMX_PATCH_N_);
     klogln(INFO, "           |___/");
 
-    if(_multiboot_magic != MULTIBOOT_BOOTLOADER_MAGIC)
-        panic("Not booted by a multiboot compliant bootloader.");
-
-    mmanager_init();
-
-    rtc_dump_date();
+    {
+        struct tm date = timkeep_date();
+        klogln(INFO, "Current date: %02d:%02d:%02d %02d/%02d/%d.", date.tm_hour, date.tm_min, date.tm_sec, date.tm_mday, date.tm_mon + 1, 1900 + date.tm_year);
+    }
 
     return 0;
 }
