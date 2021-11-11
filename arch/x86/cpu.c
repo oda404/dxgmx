@@ -121,6 +121,20 @@ uint32_t cpu_read_cr0()
     return ret;
 }
 
+u32 cpu_read_ebp()
+{
+    u32 ret;
+    __asm__ volatile("movl %%ebp, %0": "=a"(ret));
+    return ret;
+}
+
+u32 cpu_read_esp()
+{
+    u32 ret;
+    __asm__ volatile("movl %%esp, %0": "=a"(ret));
+    return ret;
+}
+
 u32 cpu_read_cr4()
 {
     u32 ret;
