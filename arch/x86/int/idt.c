@@ -9,6 +9,7 @@
 #include<dxgmx/x86/interrupt_frame.h>
 #include<dxgmx/x86/interrupts.h>
 #include<dxgmx/x86/portio.h>
+#include<dxgmx/x86/exceptions.h>
 #include<dxgmx/types.h>
 #include<dxgmx/attrs.h>
 #include<dxgmx/panic.h>
@@ -235,6 +236,8 @@ _INIT void idt_init()
     pic8259_remap(MASTER_PIC_OFFSET, SLAVE_PIC_OFFSET);
     idt_load(&g_idtr);
 
+    exceptions_set_up_common_handlers();
+
     interrupts_enable();
 }
 
@@ -246,7 +249,6 @@ _INIT bool idt_register_isr(u8 irq, isr cb)
 
 #define TRAP_HANDLER_NO_DATA(n) \
 _ATTR_USED static void trap##n##_handler(const InterruptFrame *frame) { \
-    panic("trap %d\n", n); \
     g_isrs[TRAP##n](frame, NULL); \
 }
 
