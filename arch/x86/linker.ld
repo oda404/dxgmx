@@ -47,6 +47,11 @@ SECTIONS
         _bss_section_end = .;
     }
 
+    .shstrtab ALIGN(4K): 
+    {
+        *(.shstrtab*)
+    }
+
     .ro_after_stage1 ALIGN(4K) :
     {
         _ro_after_stage1_section_base = .;
@@ -60,12 +65,6 @@ SECTIONS
         *(.init)
         _init_section_end = .;
     }
-
-    .shstrtab ALIGN(4K): 
-    {
-        *(.shstrtab*)
-    }
-
     _kernel_end = .;
 
     /* discard any other seciton that hasn't 
