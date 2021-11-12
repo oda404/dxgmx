@@ -54,7 +54,7 @@ _INIT int falloc_init()
     KLOGF(
         INFO, 
         "Using %lu free %d%s page frames.",
-        g_pgframes_cnt,
+        (unsigned long)g_pgframes_cnt,
         (int)bytes_to_human_readable(PAGE_SIZE, unit),
         unit
     );

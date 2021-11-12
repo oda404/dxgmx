@@ -36,7 +36,7 @@ static void invalid_opcode_isr(const InterruptFrame *frame, const void *data)
 {
     (void)frame;
     (void)data;
-    panic("Invalid instruction at EIP: 0x%p. Not proceeding.", frame->eip);
+    panic("Invalid instruction at EIP: 0x%p. Not proceeding.", (void*)frame->eip);
 }
 
 static void fpu_not_available_isr(const InterruptFrame *frame, const void *data)
@@ -51,7 +51,7 @@ static void double_fault_isr(const InterruptFrame *frame, const void *data)
     (void)frame;
     (void)data;
 
-    panic("Double fault! EIP: 0x%p. Obviously not proceeding.", frame->eip);
+    panic("Double fault! EIP: 0x%p. Obviously not proceeding.", (void*)frame->eip);
 }
 
 static void invalid_tss_isr(const InterruptFrame *frame, const void *data)
@@ -107,7 +107,7 @@ static void machine_check_isr(const InterruptFrame *frame, const void *data)
     (void)frame;
     (void)data;
 
-    panic("You just got machine checked, EIP: 0x%p. Not proceeding", frame->eip);
+    panic("You just got machine checked, EIP: 0x%p. Not proceeding", (void*)frame->eip);
 }
 
 static void simdfloating_point_err_isr(const InterruptFrame *frame, const void *data)

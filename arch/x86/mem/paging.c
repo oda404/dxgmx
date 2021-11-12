@@ -36,9 +36,9 @@ static void paging_isr(
     if(PAGEFAULT_IS_PROT_VIOL(frame->code))
     {
         panic(
-            "Page protection violation: tried to %s 0x%08lX. Not proceeding.", 
+            "Page protection violation: tried to %s 0x%p. Not proceeding.", 
             PAGEFAULT_IS_WRITE(frame->code) ? "write to" : "read from",
-            faultaddr
+            (void*)faultaddr
         );
     }
 

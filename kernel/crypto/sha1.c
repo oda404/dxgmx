@@ -23,17 +23,17 @@ typedef struct S_SHA1Context
     } regs;
     struct
     {
-        char buf[64];
+        u8 buf[64];
         size_t size;
     } block;
     struct
     {
-        char buf[64];
+        u8 buf[64];
         bool has;
     } extrapadding;
     struct
     {
-        const char *buf;
+        const u8 *buf;
         size_t initsize;
         size_t size;
     } msg;
@@ -174,7 +174,7 @@ static SHA1Context sha1_create_context(const char *msg, size_t msglen)
         .regs.h3 = 0x10325476,
         .regs.h4 = 0xC3D2E1F0,
         .msg = {
-            .buf = msg,
+            .buf = (const u8*)msg,
             .initsize = msglen,
             .size = msglen
         },

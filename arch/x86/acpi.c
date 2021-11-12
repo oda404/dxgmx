@@ -89,11 +89,11 @@ _INIT int acpi_reserve_tables()
     ACPIRSDP *rsdp = acpi_find_rsdp();
 
     if(!acpi_is_rsdp_valid(rsdp))
-        panic("ACPI: RSDP at 0x%lX is invalid. Not proceeding.", (u32)g_rsdt);
+        panic("ACPI: RSDP at 0x%p is invalid. Not proceeding.", g_rsdt);
 
     g_rsdt = (ACPIRSDT *)rsdp->rsdp_v1.rsdt_base;
     if(!acpi_is_sdt_header_valid(&g_rsdt->header))
-        panic("ACPI: RSDT at 0x%lX is invalid. Not proceeding.", (u32)g_rsdt);
+        panic("ACPI: RSDT at 0x%p is invalid. Not proceeding.", g_rsdt);
 
     size_t rsdt_max_tables = (g_rsdt->header.len - sizeof(g_rsdt->header)) / 4;
 
@@ -109,7 +109,7 @@ _INIT int acpi_reserve_tables()
                 acpi_parse_hpet(header);
         }
         else
-            KLOGF(WARN, "Found invalid header at 0x%lX.", (u32)header);
+            KLOGF(WARN, "Found invalid header at 0x%p.", header);
     }
 
     return 0;
