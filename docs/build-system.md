@@ -8,7 +8,7 @@ The dxgmx build system uses good old Makefiles, but with a few practices that ma
 - [*.buildtarget](#*.buildtarget): Defines how the kernel is built.
 
 ## buildconfig
- A makefile-like file that defines variables about the build environment and target architecture. The file can either be automatically picked up if placed in the root of the source tree, or it's path can be explictly set as an env. variable using **BUILDCONFIG=<...>**. **If no buildconfig file is found the build will fail early on.** Below is list of all the relevant options that **must** be set in a buildconfig file.
+ A makefile-like file that defines variables about the build environment and target architecture. The file can either be automatically picked up if placed in the root of the source tree, or it's path can be explictly set as an env. variable using **BUILDCONFIG=<...>**. **If no buildconfig file is found the build will fail early on.** Below is a list of all the relevant options that **must** be set in a buildconfig file.
 - **HAS_BUILDCONFIG**: Must be set to 1.
 - **CC**: The C compiler binary path.
 - **CXX**: The C++ compiler binary path(currently unused).
@@ -16,6 +16,7 @@ The dxgmx build system uses good old Makefiles, but with a few practices that ma
 - **LD**: The linker binary path.
 - **TARGET_TRIPLET**: The target triplet.
 - **IS_CROSS_COMP**: 1 if cross-compiling, 0 if not.
+- **LLVM**: [optional] 1 if an LLVM toolchain is used, 0 or left undefined otherwise.
 - **BUILDTARGET**: [optional] A [*.buildtarget](#*.buildtarget) file.
 
 ## *.buildtarget
@@ -30,4 +31,8 @@ The dxgmx build system uses good old Makefiles, but with a few practices that ma
 - **Config options**: [optional] A list of configuration options. See config-options.md
 
 ## Notes
-- For now the kernel can only be built with GCC and GNU binutils.
+- The kernel has been tested with:
+    - GCC 11.2.0 and GNU Binutils 2.37
+    - clang 12.0.1
+- Regardless of the toolchain used, the kernel needs to be linked against libgcc or a suitable replacement, built for the target architecture (One way to do that is **EXTRA_LDFLAGS += \<libpath\>** in the buildconfig file.).
+
