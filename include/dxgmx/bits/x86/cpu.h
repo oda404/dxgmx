@@ -30,6 +30,55 @@ typedef enum E_CR0Flags
     CR0_PG = (1 << 31)
 } CR0Flags;
 
+typedef enum E_CR4Flags
+{
+    /* Virtual 8086 mode extensions. */
+    CR4_VME        = 1,
+    /* Protected mode virtual interrupts. */
+    CR4_PVI        = (1 << 1),
+    /* Time stamp disabled. */
+    CR4_TSD        = (1 << 2),
+    /* Debugging extensions. */
+    CR4_DE         = (1 << 3),
+    /* Page size extension. */
+    CR4_PSE        = (1 << 4),
+    /* Page address extension. */
+    CR4_PAE        = (1 << 5),
+    /* Machine check exception. */
+    CR4_MCE        = (1 << 6),
+    /* Page global enable */
+    CR4_PGE        = (1 << 7),
+    /* Performance monitoring counter enable. */
+    CR4_PCE        = (1 << 8),
+    /* OS support for FXSAVE and FXRSTOR instructions. */
+    CR4_OSFXSR     = (1 << 9),
+    /* OS support for unmasked SIMD floating point exceptions. */
+    CR4_OSXMMEXCPT = (1 << 10),
+    /* User mode instruction prevention. General protection fault when 
+    executing SGDT, SIDT, SLDT, SMSW, and STR when CPL > 0. */
+    CR4_UMIP       = (1 << 11),
+    /* Virtual machine extensions. */
+    CR4_VMXE       = (1 << 13),
+    /* Safer mode extensions. */
+    CR4_SMXE       = (1 << 14),
+    /* Enable RDFSBASE, RDGSBASE, WRFSBASE and WRGSBASE instructions. */
+    CR4_FSGSBASE   = (1 << 16),
+    /* Enable PCID. */
+    CR4_PCIDE       = (1 << 17),
+    /* Enable XSAVE and processor extended status. */
+    CR4_OSXSAVE    = (1 << 18),
+    /* Supervisor mode execution protection. */
+    CR4_SMEP       = (1 << 20),
+    /* Supervisor mode access prevention. */
+    CR4_SMAP       = (1 << 21),
+    /* Enable protection key. */
+    CR4_PKE        = (1 << 22),
+    /* Control flow enforcement. */
+    CR4_CET        = (1 << 23),
+    /* Enable protection keys for supervisor mode pages.  */
+    CR4_PKS        = (1 << 24),
+} CR4Flags;
+
 typedef enum E_CPUVendor
 {
     CPU_VENDOR_INTEL,
