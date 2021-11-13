@@ -101,7 +101,7 @@ _INIT void paging_init()
 
     idt_register_isr(TRAP14, paging_isr);
 
-    cpu_write_cr0(cpu_read_cr0() | CR0FLAG_PE | CR0FLAG_PG | CR0FLAG_WP);
+    cpu_write_cr0(cpu_read_cr0() | CR0_PE | CR0_PG | CR0_WP);
     
     KLOGF(INFO, "Enabled paging.");
 }
