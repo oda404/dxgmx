@@ -36,6 +36,107 @@ typedef enum E_CPUVendor
     CPU_VENDOR_AMD,
 } CPUVendor;
 
+typedef enum E_CPUFeatureFlag
+{
+    /* On chip floating point unit. */
+    CPU_FPU       = (1 << 0),
+    /* Virtual mode enhancements */
+    CPU_VME       = (1 << 1),
+    /* Debugging extension. */
+    CPU_DE        = (1 << 2),
+    /* Page size extension. */
+    CPU_PSE       = (1 << 3),
+    /* Time stamp counter. */
+    CPU_TSC       = (1 << 4),
+    /* Model specifc registers. */
+    CPU_MSR       = (1 << 5),
+    /* Page address extension/ */
+    CPU_PAE       = (1 << 6),
+    /* Machine check exception. */
+    CPU_MCE       = (1 << 7),
+    /* CMPXCHG8B instruction. */
+    CPU_CMPXCHG8B = (1 << 8),
+    /* APIC is present and enabled. */
+    CPU_APIC      = (1 << 9),
+    /* SYSENTER and SYSEXIT instructions. */
+    CPU_SEP       = (1 << 10),
+    /* Memory type range registers. */
+    CPU_MTRR      = (1 << 11),
+    /* Page global extension. */
+    CPU_PGE       = (1 << 12),
+    /* Machine check architecture. */
+    CPU_MCA       = (1 << 13),
+    /* CMOV instruction. */
+    CPU_CMOV      = (1 << 14),
+    /* Page attribute table. */
+    CPU_PAT       = (1 << 15),
+    /* PSE32 page size extension. */
+    CPU_PSE36     = (1 << 16),
+    /* CLFLUSH instruction. */
+    CPU_CLFLUSH   = (1 << 17),
+    /* MMX instruction/ */
+    CPU_MMX       = (1 << 18),
+    /* FXSR and FXSAVE instructions. */
+    CPU_FXSR      = (1 << 19),
+    /* SSE instruction. */
+    CPU_SSE       = (1 << 20),
+    /* SSE2 instruction. */
+    CPU_SSE2      = (1 << 21),
+    /* Hyper threading technology. */
+    CPU_HTT       = (1 << 22),
+    /* Processor serial number present and enabled. */
+    CPU_PSN       = (1 << 23),
+    /* Debug store. */
+    CPU_DS        = (1 << 24),
+    /* Thermal monitor and sofware controlled clock facilities. */
+    CPU_ACPI      = (1 << 25),
+    /* Self snoop. */
+    CPU_SS        = (1 << 26),
+    /* Automatic thermal control circuit (TCC). */
+    CPU_TM        = (1 << 27),
+
+    // ... more to come
+} CPUFeatureFlag;
+
+typedef struct S_CPUFeatures
+{
+    union
+    {
+        struct _ATTR_PACKED
+        {
+            u8 fpu: 1;
+            u8 vme: 1;
+            u8 de: 1;
+            u8 pse: 1;
+            u8 tsc: 1;
+            u8 msr: 1;
+            u8 pae: 1;
+            u8 mce: 1;
+            u8 cmpxchg8: 1;
+            u8 apic: 1;
+            u8 sep: 1;
+            u8 mtrr: 1;
+            u8 pge: 1;
+            u8 mca: 1;
+            u8 cmov: 1;
+            u8 pat: 1;
+            u8 pse36: 1;
+            u8 clflush: 1;
+            u8 mmx: 1;
+            u8 fxsr: 1;
+            u8 sse: 1;
+            u8 sse2: 1;
+            u8 htt: 1;
+            u8 psn: 1;
+            u8 ds: 1;
+            u8 acpi: 1;
+            u8 ss: 1;
+            u8 tm: 1;
+        };
+        u64 flags;
+    };
+} CPUFeatures;
+
 u32 cpu_read_cr2();
 u32 cpu_read_cr0();
 u32 cpu_read_cr4();
