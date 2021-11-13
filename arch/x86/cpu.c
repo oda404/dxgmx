@@ -13,6 +13,7 @@
 #include<dxgmx/todo.h>
 #include<dxgmx/attrs.h>
 
+static CPUFeatures g_cpufeatures;
 static CPUInfo g_cpuinfo;
 static int g_cpu_identified = 0;
 
@@ -20,6 +21,33 @@ static int g_cpu_identified = 0;
 #define CPU_VENDORSTR_AMD   "AuthenticAMD"
 
 #define KLOGF(lvl, fmt, ...) klogln(lvl, "cpu: " fmt, ##__VA_ARGS__);
+
+_INIT static void cpu_set_common_features(u32 edx)
+{
+    g_cpufeatures.fpu      = edx & 1;
+    g_cpufeatures.vme      = (edx >> 1) & 1;
+    g_cpufeatures.de       = (edx >> 2) & 1;
+    g_cpufeatures.pse      = (edx >> 3) & 1;
+    g_cpufeatures.tsc      = (edx >> 4) & 1;
+    g_cpufeatures.msr      = (edx >> 5) & 1;
+    g_cpufeatures.pae      = (edx >> 6) & 1;
+    g_cpufeatures.mce      = (edx >> 7) & 1;
+    g_cpufeatures.cmpxchg8 = (edx >> 8) & 1;
+    g_cpufeatures.apic     = (edx >> 9) & 1;
+    g_cpufeatures.sep      = (edx >> 11) & 1;
+    g_cpufeatures.mtrr     = (edx >> 12) & 1;
+    g_cpufeatures.pge      = (edx >> 13) & 1;
+    g_cpufeatures.mca      = (edx >> 14) & 1;
+    g_cpufeatures.cmov     = (edx >> 15) & 1;
+    g_cpufeatures.pat      = (edx >> 16) & 1;
+    g_cpufeatures.pse36    = (edx >> 17) & 1;
+    g_cpufeatures.clflush  = (edx >> 19) & 1;
+    g_cpufeatures.mmx      = (edx >> 23) & 1;
+    g_cpufeatures.fxsr     = (edx >> 24) & 1;
+    g_cpufeatures.sse      = (edx >> 25) & 1;
+    g_cpufeatures.sse2     = (edx >> 26) & 1;
+    g_cpufeatures.htt      = (edx >> 28) & 1;
+}
 
 _INIT static void cpu_handle_amd_cpuid()
 {
@@ -47,7 +75,7 @@ _INIT static void cpu_handle_amd_cpuid()
         g_cpuinfo.model = f1eax.ext_model * 0x10 + f1eax.base_model;
     }
 
-    KLOGF(INFO, "UID is %d.%d.%d.", g_cpuinfo.family, g_cpuinfo.model, g_cpuinfo.stepping);
+    cpu_set_common_features(edx);
 }
 
 _INIT static void cpu_handle_intel_cpuid()
@@ -66,7 +94,13 @@ _INIT static void cpu_handle_intel_cpuid()
     g_cpuinfo.model = (f1eax.extended_model << 4) + f1eax.model_number;
     g_cpuinfo.stepping = f1eax.stepping_id;
 
-    KLOGF(INFO, "UID is %d.%d.%d.", g_cpuinfo.family, g_cpuinfo.model, g_cpuinfo.stepping);
+    cpu_set_common_features(edx);
+    /* Intel specific features. */
+    g_cpufeatures.psn  = (edx >> 18) & 1;
+    g_cpufeatures.ds   = (edx >> 21) & 1;
+    g_cpufeatures.acpi = (edx >> 22) & 1;
+    g_cpufeatures.ss   = (edx >> 27) & 1;
+    g_cpufeatures.tm   = (edx >> 29) & 1;
 }
 
 _INIT int cpu_identify()
@@ -87,6 +121,8 @@ _INIT int cpu_identify()
 
     KLOGF(INFO, "Vendor string is \"%s\".", g_cpuinfo.vendorstr);
 
+    memset(&g_cpufeatures, 0, sizeof(g_cpufeatures));
+
     if(strcmp(g_cpuinfo.vendorstr, CPU_VENDORSTR_AMD) == 0)
         cpu_handle_amd_cpuid();
     else if(strcmp(g_cpuinfo.vendorstr, CPU_VENDORSTR_INTEL) == 0)
@@ -94,6 +130,7 @@ _INIT int cpu_identify()
     else
         panic("Unknown CPU vendor '%s'. Not proceeding.", g_cpuinfo.vendorstr);
 
+    KLOGF(INFO, "UID is %d.%d.%d.", g_cpuinfo.family, g_cpuinfo.model, g_cpuinfo.stepping);
     g_cpu_identified = 1;
 
     return 0;
@@ -105,6 +142,11 @@ const CPUInfo *cpu_get_info()
         return NULL;
         
     return &g_cpuinfo;
+}
+
+bool cpu_has_feature(CPUFeatureFlag flag)
+{
+    return (bool)(g_cpufeatures.flags & flag);
 }
 
 uint32_t cpu_read_cr2()
@@ -170,5 +212,4 @@ void cpu_hang()
 
         cpu_suspend();
     }
-    __builtin_unreachable();
 }

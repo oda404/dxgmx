@@ -31,4 +31,6 @@ _ATTR_NORETURN void cpu_hang();
 */
 const CPUInfo *cpu_get_info();
 
+bool cpu_has_feature(CPUFeatureFlag flag);
+
 #endif // _DXGMX_CPU_H
