@@ -10,14 +10,62 @@
 #include<dxgmx/mem/paging.h>
 #include<dxgmx/mem/memrange.h>
 #include<dxgmx/attrs.h>
+#include<dxgmx/assert.h>
 
 #define KLOGF(lvl, fmt, ...) klogln(lvl, "mmanager: " fmt, ##__VA_ARGS__)
 
 static MemoryMap g_sys_mmap;
 static bool g_sys_mmap_locked = false;
 
-extern ptr _kernel_base[];
-extern ptr _kernel_end[];
+extern u8 _kernel_base[];
+extern u8 _kernel_end[];
+extern u8 _text_section_base[];
+extern u8 _text_section_end[];
+extern u8 _rodata_section_base[];
+extern u8 _rodata_section_end[];
+extern u8 _data_section_base[];
+extern u8 _data_section_end[];
+extern u8 _bss_section_base[];
+extern u8 _bss_section_end[];
+
+_INIT static void mmanager_enforce_kernel_section_perms()
+{
+    ASSERT((ptr)_text_section_base % PAGE_SIZE == 0);
+    ASSERT((ptr)_rodata_section_base % PAGE_SIZE == 0);
+    ASSERT((ptr)_data_section_base % PAGE_SIZE == 0);
+    ASSERT((ptr)_bss_section_base % PAGE_SIZE == 0);
+
+    PageTableEntry *pte = NULL;
+
+    for(ptr i = (ptr)_text_section_base; i < (ptr)_text_section_end; i += PAGE_SIZE)
+    {
+        pte = paging_pte_from_vaddr(i);
+        pte->writable = false;
+        paging_flush_tlb_entries(i);
+    }
+
+    for(ptr i = (ptr)_rodata_section_base; i < (ptr)_rodata_section_end; i += PAGE_SIZE)
+    {
+        pte = paging_pte_from_vaddr(i);
+        pte->writable = false;
+        pte->exec_disable = true;
+        paging_flush_tlb_entries(i);
+    }
+
+    for(ptr i = (ptr)_data_section_base; i < (ptr)_data_section_end; i += PAGE_SIZE)
+    {
+        pte = paging_pte_from_vaddr(i);
+        pte->exec_disable = true;
+        paging_flush_tlb_entries(i);
+    }
+
+    for(ptr i = (ptr)_bss_section_base; i < (ptr)_bss_section_end; i += PAGE_SIZE)
+    {
+        pte = paging_pte_from_vaddr(i);
+        pte->exec_disable = true;
+        paging_flush_tlb_entries(i);
+    }
+}
 
 _INIT int mmanager_init()
 {
@@ -54,6 +102,8 @@ _INIT int mmanager_init()
 
     falloc_init();
     paging_init();
+
+    mmanager_enforce_kernel_section_perms();
 
     return 0;
 }
