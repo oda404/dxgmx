@@ -1,123 +1,18 @@
-/**
- * Copyright 2021 Alexandru Olaru.
- * Distributed under the MIT license.
-*/
 
 #include<dxgmx/x86/pagetable.h>
-#include<dxgmx/mem/pagesize.h>
-#include<dxgmx/bitwise.h>
 #include<dxgmx/string.h>
 
-void pagetable_init(PageTable *table)
+void pagetable_init(PageTable *pt)
 {
-    memset((void *)table, 0, sizeof(PageTable));
+    memset(pt, 0, sizeof(*pt));
 }
 
-void pagetable_entry_set_present(
-    int present,
-    PageTableEntry *entry
-)
+void pte_set_frame_base(u64 base, PageTableEntry *pte)
 {
-    entry->present = present;
+    pte->frame_base = base >> 12;
 }
 
-void pagetable_entry_set_rw(
-    int rw,
-    PageTableEntry *entry
-)
+u64 pte_frame_base(PageTableEntry *pte)
 {
-    entry->rw = rw;
-}
-
-void pagetable_entry_set_user_access(
-    int user_acces,
-    PageTableEntry *entry
-)
-{
-    entry->user_access = user_acces;
-}
-
-void pagetable_entry_set_write_through(
-    int write_through,
-    PageTableEntry *entry
-)
-{
-    entry->write_through = write_through;
-}
-
-void pagetable_entry_set_cache_disabled(
-    int cache_disabled,
-    PageTableEntry *entry
-)
-{
-    entry->cache_disabled = cache_disabled;
-}
-
-void pagetable_entry_set_pat_memtype(
-    int pat_memtype,
-    PageTableEntry *entry
-)
-{
-    entry->pat_memtype = pat_memtype;
-}
-
-void pagetable_entry_set_global(
-    int global,
-    PageTableEntry *entry
-)
-{
-    entry->global = global;
-}
-
-int pagetable_entry_set_frame_base(
-    uint32_t frame_base, 
-    PageTableEntry *entry
-)
-{
-    if(!bw_is_aligned(frame_base, PAGE_SIZE))
-        return 1;
-
-    entry->frame_base = frame_base >> 12;
-
-    return 0;
-}
-
-uint32_t pagetable_entry_get_frame_base(PageTableEntry *entry)
-{
-    return entry->frame_base << 12;
-}
-
-int pagetable_entry_get_present(PageTableEntry *entry)
-{
-    return entry->present;
-}
-
-int pagetable_entry_get_rw(PageTableEntry *entry)
-{
-    return entry->rw;
-}
-
-int pagetable_entry_get_user_access(PageTableEntry *entry)
-{
-    return entry->user_access;
-}
-
-int pagetable_entry_get_write_through(PageTableEntry *entry)
-{
-    return entry->write_through;
-}
-
-int pagetable_entry_get_cache_disabled(PageTableEntry *entry)
-{
-    return entry->cache_disabled;
-}
-
-int pagetable_entry_get_pat_memtype(PageTableEntry *entry)
-{
-    return entry->pat_memtype;
-}
-
-int pagetable_entry_get_global(PageTableEntry *entry)
-{
-    return entry->global;
+    return pte->frame_base << 12;
 }
