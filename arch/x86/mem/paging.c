@@ -67,7 +67,7 @@ _INIT static int paging_identity_map_area(ptr base, ptr end)
 
         pte_set_frame_base(i, entry);
         entry->present = true;
-        entry->rw = true;
+        entry->writable = true;
     }
 
     return 0;
@@ -97,7 +97,7 @@ _INIT void paging_init()
 
     pde_set_table_base((ptr)&g_pagetable, &g_pagedir.entries[0]);
     g_pagedir.entries[0].present = true;
-    g_pagedir.entries[0].rw = true;
+    g_pagedir.entries[0].writable = true;
 
     pdpte_set_pagedir_base((ptr)&g_pagedir, &g_pdpt.entries[0]);
     g_pdpt.entries[0].present = true;

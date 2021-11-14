@@ -11,7 +11,7 @@ _ATTR_PACKED S_PageTableEntry
     /* 1 if the page is present in memory. */
     u8  present:        1;
     /* 1 if the page is read/write, 0 if it's read only. */
-    u8  rw:             1;
+    u8  writable:             1;
     /* 1 if the page can be accessed by both kernel and users, 0 if the page can only be accessed by the kernel. */
     u8  user_access:    1;
     /* 1 if the page has write through enabled. */
@@ -32,8 +32,8 @@ _ATTR_PACKED S_PageTableEntry
     u64 frame_base:     50;
     /* Should be 0 */
     u8 reserved:        1;
-    /* eXecute Disable. */
-    u8 xd:              1;
+    /* Page can't be executed from. */
+    u8 exec_disable:    1;
 } PageTableEntry;
 
 typedef struct S_PageTable
