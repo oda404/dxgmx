@@ -184,6 +184,13 @@ u32 cpu_read_cr4()
     return ret;
 }
 
+u64 cpu_read_msr(CPUMSR msr)
+{
+    u32 hi, lo;
+    __asm__ volatile("rdmsr": "=d"(hi), "=a"(lo) : "c"((u32)msr));
+    return ((u64)hi << 32) | lo;
+}
+
 _INIT void cpu_write_cr0(uint32_t val)
 {
     __asm__ volatile("movl %0, %%cr0": :"a"(val));
@@ -192,6 +199,11 @@ _INIT void cpu_write_cr0(uint32_t val)
 _INIT void cpu_write_cr4(u32 val)
 {
     __asm__ volatile("movl %0, %%cr4": : "a"(val));
+}
+
+_INIT void cpu_write_msr(u64 val, CPUMSR msr)
+{
+    __asm__ volatile("wrmsr": : "d"((u32)(val >> 32)), "a"((u32)val), "c"((u32)msr));
 }
 
 void cpu_suspend()

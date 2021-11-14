@@ -147,6 +147,23 @@ typedef enum E_CPUFeatureFlag
     // ... more to come
 } CPUFeatureFlag;
 
+typedef enum E_EFERFlags
+{
+    EFER_SCE = 1,
+    EFER_LME = (1 << 8),
+    EFER_LMA = (1 << 10),
+    EFER_NXE = (1 << 11),
+    EFER_SVME = (1 << 12),
+    EFER_LMSLE = (1 << 13),
+    EFER_FFXSR = (1 << 14),
+    EFER_TCE = (1 << 15)
+} EFERFlags;
+
+typedef enum E_CPUMSR
+{
+    MSR_EFER = 0xC0000080
+} CPUMSR;
+
 typedef struct S_CPUFeatures
 {
     union
@@ -195,6 +212,9 @@ u32 cpu_read_esp();
 
 void cpu_write_cr0(u32 val);
 void cpu_write_cr4(u32 val);
+
+u64 cpu_read_msr(CPUMSR msr);
+void cpu_write_msr(u64 val, CPUMSR msr);
 
 typedef struct
 S_CPUInfo
