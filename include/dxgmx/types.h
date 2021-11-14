@@ -51,4 +51,9 @@ typedef int16_t  i16;
 typedef int32_t  i32;
 typedef int64_t  i64;
 
+#define KIB 1024
+#define MIB (KIB * 1024)
+#define GIB (MIB * 1024)
+#define TIB (GIB * 1024)
+
 #endif //!_DXGMX_TYPES_H
