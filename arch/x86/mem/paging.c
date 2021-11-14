@@ -4,10 +4,11 @@
 */
 
 #include<dxgmx/mem/paging.h>
-#include<dxgmx/x86/pagedir.h>
-#include<dxgmx/x86/pagetable.h>
 #include<dxgmx/x86/interrupt_frame.h>
 #include<dxgmx/x86/idt.h>
+#include<dxgmx/x86/pagetable.h>
+#include<dxgmx/x86/pagedir.h>
+#include<dxgmx/x86/pagedir_ptrtable.h>
 #include<dxgmx/compiler_attrs.h>
 #include<dxgmx/mem/pagesize.h>
 #include<dxgmx/klog.h>
@@ -17,9 +18,11 @@
 #include<dxgmx/math.h>
 #include<dxgmx/todo.h>
 #include<dxgmx/attrs.h>
+#include<dxgmx/string.h>
 
-static PageDirectory g_pagedir _ATTR_ALIGNED(PAGE_SIZE);
-static PageTable g_pagetables[1];
+static _ATTR_ALIGNED(PAGE_SIZE) PageDirectoryPointerTable g_pdpt;
+static _ATTR_ALIGNED(PAGE_SIZE) PageDirectory g_pagedir;
+static _ATTR_ALIGNED(PAGE_SIZE) PageTable g_pagetable;
 
 #define KLOGF(lvl, fmt, ...) klogln(lvl, "paging: " fmt, ##__VA_ARGS__)
 
@@ -30,49 +33,42 @@ static void paging_isr(
 {
 #define PAGEFAULT_IS_PROT_VIOL(x) (x & 1)
 #define PAGEFAULT_IS_WRITE(x) (x & (1 << 1))
+#define PAGEFAULT_IS_EXEC(x) (x & (1 << 4))
 
     ptr faultaddr = cpu_read_cr2();
 
-    if(PAGEFAULT_IS_PROT_VIOL(frame->code))
-    {
-        panic(
-            "Page protection violation: tried to %s 0x%p. Not proceeding.", 
-            PAGEFAULT_IS_WRITE(frame->code) ? "write to" : "read from",
-            (void*)faultaddr
-        );
-    }
-
     if(faultaddr < PAGE_SIZE)
         panic("Possible NULL dereference in ring 0 :(. Not proceeding.");
+
+    if(PAGEFAULT_IS_PROT_VIOL(frame->code))
+    {
+        char msg[10];
+        if(PAGEFAULT_IS_EXEC(frame->code))
+            strcpy(msg, "exec from");
+        else if(PAGEFAULT_IS_WRITE(frame->code))
+            strcpy(msg, "write to");
+        else
+            strcpy(msg, "read from");
+
+        panic("Page protection violation: tried to %s 0x%p. Not proceeding.", msg, (void*)faultaddr);
+    }
 }
 
 _INIT static int paging_identity_map_area(ptr base, ptr end)
 {
-    if(!bw_is_aligned(base, PAGE_SIZE))
+    if(base % PAGE_SIZE != 0)
         return 1;
     
     for(size_t i = base; i < end; i += PAGE_SIZE)
     {
-        size_t pgtable_entry = i / PAGE_SIZE;
-        size_t pgtable = pgtable_entry / 1024;
-        if(pgtable > 0)
-            TODO_FATAL(); /* Only first page table can be accessed for now. */
-        pgtable_entry -= pgtable * 1024;
+        PageTableEntry *entry = paging_pte_from_vaddr(i);
 
-        PageTable *table = &g_pagetables[0];
-        PageTableEntry *entry = &table->entries[pgtable_entry];
-
-        pagetable_entry_set_frame_base(i, entry);
-        pagetable_entry_set_present(true, entry);
-        pagetable_entry_set_rw(true, entry);
+        pte_set_frame_base(i, entry);
+        entry->present = true;
+        entry->rw = true;
     }
 
     return 0;
-}
-
-_INIT static int paging_identity_map(ptr base, size_t pages)
-{
-    return paging_identity_map_area(base, base + pages * PAGE_SIZE);
 }
 
 extern u8 _kernel_base[];
@@ -80,28 +76,50 @@ extern u8 _kernel_end[];
 
 _INIT void paging_init()
 {
+    if(!cpu_has_feature(CPU_PAE))
+        panic("CPU doesn't support PAE, we don't support that. Not proceeding.");
+
+    KLOGF(INFO, "Setting up 3-level paging with PAE.");
+
+    pdpt_init(&g_pdpt);
     pagedir_init(&g_pagedir);
-    pagetable_init(&g_pagetables[0]);
+    pagetable_init(&g_pagetable);
+    /* Enable page address extension for the execution disable bit and
+    disable page size extension as we don't use it. */
+    cpu_write_cr4((cpu_read_cr4() | CR4_PAE) & ~(CR4_PSE));
+    cpu_write_msr(cpu_read_msr(MSR_EFER) | EFER_NXE, MSR_EFER);
 
-    /* Mark the first page as absent. */
-    pagetable_entry_set_frame_base(0, &g_pagetables[0].entries[0]);
-    pagetable_entry_set_present(0, &g_pagetables[0].entries[0]);
+    /* Mark the first page as absent so we can't do shit like *(NULL). */
+    g_pagetable.entries[0].frame_base = 0;
+    g_pagetable.entries[0].present = false;
 
-    /* Identity map the first 1mb */
-    paging_identity_map(4096, 255);
+    pde_set_table_base((ptr)&g_pagetable, &g_pagedir.entries[0]);
+    g_pagedir.entries[0].present = true;
+    g_pagedir.entries[0].rw = true;
 
-    /* Identity map the kernel */
+    pdpte_set_pagedir_base((ptr)&g_pagedir, &g_pdpt.entries[0]);
+    g_pdpt.entries[0].present = true;
+
+    paging_identity_map_area(PAGE_SIZE, MIB);
     paging_identity_map_area((ptr)_kernel_base, (ptr)_kernel_end);
 
-    pagedir_entry_set_table_base(&g_pagetables[0], &g_pagedir.entries[0]);
-    pagedir_entry_set_present(true, &g_pagedir.entries[0]);
-    pagedir_entry_set_rw(true, &g_pagedir.entries[0]);
-
-    pagedir_load(&g_pagedir);
+    /* Flush pdpt. */
+    cpu_write_cr3((u32)&g_pdpt);
 
     idt_register_isr(TRAP14, paging_isr);
 
-    cpu_write_cr0(cpu_read_cr0() | CR0_PE | CR0_PG | CR0_WP);
-    
-    KLOGF(INFO, "Enabled paging.");
+    /* Enable paging. */
+    cpu_write_cr0(cpu_read_cr0() | CR0_PG | CR0_WP);
+}
+
+PageTableEntry *paging_pte_from_vaddr(ptr vaddr)
+{
+    size_t pte_idx = vaddr / PAGE_SIZE;
+    size_t pt_idx = pte_idx / 512;
+    if(pt_idx > 0)
+        TODO_FATAL(); /* Only first page table can be accessed for now. */
+    pte_idx -= pt_idx * 512;
+
+    PageTable *table = &g_pagetable;
+    return &table->entries[pte_idx];
 }
