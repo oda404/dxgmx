@@ -52,6 +52,8 @@ static void paging_isr(
 
         panic("Page protection violation: tried to %s 0x%p. Not proceeding.", msg, (void*)faultaddr);
     }
+    else
+        TODO_FATAL();
 }
 
 _INIT static int paging_identity_map_area(ptr base, ptr end)
@@ -122,4 +124,11 @@ PageTableEntry *paging_pte_from_vaddr(ptr vaddr)
 
     PageTable *table = &g_pagetable;
     return &table->entries[pte_idx];
+}
+
+void paging_flush_tlb_entries(ptr vaddr)
+{
+    /*FIXEME: check for i386 CPUs that don't support invlpg ?
+    Though, if a CPU supports the mandatory PAE it should also support invlpg ? */
+    __asm__ volatile("invlpg (%0)": : "a"(vaddr));
 }

@@ -12,4 +12,8 @@
 void paging_init();
 PageTableEntry *paging_pte_from_vaddr(ptr vaddr);
 
+#if defined(_X86_)
+void paging_flush_tlb_entries(ptr vaddr);
+#endif
+
 #endif //_DXGMX_PAGING_H
