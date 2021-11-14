@@ -212,6 +212,7 @@ u32 cpu_read_esp();
 
 void cpu_write_cr0(u32 val);
 void cpu_write_cr4(u32 val);
+void cpu_write_cr3(u32 val);
 
 u64 cpu_read_msr(CPUMSR msr);
 void cpu_write_msr(u64 val, CPUMSR msr);

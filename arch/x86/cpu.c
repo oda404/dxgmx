@@ -196,6 +196,11 @@ _INIT void cpu_write_cr0(uint32_t val)
     __asm__ volatile("movl %0, %%cr0": :"a"(val));
 }
 
+_INIT void cpu_write_cr3(u32 val)
+{
+    __asm__ volatile("movl %0, %%cr3": : "a"(val));
+}
+
 _INIT void cpu_write_cr4(u32 val)
 {
     __asm__ volatile("movl %0, %%cr4": : "a"(val));
