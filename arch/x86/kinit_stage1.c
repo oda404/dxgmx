@@ -33,11 +33,11 @@ int kinit_stage1()
     if(_multiboot_magic != MULTIBOOT_BOOTLOADER_MAGIC)
         panic("Not booted by a multiboot compliant bootloader.");
 
-    /* Set up memory management. */
-    mmanager_init();
-
     /* Set CPU features as they may be needed for initializing system timers. */
     cpu_identify();
+
+    /* Set up memory management. */
+    mmanager_init();
 
     /* Start timekeeping and get out of 'early' mode. */
     timekeep_init();
