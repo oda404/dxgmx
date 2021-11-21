@@ -3,12 +3,11 @@
 #define _DXGMX_KSTACK_H
 
 #include<dxgmx/types.h>
-#include<dxgmx/compiler_attrs.h>
 
 /* The size of the kernel stack in bytes. */
-#define KSTACK_SIZE (1024 * 4)
+#define KSTACK_SIZE (2 * KIB)
 
-ptr kstack_get_top();
-ptr kstack_get_bot();
+extern ptr _kernel_stack_top;
+extern ptr _kernel_stack_bot;
 
 #endif //!_DXGMX_KSTACK_H
