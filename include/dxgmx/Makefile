@@ -24,6 +24,7 @@ $(INCLUDEDIR)/dxgmx/compiler_attrs.h \
 $(INCLUDEDIR)/dxgmx/timekeep.h \
 $(INCLUDEDIR)/dxgmx/stack_trace.h \
 $(INCLUDEDIR)/dxgmx/kmalloc.h \
+$(INCLUDEDIR)/dxgmx/hashtable.h \
 
 include $(INCLUDEDIR)/dxgmx/bits/Makefile
 include $(INCLUDEDIR)/dxgmx/mem/Makefile
