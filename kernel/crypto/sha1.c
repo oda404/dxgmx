@@ -218,19 +218,13 @@ SHA1Digest sha1_hash_buf(const char *buf, size_t buflen)
     sha1_process_block(&ctx);
 
     SHA1Digest digest = {
-        .hashlen = 40,
+        .hashsize = 20,
+        .h0 = ctx.regs.h0,
+        .h1 = ctx.regs.h1,
+        .h2 = ctx.regs.h2,
+        .h3 = ctx.regs.h3,
+        .h4 = ctx.regs.h4,
     };
-
-    snprintf(
-        digest.hash, 
-        41, 
-        "%08lX%08lX%08lX%08lX%08lX", 
-        ctx.regs.h0,
-        ctx.regs.h1,
-        ctx.regs.h2,
-        ctx.regs.h3,
-        ctx.regs.h4
-    );
 
     return digest;
 }
