@@ -11,6 +11,8 @@
 
 long int strtol(const char *__restrict str, char **__restrict endptr, int base);
 
+unsigned long strtoul(const char *__restrict str, char **__restrict endptr, int base);
+
 int abs(int n)
 _ATTR_CONST;
 

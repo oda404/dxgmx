@@ -87,6 +87,61 @@ static int isbasedigit(int c, int base)
     return 0;
 }
 
+unsigned long strtoul(const char *str, char **endptr, int base)
+{
+    if((base < 2 && base != 0) || base > 36)
+        return 0;
+
+    if(base == 0)
+        TODO_FATAL(); // can't be fucked now
+    
+    int neg = 0;
+    /* assume the initial str is invalid */
+    if(endptr)
+        *endptr = (char*)str; /* needed voodo to supress warnings */
+    
+    while(isspace(*str))
+        ++str;
+    if(*str == '-')
+    {
+        neg = 1;
+        ++str;
+    }
+    /* if a digit isn't found after the potential sign return 0 */
+    if(!isbasedigit(*str, base))
+    {
+        errno = EINVAL;
+        return 0;
+    }
+
+    unsigned long out = 0;
+
+    for(; *str != '\0'; ++str)
+    {
+        if(!isbasedigit(*str, base))
+            break;
+
+        unsigned long tmp;
+        if(*str <= '9')
+            tmp = out * base + (*str - '0');
+        else if (*str >= 'a' && *str <= 'v')
+            tmp = out * base + (*str - 'a' + 10);
+        else
+            tmp = out * base + (*str - 'A' + 10);
+
+        if(tmp < out) // overflow
+        {
+            errno = ERANGE;
+            return ULONG_MAX;
+        }
+        out = tmp;
+    }
+
+    if(endptr)
+        *endptr = (char*)str; /* needed voodo to supress warnings */
+    return neg ? -out : out;
+}
+
 long int strtol(const char *str, char **endptr, int base)
 {
     if((base < 2 && base != 0) || base > 36)
