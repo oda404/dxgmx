@@ -1,15 +1,35 @@
 
-#include<dxgmx/kprintf.h>
-#include<dxgmx/stdlib.h>
+#include<dxgmx/stdio.h>
+#include<dxgmx/types.h>
 #include<dxgmx/string.h>
+#include<dxgmx/math.h>
+#include<dxgmx/stdlib.h>
 #include<dxgmx/ctype.h>
 #include<dxgmx/todo.h>
-#include<dxgmx/math.h>
-#include<dxgmx/types.h>
-#include<stdint.h>
-#include<stddef.h>
 #include<limits.h>
-#include<stdarg.h>
+
+int vsprintf(char *dest, const char *fmt, va_list arglist)
+{
+    return vsnprintf(dest, INT_MAX, fmt, arglist);
+}
+
+int snprintf(char *dest, size_t n, const char *fmt, ...)
+{
+    va_list arglist;
+    va_start(arglist, fmt);
+    int written = vsnprintf(dest, n, fmt, arglist);
+    va_end(arglist);
+    return written;
+}
+
+int sprintf(char *dest, const char *fmt, ...)
+{
+    va_list arglist;
+    va_start(arglist, fmt);
+    size_t written = vsprintf(dest, fmt, arglist);
+    va_end(arglist);
+    return written;
+}
 
 enum PrintfLengthSpecifier
 {
@@ -41,7 +61,7 @@ enum PrintfParseStatus
     PRINTF_PARSE_DONE
 };
 
-static int printf_parse_flags(char c, uint8_t *flags)
+static int printf_parse_flags(char c, u8 *flags)
 {
     switch(c)
     {
@@ -65,7 +85,7 @@ static int printf_parse_flags(char c, uint8_t *flags)
     }
 }
 
-static int printf_parse_length(char c, uint8_t *length)
+static int printf_parse_length(char c, u8 *length)
 {
     switch(c)
     {
@@ -125,7 +145,7 @@ static int printf_parse_length(char c, uint8_t *length)
 static size_t printf_apply_flags_and_width(
     char *buf,
     size_t bufmax,
-    uint8_t flags,
+    u8 flags,
     size_t width
 )
 {
@@ -173,10 +193,10 @@ int vsnprintf(char *dest, size_t n, const char *fmt, va_list arglist)
     dest[0] = '\0';
 
     size_t written = 0;
-    uint8_t length;
-    uint8_t flags;
-    uint16_t width;
-    int64_t precision;
+    u8 length;
+    u8 flags;
+    u16 width;
+    i64 precision;
 
     for(; *fmt != '\0'; ++fmt)
     {
@@ -452,3 +472,4 @@ reprocess_length:
 
     return written;
 }
+
