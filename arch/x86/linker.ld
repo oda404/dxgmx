@@ -59,7 +59,14 @@ SECTIONS
         _ro_after_stage1_section_end = .;
     }
 
-    .init ALIGN(4K):
+    .ksyms ALIGN(4K) :
+    {
+        _ksyms_section_base = .;
+        *(.ksyms)
+        _ksyms_section_end = .;
+    }
+
+    .init ALIGN(4K) :
     {
         _init_section_base = .;
         *(.init)

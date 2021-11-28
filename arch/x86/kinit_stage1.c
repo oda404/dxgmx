@@ -14,6 +14,7 @@
 #include<dxgmx/klog.h>
 #include<dxgmx/mem/mmanager.h>
 #include<dxgmx/timekeep.h>
+#include<dxgmx/ksyms.h>
 
 int kinit_stage1()
 {
@@ -29,6 +30,8 @@ int kinit_stage1()
     /* Initialize logging early on, so if something goes wrong we see it. */
     tty_init();
     klog_init((KLogLevel)_DXGMX_LOGLVL_);
+
+    ksyms_load();
 
     if(_multiboot_magic != MULTIBOOT_BOOTLOADER_MAGIC)
         panic("Not booted by a multiboot compliant bootloader.");
