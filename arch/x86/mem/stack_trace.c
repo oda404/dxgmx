@@ -2,6 +2,7 @@
 #include<dxgmx/stack_trace.h>
 #include<dxgmx/cpu.h>
 #include<dxgmx/klog.h>
+#include<dxgmx/ksyms.h>
 
 void stack_trace_dump()
 {
@@ -15,13 +16,35 @@ void stack_trace_dump()
     klogln(INFO, "Call stack backtrace:");
     if(!frame)
     {
-        klogln(WARN, "Current ebp is 0, something has gone horribly wrong lmao.");
+        klogln(ERR, "Current ebp is 0, something has gone horribly wrong lmao.");
         return;
     }
 
-    while(frame)
+#define FRAMES_UNWIND_MAX 15
+#define FUNC_BUF_MAX 49
+
+    size_t frames = 0;
+    while(frame && frames < FRAMES_UNWIND_MAX)
     {
-        klogln(INFO, "  0x%p - ???", (void*)frame->instptr);
+        char buf[FUNC_BUF_MAX + 1] = "???";
+
+        ptr offset = 0;
+        ksyms_get_symbol_name(
+            frame->instptr - 1, 
+            &offset, 
+            buf, 
+            FUNC_BUF_MAX
+        );
+
+        klogln(
+            INFO, 
+            "  0x%p - [%s] + 0x%X", 
+            (void*)(frame->instptr - 1), 
+            buf, 
+            offset
+        );
         frame = (StackFrame*)frame->baseptr;
+
+        ++frames;
     }
 }
