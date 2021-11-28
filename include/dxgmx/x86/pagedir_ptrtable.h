@@ -9,20 +9,20 @@ typedef struct
 _ATTR_PACKED S_PageDirectoryPointerTableEntry
 {
     /* The referenced page directory is present in memory. */
-    u8 present: 1;
+    u16 present: 1;
     /* Must be 0. */
-    u8 reserved: 2;
+    u16 reserved: 2;
     /* Page-level write through. */
-    u8 pwt: 1;
+    u16 pwt: 1;
     /* Page-level cache disabled. */
-    u8 pcd: 1;
+    u16 pcd: 1;
     /* Must be 0. */
-    u8 reserved2: 4;
-    u8 ignored: 3;
+    u16 reserved2: 4;
+    u16 ignored: 3;
     /* Physical address of the page directory. */
     u64 pd_base: 51;
     /* Must be 0. */
-    u8 reserved3: 1;
+    u16 reserved3: 1;
 } PageDirectoryPointerTableEntry;
 
 typedef struct S_PageDirectoryPointerTable
