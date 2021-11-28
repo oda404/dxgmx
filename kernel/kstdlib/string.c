@@ -58,6 +58,22 @@ char *strcpy(char *dest, const char *src)
     dest[i] = '\0';
     return dest;
 }
+#include<dxgmx/klog.h>
+char *strncpy(char *dest, const char *src, size_t n)
+{
+    size_t i = 0;
+    size_t srclen = strnlen(src, n);
+
+    for(; i < srclen; ++i)
+        dest[i] = src[i];
+
+    /* pad remaining bytes with '\0'. */
+    for(size_t k = n - srclen; k >= 1; --k)
+        dest[i++] = '\0';
+
+    dest[i] = '\0';
+    return dest;
+}
 
 int strcmp(const char *str1, const char *str2)
 {
@@ -80,3 +96,10 @@ size_t strlen(const char *str)
     return ret;
 }
 
+size_t strnlen(const char *str, size_t n)
+{
+    size_t ret = 0;
+    while(str[ret] != '\0' && ret < n)
+        ++ret;
+    return ret;
+}
