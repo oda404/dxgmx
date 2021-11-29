@@ -5,14 +5,10 @@
 
 #include<dxgmx/x86/cpuid.h>
 #include<dxgmx/string.h>
-#include<stdint.h>
 
-#define CPUID_VENDOR_STR 0
-#define CPUID_MAX_EAX    0
-
-int cpuid_is_avail()
+bool cpuid_is_avail()
 {
-    int ret;
+    bool ret;
     __asm__ volatile(
         "pushfl                                                                                   \n"
         "pushfl                                                                                   \n"
