@@ -51,7 +51,7 @@ _INIT static void cpu_set_common_features(u32 edx)
 
 _INIT static void cpu_handle_amd_cpuid()
 {
-    uint32_t eax, ebx, ecx, edx;
+    u32 eax, ebx, ecx, edx;
     CPUID(1, eax, ebx, ecx, edx);
 
     g_cpuinfo.vendor = CPU_VENDOR_AMD;
@@ -149,9 +149,9 @@ bool cpu_has_feature(CPUFeatureFlag flag)
     return (bool)(g_cpufeatures.flags & flag);
 }
 
-uint32_t cpu_read_cr2()
+u32 cpu_read_cr2()
 {
-    uint32_t ret;
+    u32 ret;
     __asm__ volatile("movl %%cr2, %0": "=a"(ret));
     return ret;
 }
@@ -163,9 +163,9 @@ u32 cpu_read_cr3()
     return ret;
 }
 
-uint32_t cpu_read_cr0()
+u32 cpu_read_cr0()
 {
-    uint32_t ret;
+    u32 ret;
     __asm__ volatile("movl %%cr0, %0": "=a"(ret));
     return ret;
 }
@@ -200,7 +200,7 @@ u64 cpu_read_msr(CPUMSR msr)
     return ((u64)hi << 32) | lo;
 }
 
-_INIT void cpu_write_cr0(uint32_t val)
+_INIT void cpu_write_cr0(u32 val)
 {
     __asm__ volatile("movl %0, %%cr0": :"a"(val));
 }
