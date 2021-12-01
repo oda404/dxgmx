@@ -147,7 +147,7 @@ _INIT int setup_heap()
         panic("Could not map initial heap. Not proceeding.");
 
     /* Map the heap */
-    pde_set_table_base((ptr)pgtable, &g_pgdirs[3].entries[1]);
+    pde_set_table_base((ptr)pgtable - (ptr)_kernel_map_offset, &g_pgdirs[3].entries[1]);
     g_pgdirs[3].entries[1].present = true;
     g_pgdirs[3].entries[1].writable = true;
 
@@ -164,10 +164,12 @@ _INIT int setup_heap()
             break;
         }
 
-        pte_set_frame_base(falloc(1), entry);
+        pte_set_frame_base(fbase, entry);
         entry->present = true;
         entry->writable = true;
     }
+
+    cpu_write_cr3((ptr)&g_pdpt - (ptr)_kernel_map_offset);
 }
 
 _INIT int mmanager_init()
