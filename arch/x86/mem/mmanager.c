@@ -170,6 +170,8 @@ _INIT int setup_heap()
     }
 
     cpu_write_cr3((ptr)&g_pdpt - (ptr)_kernel_map_offset);
+
+    return 0;
 }
 
 _INIT int mmanager_init()
