@@ -209,7 +209,7 @@ _INIT int mmanager_init()
     setup_heap();
 
     /* The heap can finally be initialized. */
-    kmalloc_init();
+    kmalloc_init(g_heap_start, g_heap_size);
 
     /* ACPI could potentially modify the sys mmap 
     before we lock it down. */
