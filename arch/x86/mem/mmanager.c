@@ -3,22 +3,40 @@
 #include<dxgmx/mem/mmap.h>
 #include<dxgmx/x86/multiboot.h>
 #include<dxgmx/x86/acpi.h>
+#include<dxgmx/x86/idt.h>
+#include<dxgmx/x86/pagedir_ptrtable.h>
+#include<dxgmx/x86/pagedir.h>
+#include<dxgmx/x86/pagetable.h>
 #include<dxgmx/types.h>
 #include<dxgmx/klog.h>
 #include<dxgmx/mem/pagesize.h>
 #include<dxgmx/mem/falloc.h>
-#include<dxgmx/mem/paging.h>
 #include<dxgmx/mem/memrange.h>
 #include<dxgmx/attrs.h>
 #include<dxgmx/assert.h>
+#include<dxgmx/cpu.h>
+#include<dxgmx/string.h>
+#include<dxgmx/todo.h>
+#include<dxgmx/kmalloc.h>
+#include<dxgmx/math.h>
 
 #define KLOGF(lvl, fmt, ...) klogln(lvl, "mmanager: " fmt, ##__VA_ARGS__)
+
+/* The minimum paging structures we need to statically allocate,
+before we can use the heap. */
+static _ATTR_ALIGNED(PAGE_SIZE) PageTable g_pgtable0;
+static _ATTR_ALIGNED(PAGE_SIZE) PageTable g_pgtable1;
+static _ATTR_ALIGNED(PAGE_SIZE) PageDirectoryPointerTable g_pdpt;
+static _ATTR_ALIGNED(PAGE_SIZE) PageDirectory g_pgdirs[4];
+static PageTable *g_pgtables[512 * 4];
 
 static MemoryMap g_sys_mmap;
 static bool g_sys_mmap_locked = false;
 
+static ptr g_heap_start = 0;
+static ptr g_heap_size = 0;
+
 extern u8 _kernel_base[];
-extern u8 _kernel_end[];
 extern u8 _text_section_base[];
 extern u8 _text_section_end[];
 extern u8 _rodata_section_base[];
@@ -27,54 +45,143 @@ extern u8 _data_section_base[];
 extern u8 _data_section_end[];
 extern u8 _bss_section_base[];
 extern u8 _bss_section_end[];
+extern u8 _bootloader_section_base[];
+extern u8 _bootloader_section_end[];
+extern u8 _kernel_map_offset[];
+extern u8 _kernel_size[];
 
-_INIT static void mmanager_enforce_kernel_section_perms()
+static PageTable *pgtable_from_vaddr(ptr vaddr)
 {
-    ASSERT((ptr)_text_section_base % PAGE_SIZE == 0);
-    ASSERT((ptr)_rodata_section_base % PAGE_SIZE == 0);
-    ASSERT((ptr)_data_section_base % PAGE_SIZE == 0);
-    ASSERT((ptr)_bss_section_base % PAGE_SIZE == 0);
+    return g_pgtables[(size_t)floor(vaddr / PAGE_SIZE / 512)];
+}
 
-    PageTableEntry *pte = NULL;
+static void paging_isr(
+    const InterruptFrame *frame, 
+    const void _ATTR_MAYBE_UNUSED *data
+)
+{
+#define PAGEFAULT_IS_PROT_VIOL(x) (x & 1)
+#define PAGEFAULT_IS_WRITE(x) (x & (1 << 1))
+#define PAGEFAULT_IS_EXEC(x) (x & (1 << 4))
 
-    for(ptr i = (ptr)_text_section_base; i < (ptr)_text_section_end; i += PAGE_SIZE)
+    ptr faultaddr = cpu_read_cr2();
+
+    if(faultaddr < PAGE_SIZE)
+        panic("Possible NULL dereference in ring 0 :(. Not proceeding.");
+
+    if(PAGEFAULT_IS_PROT_VIOL(frame->code))
     {
-        pte = paging_pte_from_vaddr(i);
-        pte->writable = false;
-        paging_flush_tlb_entries(i);
+        char msg[10];
+        if(PAGEFAULT_IS_EXEC(frame->code))
+            strcpy(msg, "exec from");
+        else if(PAGEFAULT_IS_WRITE(frame->code))
+            strcpy(msg, "write to");
+        else
+            strcpy(msg, "read from");
+
+        panic("Page protection violation: tried to %s 0x%p. Not proceeding.", msg, (void*)faultaddr);
+    }
+    else
+        TODO_FATAL();
+}
+
+_INIT static int setup_definitive_paging()
+{
+    /* Paging is and has been enabled ever since we jumped to C code
+    but we replace the 'boot' paging structs, and set up a heap. */
+
+    memset(&g_pdpt, 0, sizeof(g_pdpt));
+    memset(&g_pgdirs, 0, sizeof(g_pgdirs));
+    memset(&g_pgtable0, 0, sizeof(g_pgtable0));
+    memset(&g_pgtable1, 0, sizeof(g_pgtable1));
+    memset(g_pgtables, 0, sizeof(g_pgtables));
+
+    g_pgtables[512 * 3] = &g_pgtable0;
+    g_pgtables[512 * 3 + 1] = &g_pgtable1;
+
+    /* Setup the pagefault handler. */
+    idt_register_isr(TRAP14, paging_isr);
+    /* Enable NXE bit. */
+    cpu_write_msr(cpu_read_msr(MSR_EFER) | EFER_NXE, MSR_EFER);
+
+    pdpte_set_pagedir_base((ptr)&g_pgdirs[0] - (ptr)_kernel_map_offset, &g_pdpt.entries[0]);
+    pdpte_set_pagedir_base((ptr)&g_pgdirs[1] - (ptr)_kernel_map_offset, &g_pdpt.entries[1]);
+    pdpte_set_pagedir_base((ptr)&g_pgdirs[2] - (ptr)_kernel_map_offset, &g_pdpt.entries[2]);
+    pdpte_set_pagedir_base((ptr)&g_pgdirs[3] - (ptr)_kernel_map_offset, &g_pdpt.entries[3]);
+    g_pdpt.entries[3].present = true;
+
+    PageTable *pgtable = pgtable_from_vaddr(0xC0000000);
+    if(!pgtable)
+        panic("Could not map kernel image. Not proceding.");
+
+    pde_set_table_base((ptr)pgtable - (ptr)_kernel_map_offset, &g_pgdirs[3].entries[0]);
+    g_pgdirs[3].entries[0].present = true;
+    g_pgdirs[3].entries[0].writable = true;
+
+    /* Map the first 2MiB of memory to 0xC0000000. */
+    size_t entries = 256 + ((ptr)_kernel_size / PAGE_SIZE + 1);
+    if(entries > 512)
+        panic("Kernel has grown beyond 1MiB, how did we get here ?");
+
+    for(size_t i = 0; i < entries; ++i)
+    {
+        PageTableEntry *entry = &pgtable->entries[i];
+
+        pte_set_frame_base(PAGE_SIZE * i, entry);
+        entry->present = true;
+        entry->writable = true;
     }
 
-    for(ptr i = (ptr)_rodata_section_base; i < (ptr)_rodata_section_end; i += PAGE_SIZE)
-    {
-        pte = paging_pte_from_vaddr(i);
-        pte->writable = false;
-        pte->exec_disable = true;
-        paging_flush_tlb_entries(i);
-    }
+    cpu_write_cr3((ptr)&g_pdpt - (ptr)_kernel_map_offset);
 
-    for(ptr i = (ptr)_data_section_base; i < (ptr)_data_section_end; i += PAGE_SIZE)
-    {
-        pte = paging_pte_from_vaddr(i);
-        pte->exec_disable = true;
-        paging_flush_tlb_entries(i);
-    }
+    return 0;
+}
 
-    for(ptr i = (ptr)_bss_section_base; i < (ptr)_bss_section_end; i += PAGE_SIZE)
+_INIT int setup_heap()
+{
+    g_heap_start = 0xC0200000;
+    g_heap_size = 2 * MIB;
+
+    PageTable *pgtable = pgtable_from_vaddr(g_heap_start);
+    if(!pgtable)
+        panic("Could not map initial heap. Not proceeding.");
+
+    /* Map the heap */
+    pde_set_table_base((ptr)pgtable, &g_pgdirs[3].entries[1]);
+    g_pgdirs[3].entries[1].present = true;
+    g_pgdirs[3].entries[1].writable = true;
+
+    for(size_t i = 1; i <= 512; ++i)
     {
-        pte = paging_pte_from_vaddr(i);
-        pte->exec_disable = true;
-        paging_flush_tlb_entries(i);
+        PageTableEntry *entry = &pgtable->entries[i - 1];
+
+        ptr fbase = falloc(1);
+        if(!fbase)
+        {
+            const size_t initheap = g_heap_size;
+            g_heap_size = (i - 1) * 4096;
+            KLOGF(WARN, "Only mapped %d/%d pages of the heap.", g_heap_size, initheap);
+            break;
+        }
+
+        pte_set_frame_base(falloc(1), entry);
+        entry->present = true;
+        entry->writable = true;
     }
 }
 
 _INIT int mmanager_init()
 {
+    setup_definitive_paging();
+
+    /* First we setup the system memory map to know what
+    we're working with. */
     mmap_init(&g_sys_mmap);
-    MultibootMBI *mbi = (MultibootMBI *)_multiboot_info_struct_base;
+    MultibootMBI *mbi = (MultibootMBI *)(_multiboot_info_struct_base + (ptr)_kernel_map_offset);
 
     for(
-        MultibootMMAP *mmap = (MultibootMMAP *)mbi->mmap_base;
-        (ptr)mmap < mbi->mmap_base + mbi->mmap_length;
+        MultibootMMAP *mmap = (MultibootMMAP *)(mbi->mmap_base + (ptr)_kernel_map_offset);
+        (ptr)mmap < mbi->mmap_base + (ptr)_kernel_map_offset + mbi->mmap_length;
         mmap = (MultibootMMAP *)((ptr)mmap + mmap->size + sizeof(mmap->size))
     )
     {
@@ -84,26 +191,30 @@ _INIT int mmanager_init()
     KLOGF(INFO, "Memory map provided by BIOS:");
     mmap_dump(&g_sys_mmap);
 
-    mmap_update_entry_type(0, PAGE_SIZE, MMAP_RESERVED, &g_sys_mmap);
-    /* mark the kernel itself as kreserved */
+    /* Reserve the 1st MiB */
+    mmap_update_entry_type(0, MIB, MMAP_RESERVED, &g_sys_mmap);
+    /* Reserve the kernel image. */
     mmap_update_entry_type(
         (ptr)_kernel_base, 
-        (size_t)_kernel_end - (size_t)_kernel_base, 
+        (ptr)_kernel_size, 
         MULTIBOOT_MMAP_TYPE_RESERVED,
         &g_sys_mmap
     );
 
     mmap_align_entries(MMAP_AVAILABLE, PAGE_SIZE, &g_sys_mmap);
 
+    /* Now that we have a memory map, we can start allocating page frames. */
+    falloc_init();
+
+    setup_heap();
+
+    /* The heap can finally be initialized. */
+    kmalloc_init();
+
     /* ACPI could potentially modify the sys mmap 
     before we lock it down. */
-    acpi_reserve_tables();
+    //acpi_reserve_tables();
     g_sys_mmap_locked = true;
-
-    falloc_init();
-    paging_init();
-
-    mmanager_enforce_kernel_section_perms();
 
     return 0;
 }

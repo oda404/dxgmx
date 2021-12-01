@@ -14,7 +14,7 @@
 #define VGA_IDX_REG_2        0x3CE
 #define VGA_IDX_REG_3        0x3D4
 
-static uint16_t *g_vga_buf_base = (uint16_t *)0xB8000;
+static uint16_t *g_vga_buf_base = (uint16_t *)0xC00B8000;
 static uint8_t  g_vga_max_w     = 80;
 static uint8_t  g_vga_max_h     = 0;
 
