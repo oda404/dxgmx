@@ -4,7 +4,12 @@
 
 double ceil(double x)
 {
-    return (int)x == x ? x : (int)(x + 1);
+    return (int)(x + 1);
+}
+
+double floor(double x)
+{
+    return (int)x;
 }
 
 double modf(double x, double *whole)
