@@ -31,16 +31,16 @@ int kinit_stage1()
     tty_init();
     klog_init((KLogLevel)_DXGMX_LOGLVL_);
 
-    ksyms_load();
-
-    if(_multiboot_magic != MULTIBOOT_BOOTLOADER_MAGIC)
-        panic("Not booted by a multiboot compliant bootloader.");
-
     /* Set CPU features as they may be needed for initializing system timers. */
     cpu_identify();
 
     /* Set up memory management. */
     mmanager_init();
+
+    ksyms_load();
+
+    if(_multiboot_magic != MULTIBOOT_BOOTLOADER_MAGIC)
+        panic("Not booted by a multiboot compliant bootloader.");
 
     /* Start timekeeping and get out of 'early' mode. */
     timekeep_init();
