@@ -156,6 +156,13 @@ uint32_t cpu_read_cr2()
     return ret;
 }
 
+u32 cpu_read_cr3()
+{
+    u32 ret;
+    __asm__ volatile("movl %%cr3, %0" : "=a"(ret));
+    return ret;
+}
+
 uint32_t cpu_read_cr0()
 {
     uint32_t ret;

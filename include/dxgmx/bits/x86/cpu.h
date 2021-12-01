@@ -203,8 +203,9 @@ typedef struct S_CPUFeatures
     };
 } CPUFeatures;
 
-u32 cpu_read_cr2();
 u32 cpu_read_cr0();
+u32 cpu_read_cr2();
+u32 cpu_read_cr3();
 u32 cpu_read_cr4();
 
 u32 cpu_read_ebp();
