@@ -15,6 +15,7 @@
 #include<dxgmx/utils/bytes.h>
 #include<dxgmx/todo.h>
 #include<dxgmx/attrs.h>
+#include<dxgmx/string.h>
 
 #define KLOGF(lvl, fmt, ...) klogln(lvl, "falloc: " fmt, ##__VA_ARGS__)
 
@@ -27,7 +28,7 @@
 /* 1024 * 16 64-bit numbers are enough to hold the
 state of 1048576 4KiB pages which hold a total of 4GiB of memory. */
 #define PAGEFRAME_POOL_SIZE (1024 * 16) 
-static u64 g_pgframe_pool[PAGEFRAME_POOL_SIZE] = { UINT64_MAX };
+static u64 g_pgframe_pool[PAGEFRAME_POOL_SIZE];
 static u32 g_pgframes_cnt = 0;
 
 /* Adds any complete PAGE_FRAME_SIZE sized frames from the given area. */
@@ -37,17 +38,17 @@ static void pageframe_add_available(const MemRangeTyped *e)
         return;
 
     for(ptr frame = e->base; frame < e->base + e->size; frame += PAGE_SIZE)
-    {
         ffree(frame, 1);
-    }
 }
 
 _INIT int falloc_init()
 {
+    memset(g_pgframe_pool, 0xFF, sizeof(g_pgframe_pool));
+
     FOR_EACH_MMAP_ENTRY(entry, mmanager_get_sys_mmap())
         pageframe_add_available(entry);
 
-    if(g_pgframes_cnt == 0)
+    if(!g_pgframes_cnt)
         panic("falloc: No free page frames have been registered.");
 
     char unit[4];
@@ -77,7 +78,7 @@ ptr falloc(size_t n)
         u64 *pageframe_pool = &g_pgframe_pool[i];
         for(u8 k = 0; k < 64; ++k)
         {
-            if(!(*pageframe_pool >> k & 1))
+            if(!((*pageframe_pool >> k) & 1))
             {
                 bw_set(pageframe_pool, k);
                 --g_pgframes_cnt;
@@ -101,13 +102,11 @@ void ffree(ptr base, size_t n)
     if(n > 1)
         TODO_FATAL();
 
-    u64 pageframe_n = base / PAGE_SIZE;
-    u16 pageframe_pool_i = pageframe_n / 64;
-    pageframe_n -= pageframe_pool_i * 64;
+    u64 bit = base / PAGE_SIZE;
+    u16 i = bit / 64;
+    bit -= i * 64;
 
-    bw_clear(
-        &g_pgframe_pool[pageframe_pool_i], 
-        pageframe_n
-    );
+    bw_clear(&g_pgframe_pool[i], bit);
+
     ++g_pgframes_cnt;
 }
