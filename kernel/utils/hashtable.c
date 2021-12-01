@@ -3,7 +3,7 @@
  * Distributed under the MIT license.
 */
 
-#include<dxgmx/hashtable.h>
+#include<dxgmx/utils/hashtable.h>
 #include<dxgmx/crypto/sha1.h>
 #include<dxgmx/stdlib.h>
 #include<dxgmx/string.h>

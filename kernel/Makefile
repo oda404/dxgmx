@@ -1,11 +1,9 @@
 
 KERNEL_SRC += \
-$(KERNEL_SRCDIR)/bitwise.c \
 $(KERNEL_SRCDIR)/kprintf.c \
 $(KERNEL_SRCDIR)/kabort.c \
 $(KERNEL_SRCDIR)/klog.c \
 $(KERNEL_SRCDIR)/kinit_stage2.c \
-$(KERNEL_SRCDIR)/hashtable.c \
 $(KERNEL_SRCDIR)/ksyms.c \
 
 ifdef CONFIG_STACK_PROT

@@ -3,7 +3,6 @@ HEADERS += \
 $(INCLUDEDIR)/dxgmx/panic.h \
 $(INCLUDEDIR)/dxgmx/assert.h \
 $(INCLUDEDIR)/dxgmx/attrs.h \
-$(INCLUDEDIR)/dxgmx/bitwise.h \
 $(INCLUDEDIR)/dxgmx/timer.h \
 $(INCLUDEDIR)/dxgmx/cpu.h \
 $(INCLUDEDIR)/dxgmx/ctype.h \
@@ -24,7 +23,6 @@ $(INCLUDEDIR)/dxgmx/compiler_attrs.h \
 $(INCLUDEDIR)/dxgmx/timekeep.h \
 $(INCLUDEDIR)/dxgmx/stack_trace.h \
 $(INCLUDEDIR)/dxgmx/kmalloc.h \
-$(INCLUDEDIR)/dxgmx/hashtable.h \
 $(INCLUDEDIR)/dxgmx/ksyms.h \
 
 include $(INCLUDEDIR)/dxgmx/bits/Makefile

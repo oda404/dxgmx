@@ -7,7 +7,7 @@
 #include<dxgmx/string.h>
 #include<dxgmx/types.h>
 #include<dxgmx/assert.h>
-#include<dxgmx/bitwise.h>
+#include<dxgmx/utils/bitwise.h>
 #include<dxgmx/stdlib.h>
 #include<dxgmx/stdio.h>
 

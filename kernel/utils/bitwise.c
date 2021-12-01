@@ -3,7 +3,7 @@
  * Distributed under the MIT license.
 */
 
-#include<dxgmx/bitwise.h>
+#include<dxgmx/utils/bitwise.h>
 #include<dxgmx/compiler_attrs.h>
 
 _ATTR_ALWAYS_INLINE int 

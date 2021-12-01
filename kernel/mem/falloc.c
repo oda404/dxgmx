@@ -10,7 +10,7 @@
 #include<dxgmx/mem/mmanager.h>
 #include<dxgmx/klog.h>
 #include<dxgmx/panic.h>
-#include<dxgmx/bitwise.h>
+#include<dxgmx/utils/bitwise.h>
 #include<dxgmx/types.h>
 #include<dxgmx/utils/bytes.h>
 #include<dxgmx/todo.h>

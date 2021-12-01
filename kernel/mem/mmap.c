@@ -6,7 +6,7 @@
 #include<dxgmx/mem/mmap.h>
 #include<dxgmx/panic.h>
 #include<dxgmx/klog.h>
-#include<dxgmx/bitwise.h>
+#include<dxgmx/utils/bitwise.h>
 #include<dxgmx/compiler_attrs.h>
 #include<stddef.h>
 
