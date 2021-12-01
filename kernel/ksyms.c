@@ -6,11 +6,13 @@
 #include<dxgmx/stdlib.h>
 #include<dxgmx/klog.h>
 #include<dxgmx/errno.h>
+#include<dxgmx/kmalloc.h> 
 
 #define KLOGF(lvl, fmt, ...) klogln(lvl, "ksyms: " fmt, ##__VA_ARGS__)
 
 #define KSYMS_MAX_SYMBOLS 1024
-#define KSYMS_SIZE (512 * KIB)
+
+#define KSYMS_SIZE (32 * KIB)
 
 typedef struct 
 S_KernelSymbol
@@ -26,7 +28,7 @@ extern u8 _ksyms_section_end[];
 _ATTR_SECTION(".ksyms") static u8 g_ksyms[KSYMS_SIZE];
 static u32 g_ksyms_entries_cnt = 0;
 static bool g_ksyms_available = false;
-static KernelSymbol g_ksyms_table[KSYMS_MAX_SYMBOLS];
+static KernelSymbol *g_ksyms_table = NULL;
 
 _INIT int ksyms_load()
 {
@@ -54,13 +56,19 @@ _INIT int ksyms_load()
         return -1;
     }
 
+    g_ksyms_table = kmalloc(g_ksyms_entries_cnt * sizeof(KernelSymbol));
+    if(!g_ksyms_table)
+    {
+        KLOGF(ERR, "Could not allocate the kernel symbol table. Kernel symbols will not be available!");
+        return -1;
+    }
+    memset(g_ksyms_table, 0, g_ksyms_entries_cnt * sizeof(KernelSymbol));
+
     if(g_ksyms_entries_cnt > KSYMS_MAX_SYMBOLS)
     {
         KLOGF(ERR, ".ksyms section has grown too large. Symbol table will get truncated!");
         g_ksyms_entries_cnt = KSYMS_MAX_SYMBOLS;
     }
-
-    memset(g_ksyms_table, 0, sizeof(g_ksyms_table));
 
     const char *ksyms = (const char *)(g_ksyms + 18);
     for(size_t i = 0; i < g_ksyms_entries_cnt; ++i)
