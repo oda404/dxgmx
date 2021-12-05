@@ -22,6 +22,10 @@
 
 #define KLOGF(lvl, fmt, ...) klogln(lvl, "mmanager: " fmt, ##__VA_ARGS__)
 
+#define FOR_EACH_PTE_IN_RANGE(s,e,pte) \
+for(PageTableEntry *pte = pte_from_vaddr(s); pte; pte = NULL) \
+for(ptr _i = s; _i < e; _i += PAGE_SIZE, pte = pte_from_vaddr(_i))
+
 /* The minimum paging structures we need to statically allocate,
 before we can use the heap. */
 static _ATTR_ALIGNED(PAGE_SIZE) PageTable g_pgtable0;
@@ -41,6 +45,10 @@ extern u8 _text_section_base[];
 extern u8 _text_section_end[];
 extern u8 _rodata_section_base[];
 extern u8 _rodata_section_end[];
+extern u8 _ro_after_stage1_section_base[];
+extern u8 _ro_after_stage1_section_end[];
+extern u8 _init_section_base[];
+extern u8 _init_section_end[];
 extern u8 _data_section_base[];
 extern u8 _data_section_end[];
 extern u8 _bss_section_base[];
@@ -50,9 +58,18 @@ extern u8 _bootloader_section_end[];
 extern u8 _kernel_map_offset[];
 extern u8 _kernel_size[];
 
+static PageTableEntry *pte_from_vaddr(ptr vaddr)
+{
+    size_t pte = (size_t)(vaddr / PAGE_SIZE);
+    size_t pgtable = pte / 512;
+    pte -= pgtable * 512;
+
+    return &g_pgtables[pgtable]->entries[pte];
+}
+
 static PageTable *pgtable_from_vaddr(ptr vaddr)
 {
-    return g_pgtables[(size_t)floor(vaddr / PAGE_SIZE / 512)];
+    return g_pgtables[(size_t)(vaddr / PAGE_SIZE / 512)];
 }
 
 static void paging_isr(
@@ -137,7 +154,7 @@ _INIT static int setup_definitive_paging()
     return 0;
 }
 
-_INIT int setup_heap()
+_INIT static int setup_heap()
 {
     g_heap_start = 0xC0200000;
     g_heap_size = 2 * MIB;
@@ -174,9 +191,45 @@ _INIT int setup_heap()
     return 0;
 }
 
+/* Enforce all sections permissions. */
+_INIT void enforce_ksections_perms()
+{
+    /* Text section can't be written to. */
+    FOR_EACH_PTE_IN_RANGE((ptr)_text_section_base, (ptr)_text_section_end, pte)
+        pte->writable = false;
+
+    /* Rodata section can't be written to or executed from. */
+    FOR_EACH_PTE_IN_RANGE((ptr)_rodata_section_base, (ptr)_rodata_section_end, pte)
+    {
+        pte->writable = false;
+        pte->exec_disable = true;
+    }
+
+    /* Can't execute from data. */
+    FOR_EACH_PTE_IN_RANGE((ptr)_data_section_base, (ptr)_data_section_end, pte)
+        pte->exec_disable = true;
+
+    /* Can't execute from bss. */
+    FOR_EACH_PTE_IN_RANGE((ptr)_bss_section_base, (ptr)_bss_section_end, pte)
+        pte->exec_disable = true;
+
+    /* Unmap the bootloader section. */
+    FOR_EACH_PTE_IN_RANGE((ptr)_bootloader_section_base, (ptr)_bootloader_section_end, pte)
+        pte->present = false;
+
+    /* For now only disable execution. */
+    FOR_EACH_PTE_IN_RANGE((ptr)_ro_after_stage1_section_base, (ptr)_ro_after_stage1_section_end, pte)
+        pte->exec_disable = true;
+
+    /* This section holds text, so we only disable writing for now. */
+    FOR_EACH_PTE_IN_RANGE((ptr)_init_section_base, (ptr)_init_section_end, pte)
+        pte->writable = false;
+}
+
 _INIT int mmanager_init()
 {
     setup_definitive_paging();
+    enforce_ksections_perms();
 
     /* First we setup the system memory map to know what
     we're working with. */
