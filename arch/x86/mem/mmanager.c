@@ -41,20 +41,20 @@ static ptr g_heap_start = 0;
 static ptr g_heap_size = 0;
 
 extern u8 _kernel_base[];
-extern u8 _text_section_base[];
-extern u8 _text_section_end[];
-extern u8 _rodata_section_base[];
-extern u8 _rodata_section_end[];
-extern u8 _ro_after_stage1_section_base[];
-extern u8 _ro_after_stage1_section_end[];
-extern u8 _init_section_base[];
-extern u8 _init_section_end[];
-extern u8 _data_section_base[];
-extern u8 _data_section_end[];
-extern u8 _bss_section_base[];
-extern u8 _bss_section_end[];
-extern u8 _bootloader_section_base[];
-extern u8 _bootloader_section_end[];
+extern u8 _text_sect_start[];
+extern u8 _text_sect_end[];
+extern u8 _rodata_sect_start[];
+extern u8 _rodata_sect_end[];
+extern u8 _ro_post_init_sect_start[];
+extern u8 _ro_post_init_sect_end[];
+extern u8 _init_sect_start[];
+extern u8 _init_sect_end[];
+extern u8 _data_sect_start[];
+extern u8 _data_sect_end[];
+extern u8 _bss_sect_start[];
+extern u8 _bss_sect_end[];
+extern u8 _bootloader_sect_start[];
+extern u8 _bootloader_sect_end[];
 extern u8 _kernel_map_offset[];
 extern u8 _kernel_size[];
 
@@ -195,35 +195,31 @@ _INIT static int setup_heap()
 _INIT void enforce_ksections_perms()
 {
     /* Text section can't be written to. */
-    FOR_EACH_PTE_IN_RANGE((ptr)_text_section_base, (ptr)_text_section_end, pte)
+    FOR_EACH_PTE_IN_RANGE((ptr)_text_sect_start, (ptr)_text_sect_end, pte)
         pte->writable = false;
 
     /* Rodata section can't be written to or executed from. */
-    FOR_EACH_PTE_IN_RANGE((ptr)_rodata_section_base, (ptr)_rodata_section_end, pte)
+    FOR_EACH_PTE_IN_RANGE((ptr)_rodata_sect_start, (ptr)_rodata_sect_end, pte)
     {
         pte->writable = false;
         pte->exec_disable = true;
     }
 
     /* Can't execute from data. */
-    FOR_EACH_PTE_IN_RANGE((ptr)_data_section_base, (ptr)_data_section_end, pte)
+    FOR_EACH_PTE_IN_RANGE((ptr)_data_sect_start, (ptr)_data_sect_end, pte)
         pte->exec_disable = true;
 
     /* Can't execute from bss. */
-    FOR_EACH_PTE_IN_RANGE((ptr)_bss_section_base, (ptr)_bss_section_end, pte)
+    FOR_EACH_PTE_IN_RANGE((ptr)_bss_sect_start, (ptr)_bss_sect_end, pte)
         pte->exec_disable = true;
 
     /* Unmap the bootloader section. */
-    FOR_EACH_PTE_IN_RANGE((ptr)_bootloader_section_base, (ptr)_bootloader_section_end, pte)
+    FOR_EACH_PTE_IN_RANGE((ptr)_bootloader_sect_start, (ptr)_bootloader_sect_end, pte)
         pte->present = false;
 
     /* For now only disable execution. */
-    FOR_EACH_PTE_IN_RANGE((ptr)_ro_after_stage1_section_base, (ptr)_ro_after_stage1_section_end, pte)
+    FOR_EACH_PTE_IN_RANGE((ptr)_ro_post_init_sect_start, (ptr)_ro_post_init_sect_end, pte)
         pte->exec_disable = true;
-
-    /* This section holds text, so we only disable writing for now. */
-    FOR_EACH_PTE_IN_RANGE((ptr)_init_section_base, (ptr)_init_section_end, pte)
-        pte->writable = false;
 }
 
 _INIT int mmanager_init()

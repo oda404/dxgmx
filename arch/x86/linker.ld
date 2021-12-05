@@ -22,45 +22,45 @@ SECTIONS
 
     .bootloader ALIGN(4K) : AT(ADDR(.bootloader) - _kernel_map_offset)
     {
-        _bootloader_section_base = .;
+        _bootloader_sect_start = .;
         KEEP(*(.bootloader))
-        _bootloader_section_end = .;
+        _bootloader_sect_end = .;
     }
 
     .text ALIGN(4K) : AT (ADDR(.text) - _kernel_map_offset)
     {
-        _text_section_base = .;
+        _text_sect_start = .;
         *(.text)
-        _text_section_end = .;
+        _text_sect_end = .;
     }
 
     .rodata ALIGN(4K) : AT (ADDR(.rodata) - _kernel_map_offset)
     {
-        _rodata_section_base = .;
+        _rodata_sect_start = .;
         *(.rodata*)
-        _rodata_section_end = .;
+        _rodata_sect_end = .;
     }
 
-    .ro_after_stage1 ALIGN(4K) : AT (ADDR(.ro_after_stage1) - _kernel_map_offset)
+    .ro_post_init ALIGN(4K) : AT (ADDR(.ro_post_init) - _kernel_map_offset)
     {
-        _ro_after_stage1_section_base = .;
-        *(.ro_after_stage1)
-        _ro_after_stage1_section_end = .;
+        _ro_post_init_sect_start = .;
+        *(.ro_post_init)
+        _ro_post_init_sect_end = .;
     }
 
     .data ALIGN(4K) : AT (ADDR(.data) - _kernel_map_offset)
     {
-        _data_section_base = .;
+        _data_sect_start = .;
         *(.data)
-        _data_section_end = .;
+        _data_sect_end = .;
     }
 
     .bss ALIGN(4K) : AT (ADDR(.bss) - _kernel_map_offset)
     {
-        _bss_section_base = .;
+        _bss_sect_start = .;
         *(COMMON)
         *(.bss)
-        _bss_section_end = .;
+        _bss_sect_end = .;
     }
 
     .shstrtab ALIGN(4K) : AT (ADDR(.shstrtab) - _kernel_map_offset)
@@ -70,16 +70,16 @@ SECTIONS
 
     .ksyms ALIGN(4K) : AT(ADDR(.ksyms) - _kernel_map_offset)
     {
-        _ksyms_section_base = .;
+        _ksyms_sect_start = .;
         *(.ksyms)
-        _ksyms_section_end = .;
+        _ksyms_sect_end = .;
     }
 
     .init ALIGN(4K) : AT (ADDR(.init) - _kernel_map_offset)
     {
-        _init_section_base = .;
+        _init_sect_start = .;
         *(.init*)        
-        _init_section_end = .;
+        _init_sect_end = .;
     }
 
     _kernel_size = . - _kernel_vaddr;

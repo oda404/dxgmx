@@ -28,10 +28,10 @@
 
 /* Signals that the function is only used during initialization
 and can be discarded once that is done. */
-#define _INIT _ATTR_COLD _ATTR_SECTION(".init")
+#define _INIT _ATTR_COLD _ATTR_SECTION(".init.text")
 
 /* The variable will become read only at the end of the 
 kinit_stage1 function. */
-#define _RO_AFTER_STAGE1 _ATTR_SECTION(".ro_after_stage1")
+#define _RO_POST_INIT _ATTR_SECTION(".ro_post_init")
 
 #endif // _DXGMX_ATTRS_H
