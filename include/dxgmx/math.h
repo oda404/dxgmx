@@ -18,4 +18,10 @@ _ATTR_PURE;
 double floor(double x)
 _ATTR_PURE;
 
+double exp(double d) 
+_ATTR_PURE;
+
+double log(double x)
+_ATTR_PURE;
+
 #endif //!_DXGMX_MATH_H
