@@ -32,7 +32,6 @@ static _ATTR_ALIGNED(PAGE_SIZE) PageTable g_pgtable0;
 static _ATTR_ALIGNED(PAGE_SIZE) PageTable g_pgtable1;
 static _ATTR_ALIGNED(PAGE_SIZE) PageDirectoryPointerTable g_pdpt;
 static _ATTR_ALIGNED(PAGE_SIZE) PageDirectory g_pgdirs[4];
-static PageTable *g_pgtables[512 * 4];
 
 static MemoryMap g_sys_mmap;
 static bool g_sys_mmap_locked = false;
@@ -111,10 +110,6 @@ _INIT static int setup_definitive_paging()
     memset(&g_pgdirs, 0, sizeof(g_pgdirs));
     memset(&g_pgtable0, 0, sizeof(g_pgtable0));
     memset(&g_pgtable1, 0, sizeof(g_pgtable1));
-    memset(g_pgtables, 0, sizeof(g_pgtables));
-
-    g_pgtables[512 * 3] = &g_pgtable0;
-    g_pgtables[512 * 3 + 1] = &g_pgtable1;
 
     /* Setup the pagefault handler. */
     idt_register_isr(TRAP14, paging_isr);
@@ -127,7 +122,7 @@ _INIT static int setup_definitive_paging()
     pdpte_set_pagedir_base((ptr)&g_pgdirs[3] - (ptr)_kernel_map_offset, &g_pdpt.entries[3]);
     g_pdpt.entries[3].present = true;
 
-    PageTable *pgtable = pgtable_from_vaddr(0xC0000000);
+    PageTable *pgtable = &g_pgtable0;
     if(!pgtable)
         panic("Could not map kernel image. Not proceding.");
 
@@ -159,7 +154,7 @@ _INIT static int setup_heap()
     g_heap_start = 0xC0200000;
     g_heap_size = 2 * MIB;
 
-    PageTable *pgtable = pgtable_from_vaddr(g_heap_start);
+    PageTable *pgtable = &g_pgtable1;
     if(!pgtable)
         panic("Could not map initial heap. Not proceeding.");
 
