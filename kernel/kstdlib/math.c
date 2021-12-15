@@ -33,13 +33,13 @@ double floor(double x)
 
 double modf(double x, double *whole)
 {
-    *whole = (doublewhole)x;
+    *whole = (i64)x;
     return x - *whole;
 }
 
 float modff(float x, float *whole)
 {
-    *whole = (floatwhole)x;
+    *whole = (i64)x;
     return x - *whole;
 }
 
@@ -71,14 +71,14 @@ double log(double x)
 
 long double modfl(long double x, long double *whole)
 {
-    *whole = (longdoublewhole)x;
+    *whole = (i64)x;
     return x - *whole;
 }
 
 double pow(double x, double y)
 {
     /* If the exponent is whole, do it by multiplication. */
-    if((u64)y == y)
-        return ullpower(x, (u64)y);
+    if((i64)y == y)
+        return ullpower(x, (i64)y);
     return exp(y * log(x));
 }
