@@ -12,11 +12,12 @@
 
 #define KLOGF(lvl, fmt, ...) klogln(lvl, "acpi: " fmt, ##__VA_ARGS__)
 
+extern u8 _kernel_map_offset[];
+
 _INIT static ACPIRSDP *acpi_find_rsdp()
 {
-    u32 ebda_hopefully = 0;
-    memcpy(&ebda_hopefully, (void *)0x40E, 2);
-    ebda_hopefully <<= 4;
+    u32 ebda_hopefully = (*(u16 *)(0x40E + (ptr)_kernel_map_offset)) << 4;
+    ebda_hopefully += (ptr)_kernel_map_offset;
 
     for(size_t i = ebda_hopefully; i < ebda_hopefully + 0x400; i += 16)
     {
@@ -24,7 +25,11 @@ _INIT static ACPIRSDP *acpi_find_rsdp()
             return (ACPIRSDP *)i;
     }
 
-    for(size_t i = 0xE0000; i < 0xFFFFF; i += 16)
+    for(
+        size_t i = 0xE0000 + (ptr)_kernel_map_offset; 
+        i < 0x100000 + (ptr)_kernel_map_offset; 
+        i += 16
+    )
     {
         if(memcmp((void *)i, "RSD PTR ", 8) == 0)
             return (ACPIRSDP *)i;
