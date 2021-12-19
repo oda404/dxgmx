@@ -12,7 +12,7 @@ void pde_set_table_base(u64 base, PageDirectoryEntry* pde)
     pde->table_base = base >> 12;
 }
 
-u64 pde_table_base(PageDirectoryEntry *pde)
+PageTable *pde_table_base(PageDirectoryEntry *pde)
 {
-    return pde->table_base << 12;
+    return (PageTable *)(pde->table_base << 12);
 }
