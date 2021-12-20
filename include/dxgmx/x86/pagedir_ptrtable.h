@@ -4,6 +4,7 @@
 
 #include<dxgmx/compiler_attrs.h>
 #include<dxgmx/types.h>
+#include<dxgmx/x86/pagedir.h>
 
 typedef struct
 _ATTR_PACKED S_PageDirectoryPointerTableEntry
@@ -32,6 +33,6 @@ typedef struct S_PageDirectoryPointerTable
 
 void pdpt_init(PageDirectoryPointerTable *);
 void pdpte_set_pagedir_base(u64 base, PageDirectoryPointerTableEntry *);
-u64 pdpte_pagedir_base(PageDirectoryPointerTableEntry *);
+PageDirectory *pdpte_pagedir_base(PageDirectoryPointerTableEntry *);
 
 #endif //!_DXGMX_X86_PAGEDIR_PTRTABLE_H
