@@ -30,18 +30,17 @@ int kmalloc_init(ptr heap_start, size_t heap_size)
 void *kmalloc(size_t size)
 {
     /* dumbass kmalloc implementation. */
-    size_t actualsize = size + sizeof(KMallocBlockMeta);
+    size_t actualsize = size;
 
-    if(g_current_heap_start + actualsize > g_heap_start + g_heap_size)
-        return NULL;
-
-    *(KMallocBlockMeta *)g_current_heap_start = (KMallocBlockMeta) {
-        .sig = KMALLOC_BLOCK_SIG,
-        .blocksize = size
-    };
-
-    g_current_heap_start += actualsize + sizeof(KMallocBlockMeta);
+    g_current_heap_start += actualsize;
     return (void *)(g_current_heap_start - actualsize);
+}
+
+void *kmalloc_aligned(size_t size, size_t align)
+{
+    (void)align;
+    /* damn */
+    return kmalloc(size);
 }
 
 void kfree(void *addr)
