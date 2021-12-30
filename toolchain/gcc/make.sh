@@ -65,12 +65,12 @@ build() {
         --prefix=$PREFIX \
         --enable-languages=c \
         --disable-nls \
-        --without-headers \
+        --without-headers || exit 1
 
-        make all-gcc -j$(nproc)
-        make all-target-libgcc -j$(nproc)
-        make install-gcc -j$(nproc)
-        make install-target-libgcc -j$(nproc)
+        make all-gcc -j$(nproc) || exit 1
+        make all-target-libgcc -j$(nproc) || exit 1
+        make install-gcc -j$(nproc) || exit 1
+        make install-target-libgcc -j$(nproc) || exit 1
         
     popd &> /dev/null
 }

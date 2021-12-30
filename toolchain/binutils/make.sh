@@ -64,10 +64,10 @@ build() {
         --target=$TARGET \
         --prefix=$PREFIX \
         --with-sysroot \
-        --disable-nls \
+        --disable-nls  || exit 1
 
-        make -j$(nproc)
-        make install -j$(nproc)
+        make -j$(nproc) || exit 1
+        make install -j$(nproc) || exit 1
         
     popd &> /dev/null
 }
