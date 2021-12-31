@@ -11,17 +11,20 @@
 double modf(double x, double *whole);
 float modff(float x, float *whole);
 long double modfl(long double x, long double *whole);
-double pow(double x, double y)
-_ATTR_PURE;
-double ceil(double x)
-_ATTR_PURE;
-double floor(double x)
-_ATTR_PURE;
 
-double exp(double d) 
-_ATTR_PURE;
+_ATTR_PURE 
+double pow(double x, double y);
 
-double log(double x)
-_ATTR_PURE;
+_ATTR_PURE 
+double ceil(double x);
+
+_ATTR_PURE 
+double floor(double x);
+
+_ATTR_PURE 
+double exp(double d) ;
+
+_ATTR_PURE 
+double log(double x);
 
 #endif //!_DXGMX_MATH_H

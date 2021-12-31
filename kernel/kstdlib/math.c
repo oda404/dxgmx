@@ -1,5 +1,6 @@
 
 #include<dxgmx/math.h>
+#include<dxgmx/stdlib.h>
 #include<dxgmx/types.h>
 
 static inline u64 factorial(u64 n)
@@ -23,12 +24,12 @@ static inline double ullpower(double x, size_t y)
 
 double ceil(double x)
 {
-    return (int)(x + 1);
+    return (i64)x == x ? (i64)x : (i64)(x + 1);
 }
 
 double floor(double x)
 {
-    return (int)x;
+    return (i64)x;
 }
 
 double modf(double x, double *whole)
@@ -37,9 +38,15 @@ double modf(double x, double *whole)
     return x - *whole;
 }
 
-float modff(float x, float *whole)
+long double modfl(long double x, long double *whole)
 {
     *whole = (i64)x;
+    return x - *whole;
+}
+
+float modff(float x, float *whole)
+{
+    *whole = (i32)x;
     return x - *whole;
 }
 
@@ -65,20 +72,11 @@ double log(double x)
     {
         yn = yn1;
         yn1 = yn + 2 * (x - exp(yn)) / (x + exp(yn));
-    } while ((yn - yn1) < 0 ? -(yn - yn1) : (yn - yn1) > epsilon);
+    } while (abs(yn - yn1) > epsilon);
     return yn1;
-}
-
-long double modfl(long double x, long double *whole)
-{
-    *whole = (i64)x;
-    return x - *whole;
 }
 
 double pow(double x, double y)
 {
-    /* If the exponent is whole, do it by multiplication. */
-    if((i64)y == y)
-        return ullpower(x, (i64)y);
-    return exp(y * log(x));
+    return (i64)y == y ? ullpower(x, (i64)y) : exp(y * log(x));
 }
