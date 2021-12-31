@@ -4,6 +4,8 @@
 
 #include<dxgmx/types.h>
 
+#define KERNEL_HEAP_SIZE (64 * KIB)
+
 bool kheap_init();
 size_t kheap_get_size();
 ptr kheap_get_start_vaddr();

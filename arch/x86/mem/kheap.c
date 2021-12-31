@@ -15,7 +15,6 @@ above, I feel we can do better, and doing so will most likely
 require architecture specific stuff.
 */
 
-#define KERNEL_HEAP_SIZE (256 * KIB)
 static _ATTR_ALIGNED(4096) u8 g_kheap[KERNEL_HEAP_SIZE];
 
 _INIT bool kheap_init()
