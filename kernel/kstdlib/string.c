@@ -58,7 +58,7 @@ char *strcpy(char *dest, const char *src)
     dest[i] = '\0';
     return dest;
 }
-#include<dxgmx/klog.h>
+
 char *strncpy(char *dest, const char *src, size_t n)
 {
     size_t i = 0;
