@@ -1,3 +1,7 @@
+/**
+ * Copyright 2022 Alexandru Olaru.
+ * Distributed under the MIT license.
+*/
 
 #include<dxgmx/mem/mmanager.h>
 #include<dxgmx/mem/mmap.h>
