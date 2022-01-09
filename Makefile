@@ -1,11 +1,11 @@
-# Copyright 2021 Alexandru Olaru.
+# Copyright 2022 Alexandru Olaru.
 # Distributed under the MIT license.
 
 APPNAME           := dxgmx
 
 VER_MAJ           := 0
-VER_MIN           := 8
-PATCH_N           := 12
+VER_MIN           := 9
+PATCH_N           := 0
 CODENAME          := angel_attack
 
 ifdef BUILDCONFIG
