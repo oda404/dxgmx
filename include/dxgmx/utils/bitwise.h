@@ -14,7 +14,6 @@
 #include<dxgmx/types.h>
 
 /* returns 1 if 'n' is aligned on 'align' bytes. */
-int bw_is_aligned(u64 n, u64 align);
 void bw_clear(u64 *n, u8 bit);
 void bw_set(u64 *n, u8 bit);
 /* returns > 0 if the given number uses more than 32 bits */
