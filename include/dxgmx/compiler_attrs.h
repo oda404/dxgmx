@@ -74,6 +74,9 @@ __attribute__((section(x)))
 
 #define _ATTR_USED __attribute__((used))
 
+/* https://gcc.gnu.org/onlinedocs/gcc/Common-Function-Attributes.html#index-noinline-function-attribute */
+#define _ATTR_NEVER_INLINE __attribute__((noinline))
+
 #endif // __GNUC__
 
 #endif //!_DXGMX_COMPILER_ATTRS_H
