@@ -97,6 +97,7 @@ _INIT int acpi_reserve_tables()
         panic("ACPI: RSDP at 0x%p is invalid. Not proceeding.", g_rsdt);
 
     g_rsdt = (ACPIRSDT *)rsdp->rsdp_v1.rsdt_base;
+    mmanager_reserve_acpi_range((ptr)g_rsdt, sizeof(ACPIRSDT));
     if(!acpi_is_sdt_header_valid(&g_rsdt->header))
         panic("ACPI: RSDT at 0x%p is invalid. Not proceeding.", g_rsdt);
 
