@@ -8,3 +8,4 @@ Below is a list of all the valid log levels in dxgmx:
 - **2**: Error
 - **3**: Warning
 - **4**: Info
+- **5**: Debug
