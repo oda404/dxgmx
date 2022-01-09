@@ -33,6 +33,6 @@ typedef struct S_PageDirectoryPointerTable
 
 void pdpt_init(PageDirectoryPointerTable *);
 void pdpte_set_pagedir_base(u64 base, PageDirectoryPointerTableEntry *);
-PageDirectory *pdpte_pagedir_base(PageDirectoryPointerTableEntry *);
+PageDirectory *pdpte_pagedir_base(const PageDirectoryPointerTableEntry *);
 
 #endif //!_DXGMX_X86_PAGEDIR_PTRTABLE_H

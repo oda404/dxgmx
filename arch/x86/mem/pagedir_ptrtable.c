@@ -12,7 +12,7 @@ void pdpte_set_pagedir_base(u64 base, PageDirectoryPointerTableEntry *pdpte)
     pdpte->pd_base = base >> 12;
 }
 
-PageDirectory *pdpte_pagedir_base(PageDirectoryPointerTableEntry *pdpte)
+PageDirectory *pdpte_pagedir_base(const PageDirectoryPointerTableEntry *pdpte)
 {
     return (PageDirectory *)(pdpte->pd_base << 12);
 }
