@@ -27,24 +27,19 @@
 
 #define KLOGF(lvl, fmt, ...) klogln(lvl, "mmanager: " fmt, ##__VA_ARGS__)
 
-#define FOR_EACH_PTE_IN_RANGE(s,e,pte) \
-for(PageTableEntry *pte = pte_from_vaddr(s); pte; pte = NULL) \
-for(ptr _i = s; _i < e; _i += PAGE_SIZE, pte = pte_from_vaddr(_i))
+#define RET_IF_NOT(x, ret) if(!(x)) return ret;
 
-/* The minimum paging structures we need to statically allocate,
-before we can use the heap. */
-static _ATTR_ALIGNED(PAGE_SIZE) PageTable g_pgtable0;
-static _ATTR_ALIGNED(PAGE_SIZE) PageTable g_pgtable1;
-static _ATTR_ALIGNED(PAGE_SIZE) PageDirectoryPointerTable g_pdpt;
-static _ATTR_ALIGNED(PAGE_SIZE) PageDirectory g_pgdirs[4];
+#define FOR_EACH_PTE_IN_RANGE(s,e,pt,pte) \
+for(PageTableEntry *pte = pte_from_vaddr(s, pt); pte; pte = NULL) \
+for(ptr _i = s; _i < e; _i += PAGE_SIZE, pte = pte_from_vaddr(_i, pt))
+
+static PageDirectoryPointerTable *g_pdpt;
 
 static MemoryMap g_sys_mmap;
 static bool g_sys_mmap_locked = false;
 
-static ptr g_heap_start = 0;
-static ptr g_heap_size = 0;
-
 extern u8 _kernel_base[];
+extern u8 _kernel_vaddr[];
 extern u8 _text_sect_start[];
 extern u8 _text_sect_end[];
 extern u8 _rodata_sect_start[];
@@ -62,19 +57,113 @@ extern u8 _bootloader_sect_end[];
 extern u8 _kernel_map_offset[];
 extern u8 _kernel_size[];
 
-static PageTableEntry *pte_from_vaddr(ptr vaddr)
-{
-    size_t pte = (size_t)(vaddr / PAGE_SIZE);
-    size_t pgtable = pte / 512;
-    pte -= pgtable * 512;
+#if defined(_X86_)
 
-    return &g_pgtables[pgtable]->entries[pte];
+static _ATTR_NEVER_INLINE void tlb_flush_whole()
+{
+    cpu_write_cr3(cpu_read_cr3());
 }
 
-static PageTable *pgtable_from_vaddr(ptr vaddr)
+static _ATTR_ALWAYS_INLINE PageDirectoryPointerTableEntry* 
+pdpte_from_vaddr(ptr vaddr, PageDirectoryPointerTable *pdpt)
 {
-    return g_pgtables[(size_t)(vaddr / PAGE_SIZE / 512)];
+    return &pdpt->entries[vaddr / GIB];
 }
+
+static _ATTR_ALWAYS_INLINE PageDirectoryEntry* 
+pde_from_vaddr(ptr vaddr, PageDirectory *pd)
+{
+    ptr off = vaddr / (PAGE_SIZE * 512 * 512) * 512;
+    return &pd->entries[(vaddr / (PAGE_SIZE * 512)) - off];
+}
+
+static _ATTR_ALWAYS_INLINE PageTableEntry*
+pte_from_vaddr(ptr vaddr, PageTable *pt)
+{
+    ptr off = vaddr / (PAGE_SIZE * 512) * 512;
+    return &pt->entries[(vaddr / PAGE_SIZE) - off];
+}
+
+static ptr vaddr_to_physaddr(
+    ptr vaddr, 
+    const PageDirectoryPointerTable *pdpt
+)
+{
+    PageDirectory *pd = (PageDirectory*)(
+        (ptr)pdpte_pagedir_base(&pdpt->entries[vaddr / GIB]) + 
+            (ptr)_kernel_map_offset
+    );
+    RET_IF_NOT(pd, 0);
+
+    PageDirectoryEntry *pde = pde_from_vaddr(vaddr, pd);
+    RET_IF_NOT(pde, 0);
+
+    PageTable *pt = pde_table_base(pde);
+    RET_IF_NOT(pt, 0);
+    
+    PageTableEntry *pte = (PageTableEntry *)(
+        (ptr)pte_from_vaddr(vaddr, pt) + (ptr)_kernel_map_offset
+    );
+
+    return pte ? (ptr)pte_frame_base(pte) + vaddr % PAGE_SIZE : (ptr)NULL;
+}
+
+/**
+ * Maps a single 4KiB page from virtual vaddr to physical frame_base. 
+*/
+static PageTableEntry *map_page(
+    ptr frame_base, 
+    ptr vaddr, 
+    PageDirectoryPointerTable *pdpt
+)
+{
+    if(frame_base % PAGE_SIZE || vaddr % PAGE_SIZE)
+        return NULL;
+
+    PageDirectoryPointerTableEntry *pdpte = pdpte_from_vaddr(vaddr, pdpt);
+    PageDirectory *pd = pdpte_pagedir_base(pdpte);
+    if(!pd)
+    {
+        pd = kmalloc_aligned(sizeof(PageDirectory), PAGE_SIZE);
+        RET_IF_NOT(pd, NULL);
+
+        memset(pd, 0, sizeof(PageDirectory));
+        pdpte_set_pagedir_base(vaddr_to_physaddr((ptr)pd, pdpt), pdpte);
+    }
+    else
+    {
+        pd = (PageDirectory *)((ptr)pd + (ptr)_kernel_map_offset);
+    }
+
+    PageDirectoryEntry *pde = pde_from_vaddr(vaddr, pd);
+    PageTable *pt = pde_table_base(pde);
+    if(!pt)
+    {
+        pt = kmalloc_aligned(sizeof(PageTable), PAGE_SIZE);
+        RET_IF_NOT(pt, NULL);
+
+        memset(pt, 0, sizeof(PageTable));
+        pde_set_table_base(vaddr_to_physaddr((ptr)pt, pdpt), pde);
+    }
+    else
+    {
+        pt = (PageTable *)((ptr)pt + (ptr)_kernel_map_offset);
+    }
+
+    PageTableEntry *pte = pte_from_vaddr(vaddr, pt);
+    pte_set_frame_base(frame_base, pte);
+
+    pdpte->present = true;
+
+    pde->present = true;
+
+    pte->present = true;
+
+    tlb_flush_whole();
+
+    return pte;
+}
+#endif // defined(_X86_)
 
 static void pagefault_isr(
     const InterruptFrame *frame, 
@@ -108,113 +197,50 @@ static void pagefault_isr(
 
 _INIT static int setup_definitive_paging()
 {
-    /* Paging is and has been enabled ever since we jumped to C code
-    but we replace the 'boot' paging structs, and set up a heap. */
-
-    memset(&g_pdpt, 0, sizeof(g_pdpt));
-    memset(&g_pgdirs, 0, sizeof(g_pgdirs));
-    memset(&g_pgtable0, 0, sizeof(g_pgtable0));
-
     /* Setup the pagefault handler. */
     idt_register_isr(TRAP14, pagefault_isr);
     /* Enable NXE bit. */
     cpu_write_msr(cpu_read_msr(MSR_EFER) | EFER_NXE, MSR_EFER);
 
-    pdpte_set_pagedir_base((ptr)&g_pgdirs[3] - (ptr)_kernel_map_offset, &g_pdpt.entries[3]);
-    g_pdpt.entries[3].present = true;
-
-    PageTable *pgtable = &g_pgtable0;
-    if(!pgtable)
-        panic("Could not map kernel image. Not proceding.");
-
-    pde_set_table_base((ptr)pgtable - (ptr)_kernel_map_offset, &g_pgdirs[3].entries[0]);
-    g_pgdirs[3].entries[0].present = true;
-    g_pgdirs[3].entries[0].writable = true;
-
-    /* Map the first 2MiB of memory to 0xC0000000. */
-    size_t entries = 256 + ((ptr)_kernel_size / PAGE_SIZE + 1);
-    if(entries > 512)
-        panic("Kernel has grown beyond 1MiB, how did we get here ?");
-
-    for(size_t i = 0; i < entries; ++i)
-    {
-        PageTableEntry *entry = &pgtable->entries[i];
-
-        pte_set_frame_base(PAGE_SIZE * i, entry);
-        entry->present = true;
-        entry->writable = true;
-    }
-
-    cpu_write_cr3((ptr)&g_pdpt - (ptr)_kernel_map_offset);
-
-    return 0;
-}
-
-_INIT static int setup_heap()
-{
-    g_heap_start = 0xC0200000;
-    g_heap_size = 2 * MIB;
-
-    PageTable *pgtable = &g_pgtable1;
-    if(!pgtable)
-        panic("Could not map initial heap. Not proceeding.");
-
-    /* Map the heap */
-    pde_set_table_base((ptr)pgtable - (ptr)_kernel_map_offset, &g_pgdirs[3].entries[1]);
-    g_pgdirs[3].entries[1].present = true;
-    g_pgdirs[3].entries[1].writable = true;
-
-    for(size_t i = 1; i <= 512; ++i)
-    {
-        PageTableEntry *entry = &pgtable->entries[i - 1];
-
-        ptr fbase = falloc(1);
-        if(!fbase)
-        {
-            const size_t initheap = g_heap_size;
-            g_heap_size = (i - 1) * 4096;
-            KLOGF(WARN, "Only mapped %d/%d pages of the heap.", g_heap_size, initheap);
-            break;
-        }
-
-        pte_set_frame_base(fbase, entry);
-        entry->present = true;
-        entry->writable = true;
-    }
-
-    cpu_write_cr3((ptr)&g_pdpt - (ptr)_kernel_map_offset);
+    g_pdpt = (PageDirectoryPointerTable *)(cpu_read_cr3() + (ptr)_kernel_map_offset);
 
     return 0;
 }
 
 /* Enforce all sections permissions. */
-_INIT void enforce_ksections_perms()
+_INIT static void enforce_ksections_perms()
 {
+    PageDirectoryPointerTableEntry *pdpte = pdpte_from_vaddr((ptr)_kernel_vaddr, g_pdpt);
+    PageDirectory *pd = (ptr)pdpte_pagedir_base(pdpte) + (ptr)_kernel_map_offset;
+    PageDirectoryEntry *pde = pde_from_vaddr((ptr)_kernel_vaddr, pd);
+    PageTable *pt = (ptr)pde_table_base(pde) + (ptr)_kernel_map_offset;
+    PageTableEntry *pte = pte_from_vaddr((ptr)_kernel_vaddr, pt);
+
     /* Text section can't be written to. */
-    FOR_EACH_PTE_IN_RANGE((ptr)_text_sect_start, (ptr)_text_sect_end, pte)
+    FOR_EACH_PTE_IN_RANGE((ptr)_text_sect_start, (ptr)_text_sect_end, pt, pte)
         pte->writable = false;
 
     /* Rodata section can't be written to or executed from. */
-    FOR_EACH_PTE_IN_RANGE((ptr)_rodata_sect_start, (ptr)_rodata_sect_end, pte)
+    FOR_EACH_PTE_IN_RANGE((ptr)_rodata_sect_start, (ptr)_rodata_sect_end, pt, pte)
     {
         pte->writable = false;
         pte->exec_disable = true;
     }
 
     /* Can't execute from data. */
-    FOR_EACH_PTE_IN_RANGE((ptr)_data_sect_start, (ptr)_data_sect_end, pte)
+    FOR_EACH_PTE_IN_RANGE((ptr)_data_sect_start, (ptr)_data_sect_end, pt, pte)
         pte->exec_disable = true;
 
     /* Can't execute from bss. */
-    FOR_EACH_PTE_IN_RANGE((ptr)_bss_sect_start, (ptr)_bss_sect_end, pte)
+    FOR_EACH_PTE_IN_RANGE((ptr)_bss_sect_start, (ptr)_bss_sect_end, pt, pte)
         pte->exec_disable = true;
 
     /* Unmap the bootloader section. */
-    FOR_EACH_PTE_IN_RANGE((ptr)_bootloader_sect_start, (ptr)_bootloader_sect_end, pte)
+    FOR_EACH_PTE_IN_RANGE((ptr)_bootloader_sect_start, (ptr)_bootloader_sect_end, pt, pte)
         pte->present = false;
 
     /* For now only disable execution. */
-    FOR_EACH_PTE_IN_RANGE((ptr)_ro_post_init_sect_start, (ptr)_ro_post_init_sect_end, pte)
+    FOR_EACH_PTE_IN_RANGE((ptr)_ro_post_init_sect_start, (ptr)_ro_post_init_sect_end, pt, pte)
         pte->exec_disable = true;
 }
 
