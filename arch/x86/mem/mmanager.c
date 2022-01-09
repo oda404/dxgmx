@@ -211,10 +211,13 @@ _INIT static int setup_definitive_paging()
 _INIT static void enforce_ksections_perms()
 {
     PageDirectoryPointerTableEntry *pdpte = pdpte_from_vaddr((ptr)_kernel_vaddr, g_pdpt);
-    PageDirectory *pd = (ptr)pdpte_pagedir_base(pdpte) + (ptr)_kernel_map_offset;
+    PageDirectory *pd = (PageDirectory *)(
+        (ptr)pdpte_pagedir_base(pdpte) + (ptr)_kernel_map_offset
+    );
     PageDirectoryEntry *pde = pde_from_vaddr((ptr)_kernel_vaddr, pd);
-    PageTable *pt = (ptr)pde_table_base(pde) + (ptr)_kernel_map_offset;
-    PageTableEntry *pte = pte_from_vaddr((ptr)_kernel_vaddr, pt);
+    PageTable *pt = (PageTable *)(
+        (ptr)pde_table_base(pde) + (ptr)_kernel_map_offset
+    );
 
     /* Text section can't be written to. */
     FOR_EACH_PTE_IN_RANGE((ptr)_text_sect_start, (ptr)_text_sect_end, pt, pte)
