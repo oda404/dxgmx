@@ -23,6 +23,7 @@
 #include<dxgmx/todo.h>
 #include<dxgmx/kmalloc.h>
 #include<dxgmx/math.h>
+#include<dxgmx/mem/kheap.h>
 
 #define KLOGF(lvl, fmt, ...) klogln(lvl, "mmanager: " fmt, ##__VA_ARGS__)
 
@@ -75,7 +76,7 @@ static PageTable *pgtable_from_vaddr(ptr vaddr)
     return g_pgtables[(size_t)(vaddr / PAGE_SIZE / 512)];
 }
 
-static void paging_isr(
+static void pagefault_isr(
     const InterruptFrame *frame, 
     const void _ATTR_MAYBE_UNUSED *data
 )
@@ -91,13 +92,13 @@ static void paging_isr(
 
     if(PAGEFAULT_IS_PROT_VIOL(frame->code))
     {
-        char msg[10];
+        const char *msg = NULL;
         if(PAGEFAULT_IS_EXEC(frame->code))
-            strcpy(msg, "exec from");
+            msg = "exec from";
         else if(PAGEFAULT_IS_WRITE(frame->code))
-            strcpy(msg, "write to");
+            msg = "write to";
         else
-            strcpy(msg, "read from");
+            msg = "read from";
 
         panic("Page protection violation: tried to %s 0x%p. Not proceeding.", msg, (void*)faultaddr);
     }
@@ -113,16 +114,12 @@ _INIT static int setup_definitive_paging()
     memset(&g_pdpt, 0, sizeof(g_pdpt));
     memset(&g_pgdirs, 0, sizeof(g_pgdirs));
     memset(&g_pgtable0, 0, sizeof(g_pgtable0));
-    memset(&g_pgtable1, 0, sizeof(g_pgtable1));
 
     /* Setup the pagefault handler. */
-    idt_register_isr(TRAP14, paging_isr);
+    idt_register_isr(TRAP14, pagefault_isr);
     /* Enable NXE bit. */
     cpu_write_msr(cpu_read_msr(MSR_EFER) | EFER_NXE, MSR_EFER);
 
-    pdpte_set_pagedir_base((ptr)&g_pgdirs[0] - (ptr)_kernel_map_offset, &g_pdpt.entries[0]);
-    pdpte_set_pagedir_base((ptr)&g_pgdirs[1] - (ptr)_kernel_map_offset, &g_pdpt.entries[1]);
-    pdpte_set_pagedir_base((ptr)&g_pgdirs[2] - (ptr)_kernel_map_offset, &g_pdpt.entries[2]);
     pdpte_set_pagedir_base((ptr)&g_pgdirs[3] - (ptr)_kernel_map_offset, &g_pdpt.entries[3]);
     g_pdpt.entries[3].present = true;
 
@@ -258,10 +255,10 @@ _INIT int mmanager_init()
     /* Now that we have a memory map, we can start allocating page frames. */
     falloc_init();
 
-    setup_heap();
+    kheap_init();
 
     /* The heap can finally be initialized. */
-    kmalloc_init(g_heap_start, g_heap_size);
+    kmalloc_init();
 
     /* ACPI could potentially modify the sys mmap 
     before we lock it down. */
