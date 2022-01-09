@@ -52,7 +52,8 @@ size_t kvlog(KLogLevel lvl, const char *fmt, va_list list)
 size_t kvlogln(KLogLevel lvl, const char *fmt, va_list list)
 {
     size_t written = kvlog(lvl, fmt, list);
-    written += kprintf("\n");
+    if(written)
+        written += kprintf("\n");
     return written;
 }
 
