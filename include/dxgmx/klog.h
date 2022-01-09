@@ -24,6 +24,7 @@ typedef enum E_KLogLevel
     ERR,
     WARN,
     INFO,
+    DEBUG,
 
     KLOG_ENUM_END // do not remove
 } KLogLevel;
