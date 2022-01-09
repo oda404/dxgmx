@@ -288,7 +288,7 @@ _INIT int mmanager_init()
 
     /* ACPI could potentially modify the sys mmap 
     before we lock it down. */
-    //acpi_reserve_tables();
+    acpi_reserve_tables();
     g_sys_mmap_locked = true;
 
     return 0;
@@ -299,7 +299,14 @@ _INIT int mmanager_reserve_acpi_range(ptr base, size_t size)
     if(g_sys_mmap_locked)
         return 1;
 
+    ptr aligned_base = base - base % PAGE_SIZE;
+    size_t aligned_size = size;
+    aligned_size = (aligned_size + PAGE_SIZE - 1) & ~(PAGE_SIZE - 1);
+
+    map_page(aligned_base, aligned_base, g_pdpt);
+
     mmap_update_entry_type(base, size, MMAP_RESERVED, &g_sys_mmap);
+
     return 0;
 }
 
