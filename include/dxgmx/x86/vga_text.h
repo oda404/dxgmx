@@ -6,8 +6,7 @@
 #ifndef _DXGMX_VIDEO_VGA_TEXT_H
 #define _DXGMX_VIDEO_VGA_TEXT_H
 
-#include<stdint.h>
-#include<stddef.h>
+#include<dxgmx/types.h>
 
 #define VGA_ERR_INVALID_WIDTH  1
 #define VGA_ERR_INVALID_HEIGHT 2
@@ -34,14 +33,14 @@ enum VGAColor
     VGA_COLOR_WHITE   = 0xF
 };
 
-void vga_init(uint8_t w, uint8_t h);
+void vga_init(u8 w, u8 h);
 void vga_enable_cursor();
 void vga_disable_cursor();
-int vga_clear_row(uint8_t row);
-int vga_put_char(char c, uint8_t fg, uint8_t bg, uint8_t row, uint8_t col);
-int vga_clear_char(uint8_t row, uint8_t col);
-uint8_t vga_get_max_width();
-uint8_t vga_get_max_height();
+int vga_clear_row(u8 row);
+int vga_put_char(char c, u8 fg, u8 bg, u8 row, u8 col);
+int vga_clear_char(u8 row, u8 col);
+u8 vga_get_max_width();
+u8 vga_get_max_height();
 void vga_scroll(size_t lines);
 
 #endif // _DXGMX_VIDEO_VGA_TEXT_H

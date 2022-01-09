@@ -5,7 +5,6 @@
 
 #include<dxgmx/x86/cmos.h>
 #include<dxgmx/x86/portio.h>
-#include<dxgmx/types.h>
 #include<dxgmx/x86/interrupts.h>
 
 /** 
@@ -30,7 +29,7 @@ void cmos_enable_nmi()
     port_inb(CMOS_PORT_DATA);
 }
 
-uint8_t cmos_port_inb(uint8_t port, int nmistate)
+u8 cmos_port_inb(u8 port, int nmistate)
 {
     interrupts_disable();
 
@@ -57,7 +56,7 @@ uint8_t cmos_port_inb(uint8_t port, int nmistate)
     return ret;
 }
 
-void cmos_port_outb(uint8_t value, uint8_t port, int nmistate)
+void cmos_port_outb(u8 value, u8 port, int nmistate)
 {
     interrupts_disable();
 

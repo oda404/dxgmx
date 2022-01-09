@@ -6,7 +6,7 @@
 #ifndef _DXGMX_X86_CMOS_H
 #define _DXGMX_X86_CMOS_H
 
-#include<stdint.h>
+#include<dxgmx/types.h>
 
 #define CMOS_PORT_REG      0x70
 #define CMOS_PORT_DATA     0x71
@@ -29,12 +29,12 @@ void cmos_enable_nmi();
  * The parameter 'nmistate' is what the NMI state will be
  * after the value is read, see enum E_NMIState.
 */
-uint8_t cmos_port_inb(uint8_t port, int nmistate);
+u8 cmos_port_inb(u8 port, int nmistate);
 /** 
  * Safe way to write to a cmos register.
  * The parameter 'nmistate' is what the NMI state will be
  * after the value is written, see enum E_NMIState.
 */
-void cmos_port_outb(uint8_t value, uint8_t port, int nmistate);
+void cmos_port_outb(u8 value, u8 port, int nmistate);
 
 #endif //_DXGMX_X86_CMOS_H

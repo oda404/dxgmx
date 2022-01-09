@@ -7,7 +7,7 @@
 #include<dxgmx/compiler_attrs.h>
 
 _ATTR_ALWAYS_INLINE void 
-bw_clear(uint64_t *n, uint8_t bit)
+bw_clear(u64 *n, u8 bit)
 {
     if(bit < 64)
     {
@@ -20,7 +20,7 @@ bw_clear(uint64_t *n, uint8_t bit)
 }
 
 _ATTR_ALWAYS_INLINE void 
-bw_set(uint64_t *n, uint8_t bit)
+bw_set(u64 *n, u8 bit)
 {
     if(bit < 64)
     {
@@ -33,7 +33,7 @@ bw_set(uint64_t *n, uint8_t bit)
 }
 
 _ATTR_ALWAYS_INLINE int
-bw_is64_wide(uint64_t n)
+bw_is64_wide(u64 n)
 {
     return (n >> 32);
 }

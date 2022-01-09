@@ -67,10 +67,10 @@ _ATTR_PACKED S_ACPIHPETT
     u8        counter_size:       1;
     u8        reserved:           1;
     u8        legacy_replacement: 1;
-    uint16_t       pci_vendor_id;
+    u16       pci_vendor_id;
     ACPIGenericAddress address;
     u8        hpet_number;
-    uint16_t       min_tick;
+    u16       min_tick;
     u8        page_prot;
 } ACPIHPETT;
 

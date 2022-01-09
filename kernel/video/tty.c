@@ -8,8 +8,8 @@
 #include<dxgmx/string.h>
 #include<stdint.h>
 
-static uint16_t g_current_row;
-static uint16_t g_current_col;
+static u16 g_current_row;
+static u16 g_current_col;
 
 void tty_init()
 {

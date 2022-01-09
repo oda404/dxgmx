@@ -71,12 +71,12 @@
 */
 #define PIC_ICW4_SFNM         (1 << 4)
 
-void pic8259_remap(uint8_t master_offset, uint8_t slave_offset)
+void pic8259_remap(u8 master_offset, u8 slave_offset)
 {
     __asm__ volatile("cli");
 
-    uint8_t master_mask;
-    uint8_t slave_mask;
+    u8 master_mask;
+    u8 slave_mask;
 
     /* save irq masks to restore after reinit */
     master_mask = port_inb(PIC_MASTER_PORT_DATA);
@@ -115,9 +115,9 @@ void pic8259_remap(uint8_t master_offset, uint8_t slave_offset)
     __asm__ volatile("sti");
 }
 
-void pic8259_mask_irq_line(uint8_t irqline)
+void pic8259_mask_irq_line(u8 irqline)
 {
-    uint16_t port;
+    u16 port;
     /* if irqline >= 8, the irq corresponds to the slave */
     if(irqline >= 8)
     {
@@ -130,13 +130,13 @@ void pic8259_mask_irq_line(uint8_t irqline)
         port = PIC_MASTER_PORT_DATA;
     }
 
-    uint8_t mask = port_inb(port);
+    u8 mask = port_inb(port);
     port_outb(mask | (1 << irqline), port);
 }
 
-void pic8259_unmask_irq_line(uint8_t irqline)
+void pic8259_unmask_irq_line(u8 irqline)
 {
-    uint16_t port;
+    u16 port;
     /* if irqline >= 8, the irq corresponds to the slave */
     if(irqline >= 8)
     {
@@ -149,11 +149,11 @@ void pic8259_unmask_irq_line(uint8_t irqline)
         port = PIC_MASTER_PORT_DATA;
     }
 
-    uint8_t mask = port_inb(port);
+    u8 mask = port_inb(port);
     port_outb(mask & ~(1 << irqline), port);
 }
 
-void pic8259_set_mask(uint8_t mask, uint8_t pic)
+void pic8259_set_mask(u8 mask, u8 pic)
 {
     switch(pic)
     {
@@ -167,9 +167,9 @@ void pic8259_set_mask(uint8_t mask, uint8_t pic)
     }
 }
 
-uint8_t pic8259_get_isr(uint8_t pic)
+u8 pic8259_get_isr(u8 pic)
 {
-    uint8_t ret;
+    u8 ret;
     switch(pic)
     {
     case 0:
@@ -185,9 +185,9 @@ uint8_t pic8259_get_isr(uint8_t pic)
     return ret;
 }
 
-uint8_t pic8259_get_irr(uint8_t pic)
+u8 pic8259_get_irr(u8 pic)
 {
-    uint8_t ret;
+    u8 ret;
     switch(pic)
     {
     case 0:
@@ -203,7 +203,7 @@ uint8_t pic8259_get_irr(uint8_t pic)
     return ret;
 }
 
-void pic8259_signal_eoi(uint8_t pic)
+void pic8259_signal_eoi(u8 pic)
 {
     switch(pic)
     {
@@ -218,7 +218,7 @@ void pic8259_signal_eoi(uint8_t pic)
     }
 }
 
-void pic8259_disable(uint8_t pic)
+void pic8259_disable(u8 pic)
 {
     switch(pic)
     {
@@ -231,14 +231,14 @@ void pic8259_disable(uint8_t pic)
     }
 }
 
-uint8_t pic8259_get_pics_count()
+u8 pic8259_get_pics_count()
 {
     return 2;
 }
 
-uint16_t pic8259_get_mask()
+u16 pic8259_get_mask()
 {
-    uint16_t mask;
+    u16 mask;
     mask = port_inb(PIC_SLAVE_PORT_DATA);
     mask <<= 8;
     mask |= port_inb(PIC_MASTER_PORT_DATA);

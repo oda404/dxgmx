@@ -113,8 +113,8 @@ IRQ_ENTRY(15)
 
 static void idt_encode_entry(
     ptr base,
-    uint16_t selector,
-    uint8_t  flags,
+    u16 selector,
+    u8  flags,
     IDTEntry *entry
 )
 {
