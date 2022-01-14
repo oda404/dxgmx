@@ -18,13 +18,13 @@
 #   endif
 #endif // __has_builtin
 
-#ifndef LIKELY(x)
+#ifndef LIKELY
 #define LIKELY(x) x
-#endif //!LIKELY(x)
+#endif
 
-#ifndef UNLIKELY(x)
+#ifndef UNLIKELY
 #define UNLIKELY(x) x
-#endif //!UNLIKELY(x)
+#endif
 
 /* Signals that the function is only used during initialization
 and can be discarded once that is done. */
