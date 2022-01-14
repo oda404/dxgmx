@@ -53,9 +53,9 @@ KERNEL_SRCDIR     := kernel
 
 ### BASE FLAGS ###
 CFLAGS            := \
--MD -MP -isystem=/usr/include -std=c11      \
---sysroot=$(SYSROOTDIR) -fno-omit-frame-pointer  \
--ffreestanding -fno-builtin $(BT_CFLAGS)         \
+-MD -MP -isystem=/usr/include -std=c11                   \
+--sysroot=$(SYSROOTDIR) -fno-omit-frame-pointer          \
+-ffreestanding -fno-builtin $(BT_CFLAGS) -I$(INCLUDEDIR) \
 
 CXXFLAGS          := $(CFLAGS) $(BT_CXXFLAGS)
 
@@ -158,7 +158,7 @@ $(SYSROOTDIR) $(SYSROOTDIR)/boot \
 
 SYSROOT_HEADERS   := $(HEADERS:$(INCLUDEDIR)/%=$(SYSROOTDIR)/usr/include/%)
 
-DXGMX_DEPS        := $(SYSROOT_DIRS) $(SYSROOT_HEADERS) \
+DXGMX_DEPS        := $(SYSROOT_DIRS) \
 $(COBJS) $(CXXOBJS) $(ASMOBJS) $(LDSCRIPT)
 
 DXGMX_COMMON_DEPS := Makefile $(BUILDCONFIG)
@@ -196,10 +196,6 @@ $(BUILDDIR)/%_$(BT_NAME).S.o: %.S $(DXGMX_COMMON_DEPS)
 
 $(SYSROOT_DIRS):
 	@mkdir -p $(SYSROOT_DIRS)
-
-$(SYSROOTDIR)/usr/include/%.h: $(INCLUDEDIR)/%.h
-	@mkdir -p $(dir $@) 2> /dev/null || true
-	@cp -ru $< $@
 
 PHONY += iso 
 iso: $(ISO_PATH)
