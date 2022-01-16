@@ -37,13 +37,11 @@ int kinit_stage1()
     /* Set CPU features as they may be needed for initializing system timers. */
     cpu_identify();
 
-    /* Set up memory management. */
+    timekeep_init();
+
     mmanager_init();
 
     ksyms_load();
-
-    /* Start timekeeping and get out of 'early' mode. */
-    timekeep_init();
 
     klogln(INFO, "     _");
     klogln(INFO, "  __| |_  ____ _ _ __ ___ __  __");
