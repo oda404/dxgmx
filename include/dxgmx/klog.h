@@ -32,7 +32,6 @@ typedef enum E_KLogLevel
 int klog_init(KLogLevel lvl);
 /* Early mode is when klog doesn't yet have a timer
 and doesn't display info about the time. */
-bool klog_try_exit_early();
 int klog_set_max_level(KLogLevel lvl);
 
 _ATTR_FMT_PRINTF(2, 3) size_t 

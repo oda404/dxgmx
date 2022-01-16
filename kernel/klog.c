@@ -9,21 +9,14 @@
 #include<dxgmx/attrs.h>
 
 static Timer g_timer;
-static bool g_early = true;
 static KLogLevel g_loglvl;
 
 _INIT int klog_init(KLogLevel lvl)
 {
     klog_set_max_level(lvl);
-    g_early = timer_start(&g_timer) != TIMER_START_OK;
+    timer_start(&g_timer);
 
     return 0;
-}
-
-bool klog_try_exit_early()
-{
-    g_early = timer_start(&g_timer) != TIMER_START_OK;
-    return !g_early;
 }
 
 _INIT int klog_set_max_level(KLogLevel lvl)
@@ -37,16 +30,19 @@ _INIT int klog_set_max_level(KLogLevel lvl)
 
 size_t kvlog(KLogLevel lvl, const char *fmt, va_list list)
 {
-    if(lvl > g_loglvl || lvl == 0)
+    if(lvl > g_loglvl)
         return 0;
 
-    size_t written = 0;
-    if(UNLIKELY(g_early))
-        written += kprintf("[   EARLY   ] ");
-    else
-        written += kprintf("[%11.6f] ", timer_ellapsed_sec(&g_timer));
+    double time = timer_ellapsed_sec(&g_timer);
+    if(UNLIKELY(time < 0))
+    {
+        time = 0;
+        timer_start(&g_timer);
+    }
 
-    return written + kvprintf(fmt, list);
+    size_t written = kprintf("[%11.6f] ", time) + kvprintf(fmt, list);
+
+    return written;
 }
 
 size_t kvlogln(KLogLevel lvl, const char *fmt, va_list list)

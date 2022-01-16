@@ -26,9 +26,6 @@ _INIT int timekeep_init()
 
     timer_start(&g_uptime_timer);
 
-    if(!klog_try_exit_early())
-        KLOGF(ERR, "klog could not exit early mode even though system timers should be up!");
-
     return 0;
 }
 
