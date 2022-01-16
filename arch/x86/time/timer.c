@@ -7,76 +7,115 @@
 #include<dxgmx/x86/pit.h>
 #include<dxgmx/attrs.h>
 
-static u8 g_timersrc;
-static u8 g_timesrc_ready = false;
+#define KLOGF(lvl, fmt, ...) klogln(lvl, "timer: " fmt, ##__VA_ARGS__)
 
-_INIT static void pit_set_timesource(u8 timersrc)
+typedef struct 
+S_TimerSource
 {
-    g_timersrc = timersrc;
-    g_timesrc_ready = true;
+    const char* const name;
+    const size_t id;
+    const u8 priority;
+    bool useable;
+    const timersource_now now;
+} TimerSource;
+
+#define RTC_ID 0
+#define PIT_ID 1
+
+static TimerSource g_timersources[] = {
+    { .name = "RTC", .id = RTC_ID, .priority = 10, .useable = false, .now = rtc_now },
+    { .name = "PIT", .id = PIT_ID, .priority = 20, .useable = false, .now = pit_now },
+};
+
+_INIT static TimerSource *find_best_timersource()
+{
+    TimerSource *best = NULL;
+
+    for(size_t i = 0; i < sizeof(g_timersources) / sizeof(TimerSource); ++i)
+    {
+        TimerSource *src = &g_timersources[i];
+        if(best)
+        {
+            if(src->priority > best->priority && src->useable)
+                best = src;
+        }
+        else
+        {
+            if(src->useable)
+                best = src;
+        }
+    }
+
+    return best;
 }
 
-_INIT int timer_find_src()
+_INIT static TimerSource *find_timersource_by_id(size_t id)
 {
-    /* the RTC can only be used as a timer if periodic
-    interrupts are enabled. */
-    if(pit_periodic_ints_enabled())
+    for(size_t i = 0; i < sizeof(g_timersources) / sizeof(TimerSource); ++i)
     {
-        pit_set_timesource(TIMERSOURCE_PIT);
-        return 0;
-    }
-    if(rtc_periodic_ints_enabled())
-    {
-        pit_set_timesource(TIMERSOURCE_RTC);
-        return 0;
+        if(g_timersources[i].id == id)
+            return &g_timersources[i];
     }
 
-    return 1;
+    return NULL;
+}
+
+_INIT size_t timer_find_sources()
+{
+    size_t useable = 0;
+
+    if(rtc_periodic_ints_enabled())
+    {
+        TimerSource *timersource = find_timersource_by_id(RTC_ID);
+        if(timersource)
+        {
+            timersource->useable = true;
+            ++useable;
+        }
+    }
+
+    if(pit_periodic_ints_enabled())
+    {
+        TimerSource *timersource = find_timersource_by_id(PIT_ID);
+        if(timersource)
+        {
+            timersource->useable = true;
+            ++useable;
+        }
+    }
+
+    const TimerSource *best = find_best_timersource();
+    if(best)
+        KLOGF(INFO, "Found best timersource \"%s\" with id %d.", best->name, best->id);
+
+    return useable;
 }
 
 bool timer_is_ready(const Timer *t)
 {
-    return t->_is_ready;
+    return t->_ready;
 }
 
-int timer_start(Timer *t)
+bool timer_start(Timer *t)
 {
-    memset(t, 0, sizeof(*t));
-    t->_is_ready = false;
+    memset(t, 0, sizeof(Timer));
 
-    if(UNLIKELY(!g_timesrc_ready))
-        return TIMER_START_NO_TIMESOURCE;
+    const TimerSource *best = find_best_timersource();
+    if(!best)
+        return false;
 
-    t->_src = g_timersrc;
-    switch(t->_src)
-    {
-    case TIMERSOURCE_RTC:
-        t->_now = rtc_now;
-        break;
-
-    case TIMERSOURCE_PIT:
-        t->_now = pit_now;
-        break;
-
-    default:
-        return TIMER_START_INVALID_TIMESOURCE;
-    }
-
+    t->_now = best->now;
     t->_start_ts = t->_now();
-    t->_is_ready = true;
+    t->_internal_id = best->id;
+    t->_ready = true;
 
-    return TIMER_START_OK;
+    return true;
 }
 
-int timer_ellapsed(struct timespec *ts, const Timer *t)
+bool timer_ellapsed(struct timespec *ts, const Timer *t)
 {
-    /* If the global timesource is different than the timer's timesource,
-    ??? */
-    if(UNLIKELY(g_timersrc != t->_src))
-        TODO_FATAL();
-
     if(UNLIKELY( !timer_is_ready(t) ))
-        return TIMER_ELLAPSED_NEEDS_STARTING;
+        return false;
 
     const struct timespec now = t->_now();
 
@@ -90,13 +129,13 @@ int timer_ellapsed(struct timespec *ts, const Timer *t)
     }
     ts->tv_nsec = nsecdiff;
 
-    return TIMER_ELLAPSED_OK;
+    return true;
 }
 
 double timer_ellapsed_sec(const Timer *t)
 {
     struct timespec ts; 
-    return timer_ellapsed(&ts, t) == TIMER_ELLAPSED_OK ?
+    return timer_ellapsed(&ts, t) ?
         ts.tv_sec + ts.tv_nsec / 1000000000.0 :
         -1;
 }
@@ -104,7 +143,7 @@ double timer_ellapsed_sec(const Timer *t)
 double timer_ellapsed_ms(const Timer *t)
 {
     struct timespec ts;
-    return timer_ellapsed(&ts, t) == TIMER_ELLAPSED_OK ?
+    return timer_ellapsed(&ts, t) ?
         ts.tv_sec * 1000 + ts.tv_nsec / 1000000.0 :
         -1;
 }
@@ -112,7 +151,7 @@ double timer_ellapsed_ms(const Timer *t)
 double timer_ellapsed_us(const Timer *t)
 {
     struct timespec ts;
-    return timer_ellapsed(&ts, t) == TIMER_ELLAPSED_OK ?
+    return timer_ellapsed(&ts, t) ?
         ts.tv_sec * 1000000 + ts.tv_nsec / 1000.0 :
         -1;
 }
@@ -120,7 +159,7 @@ double timer_ellapsed_us(const Timer *t)
 double timer_ellapsed_ns(const Timer *t)
 {
     struct timespec ts;
-    return timer_ellapsed(&ts, t) == TIMER_ELLAPSED_OK ?
+    return timer_ellapsed(&ts, t) ?
         ts.tv_sec * 1000000000 + ts.tv_nsec :
         -1;
 }

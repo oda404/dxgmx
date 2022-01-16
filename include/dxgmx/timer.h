@@ -4,40 +4,28 @@
 
 #include<dxgmx/time.h>
 
-#if defined(_X86_)
-#include<dxgmx/bits/x86/timersources.h>
-#endif
-
-typedef struct timespec(*timersource)();
+typedef struct timespec(*timersource_now)();
 
 typedef struct
 S_Timer
 {
-    /* Internal architecture specific timer source. */
-    TimerSources _src;
     /* Starting timespec struct. */
     struct timespec _start_ts;
     /* Internal getter for timespec structs. */
-    timersource _now;
-    bool _is_ready;
+    timersource_now _now;
+    bool _ready;
+    size_t _internal_id;
 } Timer;
-
-#define TIMER_START_OK 0
-#define TIMER_START_NO_TIMESOURCE 1
-#define TIMER_START_INVALID_TIMESOURCE 2
-
-#define TIMER_ELLAPSED_OK 0
-#define TIMER_ELLAPSED_NEEDS_STARTING 1
 
 /**
  * Tries to find the most suitable source to be used as a timer.
  * @return != 0 if an error occured and no source was found.
 */
-int timer_find_src();
+size_t timer_find_sources();
 /** Starts the timer.
  * @return See TIMER_START_*.
 */
-int timer_start(Timer *t);
+bool timer_start(Timer *t);
 /**
  * @return true if the timer is valid, and can be used. This status is
  * guaranteed until timer_start() is called again.
@@ -48,7 +36,7 @@ bool timer_is_ready(const Timer *t);
  of 'ts' is not touched.
  @return See TIMER_ELLAPSED_*. 
 */
-int timer_ellapsed(struct timespec *ts, const Timer *t);
+bool timer_ellapsed(struct timespec *ts, const Timer *t);
 /**
  * @return < 0 if 't' is not ready. Else the number of seconds since
  * timer_start() was last called.

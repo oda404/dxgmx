@@ -21,8 +21,8 @@ _INIT int timekeep_init()
     rtc_init();
     rtc_enable_periodic_int();
 
-    if(timer_find_src() != 0)
-        KLOGF(ERR, "timer found no source even though system timers should be up!");
+    if(!timer_find_sources())
+        KLOGF(ERR, "No system timers were found even though they should be up!");
 
     timer_start(&g_uptime_timer);
 
