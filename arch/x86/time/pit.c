@@ -41,7 +41,7 @@
 static volatile struct timespec 
 g_periodic_int_timespec; 
 static bool g_periodic_ints_enabled = false;
-static float g_freq = 0;
+static size_t g_freq = 0;
 
 static void pit_isr(
     const InterruptFrame _ATTR_UNUSED *frame,
@@ -65,7 +65,11 @@ _INIT int pit_init()
 
 void pit_enable_periodic_int()
 {
-    const u16 freqdiv = 2;
+    g_freq = 4096;
+    const u16 freqdiv = PIT_BASE_FREQ_HZ / g_freq;
+
+    interrupts_disable();
+    idt_register_isr(IRQ0, pit_isr);
 
     port_outb(
         (PIT_MODE_BIN | PIT_OPMODE_SQUARE_WAVE_GEN | PIT_ACCESS_LOHI | PIT_CHANNEL0),
@@ -76,8 +80,7 @@ void pit_enable_periodic_int()
     /* hi */
     port_outb(freqdiv >> 8, PIT_CHANNEL0_PORT);
 
-    g_freq = PIT_BASE_FREQ_HZ / freqdiv;
-    idt_register_isr(IRQ0, pit_isr);
+    interrupts_enable();
 
     g_periodic_ints_enabled = true;
 }
