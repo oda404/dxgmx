@@ -133,7 +133,7 @@ size_t ksyms_get_symbol_name(
         }
     }
 
-    if(ksym->addr >= addr)
+    if(ksym->addr > addr && (ptr)ksym > (ptr)g_ksyms_table)
         --ksym;
 
     size_t wr = ksym->strlen < n ? ksym->strlen : n;
