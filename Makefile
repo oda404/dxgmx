@@ -5,7 +5,7 @@ APPNAME           := dxgmx
 
 VER_MAJ           := 0
 VER_MIN           := 9
-PATCH_N           := 1
+PATCH_N           := 2
 CODENAME          := angel_attack
 
 ifdef BUILDCONFIG
