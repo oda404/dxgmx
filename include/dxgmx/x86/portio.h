@@ -23,4 +23,18 @@ u8 port_inb(u16 port)
     return ret;
 }
 
+_ATTR_ALWAYS_INLINE
+void port_outl(u32 value, u16 port)
+{
+    __asm__ volatile("outl %0, %1" : : "a"(value), "Nd"(port));
+}
+
+_ATTR_ALWAYS_INLINE 
+u32 port_inl(u16 port)
+{
+    u32 ret;
+    __asm__ volatile("inl %1, %0" : "=a"(ret) : "Nd"(port));
+    return ret;
+}
+
 #endif // _DXGMX_X86_PORTIO_H
