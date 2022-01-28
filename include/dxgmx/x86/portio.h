@@ -24,6 +24,20 @@ u8 port_inb(u16 port)
 }
 
 _ATTR_ALWAYS_INLINE
+void port_outw(u16 value, u16 port)
+{
+    __asm__ volatile("outw %0, %1": : "a"(value), "Nd"(port));
+}
+
+_ATTR_ALWAYS_INLINE
+u16 port_inw(u16 port)
+{
+    u16 ret;
+    __asm__ volatile("inw %1, %0": "=a"(ret) : "Nd"(port));
+    return ret;
+}
+
+_ATTR_ALWAYS_INLINE
 void port_outl(u32 value, u16 port)
 {
     __asm__ volatile("outl %0, %1" : : "a"(value), "Nd"(port));
