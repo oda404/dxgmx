@@ -1,5 +1,5 @@
 /**
- * Copyright 2021 Alexandru Olaru.
+ * Copyright 2022 Alexandru Olaru.
  * Distributed under the MIT license.
 */
 
@@ -7,6 +7,7 @@
 #include<dxgmx/x86/gdt.h>
 #include<dxgmx/x86/multiboot.h>
 #include<dxgmx/x86/interrupts.h>
+#include<dxgmx/x86/pci.h>
 #include<dxgmx/video/tty.h>
 #include<dxgmx/cpu.h>
 #include<dxgmx/kdefs.h>
@@ -54,6 +55,8 @@ int kinit_stage1()
         struct tm date = timkeep_date();
         klogln(INFO, "Current date: %02d:%02d:%02d %02d/%02d/%d.", date.tm_hour, date.tm_min, date.tm_sec, date.tm_mday, date.tm_mon + 1, 1900 + date.tm_year);
     }
+
+    pci_enumerate_devices();
 
     return 0;
 }

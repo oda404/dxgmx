@@ -17,6 +17,7 @@ $(INCLUDEDIR)/dxgmx/x86/pagedir.h \
 $(INCLUDEDIR)/dxgmx/x86/pagetable.h \
 $(INCLUDEDIR)/dxgmx/x86/pagedir_ptrtable.h \
 $(INCLUDEDIR)/dxgmx/x86/exceptions.h \
+$(INCLUDEDIR)/dxgmx/x86/pci.h \
 
 ifeq ($(CONFIG_BOOTSPEC),multiboot)
 	HEADERS += $(INCLUDEDIR)/dxgmx/x86/multiboot.h 
