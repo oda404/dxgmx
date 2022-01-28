@@ -172,6 +172,7 @@ $(BIN_PATH): $(DXGMX_DEPS) $(DXGMX_COMMON_DEPS)
 	@$(OUTPUT_FORMATTED) LD $(notdir $(BIN_NAME))
 	@$(LD) -T $(LDSCRIPT) $(COBJS) $(CXXOBJS) $(ASMOBJS) $(LDFLAGS) -o $(BIN_PATH)
 
+	@[ -f build/image.img ] || $(SCRIPTSDIR)/create-disk.sh -p build/image.img -s 128M
 	@NM=$(NM) OBJCOPY=$(OBJCOPY) $(SCRIPTSDIR)/bake_symbols.sh $(BIN_PATH) 
 
 	@cp $(BIN_PATH) $(SYSROOTDIR)/boot/
