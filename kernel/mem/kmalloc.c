@@ -142,6 +142,7 @@ void *kmalloc_aligned(size_t size, size_t alignment)
             u64 block = g_allocator_blocks[i];
 
             slabs_offset = 0;
+            slabs_mask = 0;
             for(size_t i = 0; i < slabs; ++i)
                 bw_set(&slabs_mask, i);
 
