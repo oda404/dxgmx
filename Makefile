@@ -212,12 +212,14 @@ $(ISO_PATH): $(BIN_PATH)
 PHONY += iso-run 
 iso-run:
 	$(MAKE) iso
-	$(SCRIPTSDIR)/run.sh -i $(ISO_PATH) -a $(ARCH)
+	DXGMX_DISK=build/image.img DXGMX_MEM=128M \
+		$(SCRIPTSDIR)/run.sh -i $(ISO_PATH) -a $(ARCH)
 
 PHONY += run 
 run:
 	$(MAKE)
-	$(SCRIPTSDIR)/run.sh -k $(BIN_PATH) -a $(ARCH)
+	DXGMX_DISK=build/image.img DXGMX_MEM=128M \
+		$(SCRIPTSDIR)/run.sh -k $(BIN_PATH) -a $(ARCH)
 
 PHONY += clean 
 clean:

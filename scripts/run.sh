@@ -64,8 +64,14 @@ fi
 
 case "$EMU" in
 	"qemu")
-		EMULATOR=qemu-system-
-		EMULATOR_OPTS="--enable-kvm -m 2G -cpu host,migratable=off "
+		EMULATOR=qemu-system-x86_64
+		EMULATOR_OPTS=" \
+		--enable-kvm \
+		-m $DXGMX_MEM \
+		-cpu host,migratable=off \
+		-serial stdio \
+		-drive file=$DXGMX_DISK,format=raw,index=0,media=disk "
+
 		if [ -n "$KERNEL" ]; then
 			EMULATOR_OPTS+="-kernel $KERNEL"
 		else
@@ -75,15 +81,6 @@ case "$EMU" in
 	*)
 		echo "Invalid emelator $EMU"
 		exit
-	;;
-esac
-
-case "$ARCH" in
-	"x86"|"i386"|"i686")
-		EMULATOR+=x86_64
-	;;
-	*)
-		echo "Invalid architecure $ARCH"
 	;;
 esac
 
