@@ -10,6 +10,8 @@
 #include<dxgmx/assert.h>
 #include<dxgmx/math.h>
 #include<dxgmx/klog.h>
+#include<dxgmx/utils/hashtable.h>
+#include<dxgmx/todo.h>
 
 #if defined(_X86_)
 #   define KMALLOC_SLAB_SIZE 32
@@ -22,9 +24,18 @@
 #define KMALLOC_SLABS_PER_BLOCK 64
 #define KMALLOC_BLOCKS_COUNT (KERNEL_HEAP_SIZE / KMALLOC_SLABS_PER_BLOCK / KMALLOC_SLAB_SIZE)
 
+static HashTable g_allocation_hashtable;
 static u64 g_allocator_blocks[KMALLOC_BLOCKS_COUNT];
 
-_ATTR_ALWAYS_INLINE static ptr vaddr_from_block_and_slab(
+static _ATTR_ALWAYS_INLINE bool is_vaddr_inside_heap(ptr vaddr)
+{
+    return (
+        (ptr)vaddr >= kheap_get_start_vaddr() && 
+        (ptr)vaddr < kheap_get_start_vaddr() + kheap_get_size()
+    );
+}
+
+static _ATTR_ALWAYS_INLINE ptr vaddr_from_block_and_slab(
     size_t block, 
     size_t slab_offset
 )
@@ -34,9 +45,7 @@ _ATTR_ALWAYS_INLINE static ptr vaddr_from_block_and_slab(
         slab_offset * KMALLOC_SLAB_SIZE;
 }
 
-_ATTR_ALWAYS_INLINE static size_t block_from_vaddr(
-    ptr vaddr
-)
+static _ATTR_ALWAYS_INLINE size_t block_from_vaddr(ptr vaddr)
 {
     return (vaddr - kheap_get_start_vaddr()) / (KMALLOC_SLABS_PER_BLOCK * KMALLOC_SLAB_SIZE);
 }
@@ -56,7 +65,7 @@ static i32 find_contiguous_blocks_aligned(
         return -1;
 
     size_t block_stepping = ceil(
-        (float)alignment / (KMALLOC_BLOCKS_COUNT * KMALLOC_SLABS_PER_BLOCK)
+        (float)alignment / (KMALLOC_SLABS_PER_BLOCK * KMALLOC_SLAB_SIZE)
     );
 
     for(size_t i = start; i < KMALLOC_BLOCKS_COUNT; i += block_stepping)
@@ -80,17 +89,26 @@ static i32 find_contiguous_blocks_aligned(
 bool kmalloc_init()
 {
     memset(g_allocator_blocks, 0, sizeof(g_allocator_blocks));
+
+    /* FIXME: This creates a circular dependency where 
+    the hashtable needs kmalloc to be in working order and
+    kmalloc needs the hashtable to keep track of all allocation sizes. */
+    hashtable_init(
+        (KMALLOC_SLAB_SIZE * KMALLOC_SLABS_PER_BLOCK) / sizeof(HashTableEntry), 
+        &g_allocation_hashtable
+    );
+
     return true;
 }
 
 void *kmalloc(size_t size)
 {
-    return kmalloc_aligned(size, 1);
+    return kmalloc_aligned(size, 4);
 }
 
 void *kmalloc_aligned(size_t size, size_t alignment)
 {
-    if(!size || (!alignment || !bw_is_power_of_two(alignment)))
+    if(!size || !bw_is_power_of_two(alignment))
         return NULL;
 
     size_t slabs = ceil((float)size / KMALLOC_SLAB_SIZE);
@@ -98,7 +116,6 @@ void *kmalloc_aligned(size_t size, size_t alignment)
 
     u64 slabs_mask = 0;
     i32 start_block = 0;
-    size_t slabs_offset = 0;
 
     if(blocks)
     {
@@ -117,11 +134,8 @@ void *kmalloc_aligned(size_t size, size_t alignment)
         for(size_t i = 0; i < slabs; ++i)
             bw_set(&slabs_mask, i);
 
-        u64 half_block = g_allocator_blocks[start_block + blocks];
-        while(
-            (half_block & slabs_mask) || 
-            ((half_block >> 32) & (slabs_mask >> 32))
-        )
+        u64 block = g_allocator_blocks[start_block + blocks];
+        while(bw_mask(block, slabs_mask))
         {
             /* Try to find a new start_block. If this fails at any point, it means we can't make
             this allocation as we reached the end of the heap without finding anything. */
@@ -131,7 +145,7 @@ void *kmalloc_aligned(size_t size, size_t alignment)
                 KLOGF(WARN, "Failed to find %u contiguous bytes.", size);
                 return NULL;
             }
-            half_block = g_allocator_blocks[start_block + blocks];
+            block = g_allocator_blocks[start_block + blocks];
         }
     }
     else
@@ -141,22 +155,15 @@ void *kmalloc_aligned(size_t size, size_t alignment)
             start_block = i;
             u64 block = g_allocator_blocks[i];
 
-            slabs_offset = 0;
             slabs_mask = 0;
-            for(size_t i = 0; i < slabs; ++i)
-                bw_set(&slabs_mask, i);
+            for(size_t k = 0; k < slabs; ++k)
+                bw_set(&slabs_mask, k);
 
             for(size_t k = 0; k < KMALLOC_SLABS_PER_BLOCK - slabs; ++k)
             {
-                if(
-                    (block & slabs_mask) == 0 && 
-                    ((block >> 32) & (slabs_mask >> 32)) == 0
-                )
-                {
+                if(!bw_mask(block, slabs_mask))
                     goto done;
-                }
                 slabs_mask <<= 1;
-                ++slabs_offset;
             }
         }
 
@@ -165,45 +172,93 @@ void *kmalloc_aligned(size_t size, size_t alignment)
     }
 
 done:
-    /* mark any allocations made. */
+    /* mark any whole blocks. */
     for(size_t i = 0; i < blocks; ++i)
-    {
-        u64 *block = &g_allocator_blocks[start_block + i];
-        *block |= 0xFFFFFFFF;
-        *block <<= 32;
-        *block |= 0xFFFFFFFF;
-    }
+        bw_or_mask(&g_allocator_blocks[start_block + i], 0xFFFF'FFFF'FFFF'FFFF);
+    /* apply slabs_mask if  */
+    if(slabs_mask)
+        bw_or_mask(&g_allocator_blocks[start_block + blocks], slabs_mask);
 
+    size_t start_slab = 0;
     if(slabs_mask)
     {
-        u64 *block = &g_allocator_blocks[start_block + blocks];
-        u32 old = *block;
-        *block >>= 32;
-        *block |= (slabs_mask >> 32);
-        *block <<= 32;
-        *block |= slabs_mask & 0xFFFFFFFF;
-        *block |= old;
+        while(!((slabs_mask >> start_slab) & 1))
+            ++start_slab;
     }
-
-    ptr addr = vaddr_from_block_and_slab(start_block, slabs_offset);
     
-    KLOGF(DEBUG, "Allocated %u bytes at %p-%p.", size, (void *)addr, (void *)(addr + size));
+    const ptr addr = vaddr_from_block_and_slab(start_block, start_slab);
+
+    if(g_allocation_hashtable.entries_max)
+    {
+        // FIXME: Remove this shit.
+        if(!hashtable_add(addr, (void*)size, &g_allocation_hashtable))
+            panic("kmalloc: Allocation hashtable reached it's capacity.");
+    }
+    
+    KLOGF(
+        DEBUG, 
+        "Allocated %u(%u) bytes at 0x%p.", 
+        size,
+        KMALLOC_SLAB_SIZE * slabs + KMALLOC_SLAB_SIZE * KMALLOC_SLABS_PER_BLOCK * blocks, 
+        (void *)addr
+    );
+
     return (void *)addr;
 }
 
 void kfree(void *addr)
 {
-    ASSERT(
-        (ptr)addr % KMALLOC_SLAB_SIZE == 0 &&
-        ((ptr)addr >= kheap_get_start_vaddr() && (ptr)addr < kheap_get_start_vaddr() + kheap_get_size())
-    );
+    if((ptr)addr % KMALLOC_SLAB_SIZE || !is_vaddr_inside_heap((ptr)addr))
+        panic("Tried to kfree() an invalid address!");
 
-    /* dang */
+    const size_t size = (size_t)hashtable_get((size_t)addr, &g_allocation_hashtable);
+    if(!size)
+        panic("Tried to kfree() an invalid address!");
+
+    size_t slabs = ceil((float)size / KMALLOC_SLAB_SIZE);
+    size_t blocks = slabs / KMALLOC_SLABS_PER_BLOCK;
+    slabs -= blocks * KMALLOC_SLABS_PER_BLOCK;
+
+    size_t start_block = block_from_vaddr((ptr)addr);
+    for(size_t i = 0; i < blocks; ++i)
+        g_allocator_blocks[start_block + i] = 0;
+
+    if(slabs)
+    {
+        /* build the bitmask for the slabs */
+        size_t offset = ((ptr)addr % (KMALLOC_SLAB_SIZE * KMALLOC_SLABS_PER_BLOCK)) / KMALLOC_SLAB_SIZE;
+        u64 mask = 0xFFFF'FFFF'FFFF'FFFF;
+        for(size_t i = 0; i < slabs; ++i)
+            bw_clear(&mask, i + offset);
+
+        bw_and_mask(&g_allocator_blocks[start_block + blocks], mask);
+    }
+
+    hashtable_remove((size_t)addr, &g_allocation_hashtable);
+
+    KLOGF(
+        DEBUG, 
+        "Freed %u(%u) bytes at 0x%p.", 
+        size, 
+        KMALLOC_SLAB_SIZE * slabs + KMALLOC_SLAB_SIZE * KMALLOC_SLABS_PER_BLOCK * blocks, 
+        addr 
+    );
 }
 
 void *krealloc(void *addr, size_t size)
 {
-    (void)addr;
-    (void)size;
-    return NULL;
+    void *newaddr = NULL;
+    if(addr)
+    {
+        const size_t oldsize = (size_t)hashtable_get((size_t)addr, &g_allocation_hashtable);
+        kfree(addr);
+        newaddr = kmalloc(size);
+        memcpy(newaddr, addr, oldsize);
+    }
+    else
+    {
+        newaddr = kmalloc(size);
+    }
+
+    return newaddr;
 }
