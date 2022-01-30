@@ -24,6 +24,8 @@
 #define KMALLOC_SLABS_PER_BLOCK 64
 #define KMALLOC_BLOCKS_COUNT (KERNEL_HEAP_SIZE / KMALLOC_SLABS_PER_BLOCK / KMALLOC_SLAB_SIZE)
 
+#define KMALLOC_LOG_ACTIONS 0
+
 static HashTable g_allocation_hashtable;
 static u64 g_allocator_blocks[KMALLOC_BLOCKS_COUNT];
 
@@ -194,7 +196,8 @@ done:
         if(!hashtable_add(addr, (void*)size, &g_allocation_hashtable))
             panic("kmalloc: Allocation hashtable reached it's capacity.");
     }
-    
+
+#if KMALLOC_LOG_ACTIONS
     KLOGF(
         DEBUG, 
         "Allocated %u(%u) bytes at 0x%p.", 
@@ -202,6 +205,7 @@ done:
         KMALLOC_SLAB_SIZE * slabs + KMALLOC_SLAB_SIZE * KMALLOC_SLABS_PER_BLOCK * blocks, 
         (void *)addr
     );
+#endif // KMALLOC_LOG_ACTIONS
 
     return (void *)addr;
 }
@@ -236,6 +240,7 @@ void kfree(void *addr)
 
     hashtable_remove((size_t)addr, &g_allocation_hashtable);
 
+#if KMALLOC_LOG_ACTIONS
     KLOGF(
         DEBUG, 
         "Freed %u(%u) bytes at 0x%p.", 
@@ -243,6 +248,7 @@ void kfree(void *addr)
         KMALLOC_SLAB_SIZE * slabs + KMALLOC_SLAB_SIZE * KMALLOC_SLABS_PER_BLOCK * blocks, 
         addr 
     );
+#endif // KMALLOC_LOG_ACTIONS
 }
 
 void *krealloc(void *addr, size_t size)
