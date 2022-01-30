@@ -9,12 +9,18 @@
 _ATTR_ALWAYS_INLINE void 
 bw_clear(u64 *n, u8 bit)
 {
-    if(bit < 64)
+    if(bit < 32)
     {
-        u32 old = *n;
-        (*n) >>= bit;
-        (*n) &= ~1;
-        (*n) <<= bit;
+        u32 x = ~(1 << bit);
+        (*n) &= x;
+    }
+    else if(bit < 64)
+    {
+        u32 old = (*n);
+        (*n) >>= 32;
+        u32 x = ~(1 << (bit - 32));
+        (*n) &= x;
+        (*n) <<= 32;
         (*n) |= old;
     }
 }
@@ -22,14 +28,56 @@ bw_clear(u64 *n, u8 bit)
 _ATTR_ALWAYS_INLINE void 
 bw_set(u64 *n, u8 bit)
 {
-    if(bit < 64)
+    if(bit < 32)
     {
-        u32 old = *n;
-        (*n) >>= bit;
-        (*n) |= 1;
-        (*n) <<= bit;
+        u32 x = (1 << bit);
+        (*n) |= x;
+    }
+    else if(bit < 64)
+    {
+        u32 old = (*n);
+        (*n) >>= 32;
+        u32 x = (1 << (bit - 32));
+        (*n) |= x;
+        (*n) <<= 32;
         (*n) |= old;
     }
+}
+
+_ATTR_ALWAYS_INLINE u64 
+bw_mask(u64 n, u64 mask)
+{
+    u64 ret;
+    ret = (n >> 32) & (mask >> 32);
+    ret <<= 32;
+    u32 tmp = (u32)n & (u32)mask;
+    ret |= tmp;
+
+    return ret;
+}
+
+_ATTR_ALWAYS_INLINE void 
+bw_or_mask(u64 *n, u64 mask)
+{
+    u32 old = (u32)(*n);
+    (*n) >>= 32;
+    u32 tmp = (mask >> 32);
+    (*n) |= tmp;
+    (*n) <<= 32;
+    tmp = old | (u32)mask;
+    (*n) |= tmp;
+}
+
+_ATTR_ALWAYS_INLINE void
+bw_and_mask(u64 *n, u64 mask)
+{
+    u32 old = (u32)(*n);
+    (*n) >>= 32;
+    u32 tmp = (mask >> 32);
+    (*n) &= tmp;
+    (*n) <<= 32;
+    tmp = old & (u32)mask;
+    (*n) |= tmp;
 }
 
 _ATTR_ALWAYS_INLINE int
