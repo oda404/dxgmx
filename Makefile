@@ -66,7 +66,7 @@ MACROS            := \
 -D_DXGMX_VER_MIN_=$(VER_MIN) -D_DXGMX_PATCH_N_=$(PATCH_N) \
 -D_DXGMX_CODENAME_='"$(CODENAME)"' $(BT_MACROS)           \
 
-WARNINGS          := -Wall -Wextra                   \
+WARNINGS          := -Wall -Wextra -Wshadow          \
 -Werror-implicit-function-declaration $(BT_WARNINGS) \
 
 ### CONFIGURATION ###
