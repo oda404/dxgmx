@@ -22,17 +22,14 @@ The dxgmx build system uses good old Makefiles, but with a few practices that ma
 ## buildtarget
  A makefile-like file defining build configuration options. A buildtarget file can have any name, and it's path can be set using **BUILDTARGET=<...>** either in the [buildconfig](#buildconfig) file or as an env. variable. If no buildtarget file is specifed the kernel *will* build but the output binary will be generic. Below is a list of all the relevant options that **can/must** be set in a buildtarget file:
 - **HAS_BUILDTARGET**: Must be set to 1.
-- **BT_NAME**: The name of the target.
-- **BT_CFLAGS**: Extra flags for the C compiler.
-- **BT_CXXFLAGS**: Extra flags for the C++ compiler.
-- **BT_LDFLAGS**: Extra flags for the linker.
-- **BT_MACROS**: Extra macros for the C/C++ pre-processor.
-- **BT_WARNINGS**: Extra warnings for the C/C++ compiler.
+- **BUILDTARGET_NAME**: The name of the build target.
 - **Config options**: [optional] A list of configuration options. See config-options.md
 
-## Notes
+## Toolchains
 - The kernel has been tested with:
-    - GCC 11.2.0 and GNU Binutils 2.37
     - clang 12.0.1
+- The kernel fails to compile with GCC because -std=c2x is being used and GCC just can't ??
+
+## Notes
 - Regardless of the toolchain used, the kernel needs to be linked against libgcc or a suitable replacement, built for the target architecture (One way to do that is append the necessary flags to **EXTRA_LDFLAGS** in the buildconfig file).
 
