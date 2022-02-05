@@ -8,7 +8,7 @@ $(INCLUDEDIR)/dxgmx/cpu.h \
 $(INCLUDEDIR)/dxgmx/ctype.h \
 $(INCLUDEDIR)/dxgmx/errno.h \
 $(INCLUDEDIR)/dxgmx/kabort.h \
-$(INCLUDEDIR)/dxgmx/kdefs.h \
+$(INCLUDEDIR)/dxgmx/kconfig.h \
 $(INCLUDEDIR)/dxgmx/klog.h \
 $(INCLUDEDIR)/dxgmx/kprintf.h \
 $(INCLUDEDIR)/dxgmx/kstack.h \

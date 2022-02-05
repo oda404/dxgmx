@@ -20,7 +20,8 @@
 */
 typedef enum E_KLogLevel
 {
-    FATAL = 1,
+    QUIET = 0,
+    FATAL,
     ERR,
     WARN,
     INFO,

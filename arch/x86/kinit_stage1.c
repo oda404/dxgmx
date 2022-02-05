@@ -10,7 +10,7 @@
 #include<dxgmx/x86/pci.h>
 #include<dxgmx/kstdio.h>
 #include<dxgmx/cpu.h>
-#include<dxgmx/kdefs.h>
+#include<dxgmx/kconfig.h>
 #include<dxgmx/panic.h>
 #include<dxgmx/klog.h>
 #include<dxgmx/mem/mmanager.h>
@@ -30,7 +30,7 @@ int kinit_stage1()
 
     /* Initialize logging early on, so if something goes wrong we see it. */
     kstdio_init();
-    klog_init((KLogLevel)_DXGMX_LOGLVL_);
+    klog_init((KLogLevel)DXGMX_CONFIG_LOG_LEVEL);
     kstdio_set_serial_debug(true);
 
     if(_multiboot_magic != MULTIBOOT_BOOTLOADER_MAGIC)
@@ -49,7 +49,7 @@ int kinit_stage1()
     klogln(INFO, "  __| |_  ____ _ _ __ ___ __  __");
     klogln(INFO, " / _` \\ \\/ / _` | '_ ` _ \\\\ \\/ /");
     klogln(INFO, "| (_| |>  < (_| | | | | | |>  <");
-    klogln(INFO, " \\__,_/_/\\_\\__, |_| |_| |_/_/\\_\\ %s - %d.%d.%d", _DXGMX_CODENAME_, _DXGMX_VER_MAJ_, _DXGMX_VER_MIN_, _DXGMX_PATCH_N_);
+    klogln(INFO, " \\__,_/_/\\_\\__, |_| |_| |_/_/\\_\\ %s - %d.%d.%d", DXGMX_CODENAME, DXGMX_VER_MAJ, DXGMX_VER_MIN, DXGMX_PATCH_N);
     klogln(INFO, "           |___/");
 
     {

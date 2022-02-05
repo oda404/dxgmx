@@ -55,47 +55,23 @@ KERNEL_SRCDIR     := kernel
 CFLAGS            := \
 -MD -MP -isystem=/usr/include -std=c2x                   \
 --sysroot=$(SYSROOTDIR) -fno-omit-frame-pointer          \
--ffreestanding -fno-builtin $(BT_CFLAGS) -I$(INCLUDEDIR) \
+-ffreestanding -fno-builtin -I$(INCLUDEDIR) \
 
-CXXFLAGS          := $(CFLAGS) $(BT_CXXFLAGS)
+CXXFLAGS          := $(CFLAGS)
 
-LDFLAGS           := -nostdlib $(BT_LDFLAGS)
+LDFLAGS           := -nostdlib
 
 MACROS            := \
--D_DXGMX_ -D_DXGMX_VER_MAJ_=$(VER_MAJ)                    \
--D_DXGMX_VER_MIN_=$(VER_MIN) -D_DXGMX_PATCH_N_=$(PATCH_N) \
--D_DXGMX_CODENAME_='"$(CODENAME)"' $(BT_MACROS)           \
+-D_DXGMX_ -D__dxgmx__ -DDXGMX_VER_MAJ=$(VER_MAJ)                    \
+-DDXGMX_VER_MIN=$(VER_MIN) -DDXGMX_PATCH_N=$(PATCH_N) \
+-DDXGMX_CODENAME='"$(CODENAME)"'           \
 
 WARNINGS          := -Wall -Wextra -Wshadow          \
--Werror-implicit-function-declaration $(BT_WARNINGS) \
+-Werror-implicit-function-declaration \
 
 ### CONFIGURATION ###
 
-ifeq ($(shell test '$(CONFIG_OPTIMIZATIONS)' -eq '$(CONFIG_OPTIMIZATIONS)' 2> /dev/null && echo 0 || echo 1),0)
-	CFLAGS += -O$(CONFIG_OPTIMIZATIONS)
-	CXXFLAGS += -O$(CONFIG_OPTIMIZATIONS)
-endif
-
-ifeq ($(CONFIG_DEBUG_SYMS),1)
-	CFLAGS += -g
-	CXXFLAGS += -g
-endif
-
-ifeq ($(shell test '$(CONFIG_LOGLVL)' -eq '$(CONFIG_LOGLVL)' 2> /dev/null && echo 0 || echo 1),0)
-	MACROS += -D_DXGMX_LOGLVL_=$(CONFIG_LOGLVL)
-endif
-
-ifeq ($(CONFIG_STACK_PROT),none)
-	CFLAGS += -fno-stack-protector
-else ifeq ($(CONFIG_STACK_PROT),normal)
-	CFLAGS += -fstack-protector
-else ifeq ($(CONFIG_STACK_PROT),strong)
-	CFLAGS += -fstack-protector-strong
-else ifeq ($(CONFIG_STACK_PROT),all)
-	CFLAGS += -fstack-protector-all
-endif
-
-### CONFIGURATION END ###
+include $(SCRIPTSDIR)/configparser.mk
 
 ifeq ($(SRCARCH),x86)
 	CFLAGS += -march=$(ARCH) -m32
@@ -137,13 +113,13 @@ include $(KERNEL_SRCDIR)/Makefile
 include $(INCLUDEDIR)/Makefile
 
 COBJS             := $(filter %.c, $(ARCH_SRC) $(INIT_SRC) $(KERNEL_SRC))
-COBJS             := $(COBJS:%.c=%_$(BT_NAME).c.o)
+COBJS             := $(COBJS:%.c=%_$(BUILDTARGET_NAME).c.o)
 
 CXXOBJS           := $(filter %.cpp, $(ARCH_SRC) $(INIT_SRC) $(KERNEL_SRC))
-CXXOBJS           := $(CXXOBJS:%.cpp=%_$(BT_NAME).cpp.o)
+CXXOBJS           := $(CXXOBJS:%.cpp=%_$(BUILDTARGET_NAME).cpp.o)
 
 ASMOBJS           := $(filter %.S, $(ARCH_SRC) $(INIT_SRC) $(KERNEL_SRC))
-ASMOBJS           := $(ASMOBJS:%.S=%_$(BT_NAME).S.o)
+ASMOBJS           := $(ASMOBJS:%.S=%_$(BUILDTARGET_NAME).S.o)
 
 COBJS             := $(addprefix $(BUILDDIR)/, $(COBJS))
 CXXOBJS           := $(addprefix $(BUILDDIR)/, $(CXXOBJS))
@@ -178,19 +154,19 @@ $(BIN_PATH): $(DXGMX_DEPS) $(DXGMX_COMMON_DEPS)
 	@cp $(BIN_PATH) $(SYSROOTDIR)/boot/
 
 -include $(CDEPS)
-$(BUILDDIR)/%_$(BT_NAME).c.o: %.c $(DXGMX_COMMON_DEPS)
+$(BUILDDIR)/%_$(BUILDTARGET_NAME).c.o: %.c $(DXGMX_COMMON_DEPS)
 	@mkdir -p $(dir $@)
 	@$(OUTPUT_FORMATTED) CC $<
 	@$(CC) -c $< $(CFLAGS) -o $@
 
 -include $(CXXDEPS)
-$(BUILDDIR)/%_$(BT_NAME).cpp.o: %.cpp $(DXGMX_COMMON_DEPS)
+$(BUILDDIR)/%_$(BUILDTARGET_NAME).cpp.o: %.cpp $(DXGMX_COMMON_DEPS)
 	@mkdir -p $(dir $@)
 	@$(OUTPUT_FORMATTED) CXX $<
 	@$(CXX) -c $< $(CXXFLAGS) -o $@
 
 -include $(ASMDEPS)
-$(BUILDDIR)/%_$(BT_NAME).S.o: %.S $(DXGMX_COMMON_DEPS)
+$(BUILDDIR)/%_$(BUILDTARGET_NAME).S.o: %.S $(DXGMX_COMMON_DEPS)
 	@mkdir -p $(dir $@)
 	@$(OUTPUT_FORMATTED) AS $<
 	@$(AS) -c $< $(CFLAGS) -o $@
