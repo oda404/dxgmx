@@ -1,14 +1,24 @@
 #!/bin/bash
 
-MAX_LENGTH=20
-SECOND_LENGTH=`expr "$2" : '.*'`
-out_str="  $1    $2"
+FIRST_LENGTH=${#1}
+TOTAL_LENGTH=7
 
-for (( c=0; c<$MAX_LENGTH-$SECOND_LENGTH; c++ ))
+FIRST_TOKEN=$1
+SECOND_TOKEN=$2
+
+if (( $FIRST_LENGTH >= $TOTAL_LENGTH )); then
+    echo "scripts/output-formatted.sh: First token: '$1' is too long."
+    FIRST_TOKEN="???"
+    FIRST_LENGTH=3
+fi
+
+OUT_STR="  $FIRST_TOKEN"
+
+for (( c = 0; c < $TOTAL_LENGTH-$FIRST_LENGTH; ++c ))
 do
-    out_str="$out_str "
+    OUT_STR="$OUT_STR "
 done
 
-out_str="$out_str$3"
+OUT_STR="$OUT_STR$SECOND_TOKEN"
 
-echo "$out_str"
+echo "$OUT_STR"
