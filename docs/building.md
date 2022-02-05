@@ -23,7 +23,7 @@ The dxgmx build system uses good old Makefiles, but with a few practices that ma
  A makefile-like file defining build configuration options. A buildtarget file can have any name, and it's path can be set using **BUILDTARGET=<...>** either in the [buildconfig](#buildconfig) file or as an env. variable. If no buildtarget file is specifed the kernel *will* build but the output binary will be generic. Below is a list of all the relevant options that **can/must** be set in a buildtarget file:
 - **HAS_BUILDTARGET**: Must be set to 1.
 - **BUILDTARGET_NAME**: The name of the build target.
-- **Config options**: [optional] A list of configuration options. See config-options.md
+- **Config options**: [optional] A list of configuration options. See [Config Options](config-options.md).
 
 ## Toolchains
 - The kernel has been tested with:
