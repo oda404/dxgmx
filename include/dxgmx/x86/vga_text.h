@@ -1,5 +1,5 @@
 /**
- * Copyright 2021 Alexandru Olaru.
+ * Copyright 2022 Alexandru Olaru.
  * Distributed under the MIT license.
 */
 
@@ -8,12 +8,8 @@
 
 #include<dxgmx/types.h>
 
-#define VGA_ERR_INVALID_WIDTH  1
-#define VGA_ERR_INVALID_HEIGHT 2
-#define VGA_ERR_INVALID_FG     3
-#define VGA_ERR_INVALID_BG     4
-
-enum VGAColor
+typedef enum 
+E_VGAColor
 {
     VGA_COLOR_BLACK   = 0x0,
     VGA_COLOR_BLUE    = 0x1,
@@ -31,16 +27,28 @@ enum VGAColor
     VGA_COLOR_PINK    = 0xD,
     VGA_COLOR_YELLOW  = 0xE,
     VGA_COLOR_WHITE   = 0xF
-};
+} VGAColor;
 
-void vga_init(u8 w, u8 h);
-void vga_enable_cursor();
-void vga_disable_cursor();
-int vga_clear_row(u8 row);
-int vga_put_char(char c, u8 fg, u8 bg, u8 row, u8 col);
-int vga_clear_char(u8 row, u8 col);
-u8 vga_get_max_width();
-u8 vga_get_max_height();
-void vga_scroll(size_t lines);
+typedef struct
+S_VGATextRenderingContext
+{
+    VGAColor fg;
+    VGAColor bg;
+    u8 width;
+    u8 height;
+    u8 current_row;
+    u8 current_col;
+} VGATextRenderingContext;
+
+void vgatext_init(VGATextRenderingContext *ctx);
+bool vgatext_print_char_at(char c, u8 row, u8 col, const VGATextRenderingContext *ctx);
+bool vgatext_print_char(char c, VGATextRenderingContext *ctx);
+bool vgatext_clear_char_at(u8 row, u8 col, const VGATextRenderingContext *ctx);
+bool vgatext_clear_row(u8 row, const VGATextRenderingContext *ctx);
+void vgatext_clear_screen(const VGATextRenderingContext *ctx);
+void vgatext_scroll(size_t lines, const VGATextRenderingContext *ctx);
+void vgatext_newline(VGATextRenderingContext *ctx);
+void vgatext_enable_cursor();
+void vgatext_disable_cursor();
 
 #endif // _DXGMX_VIDEO_VGA_TEXT_H

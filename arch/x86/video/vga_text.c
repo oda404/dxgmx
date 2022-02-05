@@ -1,5 +1,5 @@
 /**
- * Copyright 2021 Alexandru Olaru.
+ * Copyright 2022 Alexandru Olaru.
  * Distributed under the MIT license.
 */
 
@@ -14,91 +14,110 @@
 #define VGA_IDX_REG_2        0x3CE
 #define VGA_IDX_REG_3        0x3D4
 
-static u16 *g_vga_buf_base = (u16 *)0xC00B8000;
-static u8  g_vga_max_w     = 80;
-static u8  g_vga_max_h     = 0;
+extern u8 _kernel_map_offset[];
+static u16 *g_vga_buf_base = (u16 *)(0xB8000 + (ptr)_kernel_map_offset);
 
-void vga_init(u8 w, u8 h)
+void vgatext_init(VGATextRenderingContext *ctx)
 {
     /* set bit 0 of misc port */
     u8 state = port_inb(VGA_MISC_PORT_R);
     port_outb(state | (1 << 0), VGA_MISC_PORT_W);
-    g_vga_max_w = w;
-    g_vga_max_h = h;
+    ctx->height = 25;
+    ctx->width = 80;
+    ctx->current_col = 0;
+    ctx->current_row = 0;
+    ctx->fg = VGA_COLOR_WHITE;
+    ctx->bg = VGA_COLOR_BLACK;
 }
 
-int vga_put_char(char c, u8 fg, u8 bg, u8 row, u8 col)
+bool vgatext_print_char_at(char c, u8 row, u8 col, const VGATextRenderingContext *ctx)
 {
-    if(row >= g_vga_max_h)
-        return VGA_ERR_INVALID_HEIGHT;
-    if(col >= g_vga_max_w)
-        return VGA_ERR_INVALID_WIDTH;
+    if(row >= ctx->height || col >= ctx->width)
+        return false;
     
-    *(g_vga_buf_base + g_vga_max_w * row + col) = 
-        c << 0 | (u16) fg << 8 | (u16) bg << 12;
+    g_vga_buf_base[ctx->width * row + col] = 
+        c | (u16) ctx->fg << 8 | (u16) ctx->bg << 12;
 
-    return 0;
+    return true;
 }
 
-int vga_clear_char(u8 row, u8 col)
+bool vgatext_print_char(char c, VGATextRenderingContext *ctx)
 {
-    if(row >= g_vga_max_h)
-        return VGA_ERR_INVALID_HEIGHT;
-    if(col >= g_vga_max_w)
-        return VGA_ERR_INVALID_WIDTH;
-    
-    *(g_vga_buf_base + g_vga_max_w * row + col) = 0;
+    if(ctx->current_col >= ctx->width || ctx->current_row >= ctx->height)
+        return false;
 
-    return 0;
+    g_vga_buf_base[ctx->width * ctx->current_row + ctx->current_col] = 
+        c | (u16) ctx->fg << 8 | (u16) ctx->bg << 12;
+
+    if(++ctx->current_col >= ctx->width)
+        vgatext_newline(ctx);
+
+    return true;
 }
 
-int vga_clear_row(u8 row)
+bool vgatext_clear_char_at(u8 row, u8 col, const VGATextRenderingContext *ctx)
 {
-    if(row >= g_vga_max_h)
-        return VGA_ERR_INVALID_HEIGHT;
-    
-    for(size_t i = 0; i < g_vga_max_w; ++i)
-        vga_clear_char(row, i);
+    if(row >= ctx->height || col >= ctx->width)
+        return false;
 
-    return 0;
+    g_vga_buf_base[ctx->width * row + col] = 0;
+
+    return true;
 }
 
-void vga_disable_cursor()
+bool vgatext_clear_row(u8 row, const VGATextRenderingContext *ctx)
+{
+    if(row >= ctx->height)
+        return false;
+    
+    for(size_t i = 0; i < ctx->width; ++i)
+        vgatext_clear_char_at(row, i, ctx);
+
+    return true;
+}
+
+void vgatext_clear_screen(const VGATextRenderingContext *ctx)
+{
+    for(size_t i = 0; i < ctx->height * ctx->width; ++i)
+        g_vga_buf_base[i] = 0;
+}
+
+void vgatext_scroll(size_t lines, const VGATextRenderingContext *ctx)
+{
+    while(lines--)
+    {
+        for(size_t i = 1; i < ctx->height; ++i)
+        {
+            for(size_t k = 0; k < ctx->width; ++k)
+            {
+                g_vga_buf_base[ctx->width * (i - 1) + k] = 
+                    g_vga_buf_base[ctx->width * i + k];
+            }
+        }
+        vgatext_clear_row(ctx->height - 1, ctx);
+    }
+}
+
+void vgatext_newline(VGATextRenderingContext *ctx)
+{
+    ctx->current_col = 0;
+    if(++ctx->current_row >= ctx->height)
+    {
+        vgatext_scroll(1, ctx);
+        --ctx->current_row;
+    }
+}
+
+void vgatext_disable_cursor()
 {
     port_outb(VGA_CURS_START_REG, VGA_IDX_REG_3);
     u8 state = port_inb(VGA_IDX_REG_3 + 1);
     port_outb(state | (1 << 5), VGA_IDX_REG_3 + 1);
 }
 
-void vga_enable_cursor()
+void vgatext_enable_cursor()
 {
     port_outb(VGA_CURS_START_REG, VGA_IDX_REG_3);
     u8 state = port_inb(VGA_IDX_REG_3 + 1);
     port_outb(state & ~(1 << 5), VGA_IDX_REG_3 + 1);
-}
-
-u8 vga_get_max_width()
-{
-    return g_vga_max_w;
-}
-
-u8 vga_get_max_height()
-{
-    return g_vga_max_h;
-}
-
-void vga_scroll(size_t lines)
-{
-    while(lines--)
-    {
-        for(size_t i = 1; i < g_vga_max_h; ++i)
-        {
-            for(size_t k = 0; k < g_vga_max_w; ++k)
-            {
-                *(g_vga_buf_base + g_vga_max_w * (i - 1) + k) = 
-                *(g_vga_buf_base + g_vga_max_w * i + k); 
-            }
-        }
-        vga_clear_row(g_vga_max_h - 1);
-    }
 }
