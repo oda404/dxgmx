@@ -13,7 +13,6 @@ ifdef CONFIG_STACK_PROT
 endif
 
 include $(KERNEL_SRCDIR)/mem/Makefile
-include $(KERNEL_SRCDIR)/video/Makefile
 include $(KERNEL_SRCDIR)/utils/Makefile
 include $(KERNEL_SRCDIR)/crypto/Makefile
 include $(KERNEL_SRCDIR)/kstdlib/Makefile

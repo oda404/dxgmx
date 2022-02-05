@@ -8,7 +8,7 @@
 #include<dxgmx/x86/multiboot.h>
 #include<dxgmx/x86/interrupts.h>
 #include<dxgmx/x86/pci.h>
-#include<dxgmx/video/tty.h>
+#include<dxgmx/kstdio.h>
 #include<dxgmx/cpu.h>
 #include<dxgmx/kdefs.h>
 #include<dxgmx/panic.h>
@@ -29,8 +29,9 @@ int kinit_stage1()
     interrupts_enable();
 
     /* Initialize logging early on, so if something goes wrong we see it. */
-    tty_init();
+    kstdio_init();
     klog_init((KLogLevel)_DXGMX_LOGLVL_);
+    kstdio_set_serial_debug(true);
 
     if(_multiboot_magic != MULTIBOOT_BOOTLOADER_MAGIC)
         panic("Not booted by a multiboot compliant bootloader.");

@@ -24,10 +24,10 @@ $(INCLUDEDIR)/dxgmx/timekeep.h \
 $(INCLUDEDIR)/dxgmx/stack_trace.h \
 $(INCLUDEDIR)/dxgmx/kmalloc.h \
 $(INCLUDEDIR)/dxgmx/ksyms.h \
+$(INCLUDEDIR)/dxgmx/kstdio.h \
 
 include $(INCLUDEDIR)/dxgmx/bits/Makefile
 include $(INCLUDEDIR)/dxgmx/mem/Makefile
-include $(INCLUDEDIR)/dxgmx/video/Makefile
 include $(INCLUDEDIR)/dxgmx/$(SRCARCH)/Makefile
 include $(INCLUDEDIR)/dxgmx/utils/Makefile
 include $(INCLUDEDIR)/dxgmx/crypto/Makefile

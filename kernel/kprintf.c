@@ -1,11 +1,11 @@
 /**
- * Copyright 2021 Alexandru Olaru.
+ * Copyright 2022 Alexandru Olaru.
  * Distributed under the MIT license.
 */
 
 #include<dxgmx/kprintf.h>
 #include<dxgmx/string.h>
-#include<dxgmx/video/tty.h>
+#include<dxgmx/kstdio.h>
 #include<dxgmx/stdio.h>
 
 int kprintf(const char *fmt, ...)
@@ -25,6 +25,6 @@ int kvprintf(const char *fmt, va_list arglist)
     vsnprintf(buf, KPRINTF_MAX_BUF_SIZE, fmt, arglist);
 
     int written;
-    written = tty_print(buf, strlen(buf));
+    written = kstdio_write(buf, strlen(buf));
     return written;
 }
