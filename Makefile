@@ -5,7 +5,7 @@ APPNAME           := dxgmx
 
 VER_MAJ           := 0
 VER_MIN           := 9
-PATCH_N           := 4
+PATCH_N           := 5
 CODENAME          := angel_attack
 
 ifdef BUILDCONFIG
@@ -137,7 +137,7 @@ SYSROOT_HEADERS   := $(HEADERS:$(INCLUDEDIR)/%=$(SYSROOTDIR)/usr/include/%)
 DXGMX_DEPS        := $(SYSROOT_DIRS) \
 $(COBJS) $(CXXOBJS) $(ASMOBJS) $(LDSCRIPT)
 
-DXGMX_COMMON_DEPS := Makefile $(BUILDCONFIG)
+DXGMX_COMMON_DEPS := Makefile $(BUILDCONFIG) $(BUILDTARGET)
 
 PHONY             :=
 
