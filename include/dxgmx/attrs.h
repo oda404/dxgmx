@@ -6,6 +6,8 @@
 #ifndef _DXGMX_ATTRS_H
 #define _DXGMX_ATTRS_H
 
+#include<dxgmx/compiler_attrs.h>
+
 #undef LIKELY
 #undef UNLIKELY
 
