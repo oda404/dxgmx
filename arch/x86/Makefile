@@ -8,6 +8,7 @@ $(ARCH_SRCDIR)/acpi.c \
 $(ARCH_SRCDIR)/panic.c \
 $(ARCH_SRCDIR)/gdt.c \
 $(ARCH_SRCDIR)/pci.c \
+$(ARCH_SRCDIR)/serial.c \
 
 LDSCRIPT := \
 $(ARCH_SRCDIR)/linker.ld
