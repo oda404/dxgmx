@@ -1,6 +1,11 @@
+/**
+ * Copyright 2022 Alexandru Olaru.
+ * Distributed under the MIT license.
+*/
 
 #include<dxgmx/time.h>
 #include<dxgmx/todo.h>
+#include<dxgmx/timer.h>
 
 char *asctime(const struct tm *timeptr)
 {
@@ -66,4 +71,23 @@ time_t time(time_t *timer)
     (void)timer;
     TODO_FATAL();
     __builtin_unreachable();
+}
+
+int nanosleep(const struct timespec *rqtp, struct timespec *rmtp)
+{
+#define NANOSLEEP_SECS_OVERHEAD 0.015
+    const double secs = 
+        rqtp->tv_sec + rqtp->tv_nsec / 1000000000.0 - NANOSLEEP_SECS_OVERHEAD;
+    Timer t;
+    timer_start(&t);
+
+    while(timer_ellapsed_sec(&t) < secs);
+
+    if(rmtp)
+    {
+        rmtp->tv_nsec = 0;
+        rmtp->tv_sec = 0;
+    }
+
+    return 0;
 }

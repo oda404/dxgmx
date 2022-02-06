@@ -1,5 +1,5 @@
 /**
- * Copyright 2021 Alexandru Olaru.
+ * Copyright 2022 Alexandru Olaru.
  * Distributed under the MIT license.
 */
 
@@ -56,5 +56,7 @@ struct timespec
    time_t tv_sec;
    time_t tv_nsec;
 };
+
+int nanosleep(const struct timespec *rqtp, struct timespec *rmtp);
 
 #endif //_DXGMX_TIME_H
