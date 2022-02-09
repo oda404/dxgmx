@@ -35,8 +35,7 @@ BUILDDIR          := build/
 SYSROOTDIR        := $(BUILDDIR)/slash/
 SCRIPTSDIR        := scripts/
 
-
-ARCH              := $(shell $(SCRIPTSDIR)/target-triplet-to-arch.sh $(TARGET_TRIPLET))
+ARCH              := $(shell $(SCRIPTSDIR)/arch.sh --from-target-trip $(TARGET_TRIPLET))
 ifeq ($(ARCH), undefined)
     $(error Couldn't get arch from target triplet: '$(TARGET_TRIPLET'))
 endif
