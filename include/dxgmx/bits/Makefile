@@ -1,2 +1,2 @@
 
-include $(INCLUDEDIR)/dxgmx/bits/$(SRCARCH)/Makefile
+include $(INCLUDE_SRCDIR)/dxgmx/bits/$(SRCARCH)/Makefile

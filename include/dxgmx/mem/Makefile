@@ -1,8 +1,8 @@
 
 HEADERS += \
-$(INCLUDEDIR)/dxgmx/mem/mmap.h \
-$(INCLUDEDIR)/dxgmx/mem/falloc.h \
-$(INCLUDEDIR)/dxgmx/mem/pagesize.h \
-$(INCLUDEDIR)/dxgmx/mem/memrange.h \
-$(INCLUDEDIR)/dxgmx/mem/mmanager.h \
-$(INCLUDEDIR)/dxgmx/mem/kheap.h \
+$(INCLUDE_SRCDIR)/dxgmx/mem/mmap.h \
+$(INCLUDE_SRCDIR)/dxgmx/mem/falloc.h \
+$(INCLUDE_SRCDIR)/dxgmx/mem/pagesize.h \
+$(INCLUDE_SRCDIR)/dxgmx/mem/memrange.h \
+$(INCLUDE_SRCDIR)/dxgmx/mem/mmanager.h \
+$(INCLUDE_SRCDIR)/dxgmx/mem/kheap.h \

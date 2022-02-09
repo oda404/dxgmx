@@ -1,6 +1,6 @@
 
 HEADERS += \
-$(INCLUDEDIR)/dxgmx/utils/bytes.h \
-$(INCLUDEDIR)/dxgmx/utils/bitwise.h \
-$(INCLUDEDIR)/dxgmx/utils/hashtable.h \
+$(INCLUDE_SRCDIR)/dxgmx/utils/bytes.h \
+$(INCLUDE_SRCDIR)/dxgmx/utils/bitwise.h \
+$(INCLUDE_SRCDIR)/dxgmx/utils/hashtable.h \
 

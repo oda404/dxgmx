@@ -1,2 +1,2 @@
 
-include $(INCLUDEDIR)/dxgmx/Makefile
+include $(INCLUDE_SRCDIR)/dxgmx/Makefile
