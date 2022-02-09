@@ -4,10 +4,11 @@ FIRST_LENGTH=${#1}
 TOTAL_LENGTH=7
 
 FIRST_TOKEN=$1
-SECOND_TOKEN=$2
+# Strip unneeded '/'
+SECOND_TOKEN=$(echo $2 | sed s#//*#/#g)
 
 if (( $FIRST_LENGTH >= $TOTAL_LENGTH )); then
-    echo "scripts/output-formatted.sh: First token: '$1' is too long."
+    echo "$0: First token: '$1' is too long."
     FIRST_TOKEN="???"
     FIRST_LENGTH=3
 fi
