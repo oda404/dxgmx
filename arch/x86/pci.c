@@ -16,6 +16,9 @@
 #define ACPI_CONFIG_ADDRESS_PORT 0xCF8
 #define ACPI_CONFIG_DATA_PORT 0xCFC
 
+static PCIDevice *g_pci_devices = NULL;
+static size_t g_pci_devices_count = 0;
+
 typedef union
 U_PCIDeviceRegister
 {
@@ -111,18 +114,18 @@ static void pci_register_device(u8 bus, u8 dev, u8 func)
     if((tmp & 0xFFFF) == 0xFFFF)
         return;
 
-    // TODO: save this somewhere after my lazy ass imeplements krealloc.
-    PCIDeviceInfo device;
-    device.bus_num = bus;
-    device.device_num = dev;
-    device.func_num = func;
+    g_pci_devices = krealloc(g_pci_devices, (++g_pci_devices_count) * sizeof(PCIDevice));
+    PCIDevice *device = &g_pci_devices[g_pci_devices_count - 1];
+    device->bus = bus;
+    device->dev = dev;
+    device->func = func;
 
-    device.vendor_id = tmp & 0xFFFF;
-    device.device_id = (tmp >> 16) & 0xFFFF;
+    device->vendor_id = tmp & 0xFFFF;
+    device->device_id = (tmp >> 16) & 0xFFFF;
 
     tmp = pci_read_4bytes(bus, dev, func, 0x8);
-    device.class = (tmp >> 24) & 0xFF;
-    device.subclass = (tmp >> 16) & 0xFF;
+    device->class = (tmp >> 24) & 0xFF;
+    device->subclass = (tmp >> 16) & 0xFF;
 
     KLOGF(
         INFO, 
@@ -130,9 +133,9 @@ static void pci_register_device(u8 bus, u8 dev, u8 func)
         bus, 
         dev, 
         func,
-        pci_class_to_string(device.class, device.subclass), 
-        device.class, 
-        device.subclass
+        pci_class_to_string(device->class, device->subclass), 
+        device->class, 
+        device->subclass
     );
 }
 
