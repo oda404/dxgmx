@@ -38,35 +38,18 @@ E_PCIClassCode
     PCI_VENDOR_SPECIFIC = 0xFF
 } PCIClassCode;
 
-typedef union
-U_PCIDevice
-{
-    u32 whole;
-    _ATTR_PACKED struct
-    {
-        u8 register_offset;
-        u8 func_number: 3;
-        u8 dev_number: 5;
-        u8 bus_number;
-        u8 reserved: 7;
-        u8 enabled: 1;
-    };
-} PCIDevice;
-
 typedef struct
-S_PCIDeviceInfo
+S_PCIDevice
 {
-    u8 bus_num;
-    u8 device_num;
-    u8 func_num;
+    u8 bus;
+    u8 dev;
+    u8 func;
 
     u16 vendor_id;
     u16 device_id;
     u8 class;
     u8 subclass;
-
-    const char *name;
-} PCIDeviceInfo;
+} PCIDevice;
 
 void pci_enumerate_bus(u8 bus);
 void pci_enumerate_devices();

@@ -16,6 +16,21 @@
 #define ACPI_CONFIG_ADDRESS_PORT 0xCF8
 #define ACPI_CONFIG_DATA_PORT 0xCFC
 
+typedef union
+U_PCIDeviceRegister
+{
+    u32 whole;
+    _ATTR_PACKED struct
+    {
+        u8 register_offset;
+        u8 func: 3;
+        u8 dev: 5;
+        u8 bus;
+        u8 reserved: 7;
+        u8 enabled: 1;
+    };
+} PCIDeviceRegister;
+
 static const char *pci_class_to_string(u8 class, u8 subclass)
 {
     switch(class)
@@ -78,11 +93,11 @@ static u32 pci_read_4bytes(u8 bus, u8 dev, u8 func, u8 offset)
     if(offset & 0b11)
         return 0;
 
-    PCIDevice reg = {
+    PCIDeviceRegister reg = {
         .register_offset = offset,
-        .func_number = func,
-        .dev_number = dev,
-        .bus_number = bus,
+        .func = func,
+        .dev = dev,
+        .bus = bus,
         .enabled = 1
     };
 
