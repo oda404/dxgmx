@@ -8,6 +8,7 @@
 #include<dxgmx/x86/multiboot.h>
 #include<dxgmx/x86/interrupts.h>
 #include<dxgmx/x86/pci.h>
+#include<dxgmx/x86/ata.h>
 #include<dxgmx/kstdio.h>
 #include<dxgmx/cpu.h>
 #include<dxgmx/kconfig.h>
@@ -58,6 +59,8 @@ int kinit_stage1()
     }
 
     pci_enumerate_devices();
+
+    ata_init();
 
     return 0;
 }
