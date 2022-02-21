@@ -69,6 +69,7 @@ case "$EMU" in
 		--enable-kvm \
 		-m $DXGMX_MEM \
 		-cpu host,migratable=off \
+		-display none \
 		-serial stdio \
 		-drive file=$DXGMX_DISK,format=raw,index=0,media=disk "
 
