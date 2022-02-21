@@ -274,7 +274,11 @@ bool atapio_write_sectors(u64 lba, size_t sectors, const u8 *buf, const ATADevic
             }
         }
 
-        atapio_flush_written_sectors(ATAPIO_FLUSH_SECTORS_TIMEOUT_MS, dev);
+        if(!atapio_flush_written_sectors(ATAPIO_FLUSH_SECTORS_TIMEOUT_MS, dev))
+        {
+            KLOGF(ERR, "Timed-out trying to flush sectors to disk!");
+            return false;
+        }
         sectors -= workingsectors;
         lba += workingsectors;
     }
@@ -450,7 +454,7 @@ bool atapio_write(u64 start, size_t n, const u8* buf, const ATADevice *dev)
 
         if(!atapio_flush_written_sectors(ATAPIO_FLUSH_SECTORS_TIMEOUT_MS, dev))
         {
-            KLOGF(ERR, "Failed to flush sectors to disk!");
+            KLOGF(ERR, "Timed-out trying to flush sectors to disk!");
             return false;
         }
 
@@ -508,7 +512,7 @@ bool atapio_write(u64 start, size_t n, const u8* buf, const ATADevice *dev)
 
         if(!atapio_flush_written_sectors(ATAPIO_FLUSH_SECTORS_TIMEOUT_MS, dev))
         {
-            KLOGF(ERR, "Failed to flush sectors to disk!");
+            KLOGF(ERR, "Timed-out trying to flush sectors to disk!");
             return false;
         }
     }
