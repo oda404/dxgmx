@@ -27,4 +27,10 @@ double exp(double d) ;
 _ATTR_PURE 
 double log(double x);
 
+_ATTR_PURE
+double max(double x, double y);
+
+_ATTR_PURE
+double min(double x, double y);
+
 #endif //!_DXGMX_MATH_H

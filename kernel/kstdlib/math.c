@@ -80,3 +80,13 @@ double pow(double x, double y)
 {
     return (i64)y == y ? ullpower(x, (i64)y) : exp(y * log(x));
 }
+
+double max(double x, double y)
+{
+    return x > y ? x : y;
+}
+
+double min(double x, double y)
+{
+    return x > y ? y : x;
+}
