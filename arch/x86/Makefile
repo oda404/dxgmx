@@ -19,4 +19,4 @@ include $(ARCH_SRCDIR)/video/Makefile
 include $(ARCH_SRCDIR)/int/Makefile
 include $(ARCH_SRCDIR)/mem/Makefile
 include $(ARCH_SRCDIR)/time/Makefile
-include $(ARCH_SRCDIR)/storage/Makefile
+include $(ARCH_SRCDIR)/ata/Makefile
