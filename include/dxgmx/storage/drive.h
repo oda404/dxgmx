@@ -16,7 +16,18 @@ struct S_GenericDrive;
 typedef struct
 S_GenericDrivePartition
 {
-    
+    char *suffix;
+    size_t suffixlen;
+
+    char *mountpoint;
+    size_t mountpoint_len;
+
+    size_t number;
+
+    u64 start;
+    u64 size;
+
+    const struct S_GenericDrive *parent_drive;
 } GenericDrivePartition;
 
 typedef struct
