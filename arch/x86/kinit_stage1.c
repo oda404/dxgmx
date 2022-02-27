@@ -17,8 +17,9 @@
 #include<dxgmx/mem/mmanager.h>
 #include<dxgmx/timekeep.h>
 #include<dxgmx/ksyms.h>
+#include<dxgmx/attrs.h>
 
-int kinit_stage1()
+_INIT bool kinit_stage1()
 {
     /* Hang interrupts until a predictable gdt/idt is set up. */
     interrupts_disable();
@@ -62,5 +63,5 @@ int kinit_stage1()
 
     ata_init();
 
-    return 0;
+    return true;
 }
