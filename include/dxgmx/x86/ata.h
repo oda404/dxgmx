@@ -46,6 +46,9 @@
 typedef struct
 S_ATADevice
 {
+    char *name;
+    size_t namelen;
+
     u16 bus_io;
     u16 bus_ctrl;
     u64 sector_count;

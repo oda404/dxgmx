@@ -37,12 +37,32 @@ static void ata_dump_device_info(const ATADevice *dev)
 
     KLOGF(
         DEBUG, 
-        "%s device (%u%s) on bus %X:%X mode %s.",
+        "[%s] %s (%u%s) on bus %X:%X mode %s.",
+        dev->name,
         dev->master ? "Master" : "Slave",
         size, unit,
         dev->bus_io, dev->bus_ctrl,
         mode
     );
+}
+
+static bool ata_generate_drive_name(ATADevice *dev)
+{
+    if(!dev)
+        return false;
+
+    if(g_ata_devices_count > 26)
+        return false; // for now
+
+    dev->namelen = 3;
+    dev->name = kmalloc(dev->namelen + 1);
+    if(!dev->name)
+        return false;
+
+    strcpy(dev->name, "hda");
+    dev->name[2] += g_ata_devices_count - 1;
+
+    return true;
 }
 
 /* Identifies a previously selected device. */
@@ -131,6 +151,12 @@ static bool ata_identify_drive(size_t bus_io, size_t bus_ctrl, bool master)
         }
     }
 
+    /* Disable interrupts */
+    port_outb(
+        port_inb(ATA_DEV_CTRL_REG(bus_ctrl)) & ~(2), 
+        ATA_DEV_CTRL_REG(bus_ctrl)
+    );
+
     /* Do LBA48 drives support LBA28 ? */
     dev->lba28 = (!dev->lba48 && !dev->chs);
 
@@ -144,11 +170,11 @@ static bool ata_identify_drive(size_t bus_io, size_t bus_ctrl, bool master)
         dev->write = (storage_drive_write)atapio_write;
     }
 
-    /* Disable interrupts */
-    port_outb(
-        port_inb(ATA_DEV_CTRL_REG(bus_ctrl)) & ~(2), 
-        ATA_DEV_CTRL_REG(bus_ctrl)
-    );
+    if(!ata_generate_drive_name(dev))
+    {
+        KLOGF(ERR, "Failed to generate drive name!");
+        return false;
+    }
 
     return true;
 }
