@@ -25,8 +25,10 @@ S_GenericDrive
     const char* const name;
     const size_t namelen;
 
-    char *mountpoint;
-    size_t mountpoint_len;
+    const size_t sectorsize;
+
+    /* Unique IDentifier */
+    u64 uid;
 
     GenericDrivePartition *partitions;
     size_t partitions_count;
@@ -34,8 +36,6 @@ S_GenericDrive
     void* const internal_dev;
     const storage_drive_read read;
     const storage_drive_write write;
-
-    const size_t sectorsize;
 } GenericDrive;
 
 #endif // !_DXGMX_STORAGE_DRIVE_H

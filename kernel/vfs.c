@@ -23,9 +23,7 @@ bool vfs_add_drive(const GenericDrive *d)
     /* We memcpy since there are some const members that we can't assign. */
     memcpy(drive, d, sizeof(GenericDrive));
 
-    drive->mountpoint_len = 0;
-    drive->mountpoint = NULL;
-
+    drive->uid = 0;
     drive->partitions_count = 0;
     drive->partitions = NULL;
 
