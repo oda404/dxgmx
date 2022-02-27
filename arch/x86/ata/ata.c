@@ -218,6 +218,24 @@ _INIT int ata_init()
     for(size_t i = 0; i < g_ata_devices_count; ++i)
         ata_dump_device_info(&g_ata_devices[i]);
 
+    /* Hardcoded at 1 because the bus reports 2 identical drives
+    (master & slave) even though only one being emulated ??? */
+    for(size_t i = 0; i < 1; ++i)
+    {
+        ATADevice *dev = &g_ata_devices[i];
+
+        GenericDrive drive = {
+            .name = dev->name,
+            .namelen = dev->namelen,
+            .internal_dev = dev,
+            .read = dev->read,
+            .write = dev->write,
+            .sectorsize = 512,
+        };
+
+        vfs_add_drive(&drive);
+    }
+
     return 0;
 }
 
