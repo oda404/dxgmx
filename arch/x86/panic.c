@@ -16,6 +16,7 @@ void panic(const char *lastmsg, ...)
     cmos_disable_nmi();
     interrupts_disable();
 
+    klogln(FATAL, "");
     klogln(FATAL, "---[ uh-oh kernel panic :( ]---");
     stack_trace_dump();
     if(lastmsg)
