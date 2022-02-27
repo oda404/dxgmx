@@ -264,10 +264,9 @@ reprocess_length:
             break;
         }
 
-        char *outbuf = NULL;
-        size_t outbuf_len = 0;
-
         char tmpbuf[50] = { 0 };
+        char *outbuf = tmpbuf;
+        size_t outbuf_len = 0;
 
         // specifier
         switch(*fmt)
