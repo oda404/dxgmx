@@ -5,6 +5,7 @@ $(KERNEL_SRCDIR)/kabort.c \
 $(KERNEL_SRCDIR)/klog.c \
 $(KERNEL_SRCDIR)/kinit_stage2.c \
 $(KERNEL_SRCDIR)/ksyms.c \
+$(KERNEL_SRCDIR)/mbr.c \
 $(KERNEL_SRCDIR)/vfs.c \
 
 ifdef DXGMX_CONFIG_STACK_PROT

@@ -25,6 +25,7 @@ $(INCLUDE_SRCDIR)/dxgmx/stack_trace.h \
 $(INCLUDE_SRCDIR)/dxgmx/kmalloc.h \
 $(INCLUDE_SRCDIR)/dxgmx/ksyms.h \
 $(INCLUDE_SRCDIR)/dxgmx/kstdio.h \
+$(INCLUDE_SRCDIR)/dxgmx/mbr.h \
 $(INCLUDE_SRCDIR)/dxgmx/vfs.h \
 
 include $(INCLUDE_SRCDIR)/dxgmx/bits/Makefile
