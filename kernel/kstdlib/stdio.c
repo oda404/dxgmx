@@ -1,19 +1,23 @@
+/**
+ * Copyright 2022 Alexandru Olaru.
+ * Distributed under the MIT license.
+ */
 
-#include<dxgmx/stdio.h>
-#include<dxgmx/types.h>
-#include<dxgmx/string.h>
-#include<dxgmx/math.h>
-#include<dxgmx/stdlib.h>
-#include<dxgmx/ctype.h>
-#include<dxgmx/todo.h>
-#include<limits.h>
+#include <dxgmx/ctype.h>
+#include <dxgmx/math.h>
+#include <dxgmx/stdio.h>
+#include <dxgmx/stdlib.h>
+#include <dxgmx/string.h>
+#include <dxgmx/todo.h>
+#include <dxgmx/types.h>
+#include <limits.h>
 
-int vsprintf(char *dest, const char *fmt, va_list arglist)
+int vsprintf(char* dest, const char* fmt, va_list arglist)
 {
     return vsnprintf(dest, INT_MAX, fmt, arglist);
 }
 
-int snprintf(char *dest, size_t n, const char *fmt, ...)
+int snprintf(char* dest, size_t n, const char* fmt, ...)
 {
     va_list arglist;
     va_start(arglist, fmt);
@@ -22,7 +26,7 @@ int snprintf(char *dest, size_t n, const char *fmt, ...)
     return written;
 }
 
-int sprintf(char *dest, const char *fmt, ...)
+int sprintf(char* dest, const char* fmt, ...)
 {
     va_list arglist;
     va_start(arglist, fmt);
@@ -46,12 +50,12 @@ enum PrintfLengthSpecifier
 
 enum PrintfFlags
 {
-    PRINTF_FLAG_NONE           = 0x0,
-    PRINTF_FLAG_LEFT_JUSTIFY   = 0x1,
-    PRINTF_FLAG_FORCE_SIGN     = 0x2,
-    PRINTF_FLAG_WHITESPACE     = 0x4,
-    PRINTF_FLAG_HASHTAG        = 0x8,
-    PRITNF_FLAG_PAD_ZERO       = 0x10
+    PRINTF_FLAG_NONE = 0x0,
+    PRINTF_FLAG_LEFT_JUSTIFY = 0x1,
+    PRINTF_FLAG_FORCE_SIGN = 0x2,
+    PRINTF_FLAG_WHITESPACE = 0x4,
+    PRINTF_FLAG_HASHTAG = 0x8,
+    PRITNF_FLAG_PAD_ZERO = 0x10
 };
 
 enum PrintfParseStatus
@@ -61,78 +65,78 @@ enum PrintfParseStatus
     PRINTF_PARSE_DONE
 };
 
-static int printf_parse_flags(char c, u8 *flags)
+static int printf_parse_flags(char c, u8* flags)
 {
-    switch(c)
+    switch (c)
     {
     case '-':
         *flags |= PRINTF_FLAG_LEFT_JUSTIFY;
         return PRINTF_PARSE_CONTINUE;
     case '+':
-        *flags  |= PRINTF_FLAG_FORCE_SIGN;
+        *flags |= PRINTF_FLAG_FORCE_SIGN;
         return PRINTF_PARSE_CONTINUE;
     case ' ':
-        *flags  |= PRINTF_FLAG_WHITESPACE;
+        *flags |= PRINTF_FLAG_WHITESPACE;
         return PRINTF_PARSE_CONTINUE;
     case '#':
-        *flags  |= PRINTF_FLAG_HASHTAG;
+        *flags |= PRINTF_FLAG_HASHTAG;
         return PRINTF_PARSE_CONTINUE;
     case '0':
-        *flags  |= PRITNF_FLAG_PAD_ZERO;
+        *flags |= PRITNF_FLAG_PAD_ZERO;
         return PRINTF_PARSE_CONTINUE;
     default:
         return PRINTF_PARSE_DONE;
     }
 }
 
-static int printf_parse_length(char c, u8 *length)
+static int printf_parse_length(char c, u8* length)
 {
-    switch(c)
+    switch (c)
     {
     case 'l':
-        if(*length == PRINTF_LEN_l)
+        if (*length == PRINTF_LEN_l)
         {
             *length = PRINTF_LEN_ll;
             return PRINTF_PARSE_CONTINUE;
         }
-        else if(*length != PRINTF_LEN_NONE)
+        else if (*length != PRINTF_LEN_NONE)
             return PRINTF_PARSE_INVALID;
-        
+
         *length = PRINTF_LEN_l;
         return PRINTF_PARSE_CONTINUE;
-    
+
     case 'h':
-        if(*length == PRINTF_LEN_h)
+        if (*length == PRINTF_LEN_h)
         {
             *length = PRINTF_LEN_hh;
             return PRINTF_PARSE_CONTINUE;
         }
-        else if(*length != PRINTF_LEN_NONE)
+        else if (*length != PRINTF_LEN_NONE)
             return PRINTF_PARSE_INVALID;
-        
+
         *length = PRINTF_LEN_h;
         return PRINTF_PARSE_CONTINUE;
 
     case 'j':
-        if(*length != PRINTF_LEN_NONE)
+        if (*length != PRINTF_LEN_NONE)
             return PRINTF_PARSE_INVALID;
         *length = PRINTF_LEN_j;
         return PRINTF_PARSE_CONTINUE;
 
     case 'z':
-        if(*length != PRINTF_LEN_NONE)
+        if (*length != PRINTF_LEN_NONE)
             return PRINTF_PARSE_INVALID;
         *length = PRINTF_LEN_z;
         return PRINTF_PARSE_CONTINUE;
 
     case 't':
-        if(*length != PRINTF_LEN_NONE)
+        if (*length != PRINTF_LEN_NONE)
             return PRINTF_PARSE_INVALID;
         *length = PRINTF_LEN_t;
         return PRINTF_PARSE_CONTINUE;
-    
+
     case 'L':
-        if(*length != PRINTF_LEN_NONE)
+        if (*length != PRINTF_LEN_NONE)
             return PRINTF_PARSE_INVALID;
         *length = PRINTF_LEN_L;
         return PRINTF_PARSE_CONTINUE;
@@ -142,44 +146,40 @@ static int printf_parse_length(char c, u8 *length)
     }
 }
 
-static size_t printf_apply_flags_and_width(
-    char *buf,
-    size_t bufmax,
-    u8 flags,
-    size_t width
-)
+static size_t
+printf_apply_flags_and_width(char* buf, size_t bufmax, u8 flags, size_t width)
 {
-    if(width > bufmax)
+    if (width > bufmax)
         width = bufmax;
 
     size_t buflen = strlen(buf);
 
-    if(flags & PRINTF_FLAG_LEFT_JUSTIFY)
+    if (flags & PRINTF_FLAG_LEFT_JUSTIFY)
     {
-        //TODO
+        // TODO
     }
 
-    if(flags & PRINTF_FLAG_FORCE_SIGN)
+    if (flags & PRINTF_FLAG_FORCE_SIGN)
     {
-        //TODO
+        // TODO
     }
 
-    if(flags & PRINTF_FLAG_WHITESPACE)
+    if (flags & PRINTF_FLAG_WHITESPACE)
     {
-        //TODO
+        // TODO
     }
 
-    if(flags & PRINTF_FLAG_HASHTAG)
+    if (flags & PRINTF_FLAG_HASHTAG)
     {
-        //TODO
+        // TODO
     }
 
-    if(width > buflen)
+    if (width > buflen)
     {
         const char c = (flags & PRITNF_FLAG_PAD_ZERO) ? '0' : ' ';
-        for(size_t i = 0; i < width - buflen; ++i)
+        for (size_t i = 0; i < width - buflen; ++i)
         {
-            for(size_t k = buflen + i; k > 0; --k)
+            for (size_t k = buflen + i; k > 0; --k)
                 buf[k] = buf[k - 1];
             buf[i] = c;
         }
@@ -188,7 +188,7 @@ static size_t printf_apply_flags_and_width(
     return strlen(buf);
 }
 
-int vsnprintf(char *dest, size_t n, const char *fmt, va_list arglist)
+int vsnprintf(char* dest, size_t n, const char* fmt, va_list arglist)
 {
     dest[0] = '\0';
 
@@ -198,12 +198,12 @@ int vsnprintf(char *dest, size_t n, const char *fmt, va_list arglist)
     u16 width;
     i64 precision;
 
-    for(; *fmt != '\0'; ++fmt)
+    for (; *fmt != '\0'; ++fmt)
     {
-        if(written >= n - 1)
+        if (written >= n - 1)
             return written;
 
-        if(*fmt != '%')
+        if (*fmt != '%')
         {
             strncat(dest, fmt, 1);
             ++written;
@@ -212,22 +212,22 @@ int vsnprintf(char *dest, size_t n, const char *fmt, va_list arglist)
         // jump over the '%'
         ++fmt;
         length = PRINTF_LEN_NONE;
-        flags  = PRINTF_FLAG_NONE;
+        flags = PRINTF_FLAG_NONE;
         width = 0;
         precision = -1;
 
-        while(printf_parse_flags(*fmt, &flags) == PRINTF_PARSE_CONTINUE)
+        while (printf_parse_flags(*fmt, &flags) == PRINTF_PARSE_CONTINUE)
             ++fmt;
 
         /* width */
-        if(*fmt == '*')
+        if (*fmt == '*')
         {
             width = va_arg(arglist, int);
             ++fmt;
         }
         else
         {
-            while(isdigit(*fmt))
+            while (isdigit(*fmt))
             {
                 width = width * 10 + (*fmt - '0');
                 ++fmt;
@@ -235,25 +235,25 @@ int vsnprintf(char *dest, size_t n, const char *fmt, va_list arglist)
         }
 
         /* precision */
-        if(*fmt == '.')
+        if (*fmt == '.')
         {
             ++fmt;
-            if(*fmt == '*')
+            if (*fmt == '*')
             {
                 precision = va_arg(arglist, size_t);
             }
             else
             {
                 precision = 0;
-                while(isdigit(*fmt))
+                while (isdigit(*fmt))
                 {
                     precision = precision * 10 + (*fmt++ - '0');
                 }
             }
         }
-        
-reprocess_length:
-        switch(printf_parse_length(*fmt, &length))
+
+    reprocess_length:
+        switch (printf_parse_length(*fmt, &length))
         {
         case PRINTF_PARSE_INVALID:
             continue;
@@ -264,18 +264,18 @@ reprocess_length:
             break;
         }
 
-        char tmpbuf[50] = { 0 };
-        char *outbuf = tmpbuf;
+        char tmpbuf[50] = {0};
+        char* outbuf = tmpbuf;
         size_t outbuf_len = 0;
 
         // specifier
-        switch(*fmt)
+        switch (*fmt)
         {
         /* int %i %d */
         case 'i':
         case 'd':
         {
-            switch(length)
+            switch (length)
             {
             case PRINTF_LEN_l:
             {
@@ -293,13 +293,8 @@ reprocess_length:
                 break;
             }
             }
-            
-            outbuf_len = printf_apply_flags_and_width(
-                tmpbuf, 
-                21, 
-                flags, 
-                width
-            );
+
+            outbuf_len = printf_apply_flags_and_width(tmpbuf, 21, flags, width);
             outbuf = tmpbuf;
             break;
         }
@@ -308,7 +303,7 @@ reprocess_length:
         case 'x':
         case 'X':
         {
-            switch(length)
+            switch (length)
             {
             case PRINTF_LEN_l:
             {
@@ -327,12 +322,7 @@ reprocess_length:
             }
             }
 
-            outbuf_len = printf_apply_flags_and_width(
-                tmpbuf, 
-                21, 
-                flags, 
-                width
-            );
+            outbuf_len = printf_apply_flags_and_width(tmpbuf, 21, flags, width);
             outbuf = tmpbuf;
             break;
         }
@@ -343,19 +333,14 @@ reprocess_length:
             flags = PRITNF_FLAG_PAD_ZERO;
             width = PTR_DIG;
 
-            outbuf_len = printf_apply_flags_and_width(
-                tmpbuf, 
-                21, 
-                flags, 
-                width
-            );
+            outbuf_len = printf_apply_flags_and_width(tmpbuf, 21, flags, width);
             outbuf = tmpbuf;
             break;
         }
 
         case 'u':
         {
-            switch(length)
+            switch (length)
             {
             case PRINTF_LEN_hh:
                 utoa(va_arg(arglist, unsigned int), tmpbuf, 10);
@@ -385,12 +370,7 @@ reprocess_length:
                 break;
             }
 
-            outbuf_len = printf_apply_flags_and_width(
-                tmpbuf, 
-                21, 
-                flags, 
-                width
-            );
+            outbuf_len = printf_apply_flags_and_width(tmpbuf, 21, flags, width);
             outbuf = tmpbuf;
             break;
         }
@@ -398,9 +378,9 @@ reprocess_length:
         case 'F': /* what does %F exactly do ?? */
         case 'f':
         {
-            long double val = length == PRINTF_LEN_L ? 
-                va_arg(arglist, long double) : 
-                (long double)va_arg(arglist, double);
+            long double val = length == PRINTF_LEN_L
+                                  ? va_arg(arglist, long double)
+                                  : (long double)va_arg(arglist, double);
 
             long double whole, frac;
             frac = modfl(val, &whole);
@@ -408,18 +388,18 @@ reprocess_length:
             lltoa((long long)whole, tmpbuf, 10);
 
             size_t digits = precision != -1 ? precision : 6;
-            if(digits > 0)
+            if (digits > 0)
             {
                 /* Don't try to write more than 20 digits. */
-                if(digits > __LDBL_DECIMAL_DIG__)
+                if (digits > __LDBL_DECIMAL_DIG__)
                     digits = __LDBL_DECIMAL_DIG__;
 
-                if(frac < 0)
+                if (frac < 0)
                     frac *= -1;
 
                 strcat(tmpbuf, ".");
                 size_t idx = strlen(tmpbuf);
-                while(digits--)
+                while (digits--)
                 {
                     frac *= 10;
                     lltoa((long long)(frac), tmpbuf + idx++, 10);
@@ -428,13 +408,9 @@ reprocess_length:
             }
 
             outbuf_len = printf_apply_flags_and_width(
-                tmpbuf, 
-                __LDBL_DIG__ + __LDBL_DECIMAL_DIG__ + 3, 
-                flags, 
-                width
-            );
+                tmpbuf, __LDBL_DIG__ + __LDBL_DECIMAL_DIG__ + 3, flags, width);
             outbuf = tmpbuf;
-            
+
             break;
         }
 
@@ -442,11 +418,11 @@ reprocess_length:
         case 's':
         {
             outbuf = va_arg(arglist, char*);
-            if(precision != -1 && precision <= strlen(outbuf))
+            if (precision != -1 && precision <= strlen(outbuf))
                 outbuf_len = precision;
             else
                 outbuf_len = strlen(outbuf);
-                
+
             break;
         }
 
@@ -459,9 +435,9 @@ reprocess_length:
         }
         }
 
-        if(written + outbuf_len > n - 1)
+        if (written + outbuf_len > n - 1)
         {
-            strncat(dest, outbuf,  outbuf_len - (outbuf_len - n + 1));
+            strncat(dest, outbuf, outbuf_len - (outbuf_len - n + 1));
             return written + outbuf_len;
         }
 
@@ -471,4 +447,3 @@ reprocess_length:
 
     return written;
 }
-

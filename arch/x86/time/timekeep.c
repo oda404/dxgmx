@@ -1,11 +1,15 @@
+/**
+ * Copyright 2022 Alexandru Olaru.
+ * Distributed under the MIT license.
+ */
 
-#include<dxgmx/timekeep.h>
-#include<dxgmx/x86/pit.h>
-#include<dxgmx/x86/rtc.h>
-#include<dxgmx/timer.h>
-#include<dxgmx/klog.h>
-#include<dxgmx/attrs.h>
-#include<dxgmx/todo.h>
+#include <dxgmx/attrs.h>
+#include <dxgmx/klog.h>
+#include <dxgmx/timekeep.h>
+#include <dxgmx/timer.h>
+#include <dxgmx/todo.h>
+#include <dxgmx/x86/pit.h>
+#include <dxgmx/x86/rtc.h>
 
 #define KLOGF(lvl, fmt, ...) klogln(lvl, "timekeep: " fmt, ##__VA_ARGS__)
 
@@ -21,8 +25,9 @@ _INIT int timekeep_init()
     rtc_init();
     rtc_enable_periodic_int();
 
-    if(!timer_find_sources())
-        KLOGF(ERR, "No system timers were found even though they should be up!");
+    if (!timer_find_sources())
+        KLOGF(
+            ERR, "No system timers were found even though they should be up!");
 
     timer_start(&g_uptime_timer);
 

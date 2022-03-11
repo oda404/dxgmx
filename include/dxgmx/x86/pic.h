@@ -1,12 +1,12 @@
 /**
  * Copyright 2021 Alexandru Olaru.
  * Distributed under the MIT license.
-*/
+ */
 
 #ifndef _DXGMX_X86_PIC8259_H
 #define _DXGMX_X86_PIC8259_H
 
-#include<dxgmx/types.h>
+#include <dxgmx/types.h>
 
 /* I m just going to assume there are exactly two PICs. */
 
@@ -19,17 +19,17 @@ void pic8259_unmask_irq_line(u8 irqline);
  * @param pic 0 for master, increment for slaves
  */
 void pic8259_set_mask(u8 mask, u8 pic);
-/* 
- * In Service Register is a bit mask that 
+/*
+ * In Service Register is a bit mask that
  * tells us which irq s have been sent to the CPU
  * and are being processed.
  * @param pic 0 for master, increment for slaves.
  */
 u8 pic8259_get_isr(u8 pic);
-/* 
- * Interrupt Request Register is a bit mask that tells us which 
+/*
+ * Interrupt Request Register is a bit mask that tells us which
  * interrupts have been raised, but not yet sent to the CPU.
- * They will only be sent to the CPU once it s done with 
+ * They will only be sent to the CPU once it s done with
  * any interrupts it s currently handling and if they aren t masked.
  * @param pic 0 for master, increment for slaves.
  */
@@ -53,7 +53,7 @@ void pic8259_disable(u8 pic);
 u8 pic8259_get_pics_count();
 /**
  * Get the current irqmask from both PICs.
-*/
+ */
 u16 pic8259_get_mask();
 
 #endif // _DXGMX_X86_PIC8259_H

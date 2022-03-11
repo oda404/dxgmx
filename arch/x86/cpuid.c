@@ -1,10 +1,10 @@
 /**
  * Copyright 2021 Alexandru Olaru.
  * Distributed under the MIT license.
-*/
+ */
 
-#include<dxgmx/x86/cpuid.h>
-#include<dxgmx/string.h>
+#include <dxgmx/string.h>
+#include <dxgmx/x86/cpuid.h>
 
 bool cpuid_is_avail()
 {
@@ -20,7 +20,6 @@ bool cpuid_is_avail()
         "and    $0x200000, %%eax                                                                  \n"
         "shr    $21,       %%eax                                                                  \n"
         "popfl                      # restore original eflags                                     \n"
-        : "=a"(ret)
-    );
+        : "=a"(ret));
     return ret;
 }

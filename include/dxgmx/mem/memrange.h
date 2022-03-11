@@ -1,18 +1,20 @@
+/**
+ * Copyright 2022 Alexandru Olaru.
+ * Distributed under the MIT license.
+ */
 
 #ifndef _DXGMX_MEM_MEMRANGE_H
 #define _DXGMX_MEM_MEMRANGE_H
 
-#include<dxgmx/types.h>
+#include <dxgmx/types.h>
 
-typedef struct 
-S_MemRange
+typedef struct S_MemRange
 {
     u64 base;
     u64 size;
 } MemRange;
 
-typedef struct
-S_MemRangeTyped
+typedef struct S_MemRangeTyped
 {
     u64 base;
     u64 size;

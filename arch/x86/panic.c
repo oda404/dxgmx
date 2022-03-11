@@ -1,17 +1,17 @@
 /**
  * Copyright 2021 Alexandru Olaru.
  * Distributed under the MIT license.
-*/
+ */
 
-#include<dxgmx/x86/cmos.h>
-#include<dxgmx/x86/interrupts.h>
-#include<dxgmx/panic.h>
-#include<dxgmx/kabort.h>
-#include<dxgmx/klog.h>
-#include<dxgmx/stack_trace.h>
-#include<stdarg.h>
+#include <dxgmx/kabort.h>
+#include <dxgmx/klog.h>
+#include <dxgmx/panic.h>
+#include <dxgmx/stack_trace.h>
+#include <dxgmx/x86/cmos.h>
+#include <dxgmx/x86/interrupts.h>
+#include <stdarg.h>
 
-void panic(const char *lastmsg, ...)
+void panic(const char* lastmsg, ...)
 {
     cmos_disable_nmi();
     interrupts_disable();
@@ -19,7 +19,7 @@ void panic(const char *lastmsg, ...)
     klogln(FATAL, "");
     klogln(FATAL, "---[ uh-oh kernel panic :( ]---");
     stack_trace_dump();
-    if(lastmsg)
+    if (lastmsg)
     {
         va_list list;
         va_start(list, lastmsg);

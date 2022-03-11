@@ -1,30 +1,29 @@
 /**
  * Copyright 2021 Alexandru Olaru.
  * Distributed under the MIT license.
-*/
+ */
 
 #ifndef _DXGMX_X86_MULTIBOOT_H
 #define _DXGMX_X86_MULTIBOOT_H
 
-#define MULTIBOOT_HEADER_ALIGN      4
-#define MULTIBOOT_HEADER_MAGIC      0x1BADB002
+#define MULTIBOOT_HEADER_ALIGN 4
+#define MULTIBOOT_HEADER_MAGIC 0x1BADB002
 /* this is what the bootloader slaps in %eax to prove we are mbooting */
-#define MULTIBOOT_BOOTLOADER_MAGIC  0x2BADB002
+#define MULTIBOOT_BOOTLOADER_MAGIC 0x2BADB002
 
 /* align modules on 4K page boundaries */
-#define MULTIBOOT_FLAG_MOD_PAGE_ALIGN   0x1
+#define MULTIBOOT_FLAG_MOD_PAGE_ALIGN 0x1
 /* provide the kernel with info about the memory */
-#define MULTIBOOT_FLAG_MEM_INFO         0x2
+#define MULTIBOOT_FLAG_MEM_INFO 0x2
 /* provide the kernel with info about the video  */
-#define MULTIBOOT_FLAG_VIDEO            0x4
+#define MULTIBOOT_FLAG_VIDEO 0x4
 
 #ifndef _ASM
 
-#include<dxgmx/compiler_attrs.h>
-#include<dxgmx/types.h>
+#include <dxgmx/compiler_attrs.h>
+#include <dxgmx/types.h>
 
-typedef struct
-_ATTR_PACKED S_MultibootMBI
+typedef struct _ATTR_PACKED S_MultibootMBI
 {
     u32 flags;
     u32 mem_lower;
@@ -41,7 +40,7 @@ _ATTR_PACKED S_MultibootMBI
     u32 config_table;
     u32 bootloader_name_base;
     u32 apm_table_base;
-    
+
     struct
     {
         u32 control_info;
@@ -52,20 +51,21 @@ _ATTR_PACKED S_MultibootMBI
         u16 interface_len;
     } vbe;
 
-    struct 
+    struct
     {
         u64 base;
         u32 pitch;
         u32 width;
         u32 height;
-        u8  bpp;
-        u8  type;
+        u8 bpp;
+        u8 type;
         /**
-         * Since this is an union only one of these structs will be valid at a time.
-         * If MultibootMBI::fb::type is 0, the first struct will be valid.
+         * Since this is an union only one of these structs will be valid at a
+         * time. If MultibootMBI::fb::type is 0, the first struct will be valid.
          * Else if MultibootMBI::fb::type is 1, the second struct will be valid.
-         * Else if MultibootMBI::fb::type is 2, EGA standard text mode is used and this union is obsolete.
-        */
+         * Else if MultibootMBI::fb::type is 2, EGA standard text mode is used
+         * and this union is obsolete.
+         */
         union
         {
             struct
@@ -84,17 +84,16 @@ _ATTR_PACKED S_MultibootMBI
             };
         };
     } fb;
-    
+
 } MultibootMBI;
 
-#define MULTIBOOT_MMAP_TYPE_AVAILABLE        1
-#define MULTIBOOT_MMAP_TYPE_RESERVED         2
+#define MULTIBOOT_MMAP_TYPE_AVAILABLE 1
+#define MULTIBOOT_MMAP_TYPE_RESERVED 2
 #define MULTIBOOT_MMAP_TYPE_ACPI_RECLAIMABLE 3
-#define MULTIBOOT_MMAP_TYPE_NVS              4
-#define MULTIBOOT_MMAP_TYPE_BADRAM           5
+#define MULTIBOOT_MMAP_TYPE_NVS 4
+#define MULTIBOOT_MMAP_TYPE_BADRAM 5
 
-typedef struct
-_ATTR_PACKED S_MultibootMMAP
+typedef struct _ATTR_PACKED S_MultibootMMAP
 {
     u32 size;
     u64 base;

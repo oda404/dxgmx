@@ -1,14 +1,13 @@
 /**
  * Copyright 2022 Alexandru Olaru.
  * Distributed under the MIT license.
-*/
+ */
 
-
-#include<dxgmx/x86/serial.h>
-#include<dxgmx/x86/portio.h>
-#include<dxgmx/types.h>
-#include<dxgmx/attrs.h>
-#include<dxgmx/compiler_attrs.h>
+#include <dxgmx/attrs.h>
+#include <dxgmx/compiler_attrs.h>
+#include <dxgmx/types.h>
+#include <dxgmx/x86/portio.h>
+#include <dxgmx/x86/serial.h>
 
 #define BAUDRATE_LO_PORT(x) (x)
 #define BAUDRATE_HI_PORT(x) (x + 1)
@@ -37,7 +36,7 @@
 #define MODEMCTRL_OUT2 (1 << 3)
 #define MODEMCTRL_LOOPBACK (1 << 4)
 
-bool serial_config_port(const SerialPort *config)
+bool serial_config_port(const SerialPort* config)
 {
     const u16 port = config->port;
 
@@ -54,35 +53,31 @@ bool serial_config_port(const SerialPort *config)
     /* Set bit pattern. */
     port_outb(
         LINECTRL_DATABITS(config->databits) |
-        LINECTRL_STOPBITS(config->stopbits) |
-        LINECTRL_PARITY(config->parity), 
-        LINECTRL_PORT(port)
-    );
+            LINECTRL_STOPBITS(config->stopbits) |
+            LINECTRL_PARITY(config->parity),
+        LINECTRL_PORT(port));
 
     /* Set FIFO. */
     port_outb(
-        FIFO_ENABLE | FIFO_CLEAR_RECEIVE |
-        FIFO_CLEAR_TRANSMIT | FIFO_INT_TRIGG_LVL_14B, 
-        FIFO_PORT(port)
-    );
+        FIFO_ENABLE | FIFO_CLEAR_RECEIVE | FIFO_CLEAR_TRANSMIT |
+            FIFO_INT_TRIGG_LVL_14B,
+        FIFO_PORT(port));
 
     /* Set port in loopback mode to test it. */
     port_outb(
-        MODEMCTRL_REQ_SEND | MODEMCTRL_OUT1 | 
-        MODEMCTRL_OUT2 | MODEMCTRL_LOOPBACK, 
-        MODEMCTRL_PORT(port)
-    );
+        MODEMCTRL_REQ_SEND | MODEMCTRL_OUT1 | MODEMCTRL_OUT2 |
+            MODEMCTRL_LOOPBACK,
+        MODEMCTRL_PORT(port));
 
     port_outb(0x69, port);
-    if(port_inb(port) != 0x69)
+    if (port_inb(port) != 0x69)
         return false;
 
     /* Port is good, exit loopback mode. */
     port_outb(
-        MODEMCTRL_DATA_RDY | MODEMCTRL_REQ_SEND |
-        MODEMCTRL_OUT1 | MODEMCTRL_OUT2, 
-        MODEMCTRL_PORT(port)
-    );
+        MODEMCTRL_DATA_RDY | MODEMCTRL_REQ_SEND | MODEMCTRL_OUT1 |
+            MODEMCTRL_OUT2,
+        MODEMCTRL_PORT(port));
 
     return true;
 }

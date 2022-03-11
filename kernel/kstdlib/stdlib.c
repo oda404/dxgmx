@@ -1,9 +1,13 @@
+/**
+ * Copyright 2022 Alexandru Olaru.
+ * Distributed under the MIT license.
+ */
 
-#include<dxgmx/stdlib.h>
-#include<dxgmx/errno.h>
-#include<dxgmx/todo.h>
-#include<dxgmx/ctype.h>
-#include<limits.h>
+#include <dxgmx/ctype.h>
+#include <dxgmx/errno.h>
+#include <dxgmx/stdlib.h>
+#include <dxgmx/todo.h>
+#include <limits.h>
 
 int abs(int n)
 {
@@ -20,19 +24,19 @@ long long int llabs(long long int n)
     return n < 0 ? -n : n;
 }
 
-char *itoa(int n, char *str, int base)
+char* itoa(int n, char* str, int base)
 {
     return ltoa(n, str, base);
 }
 
-char *ltoa(long n, char *str, int base)
+char* ltoa(long n, char* str, int base)
 {
     return lltoa(n, str, base);
 }
 
-char *lltoa(long long n, char *str, int base)
+char* lltoa(long long n, char* str, int base)
 {
-    if(!n)
+    if (!n)
     {
         str[0] = '0';
         str[1] = '\0';
@@ -40,7 +44,7 @@ char *lltoa(long long n, char *str, int base)
     }
 
     size_t revstart = 0;
-    if(n < 0)
+    if (n < 0)
     {
         str[0] = '-';
         n = llabs(n);
@@ -49,10 +53,10 @@ char *lltoa(long long n, char *str, int base)
 
     char tmpbuff[21];
     size_t digits = 0;
-    while(n)
+    while (n)
     {
         int tmp = n % base;
-        if(tmp < 10)
+        if (tmp < 10)
             tmpbuff[digits] = tmp + '0';
         else
             tmpbuff[digits] = tmp + ('A' - 10);
@@ -60,9 +64,9 @@ char *lltoa(long long n, char *str, int base)
         n /= base;
     }
 
-    //reverse
+    // reverse
     revstart += digits;
-    while(digits)
+    while (digits)
     {
         str[revstart - digits] = tmpbuff[digits - 1];
         --digits;
@@ -72,43 +76,41 @@ char *lltoa(long long n, char *str, int base)
 }
 
 static int isbasedigit(int c, int base)
-{    
-    switch(base)
+{
+    switch (base)
     {
     case 2 ... 10:
         return (c >= '0' && c <= '0' + base - 1);
     case 11 ... 32:
-        return 
-            (c >= '0' && c <= '9') || 
-            (c >= 'A' && c <= 'A' + base - 11) ||
-            (c >= 'a' && c <= 'a' + base - 11);
+        return (c >= '0' && c <= '9') || (c >= 'A' && c <= 'A' + base - 11) ||
+               (c >= 'a' && c <= 'a' + base - 11);
     }
 
     return 0;
 }
 
-unsigned long strtoul(const char *str, char **endptr, int base)
+unsigned long strtoul(const char* str, char** endptr, int base)
 {
-    if((base < 2 && base != 0) || base > 36)
+    if ((base < 2 && base != 0) || base > 36)
         return 0;
 
-    if(base == 0)
+    if (base == 0)
         TODO_FATAL(); // can't be fucked now
-    
+
     int neg = 0;
     /* assume the initial str is invalid */
-    if(endptr)
+    if (endptr)
         *endptr = (char*)str; /* needed voodo to supress warnings */
-    
-    while(isspace(*str))
+
+    while (isspace(*str))
         ++str;
-    if(*str == '-')
+    if (*str == '-')
     {
         neg = 1;
         ++str;
     }
     /* if a digit isn't found after the potential sign return 0 */
-    if(!isbasedigit(*str, base))
+    if (!isbasedigit(*str, base))
     {
         errno = EINVAL;
         return 0;
@@ -116,20 +118,20 @@ unsigned long strtoul(const char *str, char **endptr, int base)
 
     unsigned long out = 0;
 
-    for(; *str != '\0'; ++str)
+    for (; *str != '\0'; ++str)
     {
-        if(!isbasedigit(*str, base))
+        if (!isbasedigit(*str, base))
             break;
 
         unsigned long tmp;
-        if(*str <= '9')
+        if (*str <= '9')
             tmp = out * base + (*str - '0');
         else if (*str >= 'a' && *str <= 'v')
             tmp = out * base + (*str - 'a' + 10);
         else
             tmp = out * base + (*str - 'A' + 10);
 
-        if(tmp < out) // overflow
+        if (tmp < out) // overflow
         {
             errno = ERANGE;
             return ULONG_MAX;
@@ -137,33 +139,33 @@ unsigned long strtoul(const char *str, char **endptr, int base)
         out = tmp;
     }
 
-    if(endptr)
+    if (endptr)
         *endptr = (char*)str; /* needed voodo to supress warnings */
     return neg ? -out : out;
 }
 
-long int strtol(const char *str, char **endptr, int base)
+long int strtol(const char* str, char** endptr, int base)
 {
-    if((base < 2 && base != 0) || base > 36)
+    if ((base < 2 && base != 0) || base > 36)
         return 0;
 
-    if(base == 0)
+    if (base == 0)
         TODO_FATAL(); // can't be fucked now
-    
+
     int neg = 0;
     /* assume the initial str is invalid */
-    if(endptr)
+    if (endptr)
         *endptr = (char*)str; /* needed voodo to supress warnings */
-    
-    while(isspace(*str))
+
+    while (isspace(*str))
         ++str;
-    if(*str == '-')
+    if (*str == '-')
     {
         neg = 1;
         ++str;
     }
     /* if a digit isn't found after the potential sign return 0 */
-    if(!isbasedigit(*str, base))
+    if (!isbasedigit(*str, base))
     {
         errno = EINVAL;
         return 0;
@@ -171,20 +173,20 @@ long int strtol(const char *str, char **endptr, int base)
 
     long int out = 0;
 
-    for(; *str != '\0'; ++str)
+    for (; *str != '\0'; ++str)
     {
-        if(!isbasedigit(*str, base))
+        if (!isbasedigit(*str, base))
             break;
 
         long int tmp;
-        if(*str <= '9')
+        if (*str <= '9')
             tmp = out * base + (*str - '0');
         else if (*str >= 'a' && *str <= 'v')
             tmp = out * base + (*str - 'a' + 10);
         else
             tmp = out * base + (*str - 'A' + 10);
 
-        if(tmp < out) // over or under flow based on sign
+        if (tmp < out) // over or under flow based on sign
         {
             errno = ERANGE;
             return neg ? LONG_MIN : LONG_MAX;
@@ -192,24 +194,24 @@ long int strtol(const char *str, char **endptr, int base)
         out = tmp;
     }
 
-    if(endptr)
+    if (endptr)
         *endptr = (char*)str; /* needed voodo to supress warnings */
     return neg ? -out : out;
 }
 
-char *utoa(unsigned n, char *str, int base)
+char* utoa(unsigned n, char* str, int base)
 {
     return ultoa(n, str, base);
 }
 
-char *ultoa(unsigned long n, char *str, int base)
+char* ultoa(unsigned long n, char* str, int base)
 {
     return ulltoa(n, str, base);
 }
 
-char *ulltoa(unsigned long long n, char *str, int base)
+char* ulltoa(unsigned long long n, char* str, int base)
 {
-    if(!n)
+    if (!n)
     {
         str[0] = '0';
         str[1] = '\0';
@@ -218,10 +220,10 @@ char *ulltoa(unsigned long long n, char *str, int base)
 
     char tmpbuff[21];
     size_t digits = 0;
-    while(n)
+    while (n)
     {
         int tmp = n % base;
-        if(tmp < 10)
+        if (tmp < 10)
             tmpbuff[digits] = tmp + '0';
         else
             tmpbuff[digits] = tmp + ('A' - 10);
@@ -229,9 +231,9 @@ char *ulltoa(unsigned long long n, char *str, int base)
         n /= base;
     }
 
-    //reverse
+    // reverse
     size_t revstart = digits;
-    while(digits)
+    while (digits)
     {
         str[revstart - digits] = tmpbuff[digits - 1];
         --digits;

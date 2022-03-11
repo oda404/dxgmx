@@ -1,13 +1,13 @@
 /**
  * Copyright 2022 Alexandru Olaru.
  * Distributed under the MIT license.
-*/
+ */
 
 #ifndef _DXGMX_MEM_MMANAGER_H
 #define _DXGMX_MEM_MMANAGER_H
 
-#include<dxgmx/types.h>
-#include<dxgmx/mem/mmap.h>
+#include <dxgmx/mem/mmap.h>
+#include <dxgmx/types.h>
 
 int mmanager_init();
 MemoryMap mmanager_get_sys_mmap();

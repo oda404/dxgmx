@@ -1,8 +1,12 @@
+/**
+ * Copyright 2022 Alexandru Olaru.
+ * Distributed under the MIT license.
+ */
 
 #ifndef _DXGMX_MEM_KHEAP_H
 #define _DXGMX_MEM_KHEAP_H
 
-#include<dxgmx/types.h>
+#include <dxgmx/types.h>
 
 #define KERNEL_HEAP_SIZE (64 * KIB)
 

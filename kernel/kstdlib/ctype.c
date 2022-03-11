@@ -1,5 +1,9 @@
+/**
+ * Copyright 2022 Alexandru Olaru.
+ * Distributed under the MIT license.
+ */
 
-#include<dxgmx/ctype.h>
+#include <dxgmx/ctype.h>
 
 int isdigit(int c)
 {
@@ -9,23 +13,15 @@ int isdigit(int c)
 
 int isspace(int c)
 {
-    return 
-    c ==  ' ' || 
-    c == '\f' ||
-    c == '\n' ||
-    c == '\r' ||
-    c == '\t' ||
-    c == '\v';
+    return c == ' ' || c == '\f' || c == '\n' || c == '\r' || c == '\t' ||
+           c == '\v';
 }
 
 int isxdigit(int c)
 {
-    if(
-        (c >= '0' && c <= '9') || 
-        (c >= 'a' && c <= 'f') ||
-        (c >= 'A' && c <= 'F')
-    )
+    if ((c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') ||
+        (c >= 'A' && c <= 'F'))
         return 1;
-    
+
     return 0;
 }

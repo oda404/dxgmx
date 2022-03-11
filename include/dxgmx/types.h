@@ -1,30 +1,30 @@
 /**
  * Copyright 2021 Alexandru Olaru.
  * Distributed under the MIT license.
-*/
+ */
 
 #ifndef _DXGMX_TYPES_H
 #define _DXGMX_TYPES_H
 
-#include<stddef.h>
-#include<stdint.h>
-#include<stdbool.h>
+#include <stdbool.h>
+#include <stddef.h>
+#include <stdint.h>
 
-typedef uint8_t  u8;
+typedef uint8_t u8;
 typedef uint16_t u16;
 typedef uint32_t u32;
 typedef uint64_t u64;
-typedef int8_t   i8;
-typedef int16_t  i16;
-typedef int32_t  i32;
-typedef int64_t  i64;
+typedef int8_t i8;
+typedef int16_t i16;
+typedef int32_t i32;
+typedef int64_t i64;
 
 #if defined(_X86_)
-    typedef u32 ptr;
-#   define PTR_DIG 8
+typedef u32 ptr;
+#define PTR_DIG 8
 #elif defined(_X86_64_)
-    typedef u64 ptr;
-#   define PTR_DIG 16
+typedef u64 ptr;
+#define PTR_DIG 16
 #endif //_X86_
 
 #define KIB 1024

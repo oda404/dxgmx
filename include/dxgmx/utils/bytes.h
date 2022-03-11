@@ -1,8 +1,12 @@
+/**
+ * Copyright 2022 Alexandru Olaru.
+ * Distributed under the MIT license.
+ */
 
 #ifndef _DXGMX_UITLS_BYTE_H
 #define _DXGMX_UITLS_BYTE_H
 
-#include<dxgmx/types.h>
+#include <dxgmx/types.h>
 
 /* Takes in a number of bytes and transforms them into
 the most human readable format, putting the unit used in 'unit'

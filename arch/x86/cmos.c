@@ -1,17 +1,17 @@
 /**
  * Copyright 2021 Alexandru Olaru.
  * Distributed under the MIT license.
-*/
+ */
 
-#include<dxgmx/x86/cmos.h>
-#include<dxgmx/x86/portio.h>
-#include<dxgmx/x86/interrupts.h>
+#include <dxgmx/x86/cmos.h>
+#include <dxgmx/x86/interrupts.h>
+#include <dxgmx/x86/portio.h>
 
-/** 
+/**
  * Because of ancient computers the switch for disabling
  * the NMIs is the 7th bit of the CMOS register port, 0x70.
  * If this bit is set NMIs will be masked(ignored).
-*/
+ */
 
 static u8 g_nmienabled = 1;
 
@@ -36,7 +36,7 @@ u8 cmos_port_inb(u8 port, int nmistate)
     port_outb(port | 0x80, CMOS_PORT_REG);
     u8 ret = port_inb(CMOS_PORT_DATA);
 
-    switch(nmistate)
+    switch (nmistate)
     {
     case NMIDISABLED:
         break;
@@ -46,13 +46,13 @@ u8 cmos_port_inb(u8 port, int nmistate)
         break;
 
     case NMIKEEP:
-        if(g_nmienabled)
+        if (g_nmienabled)
             cmos_enable_nmi();
         break;
     }
 
     interrupts_enable();
-    
+
     return ret;
 }
 
@@ -63,7 +63,7 @@ void cmos_port_outb(u8 value, u8 port, int nmistate)
     port_outb(port | 0x80, CMOS_PORT_REG);
     port_outb(value, CMOS_PORT_DATA);
 
-    switch(nmistate)
+    switch (nmistate)
     {
     case NMIDISABLED:
         break;
@@ -73,7 +73,7 @@ void cmos_port_outb(u8 value, u8 port, int nmistate)
         break;
 
     case NMIKEEP:
-        if(g_nmienabled)
+        if (g_nmienabled)
             cmos_enable_nmi();
         break;
     }

@@ -1,7 +1,11 @@
+/**
+ * Copyright 2022 Alexandru Olaru.
+ * Distributed under the MIT license.
+ */
 
-#include<dxgmx/types.h>
-#include<dxgmx/panic.h>
-#include<dxgmx/compiler_attrs.h>
+#include <dxgmx/compiler_attrs.h>
+#include <dxgmx/panic.h>
+#include <dxgmx/types.h>
 
 /* TODO: actually randomize it */
 ptr __stack_chk_guard = 0xFA7BA115;

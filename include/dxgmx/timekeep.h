@@ -1,8 +1,12 @@
+/**
+ * Copyright 2022 Alexandru Olaru.
+ * Distributed under the MIT license.
+ */
 
 #ifndef _DXGMX_TIMEKEEP_H
 #define _DXGMX_TIMEKEEP_H
 
-#include<dxgmx/time.h>
+#include <dxgmx/time.h>
 
 int timekeep_init();
 /* Returns the current date. */

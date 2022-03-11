@@ -1,19 +1,19 @@
 /**
  * Copyright 2022 Alexandru Olaru.
  * Distributed under the MIT license.
-*/
+ */
 
-#include<dxgmx/storage/mbr.h>
-#include<dxgmx/kmalloc.h>
-#include<dxgmx/string.h>
+#include <dxgmx/kmalloc.h>
+#include <dxgmx/storage/mbr.h>
+#include <dxgmx/string.h>
 
-bool mbr_drive_has_mbr(const GenericDrive *drive)
+bool mbr_drive_has_mbr(const GenericDrive* drive)
 {
-    if(!drive)
+    if (!drive)
         return false;
 
-    MBR *mbr = kmalloc(512);
-    if(!mbr || !drive->read(0, 512, (void *)mbr, drive->internal_dev))
+    MBR* mbr = kmalloc(512);
+    if (!mbr || !drive->read(0, 512, (void*)mbr, drive->internal_dev))
     {
         kfree(mbr);
         return false;
@@ -25,38 +25,38 @@ bool mbr_drive_has_mbr(const GenericDrive *drive)
     return ret;
 }
 
-bool mbr_parse_drive_info(GenericDrive *drive)
+bool mbr_parse_drive_info(GenericDrive* drive)
 {
-    if(!drive)
+    if (!drive)
         return false;
-    
-    MBR *mbr = kmalloc(512);
-    if(!mbr || !drive->read(0, 512, (void *)mbr, drive->internal_dev))
+
+    MBR* mbr = kmalloc(512);
+    if (!mbr || !drive->read(0, 512, (void*)mbr, drive->internal_dev))
     {
         kfree(mbr);
         return false;
     }
-    
+
     drive->uid = mbr->uid;
-    
-    const MBRPartitionTableEntry *mbrpart = &mbr->partition1;
-    for(size_t i = 0; i < 4; ++i, ++mbrpart)
+
+    const MBRPartitionTableEntry* mbrpart = &mbr->partition1;
+    for (size_t i = 0; i < 4; ++i, ++mbrpart)
     {
-        if(!mbrpart->lba_start || !mbrpart->total_sectors)
+        if (!mbrpart->lba_start || !mbrpart->total_sectors)
             continue; // consider unallocated.
 
         drive->partitions = krealloc(
             drive->partitions,
-            sizeof(GenericDrivePartition) * (++drive->partitions_count)
-        );
+            sizeof(GenericDrivePartition) * (++drive->partitions_count));
 
-        if(!drive->partitions)
+        if (!drive->partitions)
         {
             kfree(mbr);
             return false;
         }
 
-        GenericDrivePartition *part = &drive->partitions[drive->partitions_count - 1];
+        GenericDrivePartition* part =
+            &drive->partitions[drive->partitions_count - 1];
         memset(part, 0, sizeof(GenericDrivePartition));
 
         part->start = mbrpart->lba_start * drive->sectorsize;

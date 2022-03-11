@@ -1,16 +1,15 @@
 /**
  * Copyright 2022 Alexandru Olaru.
  * Distributed under the MIT license.
-*/
+ */
 
 #ifndef _DXGMX_X86_PCI_H
 #define _DXGMX_X86_PCI_H
 
-#include<dxgmx/types.h>
-#include<dxgmx/compiler_attrs.h>
+#include <dxgmx/compiler_attrs.h>
+#include <dxgmx/types.h>
 
-typedef enum 
-E_PCIClassCode
+typedef enum E_PCIClassCode
 {
     PCI_UNCLASSIFIED,
     PCI_MASS_STORAGE_CONTROLLER,
@@ -38,8 +37,7 @@ E_PCIClassCode
     PCI_VENDOR_SPECIFIC = 0xFF
 } PCIClassCode;
 
-typedef struct
-S_PCIDevice
+typedef struct S_PCIDevice
 {
     u8 bus;
     u8 dev;

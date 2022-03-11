@@ -1,25 +1,26 @@
 /**
  * Copyright 2022 Alexandru Olaru.
  * Distributed under the MIT license.
-*/
+ */
 
 #ifndef _DXGMX_STORAGE_DRIVE_H
 #define _DXGMX_STORAGE_DRIVE_H
 
-#include<dxgmx/types.h>
+#include <dxgmx/types.h>
 
-typedef bool(*storage_drive_read)(u64 start, size_t n, u8* buf, const void *dev);
-typedef bool(*storage_drive_write)(u64 start, size_t n, const u8 *buf, const void *dev);
+typedef bool (*storage_drive_read)(
+    u64 start, size_t n, u8* buf, const void* dev);
+typedef bool (*storage_drive_write)(
+    u64 start, size_t n, const u8* buf, const void* dev);
 
 struct S_GenericDrive;
 
-typedef struct
-S_GenericDrivePartition
+typedef struct S_GenericDrivePartition
 {
-    char *suffix;
+    char* suffix;
     size_t suffixlen;
 
-    char *mountpoint;
+    char* mountpoint;
     size_t mountpoint_len;
 
     size_t number;
@@ -27,11 +28,10 @@ S_GenericDrivePartition
     u64 start;
     u64 size;
 
-    const struct S_GenericDrive *parent_drive;
+    const struct S_GenericDrive* parent_drive;
 } GenericDrivePartition;
 
-typedef struct
-S_GenericDrive
+typedef struct S_GenericDrive
 {
     const char* const name;
     const size_t namelen;
@@ -41,7 +41,7 @@ S_GenericDrive
     /* Unique IDentifier */
     u64 uid;
 
-    GenericDrivePartition *partitions;
+    GenericDrivePartition* partitions;
     size_t partitions_count;
 
     void* const internal_dev;

@@ -1,9 +1,13 @@
+/**
+ * Copyright 2022 Alexandru Olaru.
+ * Distributed under the MIT license.
+ */
 
 #ifndef _DXGMX_X86_PIT_H
 #define _DXGMX_X86_PIT_H
 
-#include<dxgmx/time.h>
-#include<dxgmx/types.h>
+#include <dxgmx/time.h>
+#include <dxgmx/types.h>
 
 int pit_init();
 void pit_enable_periodic_int();

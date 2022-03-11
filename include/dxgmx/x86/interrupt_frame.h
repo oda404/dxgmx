@@ -1,16 +1,15 @@
 /**
  * Copyright 2021 Alexandru Olaru.
  * Distributed under the MIT license.
-*/
+ */
 
 #ifndef _DXGMX_X86_INTERRUPT_FRAME_H
 #define _DXGMX_X86_INTERRUPT_FRAME_H
 
-#include<dxgmx/compiler_attrs.h>
-#include<dxgmx/types.h>
+#include <dxgmx/compiler_attrs.h>
+#include <dxgmx/types.h>
 
-typedef struct 
-_ATTR_PACKED S_InterruptFrame
+typedef struct _ATTR_PACKED S_InterruptFrame
 {
     u32 edi;
     u32 esi;
@@ -27,6 +26,5 @@ _ATTR_PACKED S_InterruptFrame
     u32 cs;
     u32 eflags;
 } InterruptFrame;
-
 
 #endif //_DXGMX_X86_INTERRUPT_FRAME_H
