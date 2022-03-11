@@ -67,7 +67,7 @@ static i32 find_contiguous_blocks_aligned(
         return -1;
 
     size_t block_stepping = ceil(
-        (float)alignment / (KMALLOC_SLABS_PER_BLOCK * KMALLOC_SLAB_SIZE)
+        (double)alignment / (KMALLOC_SLABS_PER_BLOCK * KMALLOC_SLAB_SIZE)
     );
 
     for(size_t i = start; i < KMALLOC_BLOCKS_COUNT; i += block_stepping)
@@ -113,7 +113,7 @@ void *kmalloc_aligned(size_t size, size_t alignment)
     if(!size || !bw_is_power_of_two(alignment))
         return NULL;
 
-    size_t slabs = ceil((float)size / KMALLOC_SLAB_SIZE);
+    size_t slabs = ceil((double)size / KMALLOC_SLAB_SIZE);
     size_t blocks = slabs / KMALLOC_SLABS_PER_BLOCK;
 
     u64 slabs_mask = 0;
@@ -219,7 +219,7 @@ void kfree(void *addr)
     if(!size)
         panic("Tried to kfree() an invalid address!");
 
-    size_t slabs = ceil((float)size / KMALLOC_SLAB_SIZE);
+    size_t slabs = ceil((double)size / KMALLOC_SLAB_SIZE);
     size_t blocks = slabs / KMALLOC_SLABS_PER_BLOCK;
     slabs -= blocks * KMALLOC_SLABS_PER_BLOCK;
 

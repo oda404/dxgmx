@@ -400,7 +400,7 @@ reprocess_length:
         {
             long double val = length == PRINTF_LEN_L ? 
                 va_arg(arglist, long double) : 
-                va_arg(arglist, double);
+                (long double)va_arg(arglist, double);
 
             long double whole, frac;
             frac = modfl(val, &whole);
