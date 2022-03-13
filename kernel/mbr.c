@@ -45,15 +45,20 @@ bool mbr_parse_drive_info(GenericDrive* drive)
         if (!mbrpart->lba_start || !mbrpart->total_sectors)
             continue; // consider unallocated.
 
-        drive->partitions = krealloc(
+        /* Try to enlarge the partition table. */
+        GenericDrivePartition* tmp = krealloc(
             drive->partitions,
-            sizeof(GenericDrivePartition) * (++drive->partitions_count));
+            sizeof(GenericDrivePartition) * (drive->partitions_count + 1));
 
-        if (!drive->partitions)
+        if (!tmp)
         {
             kfree(mbr);
             return false;
         }
+
+        /* If successful update the partition table. */
+        drive->partitions = tmp;
+        ++drive->partitions_count;
 
         GenericDrivePartition* part =
             &drive->partitions[drive->partitions_count - 1];
