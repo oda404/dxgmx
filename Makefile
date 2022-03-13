@@ -5,7 +5,7 @@ KERNEL_NAME       := dxgmx
 
 VER_MAJ           := 0
 VER_MIN           := 9
-PATCH_N           := 7
+PATCH_N           := 8
 CODENAME          := angel_attack
 
 # Try to include the buildconfig
