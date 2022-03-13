@@ -231,7 +231,7 @@ _INIT int ata_init()
             .internal_dev = dev,
             .read = dev->read,
             .write = dev->write,
-            .sectorsize = 512,
+            .physical_sectorsize = 512,
         };
 
         vfs_add_drive(&drive);

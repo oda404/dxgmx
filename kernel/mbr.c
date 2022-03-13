@@ -64,10 +64,9 @@ bool mbr_parse_drive_info(GenericDrive* drive)
             &drive->partitions[drive->partitions_count - 1];
         memset(part, 0, sizeof(GenericDrivePartition));
 
-        part->start = mbrpart->lba_start * drive->sectorsize;
-        part->size = mbrpart->total_sectors * drive->sectorsize;
+        part->lba_start = mbrpart->lba_start;
+        part->sectors_count = mbrpart->total_sectors;
         part->number = i;
-        part->parent_drive = drive;
     }
 
     kfree(mbr);
