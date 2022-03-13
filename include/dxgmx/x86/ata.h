@@ -71,14 +71,6 @@ typedef struct S_ATADevice
 
 int ata_init();
 /**
- * @brief Returns an array of all the ATA devices.
- *
- * @param count Where to put the number of ATA devices.
- * @return The array of ATA devices. NULL if there aren't any.
- */
-const ATADevice* ata_get_devices(size_t* count);
-
-/**
  * @brief Reads from an ATA device, using the best available method (PIO or
  * DMA).
  *
@@ -88,7 +80,7 @@ const ATADevice* ata_get_devices(size_t* count);
  * @param dev The ATA device.
  * @return true if successful, false otherwise.
  */
-bool ata_read(u64 start, size_t n, u8* buf, const ATADevice* dev);
+bool ata_read(lba_t start, sector_t n, void* buf, const ATADevice* dev);
 /**
  * @brief Writes to an ATA device using the best available method (PIO or DMA).
  *
@@ -98,27 +90,7 @@ bool ata_read(u64 start, size_t n, u8* buf, const ATADevice* dev);
  * @param dev The ATA device.
  * @return true if successful, false otherwise.
  */
-bool ata_write(u64 start, size_t n, const u8* buf, const ATADevice* dev);
-/**
- * @brief Reads from an ATA device using PIO
- *
- * @param start Byte address from which to start reading.
- * @param n How many bytes to read.
- * @param buf Destination buffer.
- * @param dev The ATA device.
- * @return true if successful, false otherwise.
- */
-bool atapio_read(u64 start, size_t n, u8* buf, const ATADevice* dev);
-/**
- * @brief Writes to an ATA device using PIO.
- *
- * @param start Byte address from which to start writing.
- * @param n How many bytes to write.
- * @param buf Source data buffer.
- * @param dev The ATA device.
- * @return true if successful, false otherwise.
- */
-bool atapio_write(u64 start, size_t n, const u8* buf, const ATADevice* dev);
+bool ata_write(lba_t start, sector_t n, const void* buf, const ATADevice* dev);
 /**
  * @brief Reads sectors from an ATA device using PIO.
  *
@@ -128,8 +100,8 @@ bool atapio_write(u64 start, size_t n, const u8* buf, const ATADevice* dev);
  * @param dev The ATA device.
  * @return true if successful, false otherwise.
  */
-bool atapio_read_sectors(
-    u64 lba, size_t sectors, u8* buf, const ATADevice* dev);
+bool atapio_read(
+    lba_t lba, sector_t sectors, void* buf, const ATADevice* dev);
 /**
  * @brief Writes sectors to an ATA device using PIO.
  *
@@ -139,7 +111,7 @@ bool atapio_read_sectors(
  * @param dev The ATA device.
  * @return true if successful, false otherwise.
  */
-bool atapio_write_sectors(
-    u64 lba, size_t sectors, const u8* buf, const ATADevice* dev);
+bool atapio_write(
+    lba_t lba, sector_t sectors, const void* buf, const ATADevice* dev);
 
 #endif // !_DXGMX_X86_ATA_H

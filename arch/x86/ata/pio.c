@@ -33,7 +33,7 @@
  * is given, it will be capped at 256.
  * @return The sector count that can be passed to the ATAPIO drive.
  */
-static u8 atapio_internal_sectors(size_t sectors)
+static u8 atapio_internal_sectors(sector_t sectors)
 {
     return sectors >= 256 ? 0 : sectors;
 }
@@ -42,12 +42,12 @@ static u8 atapio_internal_sectors(size_t sectors)
  * @brief Sends an ATAPIO read command to the given device.
  *
  * @param lba From which LBA to start reading.
- * @param sectors How many sectors to read. (Need to be internal ATAPIO sectors:
- * see atapip_internal_sectors()).
+ * @param sectors How many sectors to read. (In internal ATAPIO sectors:
+ * see atapio_internal_sectors()).
  * @param dev The device.
  * @return false: If the device is not a PIO device.
  */
-static bool atapio_send_read_cmd(u64 lba, size_t sectors, const ATADevice* dev)
+static bool atapio_send_read_cmd(lba_t lba, u8 sectors, const ATADevice* dev)
 {
     if (dev->lba48)
     {
@@ -97,7 +97,7 @@ static bool atapio_send_read_cmd(u64 lba, size_t sectors, const ATADevice* dev)
  * @param dev The device.
  * @return false: If the device is not a PIO device.
  */
-static bool atapio_send_write_cmd(u64 lba, size_t sectors, const ATADevice* dev)
+static bool atapio_send_write_cmd(lba_t lba, u8 sectors, const ATADevice* dev)
 {
     if (dev->lba48)
     {
@@ -183,7 +183,7 @@ static bool atapio_wait_for_ready(time_t timeout_ms, const ATADevice* dev)
     return true;
 }
 
-static bool atapio_is_valid_range(u64 lba, size_t sectors, const ATADevice* dev)
+static bool atapio_is_valid_range(lba_t lba, sector_t sectors, const ATADevice* dev)
 {
     /* Check for possible underflow. */
     if (lba > dev->sector_count)
@@ -192,7 +192,7 @@ static bool atapio_is_valid_range(u64 lba, size_t sectors, const ATADevice* dev)
     return (sectors <= dev->sector_count - lba);
 }
 
-bool atapio_read_sectors(u64 lba, size_t sectors, u8* buf, const ATADevice* dev)
+bool atapio_read(lba_t lba, sector_t sectors, void* buf, const ATADevice* dev)
 {
     if (!(dev && buf && sectors))
         return false;
@@ -242,11 +242,17 @@ bool atapio_read_sectors(u64 lba, size_t sectors, u8* buf, const ATADevice* dev)
     return true;
 }
 
-bool atapio_write_sectors(
-    u64 lba, size_t sectors, const u8* buf, const ATADevice* dev)
+bool atapio_write(
+    lba_t lba, sector_t sectors, const void* buf, const ATADevice* dev)
 {
     if (!(dev && buf && sectors))
         return false;
+
+    if (!atapio_is_valid_range(lba, sectors, dev))
+    {
+        KLOGF(ERR, "Out of range read!");
+        return false;
+    }
 
     while (sectors)
     {
@@ -288,241 +294,6 @@ bool atapio_write_sectors(
         }
         sectors -= workingsectors;
         lba += workingsectors;
-    }
-
-    return true;
-}
-
-bool atapio_read(u64 start, size_t n, u8* buf, const ATADevice* dev)
-{
-    if (!(dev && buf && n))
-        return false;
-
-    u64 lba = start / ATA_DISK_SECTOR_SIZE;
-    const size_t lbaoffset = start % ATA_DISK_SECTOR_SIZE;
-    size_t leading_bytes = 0;
-    if (lbaoffset)
-    {
-        leading_bytes = min(ATA_DISK_SECTOR_SIZE - lbaoffset, n);
-        n -= leading_bytes;
-    }
-    size_t wholesectors = n / ATA_DISK_SECTOR_SIZE;
-    size_t trailing_bytes = n % ATA_DISK_SECTOR_SIZE;
-
-    if (!atapio_is_valid_range(
-            lba,
-            wholesectors + (bool)trailing_bytes + (bool)leading_bytes,
-            dev))
-    {
-        KLOGF(ERR, "Out of range read!");
-        return false;
-    }
-
-    if (leading_bytes)
-    {
-        if (!atapio_send_read_cmd(lba, 1, dev) ||
-            !atapio_wait_for_ready(ATAPIO_READ_TIMEOUT_MS, dev))
-        {
-            KLOGF(ERR, "Failed to read leading bytes!");
-            return false;
-        }
-
-        for (u16 word = 0; word < 256; ++word)
-        {
-            u16 data = port_inw(ATA_DATA_REG(dev->bus_io));
-            if (!leading_bytes)
-                continue;
-
-            /* There has to be a better way of doing this but i can t be fucked
-             * right now. */
-            if (word * 2 >= lbaoffset)
-            {
-                if (leading_bytes == 1)
-                {
-                    *buf = data;
-                    ++buf;
-                    --leading_bytes;
-                }
-                else
-                {
-                    *((u16*)buf) = data;
-                    buf += 2;
-                    leading_bytes -= 2;
-                }
-            }
-            else if (word * 2 + 1 == lbaoffset)
-            {
-                *buf = data >> 8;
-                ++buf;
-                --leading_bytes;
-            }
-        }
-        ++lba;
-    }
-
-    /* Read any whole sectors */
-    if (wholesectors)
-    {
-        if (!atapio_read_sectors(lba, wholesectors, buf, dev))
-            return false;
-        lba += wholesectors;
-        buf += wholesectors * ATA_DISK_SECTOR_SIZE;
-    }
-
-    /* Read any extra trailing bytes. */
-    if (trailing_bytes)
-    {
-        // always read one sector
-        if (!atapio_send_read_cmd(lba, 1, dev) ||
-            !atapio_wait_for_ready(ATAPIO_READ_TIMEOUT_MS, dev))
-        {
-            KLOGF(ERR, "Failed to read trailing bytes!");
-            return false;
-        }
-
-        for (size_t i = 0; i < 256; ++i)
-        {
-            u16 data = port_inw(ATA_DATA_REG(dev->bus_io));
-            if (!trailing_bytes)
-                continue;
-
-            if (trailing_bytes == 1)
-            {
-                /* last byte */
-                *buf = data;
-                --trailing_bytes;
-            }
-            else
-            {
-                *((u16*)buf) = data;
-                buf += 2;
-                trailing_bytes -= 2;
-            }
-        }
-    }
-
-    return true;
-}
-
-bool atapio_write(u64 start, size_t n, const u8* buf, const ATADevice* dev)
-{
-    if (!(dev && buf && n))
-        return false;
-
-    u64 lba = start / ATA_DISK_SECTOR_SIZE;
-    size_t lbaoffset = start % ATA_DISK_SECTOR_SIZE;
-    size_t leading_bytes = 0;
-    if (lbaoffset)
-    {
-        leading_bytes = min(ATA_DISK_SECTOR_SIZE - lbaoffset, n);
-        n -= leading_bytes;
-    }
-    size_t wholesectors = n / ATA_DISK_SECTOR_SIZE;
-    size_t trailing_bytes = n % ATA_DISK_SECTOR_SIZE;
-
-    if (!atapio_is_valid_range(lba, wholesectors + (bool)trailing_bytes, dev))
-    {
-        KLOGF(ERR, "Out of range write!");
-        return false;
-    }
-
-    const struct timespec ts = {.tv_nsec = 400, .tv_sec = 0};
-
-    /* If 'start' is not aligned on sector boundry. */
-    if (leading_bytes)
-    {
-        u8* oldsector = kmalloc(ATA_DISK_SECTOR_SIZE);
-        if (!oldsector || !ata_read(
-                              lba * ATA_DISK_SECTOR_SIZE,
-                              ATA_DISK_SECTOR_SIZE,
-                              oldsector,
-                              dev))
-        {
-            KLOGF(ERR, "Failed to write leading bytes!");
-            return false;
-        }
-
-        memcpy(oldsector + lbaoffset, buf, leading_bytes);
-        buf += leading_bytes;
-
-        if (!atapio_send_write_cmd(lba, 1, dev) ||
-            !atapio_wait_for_ready(ATAPIO_WRITE_TIMEOUT_MS, dev))
-        {
-            KLOGF(ERR, "Failed to write leading bytes!");
-            kfree(oldsector);
-            return false;
-        }
-
-        for (size_t i = 0; i < 256; ++i)
-        {
-            port_outw(((u16*)oldsector)[i], ATA_DATA_REG(dev->bus_io));
-            nanosleep(&ts, NULL);
-        }
-
-        kfree(oldsector);
-
-        if (!atapio_flush_written_sectors(ATAPIO_FLUSH_SECTORS_TIMEOUT_MS, dev))
-        {
-            KLOGF(ERR, "Timed-out trying to flush sectors to disk!");
-            return false;
-        }
-
-        ++lba;
-    }
-
-    if (wholesectors)
-    {
-        if (!atapio_write_sectors(lba, wholesectors, buf, dev))
-        {
-            return false;
-        }
-
-        lba += wholesectors;
-        buf += wholesectors * ATA_DISK_SECTOR_SIZE;
-    }
-
-    /* Write any extra bytes. */
-    if (trailing_bytes)
-    {
-        /* If we got here that means we have to write a fraction of a sector.
-        Which in turn means we have to read the current corresponding sector,
-        modify it with the new data, and write it back to disk. */
-        u8* oldsector = kmalloc(ATA_DISK_SECTOR_SIZE);
-        if (!oldsector || !atapio_read(
-                              lba * ATA_DISK_SECTOR_SIZE,
-                              ATA_DISK_SECTOR_SIZE,
-                              oldsector,
-                              dev))
-        {
-            KLOGF(ERR, "Failed to write trailing bytes!");
-            kfree(oldsector);
-            return false;
-        }
-
-        memcpy(oldsector, buf, trailing_bytes);
-
-        if (!atapio_send_write_cmd(lba, 1, dev) ||
-            !atapio_wait_for_ready(ATAPIO_READ_TIMEOUT_MS, dev))
-        {
-            KLOGF(ERR, "Failed to write trailing bytes!");
-            kfree(oldsector);
-            return false;
-        }
-
-        for (size_t i = 0; i < 256; ++i)
-        {
-            port_outw(((u16*)oldsector)[i], ATA_DATA_REG(dev->bus_io));
-            /* Sleep just for good measure. ? */
-            nanosleep(&ts, NULL);
-        }
-
-        kfree(oldsector);
-
-        if (!atapio_flush_written_sectors(ATAPIO_FLUSH_SECTORS_TIMEOUT_MS, dev))
-        {
-            KLOGF(ERR, "Timed-out trying to flush sectors to disk!");
-            return false;
-        }
     }
 
     return true;

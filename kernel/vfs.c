@@ -65,23 +65,23 @@ static bool vfs_generate_partition_suffix(GenericDrivePartition* part)
 }
 
 static bool vfs_generic_part_read(
-    u64 relstart, size_t n, void* buf, const GenericDrivePartition* part)
+    lba_t relative_lba, sector_t sectors, void* buf, const GenericDrivePartition* part)
 {
     const GenericDrive* drive = part->parent_drive;
     return drive->read(
-        part->lba_start * drive->physical_sectorsize + relstart,
-        n,
+        part->lba_start + relative_lba,
+        sectors,
         buf,
         drive->internal_dev);
 }
 
 static bool vfs_generic_part_write(
-    u64 relstart, size_t n, const void* buf, const GenericDrivePartition* part)
+    lba_t relative_lba, sector_t sectors, const void* buf, const GenericDrivePartition* part)
 {
     const GenericDrive* drive = part->parent_drive;
     return drive->write(
-        part->lba_start * drive->physical_sectorsize + relstart,
-        n,
+        part->lba_start + relative_lba,
+        sectors,
         buf,
         drive->internal_dev);
 }

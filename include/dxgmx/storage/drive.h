@@ -8,27 +8,30 @@
 
 #include <dxgmx/types.h>
 
+typedef u64 lba_t;
+typedef u64 sector_t;
+
 struct S_GenericDrive;
 
 /* Helper function to access a drive's data in an absolute manner. */
 typedef bool (*storage_drive_read)(
-    u64 start, size_t n, void* buf, const void* dev);
+    lba_t start, sector_t sectors, void* buf, const void* dev);
 
 typedef bool (*storage_drive_write)(
-    u64 start, size_t n, const void* buf, const void* dev);
+    lba_t start, sector_t sectors, const void* buf, const void* dev);
 
 struct S_GenericDrivePartition;
 
 /* Helper functions to access a partition's data in a relative manner. */
 typedef bool (*storage_drive_part_read)(
-    u64 relstart,
-    size_t n,
+    lba_t relstart,
+    sector_t sectors,
     void* buf,
     const struct S_GenericDrivePartition* part);
 
 typedef bool (*storage_drive_part_write)(
-    u64 relstart,
-    size_t n,
+    lba_t relstart,
+    sector_t sectors,
     const void* buf,
     const struct S_GenericDrivePartition* part);
 

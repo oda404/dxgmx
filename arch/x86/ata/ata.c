@@ -240,14 +240,7 @@ _INIT int ata_init()
     return 0;
 }
 
-const ATADevice* ata_get_devices(size_t* count)
-{
-    if (count)
-        *count = g_ata_devices_count;
-    return g_ata_devices;
-}
-
-bool ata_read(u64 start, size_t n, u8* buf, const ATADevice* dev)
+bool ata_read(lba_t start, sector_t n, void* buf, const ATADevice* dev)
 {
     if (dev && dev->read)
         return dev->read(start, n, buf, dev);
@@ -255,7 +248,7 @@ bool ata_read(u64 start, size_t n, u8* buf, const ATADevice* dev)
     return false;
 }
 
-bool ata_write(u64 start, size_t n, const u8* buf, const ATADevice* dev)
+bool ata_write(lba_t start, sector_t n, const void* buf, const ATADevice* dev)
 {
     if (dev && dev->write)
         return dev->write(start, n, buf, dev);
