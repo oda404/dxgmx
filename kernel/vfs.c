@@ -87,16 +87,26 @@ static bool vfs_generic_part_write(
         part->lba_start + relative_lba, sectors, buf, drive->dev);
 }
 
+static GenericDrive* vfs_new_drive()
+{
+    GenericDrive* tmp =
+        krealloc(g_drives, (g_drives_count + 1) * sizeof(GenericDrive));
+    if (!tmp)
+        return NULL;
+
+    ++g_drives_count;
+    g_drives = tmp;
+    return &g_drives[g_drives_count - 1];
+}
+
 bool vfs_add_drive(const GenericStorageDevice* dev)
 {
     if (!dev)
         return false;
 
-    g_drives = krealloc(g_drives, (++g_drives_count) * sizeof(GenericDrive));
-    if (!g_drives)
-        panic("Failed to allocate VFS device!");
-
-    GenericDrive* drive = &g_drives[g_drives_count - 1];
+    GenericDrive* drive = vfs_new_drive();
+    if (!drive)
+        return false;
     /* We memcpy since there are some const members that we can't assign. */
     drive->dev = dev;
     drive->uid = 0;
