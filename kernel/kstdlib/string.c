@@ -10,8 +10,8 @@ int memcmp(const void* str1, const void* str2, size_t n)
 {
     for (size_t i = 0; i < n; ++i)
     {
-        u8 byte1 = ((const u8*)str1)[i];
-        u8 byte2 = ((const u8*)str2)[i];
+        const u8 byte1 = ((const u8*)str1)[i];
+        const u8 byte2 = ((const u8*)str2)[i];
 
         if (byte1 != byte2)
             return byte1 - byte2;
@@ -55,27 +55,26 @@ char* strncat(char* dest, const char* src, size_t n)
 char* strcpy(char* dest, const char* src)
 {
     size_t i = 0;
-    size_t len = strlen(src);
-    for (; i < len; ++i)
+
+    for (; src[i] != '\0'; ++i)
         dest[i] = src[i];
 
     dest[i] = '\0';
+
     return dest;
 }
 
 char* strncpy(char* dest, const char* src, size_t n)
 {
     size_t i = 0;
-    size_t srclen = strnlen(src, n);
 
-    for (; i < srclen; ++i)
+    for (; i < n && src[i] != '\0'; ++i)
         dest[i] = src[i];
 
     /* pad remaining bytes with '\0'. */
-    for (size_t k = n - srclen; k >= 1; --k)
-        dest[i++] = '\0';
+    for (; i < n; ++i)
+        dest[i] = '\0';
 
-    dest[i] = '\0';
     return dest;
 }
 
