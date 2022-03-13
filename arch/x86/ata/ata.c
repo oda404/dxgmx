@@ -56,8 +56,7 @@ static bool ata_generate_drive_name(ATADevice* dev)
     if (g_ata_devices_count > 26)
         return false; // for now
 
-    dev->namelen = 3;
-    dev->name = kmalloc(dev->namelen + 1);
+    dev->name = kmalloc(4);
     if (!dev->name)
         return false;
 
@@ -229,7 +228,6 @@ _INIT int ata_init()
 
         GenericDrive drive = {
             .name = dev->name,
-            .namelen = dev->namelen,
             .internal_dev = dev,
             .read = dev->read,
             .write = dev->write,

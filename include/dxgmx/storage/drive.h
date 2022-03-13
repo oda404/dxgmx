@@ -33,8 +33,8 @@ typedef struct S_GenericDrivePartition
 
 typedef struct S_GenericDrive
 {
-    const char* const name;
-    const size_t namelen;
+    /* The name of the device eg: hda */
+    char* name;
 
     const size_t sectorsize;
 
