@@ -6,7 +6,7 @@
 #ifndef _DXGMX_X86_ATA_H
 #define _DXGMX_X86_ATA_H
 
-#include <dxgmx/storage/drive.h>
+#include <dxgmx/storage/device.h>
 #include <dxgmx/types.h>
 
 #define ATA_DISK_SECTOR_SIZE 512
@@ -43,17 +43,10 @@
 #define ATA_DEV_CTRL_REG(x) (x)
 #define ATA_DRIVE_ADDR_REG(x) (x + 1)
 
-typedef struct S_ATADevice
+typedef struct S_AtaStorageDevice
 {
-    char* name;
-    size_t namelen;
-
     u16 bus_io;
     u16 bus_ctrl;
-    u64 sector_count;
-    storage_drive_read read;
-    storage_drive_write write;
-
     union
     {
         u8 mode;
@@ -67,7 +60,7 @@ typedef struct S_ATADevice
             u8 dma : 3;
         };
     };
-} ATADevice;
+} AtaStorageDevice;
 
 int ata_init();
 /**
@@ -80,7 +73,8 @@ int ata_init();
  * @param dev The ATA device.
  * @return true if successful, false otherwise.
  */
-bool ata_read(lba_t start, sector_t n, void* buf, const ATADevice* dev);
+bool ata_read(
+    lba_t start, sector_t n, void* buf, const GenericStorageDevice* dev);
 /**
  * @brief Writes to an ATA device using the best available method (PIO or DMA).
  *
@@ -90,7 +84,8 @@ bool ata_read(lba_t start, sector_t n, void* buf, const ATADevice* dev);
  * @param dev The ATA device.
  * @return true if successful, false otherwise.
  */
-bool ata_write(lba_t start, sector_t n, const void* buf, const ATADevice* dev);
+bool ata_write(
+    lba_t start, sector_t n, const void* buf, const GenericStorageDevice* dev);
 /**
  * @brief Reads sectors from an ATA device using PIO.
  *
@@ -101,7 +96,7 @@ bool ata_write(lba_t start, sector_t n, const void* buf, const ATADevice* dev);
  * @return true if successful, false otherwise.
  */
 bool atapio_read(
-    lba_t lba, sector_t sectors, void* buf, const ATADevice* dev);
+    lba_t lba, sector_t sectors, void* buf, const GenericStorageDevice* dev);
 /**
  * @brief Writes sectors to an ATA device using PIO.
  *
@@ -112,6 +107,9 @@ bool atapio_read(
  * @return true if successful, false otherwise.
  */
 bool atapio_write(
-    lba_t lba, sector_t sectors, const void* buf, const ATADevice* dev);
+    lba_t lba,
+    sector_t sectors,
+    const void* buf,
+    const GenericStorageDevice* dev);
 
 #endif // !_DXGMX_X86_ATA_H

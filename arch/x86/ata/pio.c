@@ -47,37 +47,41 @@ static u8 atapio_internal_sectors(sector_t sectors)
  * @param dev The device.
  * @return false: If the device is not a PIO device.
  */
-static bool atapio_send_read_cmd(lba_t lba, u8 sectors, const ATADevice* dev)
+static bool
+atapio_send_read_cmd(lba_t lba, u8 sectors, const GenericStorageDevice* dev)
 {
-    if (dev->lba48)
-    {
-        port_outb(0x40 | (!dev->master << 4), ATA_DRIVE_SEL_REG(dev->bus_io));
-        /* Send the higher halfs of the sector count and lba address. */
-        port_outb(sectors >> 8, ATA_SECTOR_REG(dev->bus_io));
-        port_outb(lba >> 24, ATA_LBA_LO_REG(dev->bus_io));
-        port_outb(lba >> 32, ATA_LBA_MID_REG(dev->bus_io));
-        port_outb(lba >> 40, ATA_LBA_HI_REG(dev->bus_io));
-        /* Send the lower halfs of the sector count and lba address. */
-        port_outb(sectors, ATA_SECTOR_REG(dev->bus_io));
-        port_outb(lba, ATA_LBA_LO_REG(dev->bus_io));
-        port_outb(lba >> 8, ATA_LBA_MID_REG(dev->bus_io));
-        port_outb(lba >> 16, ATA_LBA_HI_REG(dev->bus_io));
+    const AtaStorageDevice* atadev = dev->extra;
 
-        port_outb(ATAPIO_READ_EXT, ATA_COMMAND_REG(dev->bus_io));
-    }
-    else if (dev->lba28)
+    if (atadev->lba48)
     {
         port_outb(
-            0xE0 | (!dev->master << 4) | ((lba >> 24) & 0x0F),
-            ATA_DRIVE_SEL_REG(dev->bus_io));
+            0x40 | (!atadev->master << 4), ATA_DRIVE_SEL_REG(atadev->bus_io));
+        /* Send the higher halfs of the sector count and lba address. */
+        port_outb(sectors >> 8, ATA_SECTOR_REG(atadev->bus_io));
+        port_outb(lba >> 24, ATA_LBA_LO_REG(atadev->bus_io));
+        port_outb(lba >> 32, ATA_LBA_MID_REG(atadev->bus_io));
+        port_outb(lba >> 40, ATA_LBA_HI_REG(atadev->bus_io));
+        /* Send the lower halfs of the sector count and lba address. */
+        port_outb(sectors, ATA_SECTOR_REG(atadev->bus_io));
+        port_outb(lba, ATA_LBA_LO_REG(atadev->bus_io));
+        port_outb(lba >> 8, ATA_LBA_MID_REG(atadev->bus_io));
+        port_outb(lba >> 16, ATA_LBA_HI_REG(atadev->bus_io));
 
-        port_outb(sectors, ATA_SECTOR_REG(dev->bus_io));
+        port_outb(ATAPIO_READ_EXT, ATA_COMMAND_REG(atadev->bus_io));
+    }
+    else if (atadev->lba28)
+    {
+        port_outb(
+            0xE0 | (!atadev->master << 4) | ((lba >> 24) & 0x0F),
+            ATA_DRIVE_SEL_REG(atadev->bus_io));
 
-        port_outb(lba, ATA_LBA_LO_REG(dev->bus_io));
-        port_outb(lba >> 8, ATA_LBA_MID_REG(dev->bus_io));
-        port_outb(lba >> 16, ATA_LBA_HI_REG(dev->bus_io));
+        port_outb(sectors, ATA_SECTOR_REG(atadev->bus_io));
 
-        port_outb(ATAPIO_READ, ATA_COMMAND_REG(dev->bus_io));
+        port_outb(lba, ATA_LBA_LO_REG(atadev->bus_io));
+        port_outb(lba >> 8, ATA_LBA_MID_REG(atadev->bus_io));
+        port_outb(lba >> 16, ATA_LBA_HI_REG(atadev->bus_io));
+
+        port_outb(ATAPIO_READ, ATA_COMMAND_REG(atadev->bus_io));
     }
     else
     {
@@ -97,37 +101,41 @@ static bool atapio_send_read_cmd(lba_t lba, u8 sectors, const ATADevice* dev)
  * @param dev The device.
  * @return false: If the device is not a PIO device.
  */
-static bool atapio_send_write_cmd(lba_t lba, u8 sectors, const ATADevice* dev)
+static bool
+atapio_send_write_cmd(lba_t lba, u8 sectors, const GenericStorageDevice* dev)
 {
-    if (dev->lba48)
-    {
-        port_outb(0x40 | (!dev->master << 4), ATA_DRIVE_SEL_REG(dev->bus_io));
-        /* Send the higher halfs of the sector count and lba address. */
-        port_outb(sectors >> 8, ATA_SECTOR_REG(dev->bus_io));
-        port_outb(lba >> 24, ATA_LBA_LO_REG(dev->bus_io));
-        port_outb(lba >> 32, ATA_LBA_MID_REG(dev->bus_io));
-        port_outb(lba >> 40, ATA_LBA_HI_REG(dev->bus_io));
-        /* Send the lower halfs of the sector count and lba address. */
-        port_outb(sectors, ATA_SECTOR_REG(dev->bus_io));
-        port_outb(lba, ATA_LBA_LO_REG(dev->bus_io));
-        port_outb(lba >> 8, ATA_LBA_MID_REG(dev->bus_io));
-        port_outb(lba >> 16, ATA_LBA_HI_REG(dev->bus_io));
+    const AtaStorageDevice* atadev = dev->extra;
 
-        port_outb(ATAPIO_WRITE_EXT, ATA_COMMAND_REG(dev->bus_io));
-    }
-    else if (dev->lba28)
+    if (atadev->lba48)
     {
         port_outb(
-            0xE0 | (!dev->master << 4) | ((lba >> 24) & 0x0F),
-            ATA_DRIVE_SEL_REG(dev->bus_io));
+            0x40 | (!atadev->master << 4), ATA_DRIVE_SEL_REG(atadev->bus_io));
+        /* Send the higher halfs of the sector count and lba address. */
+        port_outb(sectors >> 8, ATA_SECTOR_REG(atadev->bus_io));
+        port_outb(lba >> 24, ATA_LBA_LO_REG(atadev->bus_io));
+        port_outb(lba >> 32, ATA_LBA_MID_REG(atadev->bus_io));
+        port_outb(lba >> 40, ATA_LBA_HI_REG(atadev->bus_io));
+        /* Send the lower halfs of the sector count and lba address. */
+        port_outb(sectors, ATA_SECTOR_REG(atadev->bus_io));
+        port_outb(lba, ATA_LBA_LO_REG(atadev->bus_io));
+        port_outb(lba >> 8, ATA_LBA_MID_REG(atadev->bus_io));
+        port_outb(lba >> 16, ATA_LBA_HI_REG(atadev->bus_io));
 
-        port_outb(sectors, ATA_SECTOR_REG(dev->bus_io));
+        port_outb(ATAPIO_WRITE_EXT, ATA_COMMAND_REG(atadev->bus_io));
+    }
+    else if (atadev->lba28)
+    {
+        port_outb(
+            0xE0 | (!atadev->master << 4) | ((lba >> 24) & 0x0F),
+            ATA_DRIVE_SEL_REG(atadev->bus_io));
 
-        port_outb(lba, ATA_LBA_LO_REG(dev->bus_io));
-        port_outb(lba >> 8, ATA_LBA_MID_REG(dev->bus_io));
-        port_outb(lba >> 16, ATA_LBA_HI_REG(dev->bus_io));
+        port_outb(sectors, ATA_SECTOR_REG(atadev->bus_io));
 
-        port_outb(ATAPIO_WRITE, ATA_COMMAND_REG(dev->bus_io));
+        port_outb(lba, ATA_LBA_LO_REG(atadev->bus_io));
+        port_outb(lba >> 8, ATA_LBA_MID_REG(atadev->bus_io));
+        port_outb(lba >> 16, ATA_LBA_HI_REG(atadev->bus_io));
+
+        port_outb(ATAPIO_WRITE, ATA_COMMAND_REG(atadev->bus_io));
     }
     else
     {
@@ -139,13 +147,15 @@ static bool atapio_send_write_cmd(lba_t lba, u8 sectors, const ATADevice* dev)
 }
 
 static bool
-atapio_flush_written_sectors(time_t timeout_ms, const ATADevice* dev)
+atapio_flush_written_sectors(time_t timeout_ms, const GenericStorageDevice* dev)
 {
-    port_outb(ATAPIO_FLUSH_SECTORS, ATA_COMMAND_REG(dev->bus_io));
+    const AtaStorageDevice* atadev = dev->extra;
+
+    port_outb(ATAPIO_FLUSH_SECTORS, ATA_COMMAND_REG(atadev->bus_io));
     /* Wait for the sectors to actually flush. */
     Timer t;
     timer_start(&t);
-    while (port_inb(ATA_STATUS_REG(dev->bus_io)) & ATAPIO_STATUS_BSY)
+    while (port_inb(ATA_STATUS_REG(atadev->bus_io)) & ATAPIO_STATUS_BSY)
     {
         if (timer_ellapsed_ms(&t) > timeout_ms)
         {
@@ -157,8 +167,11 @@ atapio_flush_written_sectors(time_t timeout_ms, const ATADevice* dev)
     return true;
 }
 
-static bool atapio_wait_for_ready(time_t timeout_ms, const ATADevice* dev)
+static bool
+atapio_wait_for_ready(time_t timeout_ms, const GenericStorageDevice* dev)
 {
+    const AtaStorageDevice* atadev = dev->extra;
+
     Timer t;
     timer_start(&t);
     while (true)
@@ -169,7 +182,7 @@ static bool atapio_wait_for_ready(time_t timeout_ms, const ATADevice* dev)
             return false;
         }
 
-        u8 status = port_inb(ATA_STATUS_REG(dev->bus_io));
+        u8 status = port_inb(ATA_STATUS_REG(atadev->bus_io));
         if (!(status & ATAPIO_STATUS_BSY) && (status & ATAPIO_STATUS_DRQ))
             break;
 
@@ -183,16 +196,18 @@ static bool atapio_wait_for_ready(time_t timeout_ms, const ATADevice* dev)
     return true;
 }
 
-static bool atapio_is_valid_range(lba_t lba, sector_t sectors, const ATADevice* dev)
+static bool atapio_is_valid_range(
+    lba_t lba, sector_t sectors, const GenericStorageDevice* dev)
 {
     /* Check for possible underflow. */
-    if (lba > dev->sector_count)
+    if (lba > dev->sectors_count)
         return false;
 
-    return (sectors <= dev->sector_count - lba);
+    return (sectors <= dev->sectors_count - lba);
 }
 
-bool atapio_read(lba_t lba, sector_t sectors, void* buf, const ATADevice* dev)
+bool atapio_read(
+    lba_t lba, sector_t sectors, void* buf, const GenericStorageDevice* dev)
 {
     if (!(dev && buf && sectors))
         return false;
@@ -202,6 +217,8 @@ bool atapio_read(lba_t lba, sector_t sectors, void* buf, const ATADevice* dev)
         KLOGF(ERR, "Out of range read!");
         return false;
     }
+
+    const AtaStorageDevice* atadev = dev->extra;
 
     while (sectors)
     {
@@ -230,7 +247,7 @@ bool atapio_read(lba_t lba, sector_t sectors, void* buf, const ATADevice* dev)
 
             for (size_t word = 0; word < 256; ++word)
             {
-                *((u16*)buf) = port_inw(ATA_DATA_REG(dev->bus_io));
+                *((u16*)buf) = port_inw(ATA_DATA_REG(atadev->bus_io));
                 buf += 2;
             }
         }
@@ -243,7 +260,10 @@ bool atapio_read(lba_t lba, sector_t sectors, void* buf, const ATADevice* dev)
 }
 
 bool atapio_write(
-    lba_t lba, sector_t sectors, const void* buf, const ATADevice* dev)
+    lba_t lba,
+    sector_t sectors,
+    const void* buf,
+    const GenericStorageDevice* dev)
 {
     if (!(dev && buf && sectors))
         return false;
@@ -253,6 +273,8 @@ bool atapio_write(
         KLOGF(ERR, "Out of range read!");
         return false;
     }
+
+    const AtaStorageDevice* atadev = dev->extra;
 
     while (sectors)
     {
@@ -279,7 +301,7 @@ bool atapio_write(
 
             for (u16 k = 0; k < 256; ++k)
             {
-                port_outw(*((u16*)buf), ATA_DATA_REG(dev->bus_io));
+                port_outw(*((u16*)buf), ATA_DATA_REG(atadev->bus_io));
                 buf += 2;
 
                 /* Sleep just for good measure. ? */

@@ -16,22 +16,25 @@
 
 #define KLOGF(lvl, fmt, ...) klogln(lvl, "ata: " fmt, ##__VA_ARGS__)
 
+static GenericStorageDevice* g_ata_devices = NULL;
 static size_t g_ata_devices_count = 0;
-static ATADevice* g_ata_devices = NULL;
+
 #define ATA_DISK_SECTOR_SIZE 512
 #define ATA_DISK_MAX_WRITE_SECTORS 256
 #define ATA_DISK_MAX_READ_SECTORS 256
 
-static void ata_dump_device_info(const ATADevice* dev)
+static void ata_dump_device_info(const GenericStorageDevice* dev)
 {
     char unit[4] = {0};
     const char* mode;
-    size_t size =
-        bytes_to_human_readable(dev->sector_count * ATA_DISK_SECTOR_SIZE, unit);
+    size_t size = bytes_to_human_readable(
+        dev->sectors_count * ATA_DISK_SECTOR_SIZE, unit);
 
-    if (dev->lba28)
+    AtaStorageDevice* atadev = dev->extra;
+
+    if (atadev->lba28)
         mode = "LBA28";
-    else if (dev->lba48)
+    else if (atadev->lba48)
         mode = "LBA48";
     else
         mode = "CHS";
@@ -40,15 +43,15 @@ static void ata_dump_device_info(const ATADevice* dev)
         DEBUG,
         "[%s] %s (%u%s) on bus %X:%X mode %s.",
         dev->name,
-        dev->master ? "Master" : "Slave",
+        atadev->master ? "Master" : "Slave",
         size,
         unit,
-        dev->bus_io,
-        dev->bus_ctrl,
+        atadev->bus_io,
+        atadev->bus_ctrl,
         mode);
 }
 
-static bool ata_generate_drive_name(ATADevice* dev)
+static bool ata_generate_drive_name(GenericStorageDevice* dev)
 {
     if (!dev)
         return false;
@@ -64,6 +67,41 @@ static bool ata_generate_drive_name(ATADevice* dev)
     dev->name[2] += g_ata_devices_count - 1;
 
     return true;
+}
+
+static void ata_can_512_bytes(size_t bus_io)
+{
+    for (size_t i = 0; i < 256; ++i)
+        port_inw(ATA_DATA_REG(bus_io));
+}
+
+static GenericStorageDevice* ata_new_device()
+{
+    GenericStorageDevice dev;
+    memset(&dev, 0, sizeof(dev));
+    /* Allocate the AtaStorageDevice struct */
+    if (!(dev.extra = kmalloc(sizeof(AtaStorageDevice))))
+        return NULL;
+
+    /* Try to enlarge the devices table */
+    GenericStorageDevice* tmp = krealloc(
+        g_ata_devices,
+        (g_ata_devices_count + 1) * sizeof(GenericStorageDevice));
+
+    if (!tmp)
+    {
+        kfree(dev.extra);
+        return NULL;
+    }
+
+    /* If we got here everything is fine. */
+    memset(dev.extra, 0, sizeof(AtaStorageDevice));
+    ++g_ata_devices_count;
+    g_ata_devices = tmp;
+
+    tmp = &g_ata_devices[g_ata_devices_count - 1];
+    *tmp = dev;
+    return tmp;
 }
 
 /* Identifies a previously selected device. */
@@ -102,14 +140,20 @@ static bool ata_identify_drive(size_t bus_io, size_t bus_ctrl, bool master)
             break;
     }
 
-    g_ata_devices =
-        krealloc(g_ata_devices, (++g_ata_devices_count) * sizeof(ATADevice));
-    ATADevice* dev = &g_ata_devices[g_ata_devices_count - 1];
-    memset(dev, 0, sizeof(ATADevice));
+    GenericStorageDevice* dev = ata_new_device();
+    if (!dev)
+    {
+        ata_can_512_bytes(bus_io);
+        return false;
+    }
+    AtaStorageDevice* atadev = dev->extra;
 
-    dev->master = master;
-    dev->bus_io = bus_io;
-    dev->bus_ctrl = bus_ctrl;
+    dev->type = "pata";
+    dev->physical_sectorsize = ATA_DISK_SECTOR_SIZE;
+    dev->logical_sectorsize = ATA_DISK_SECTOR_SIZE;
+    atadev->master = master;
+    atadev->bus_io = bus_io;
+    atadev->bus_ctrl = bus_ctrl;
 
     /* Read a whole sector containing information about the drive. */
     for (u16 i = 0; i < 256; ++i)
@@ -119,31 +163,31 @@ static bool ata_identify_drive(size_t bus_io, size_t bus_ctrl, bool master)
         switch (i)
         {
         case 60:
-            dev->sector_count = val;
-            dev->sector_count |= (port_inw(ATA_DATA_REG(bus_io)) << 16);
+            dev->sectors_count = val;
+            dev->sectors_count |= (port_inw(ATA_DATA_REG(bus_io)) << 16);
             ++i;
             break;
 
         case 83:
-            dev->lba48 |= (bool)(val & (1 << 10));
+            atadev->lba48 |= (bool)(val & (1 << 10));
             break;
 
         case 88:
             break;
 
         case 93:
-            dev->bigcable = (bool)(val & (1 << 11));
+            atadev->bigcable = (bool)(val & (1 << 11));
             break;
 
         case 100:
-            if (dev->lba48)
+            if (atadev->lba48)
             {
-                dev->sector_count = 0;
+                dev->sectors_count = 0;
                 const u32 tmp = val | (port_inw(ATA_DATA_REG(bus_io)) << 16);
-                dev->sector_count |= (port_inw(ATA_DATA_REG(bus_io)));
-                dev->sector_count |= (port_inw(ATA_DATA_REG(bus_io)) << 16);
-                dev->sector_count <<= 32;
-                dev->sector_count |= tmp;
+                dev->sectors_count |= (port_inw(ATA_DATA_REG(bus_io)));
+                dev->sectors_count |= (port_inw(ATA_DATA_REG(bus_io)) << 16);
+                dev->sectors_count <<= 32;
+                dev->sectors_count |= tmp;
 
                 i += 3;
             }
@@ -160,16 +204,16 @@ static bool ata_identify_drive(size_t bus_io, size_t bus_ctrl, bool master)
         ATA_DEV_CTRL_REG(bus_ctrl));
 
     /* Do LBA48 drives support LBA28 ? */
-    dev->lba28 = (!dev->lba48 && !dev->chs);
+    atadev->lba28 = (!atadev->lba48 && !atadev->chs);
 
-    if (dev->dma)
+    if (atadev->dma)
     {
         TODO();
     }
     else
     {
-        dev->read = (storage_drive_read)atapio_read;
-        dev->write = (storage_drive_write)atapio_write;
+        dev->read = atapio_read;
+        dev->write = atapio_write;
     }
 
     if (!ata_generate_drive_name(dev))
@@ -223,24 +267,13 @@ _INIT int ata_init()
     /* Hardcoded at 1 because the bus reports 2 identical drives
     (master & slave) even though only one being emulated ??? */
     for (size_t i = 0; i < 1; ++i)
-    {
-        ATADevice* dev = &g_ata_devices[i];
-
-        GenericDrive drive = {
-            .name = dev->name,
-            .internal_dev = dev,
-            .read = dev->read,
-            .write = dev->write,
-            .physical_sectorsize = 512,
-        };
-
-        vfs_add_drive(&drive);
-    }
+        vfs_add_drive(&g_ata_devices[i]);
 
     return 0;
 }
 
-bool ata_read(lba_t start, sector_t n, void* buf, const ATADevice* dev)
+bool ata_read(
+    lba_t start, sector_t n, void* buf, const GenericStorageDevice* dev)
 {
     if (dev && dev->read)
         return dev->read(start, n, buf, dev);
@@ -248,7 +281,8 @@ bool ata_read(lba_t start, sector_t n, void* buf, const ATADevice* dev)
     return false;
 }
 
-bool ata_write(lba_t start, sector_t n, const void* buf, const ATADevice* dev)
+bool ata_write(
+    lba_t start, sector_t n, const void* buf, const GenericStorageDevice* dev)
 {
     if (dev && dev->write)
         return dev->write(start, n, buf, dev);

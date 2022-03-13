@@ -13,7 +13,7 @@ bool mbr_drive_has_mbr(const GenericDrive* drive)
         return false;
 
     MBR* mbr = kmalloc(512);
-    if (!mbr || !drive->read(0, 1, (void*)mbr, drive->internal_dev))
+    if (!mbr || !drive->dev->read(0, 1, (void*)mbr, drive->dev))
     {
         kfree(mbr);
         return false;
@@ -31,7 +31,7 @@ bool mbr_parse_drive_info(GenericDrive* drive)
         return false;
 
     MBR* mbr = kmalloc(512);
-    if (!mbr || !drive->read(0, 1, (void*)mbr, drive->internal_dev))
+    if (!mbr || !drive->dev->read(0, 1, (void*)mbr, drive->dev))
     {
         kfree(mbr);
         return false;

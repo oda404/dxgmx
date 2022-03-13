@@ -20,25 +20,26 @@ static void vfs_dump_drive_info(const GenericDrive* drive)
 {
     KLOGF(
         INFO,
-        "/dev/%s: (UID 0x%X) with %u sector size",
-        drive->name,
+        "%s: (UID 0x%X) sector size: %u, type: %s",
+        drive->dev->name,
         (u32)drive->uid,
-        drive->physical_sectorsize);
+        drive->dev->physical_sectorsize,
+        drive->dev->type);
 
     for (size_t i = 0; i < drive->partitions_count; ++i)
     {
         const GenericDrivePartition* part = &drive->partitions[i];
         const u32 start =
-            part->lba_start * part->parent_drive->physical_sectorsize;
+            part->lba_start * part->parent_drive->dev->physical_sectorsize;
         const u32 end =
-            part->sectors_count * part->parent_drive->physical_sectorsize +
+            part->sectors_count * part->parent_drive->dev->physical_sectorsize +
             start;
 
         KLOGF(
             INFO,
-            "       %s%s%s [0x%08X-0x%08X] on %s",
+            "   %s%s%s [0x%08X-0x%08X] on %s",
             i == drive->partitions_count - 1 ? "\\_ " : "|- ",
-            drive->name,
+            drive->dev->name,
             part->suffix,
             start,
             end,
@@ -65,30 +66,30 @@ static bool vfs_generate_partition_suffix(GenericDrivePartition* part)
 }
 
 static bool vfs_generic_part_read(
-    lba_t relative_lba, sector_t sectors, void* buf, const GenericDrivePartition* part)
+    lba_t relative_lba,
+    sector_t sectors,
+    void* buf,
+    const GenericDrivePartition* part)
 {
     const GenericDrive* drive = part->parent_drive;
-    return drive->read(
-        part->lba_start + relative_lba,
-        sectors,
-        buf,
-        drive->internal_dev);
+    return drive->dev->read(
+        part->lba_start + relative_lba, sectors, buf, drive->dev);
 }
 
 static bool vfs_generic_part_write(
-    lba_t relative_lba, sector_t sectors, const void* buf, const GenericDrivePartition* part)
+    lba_t relative_lba,
+    sector_t sectors,
+    const void* buf,
+    const GenericDrivePartition* part)
 {
     const GenericDrive* drive = part->parent_drive;
-    return drive->write(
-        part->lba_start + relative_lba,
-        sectors,
-        buf,
-        drive->internal_dev);
+    return drive->dev->write(
+        part->lba_start + relative_lba, sectors, buf, drive->dev);
 }
 
-bool vfs_add_drive(const GenericDrive* d)
+bool vfs_add_drive(const GenericStorageDevice* dev)
 {
-    if (!d)
+    if (!dev)
         return false;
 
     g_drives = krealloc(g_drives, (++g_drives_count) * sizeof(GenericDrive));
@@ -97,9 +98,7 @@ bool vfs_add_drive(const GenericDrive* d)
 
     GenericDrive* drive = &g_drives[g_drives_count - 1];
     /* We memcpy since there are some const members that we can't assign. */
-    memcpy(drive, d, sizeof(GenericDrive));
-
-    drive->logical_sectorsize = drive->physical_sectorsize;
+    drive->dev = dev;
     drive->uid = 0;
     drive->partitions_count = 0;
     drive->partitions = NULL;

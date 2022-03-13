@@ -6,19 +6,8 @@
 #ifndef _DXGMX_STORAGE_DRIVE_H
 #define _DXGMX_STORAGE_DRIVE_H
 
+#include <dxgmx/storage/device.h>
 #include <dxgmx/types.h>
-
-typedef u64 lba_t;
-typedef u64 sector_t;
-
-struct S_GenericDrive;
-
-/* Helper function to access a drive's data in an absolute manner. */
-typedef bool (*storage_drive_read)(
-    lba_t start, sector_t sectors, void* buf, const void* dev);
-
-typedef bool (*storage_drive_write)(
-    lba_t start, sector_t sectors, const void* buf, const void* dev);
 
 struct S_GenericDrivePartition;
 
@@ -45,9 +34,9 @@ typedef struct S_GenericDrivePartition
     /* Arbitrary number to index the partition. */
     size_t number;
     /* The LBA start of the partition */
-    u64 lba_start;
+    lba_t lba_start;
     /* The number of sectors on the partition. */
-    u64 sectors_count;
+    sector_t sectors_count;
 
     storage_drive_part_read read;
     storage_drive_part_write write;
@@ -57,21 +46,14 @@ typedef struct S_GenericDrivePartition
 
 typedef struct S_GenericDrive
 {
-    /* The name of the device eg: hda */
-    char* name;
-
-    size_t physical_sectorsize;
-    size_t logical_sectorsize;
-
     /* Unique IDentifier */
     u64 uid;
 
     GenericDrivePartition* partitions;
     size_t partitions_count;
 
-    void* const internal_dev;
-    const storage_drive_read read;
-    const storage_drive_write write;
+    /* The underlying device. */
+    const GenericStorageDevice* dev;
 } GenericDrive;
 
 #endif // !_DXGMX_STORAGE_DRIVE_H
