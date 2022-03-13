@@ -20,6 +20,12 @@ typedef int32_t i32;
 typedef int64_t i64;
 
 #if defined(_X86_)
+typedef i32 ssize_t;
+#elif defined(_X86_64_)
+typedef i64 ssize_t;
+#endif
+
+#if defined(_X86_)
 typedef u32 ptr;
 #define PTR_DIG 8
 #elif defined(_X86_64_)
