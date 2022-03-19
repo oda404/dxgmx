@@ -9,8 +9,6 @@
 #include <dxgmx/storage/device.h>
 #include <dxgmx/types.h>
 
-#define ATA_DISK_SECTOR_SIZE 512
-
 #define ATA_DEVICE_CTRL_PORT 0x3F6
 #define ATA_ALTERNATE_STATUS_PORT 0x376
 
@@ -20,8 +18,6 @@
 #define ATAPIO_STATUS_DF (1 << 5)
 #define ATAPIO_STATUS_RDY (1 << 6)
 #define ATAPIO_STATUS_BSY (1 << 7)
-
-#define ATA_IDENTIFY 0xEC
 
 #define ATA_HEAD_PORT(x) (x + 6)
 #define ATA_STATUS_PORT(x) (x + 7)
@@ -43,53 +39,55 @@
 #define ATA_DEV_CTRL_REG(x) (x)
 #define ATA_DRIVE_ADDR_REG(x) (x + 1)
 
+#define ATA_TYPE_UNKNOWN 0
+#define ATA_TYPE_CHS 1
+#define ATA_TYPE_LBA28 2
+#define ATA_TYPE_LBA48 3
+
+typedef u16 atabus_t;
+
 typedef struct S_AtaStorageDevice
 {
-    u16 bus_io;
-    u16 bus_ctrl;
-    union
-    {
-        u8 mode;
-        struct
-        {
-            u8 master : 1;
-            u8 chs : 1;
-            u8 lba28 : 1;
-            u8 lba48 : 1;
-            u8 bigcable : 1;
-            u8 dma : 3;
-        };
-    };
+    atabus_t bus_io;
+    atabus_t bus_ctrl;
+    u8 master : 1;
+    u8 type : 2;
+    u8 bigcable : 1;
+    u8 dma : 3;
 } AtaStorageDevice;
 
 int ata_init();
+
 /**
  * @brief Reads from an ATA device, using the best available method (PIO or
  * DMA).
  *
- * @param start Byte address from which to start reading.
- * @param n How many bytes to read.
+ * @param lba LBA from which to start reading.
+ * @param sectors How many sectors to read.
  * @param buf Destination buffer.
  * @param dev The ATA device.
  * @return true if successful, false otherwise.
  */
 bool ata_read(
-    lba_t start, sector_t n, void* buf, const GenericStorageDevice* dev);
+    lba_t lba, sector_t sectors, void* buf, const GenericStorageDevice* dev);
 /**
  * @brief Writes to an ATA device using the best available method (PIO or DMA).
  *
- * @param start Byte address from which to start writing.
- * @param n How many bytes to write.
+ * @param lba LBA which to start writing.
+ * @param sectors How many sectors to write.
  * @param buf Source data buffer.
  * @param dev The ATA device.
  * @return true if successful, false otherwise.
  */
 bool ata_write(
-    lba_t start, sector_t n, const void* buf, const GenericStorageDevice* dev);
+    lba_t lba,
+    sector_t sectors,
+    const void* buf,
+    const GenericStorageDevice* dev);
 /**
  * @brief Reads sectors from an ATA device using PIO.
  *
- * @param lba LBA address from which to start reading.
+ * @param lba LBA from which to start reading.
  * @param sectors How many sectors to read.
  * @param buf Destination buffer.
  * @param dev The ATA device.
@@ -100,7 +98,7 @@ bool atapio_read(
 /**
  * @brief Writes sectors to an ATA device using PIO.
  *
- * @param lba LBA address from which to start writing.
+ * @param lba LBA from which to start writing.
  * @param sectors How many sectors to write.
  * @param buf Source buffer.
  * @param dev The ATA device.
