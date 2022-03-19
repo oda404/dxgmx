@@ -203,8 +203,8 @@ run:
 
 PHONY += clean 
 clean:
-	@rm -f $(OBJS)
-	@rm -f $(DEPS)
+	@rm -f $(COBJS) $(CXXOBJS) $(ASMOBJS)
+	@rm -f $(CDEPS) $(CXXDEPS) $(ASMDEPS)
 
 PHONY += mrclean 
 mrclean:
