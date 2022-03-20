@@ -152,7 +152,7 @@ $(KERNEL_BIN_PATH): $(DXGMX_DEPS) $(DXGMX_COMMON_DEPS)
 	@$(PRETTY_PRINT) LD $(notdir $(KERNEL_BIN_NAME))
 	@$(LD) -T $(LDSCRIPT) $(COBJS) $(CXXOBJS) $(ASMOBJS) $(LDFLAGS) -o $(KERNEL_BIN_PATH)
 
-	@[ -f build/image.img ] || $(SCRIPTSDIR)/create-disk.sh -p build/image.img -s 128K
+	@[ -f build/image.img ] || $(SCRIPTSDIR)/create-disk.sh -p build/image.img
 	@NM=$(NM) OBJCOPY=$(OBJCOPY) $(SCRIPTSDIR)/bake_symbols.sh $(KERNEL_BIN_PATH) 
 
 	@cp $(KERNEL_BIN_PATH) $(SYSROOTDIR)/boot/
