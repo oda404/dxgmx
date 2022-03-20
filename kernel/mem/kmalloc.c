@@ -15,13 +15,14 @@
 
 #if defined(_X86_)
 #define KMALLOC_SLAB_SIZE 32
+#define KMALLOC_SLABS_PER_BLOCK 32
 #elif defined(_X86_64_)
 #define KMALLOC_SLAB_SIZE 64
+#define KMALLOC_SLABS_PER_BLOCK 64
 #endif // defined(_X86_)
 
 #define KLOGF(lvl, fmt, ...) klogln(lvl, "kmalloc: " fmt, ##__VA_ARGS__)
 
-#define KMALLOC_SLABS_PER_BLOCK 64
 #define KMALLOC_BLOCKS_COUNT                                                   \
     (KERNEL_HEAP_SIZE / KMALLOC_SLABS_PER_BLOCK / KMALLOC_SLAB_SIZE)
 
@@ -156,8 +157,9 @@ void* kmalloc_aligned(size_t size, size_t alignment)
             slabs_mask = 0;
             for (size_t k = 0; k < slabs; ++k)
                 bw_set(&slabs_mask, k);
-
-            for (size_t k = 0; k < KMALLOC_SLABS_PER_BLOCK - slabs; ++k)
+            
+            size_t k = 0;
+            for (; k < KMALLOC_SLABS_PER_BLOCK - slabs; ++k)
             {
                 if (!bw_mask(block, slabs_mask))
                     goto done;
