@@ -5,8 +5,25 @@
 
 #include <dxgmx/cpu.h>
 #include <dxgmx/klog.h>
+#include <dxgmx/ksections.h>
 #include <dxgmx/ksyms.h>
 #include <dxgmx/stack_trace.h>
+
+static bool stack_frame_is_valid(const StackFrame* frame)
+{
+    bool instptr_ok =
+        ((frame->instptr >= ksections_get_text_start() &&
+          frame->instptr <= ksections_get_text_end()) ||
+         (frame->instptr >= ksections_get_init_start() &&
+          frame->instptr <= ksections_get_init_end()));
+
+    bool baseptr_ok =
+        ((frame->baseptr <= ksections_get_kstack_top() &&
+          frame->baseptr >= ksections_get_kstack_bot()) ||
+         frame->baseptr == 0);
+
+    return instptr_ok && baseptr_ok;
+}
 
 void stack_trace_dump()
 {
@@ -20,8 +37,7 @@ void stack_trace_dump()
     klogln(INFO, "Call stack backtrace:");
     if (!frame)
     {
-        klogln(
-            ERR, "Current ebp is 0, something has gone horribly wrong lmao.");
+        klogln(ERR, "-- ebp is NULL, aborting stack trace dump!");
         return;
     }
 
@@ -31,6 +47,12 @@ void stack_trace_dump()
     size_t frames = 0;
     while (frame && frames < FRAMES_UNWIND_MAX)
     {
+        if (!stack_frame_is_valid(frame))
+        {
+            klogln(ERR, "-- Invalid stack frame, aborting stack trace dump!");
+            return;
+        }
+
         char buf[FUNC_BUF_MAX + 1] = "???";
 
         ptr offset = 0;
