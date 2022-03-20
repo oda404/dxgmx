@@ -5,7 +5,7 @@ KERNEL_NAME       := dxgmx
 
 VER_MAJ           := 0
 VER_MIN           := 9
-PATCH_N           := 8
+PATCH_N           := 9
 CODENAME          := angel_attack
 
 # Try to include the buildconfig
@@ -49,6 +49,7 @@ endif
 ARCH_SRCDIR       := arch/$(SRCARCH)/
 INIT_SRCDIR       := init/
 KERNEL_SRCDIR     := kernel/
+FS_SRCDIR         := fs/
 INCLUDE_SRCDIR    := include/
 
 ### BASE FLAGS ###
@@ -104,6 +105,7 @@ export PRETTY_PRINT
 ARCH_SRC          :=
 INIT_SRC          :=
 KERNEL_SRC        :=
+FS_SRC            :=
 LDSCRIPT          :=
 HEADERS           :=
 
@@ -112,16 +114,19 @@ HEADERS           :=
 include $(ARCH_SRCDIR)/Makefile
 include $(INIT_SRCDIR)/Makefile
 include $(KERNEL_SRCDIR)/Makefile
+include $(FS_SRCDIR)/Makefile
 include $(INCLUDE_SRCDIR)/Makefile
 
+ALL_SRC := $(ARCH_SRC) $(INIT_SRC) $(KERNEL_SRC) $(FS_SRC)
+
 # Filter out and add TARGET_NAME to each object.
-COBJS             := $(filter %.c, $(ARCH_SRC) $(INIT_SRC) $(KERNEL_SRC))
+COBJS             := $(filter %.c, $(ALL_SRC))
 COBJS             := $(COBJS:%.c=%_$(BUILDTARGET_NAME).c.o)
 
-CXXOBJS           := $(filter %.cpp, $(ARCH_SRC) $(INIT_SRC) $(KERNEL_SRC))
+CXXOBJS           := $(filter %.cpp, $(ALL_SRC))
 CXXOBJS           := $(CXXOBJS:%.cpp=%_$(BUILDTARGET_NAME).cpp.o)
 
-ASMOBJS           := $(filter %.S, $(ARCH_SRC) $(INIT_SRC) $(KERNEL_SRC))
+ASMOBJS           := $(filter %.S, $(ALL_SRC))
 ASMOBJS           := $(ASMOBJS:%.S=%_$(BUILDTARGET_NAME).S.o)
 
 # Prefix each object with the build directory path.
