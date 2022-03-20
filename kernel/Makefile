@@ -7,6 +7,7 @@ $(KERNEL_SRCDIR)/kinit_stage2.c \
 $(KERNEL_SRCDIR)/ksyms.c \
 $(KERNEL_SRCDIR)/mbr.c \
 $(KERNEL_SRCDIR)/vfs.c \
+$(KERNEL_SRCDIR)/ksections.c \
 
 ifdef DXGMX_CONFIG_STACK_PROT
 	ifneq ($(DXGMX_CONFIG_STACK_PROT),none)

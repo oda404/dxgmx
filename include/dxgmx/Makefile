@@ -27,6 +27,7 @@ $(INCLUDE_SRCDIR)/dxgmx/ksyms.h \
 $(INCLUDE_SRCDIR)/dxgmx/kstdio.h \
 $(INCLUDE_SRCDIR)/dxgmx/mbr.h \
 $(INCLUDE_SRCDIR)/dxgmx/vfs.h \
+$(INCLUDE_SRCDIR)/dxgmx/ksections.h \
 
 include $(INCLUDE_SRCDIR)/dxgmx/bits/Makefile
 include $(INCLUDE_SRCDIR)/dxgmx/mem/Makefile
