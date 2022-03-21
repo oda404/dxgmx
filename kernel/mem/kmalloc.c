@@ -157,7 +157,7 @@ void* kmalloc_aligned(size_t size, size_t alignment)
             slabs_mask = 0;
             for (size_t k = 0; k < slabs; ++k)
                 bw_set(&slabs_mask, k);
-            
+
             size_t k = 0;
             for (; k < KMALLOC_SLABS_PER_BLOCK - slabs; ++k)
             {
