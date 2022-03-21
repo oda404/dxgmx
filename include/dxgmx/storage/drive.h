@@ -29,8 +29,6 @@ typedef struct S_GenericDrivePartition
     /* Suffix to be added at the end of the parent_drive->name eg: 'p0' */
     char* suffix;
     char* mountpoint;
-    /* The filesystem type eg: fat, ext2 */
-    char* fstype;
     /* Arbitrary number to index the partition. */
     size_t number;
     /* The LBA start of the partition */
@@ -42,6 +40,11 @@ typedef struct S_GenericDrivePartition
     storage_drive_part_write write;
 
     const struct S_GenericDrive* parent_drive;
+
+    /* The filesystem type eg: fat, ext2 */
+    char* fstype;
+    /* Extra information to be stored for the filesystem */
+    void* extra;
 } GenericDrivePartition;
 
 typedef struct S_GenericDrive
