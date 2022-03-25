@@ -165,6 +165,9 @@ StatementAttributeLikeMacros:
 StatementMacros:
   - Q_UNUSED
   - QT_REQUIRE_VERSION
+ForEachMacros:
+  - 'FOR_EACH_MEM_REGION'
+  - 'FOR_EACH_PTE_IN_RANGE'
 TabWidth:        4
 UseCRLF:         false
 UseTab:          Never

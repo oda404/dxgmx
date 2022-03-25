@@ -217,11 +217,11 @@ _INIT static void enforce_ksections_perms()
         (PageTable*)((ptr)pde_table_base(pde) + (ptr)_kernel_map_offset);
 
     /* Text section can't be written to. */
-    FOR_EACH_PTE_IN_RANGE((ptr)_text_sect_start, (ptr)_text_sect_end, pt, pte)
-    pte->writable = false;
+    FOR_EACH_PTE_IN_RANGE ((ptr)_text_sect_start, (ptr)_text_sect_end, pt, pte)
+        pte->writable = false;
 
     /* Rodata section can't be written to or executed from. */
-    FOR_EACH_PTE_IN_RANGE(
+    FOR_EACH_PTE_IN_RANGE (
         (ptr)_rodata_sect_start, (ptr)_rodata_sect_end, pt, pte)
     {
         pte->writable = false;
@@ -229,22 +229,22 @@ _INIT static void enforce_ksections_perms()
     }
 
     /* Can't execute from data. */
-    FOR_EACH_PTE_IN_RANGE((ptr)_data_sect_start, (ptr)_data_sect_end, pt, pte)
-    pte->exec_disable = true;
+    FOR_EACH_PTE_IN_RANGE ((ptr)_data_sect_start, (ptr)_data_sect_end, pt, pte)
+        pte->exec_disable = true;
 
     /* Can't execute from bss. */
-    FOR_EACH_PTE_IN_RANGE((ptr)_bss_sect_start, (ptr)_bss_sect_end, pt, pte)
-    pte->exec_disable = true;
+    FOR_EACH_PTE_IN_RANGE ((ptr)_bss_sect_start, (ptr)_bss_sect_end, pt, pte)
+        pte->exec_disable = true;
 
     /* Unmap the bootloader section. */
-    FOR_EACH_PTE_IN_RANGE(
+    FOR_EACH_PTE_IN_RANGE (
         (ptr)_bootloader_sect_start, (ptr)_bootloader_sect_end, pt, pte)
-    pte->present = false;
+        pte->present = false;
 
     /* For now only disable execution. */
-    FOR_EACH_PTE_IN_RANGE(
+    FOR_EACH_PTE_IN_RANGE (
         (ptr)_ro_post_init_sect_start, (ptr)_ro_post_init_sect_end, pt, pte)
-    pte->exec_disable = true;
+        pte->exec_disable = true;
 }
 
 static _INIT bool mmanager_setup_sys_mregmap()
