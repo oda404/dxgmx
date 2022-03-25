@@ -300,15 +300,6 @@ static _INIT bool mmanager_setup_sys_mregmap()
 
     mregmap_align_regs(PAGE_SIZE, &g_sys_mregmap);
 
-    FOR_EACH_MEM_REGION (region, &g_sys_mregmap)
-    {
-        klogln(
-            INFO,
-            "  [mem 0x%p-0x%p].",
-            (void*)region->start,
-            (void*)(region->start + region->size - 1));
-    }
-
     return true;
 }
 
