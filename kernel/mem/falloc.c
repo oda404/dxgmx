@@ -6,9 +6,7 @@
 #include <dxgmx/attrs.h>
 #include <dxgmx/klog.h>
 #include <dxgmx/mem/falloc.h>
-#include <dxgmx/mem/memrange.h>
 #include <dxgmx/mem/mmanager.h>
-#include <dxgmx/mem/mmap.h>
 #include <dxgmx/mem/pagesize.h>
 #include <dxgmx/panic.h>
 #include <dxgmx/string.h>
@@ -32,12 +30,10 @@ static u64 g_pgframe_pool[PAGEFRAME_POOL_SIZE];
 static u32 g_pgframes_cnt = 0;
 
 /* Adds any complete PAGE_FRAME_SIZE sized frames from the given area. */
-static void pageframe_add_available(const MemRangeTyped* e)
+static void pageframe_add_available(const MemoryRegion* region)
 {
-    if (e->type != MMAP_AVAILABLE)
-        return;
-
-    for (ptr frame = e->base; frame < e->base + e->size; frame += PAGE_SIZE)
+    for (u64 frame = region->start; frame < region->start + region->size;
+         frame += PAGE_SIZE)
         ffree(frame, 1);
 }
 
@@ -45,8 +41,8 @@ _INIT int falloc_init()
 {
     memset(g_pgframe_pool, 0xFF, sizeof(g_pgframe_pool));
 
-    FOR_EACH_MMAP_ENTRY(entry, mmanager_get_sys_mmap())
-    pageframe_add_available(entry);
+    FOR_EACH_MEM_REGION (area, mmanager_get_sys_mregmap())
+        pageframe_add_available(area);
 
     if (!g_pgframes_cnt)
         panic("falloc: No free page frames have been registered.");

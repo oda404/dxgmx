@@ -11,9 +11,7 @@
 #include <dxgmx/math.h>
 #include <dxgmx/mem/falloc.h>
 #include <dxgmx/mem/kheap.h>
-#include <dxgmx/mem/memrange.h>
 #include <dxgmx/mem/mmanager.h>
-#include <dxgmx/mem/mmap.h>
 #include <dxgmx/mem/pagesize.h>
 #include <dxgmx/string.h>
 #include <dxgmx/todo.h>
@@ -37,7 +35,12 @@
 
 static PageDirectoryPointerTable* g_pdpt;
 
-static MemoryMap g_sys_mmap;
+#define SYS_MEMORY_REGIONS_MAX 16
+static MemoryRegion g_sys_mregs[SYS_MEMORY_REGIONS_MAX];
+static MemoryRegionMap g_sys_mregmap = {
+    .regions = g_sys_mregs,
+    .regions_size = 0,
+    .regions_capacity = SYS_MEMORY_REGIONS_MAX};
 static bool g_sys_mmap_locked = false;
 
 extern u8 _kernel_base[];
@@ -244,39 +247,79 @@ _INIT static void enforce_ksections_perms()
     pte->exec_disable = true;
 }
 
-_INIT int mmanager_init()
+static _INIT bool mmanager_setup_sys_mregmap()
 {
-    setup_definitive_paging();
-    enforce_ksections_perms();
+    /* Zero out areas. */
+    memset(
+        g_sys_mregmap.regions,
+        0,
+        g_sys_mregmap.regions_capacity * sizeof(MemoryRegion));
 
-    /* First we setup the system memory map to know what
-    we're working with. */
-    mmap_init(&g_sys_mmap);
     MultibootMBI* mbi =
         (MultibootMBI*)(_multiboot_info_struct_base + (ptr)_kernel_map_offset);
 
+    size_t total_regions = 0;
     for (MultibootMMAP* mmap =
              (MultibootMMAP*)(mbi->mmap_base + (ptr)_kernel_map_offset);
          (ptr)mmap <
          mbi->mmap_base + (ptr)_kernel_map_offset + mbi->mmap_length;
          mmap = (MultibootMMAP*)((ptr)mmap + mmap->size + sizeof(mmap->size)))
     {
-        mmap_add_entry(mmap->base, mmap->length, mmap->type, &g_sys_mmap);
+        if (total_regions > SYS_MEMORY_REGIONS_MAX)
+            panic("Hit maximum number of system memory regions!");
+
+        if (mmap->type != MULTIBOOT_MMAP_TYPE_AVAILABLE)
+            continue;
+
+        const MemoryRegion newreg = {
+            .start = mmap->base, .size = mmap->length, .perms = MEM_REGION_RWX};
+        mregmap_add_reg(&newreg, &g_sys_mregmap);
+        ++total_regions;
     }
 
-    KLOGF(INFO, "Memory map provided by BIOS:");
-    mmap_dump(&g_sys_mmap);
+    klogln(INFO, "Available memory provided by firmware:");
+    FOR_EACH_MEM_REGION (region, &g_sys_mregmap)
+    {
+        klogln(
+            INFO,
+            "  [mem 0x%p-0x%p].",
+            (void*)region->start,
+            (void*)(region->start + region->size - 1));
+    }
 
-    /* Reserve the 1st MiB */
-    mmap_update_entry_type(0, MIB, MMAP_RESERVED, &g_sys_mmap);
-    /* Reserve the kernel image. */
-    mmap_update_entry_type(
-        (ptr)_kernel_base,
-        (ptr)_kernel_size,
-        MULTIBOOT_MMAP_TYPE_RESERVED,
-        &g_sys_mmap);
+    /* Remove the 1st MiB */
+    mregmap_rm_reg(0, MIB, &g_sys_mregmap);
+    klogln(INFO, "Reserving [mem 0x%p-0x%p].", (void*)0, (void*)(MIB - 1));
+    /* Remove the kernel image. */
+    mregmap_rm_reg((ptr)_kernel_base, (ptr)_kernel_size, &g_sys_mregmap);
+    klogln(
+        INFO,
+        "Reserving [mem 0x%p-0x%p].",
+        (void*)_kernel_base,
+        (void*)((ptr)_kernel_base + (size_t)_kernel_size - 1));
 
-    mmap_align_entries(MMAP_AVAILABLE, PAGE_SIZE, &g_sys_mmap);
+    mregmap_align_regs(PAGE_SIZE, &g_sys_mregmap);
+
+    FOR_EACH_MEM_REGION (region, &g_sys_mregmap)
+    {
+        klogln(
+            INFO,
+            "  [mem 0x%p-0x%p].",
+            (void*)region->start,
+            (void*)(region->start + region->size - 1));
+    }
+
+    return true;
+}
+
+_INIT int mmanager_init()
+{
+    setup_definitive_paging();
+    enforce_ksections_perms();
+
+    /* First we setup the system memory regions map to know what
+    we're working with. */
+    mmanager_setup_sys_mregmap();
 
     /* Now that we have a memory map, we can start allocating page frames. */
     falloc_init();
@@ -286,7 +329,7 @@ _INIT int mmanager_init()
     /* The heap can finally be initialized. */
     kmalloc_init();
 
-    /* ACPI could potentially modify the sys mmap
+    /* ACPI could potentially modify the system memory regions map
     before we lock it down. */
     acpi_reserve_tables();
     g_sys_mmap_locked = true;
@@ -305,12 +348,12 @@ _INIT int mmanager_reserve_acpi_range(ptr base, size_t size)
 
     map_page(aligned_base, aligned_base, g_pdpt);
 
-    mmap_update_entry_type(base, size, MMAP_RESERVED, &g_sys_mmap);
+    mregmap_rm_reg(base, size, &g_sys_mregmap);
 
     return 0;
 }
 
-MemoryMap mmanager_get_sys_mmap()
+const MemoryRegionMap* mmanager_get_sys_mregmap()
 {
-    return g_sys_mmap;
+    return &g_sys_mregmap;
 }

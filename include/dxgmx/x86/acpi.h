@@ -7,7 +7,6 @@
 #define _DXGMX_X86_ACPI_H
 
 #include <dxgmx/compiler_attrs.h>
-#include <dxgmx/mem/mmap.h>
 #include <dxgmx/types.h>
 
 typedef struct _ATTR_PACKED S_ACPIGenericAddress
