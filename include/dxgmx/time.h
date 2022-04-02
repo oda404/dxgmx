@@ -13,12 +13,10 @@
  */
 
 #include <dxgmx/types.h>
+#include <posix/time.h>
 #include <stddef.h>
 
 #define CLOCKS_PER_SEC 1000000
-
-typedef i32 clock_t;
-typedef i32 time_t;
 
 struct tm
 {
@@ -55,12 +53,6 @@ size_t
 strftime(char* str, size_t maxsize, const char* fmt, const struct tm* timeptr);
 /* Encodes the current calendar time into 'timer'. */
 time_t time(time_t* timer);
-
-struct timespec
-{
-    time_t tv_sec;
-    time_t tv_nsec;
-};
 
 int nanosleep(const struct timespec* rqtp, struct timespec* rmtp);
 
