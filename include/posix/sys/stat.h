@@ -6,6 +6,9 @@
 #ifndef _SYS_STAT_H
 #define _SYS_STAT_H
 
+#include <posix/sys/types.h>
+#include <posix/time.h>
+
 #define S_IXOTH 1
 #define S_IWOTH 2
 #define S_IROTH 4
@@ -29,13 +32,35 @@
 #define S_IWRITE S_IWUSR
 #define S_IEXEC S_IXUSR
 
-#define S_IFIFO 0x1000
-#define S_IFCHR 0x2000
-#define S_IFDIR 0x4000
-#define S_IFREG 0x8000
-#define S_IFBLK 0x6000
-#define S_IFLNK 0xa000
+#define S_IFIFO  0x1000
+#define S_IFCHR  0x2000
+#define S_IFDIR  0x4000
+#define S_IFBLK  0x6000
+#define S_IFREG  0x8000
+#define S_IFLNK  0xa000
 #define S_IFSOCK 0xc000
-#define S_IFMT 0xf000
+#define S_IFMT   0xf000
+
+struct stat
+{
+    dev_t st_dev;
+    ino_t st_ino;
+    mode_t st_mode;
+    nlink_t st_nlink;
+    uid_t st_uid;
+    gid_t st_gid;
+    dev_t st_rdev;
+    off_t st_size;
+    blksize_t st_blksize;
+    blkcnt_t st_blocks;
+
+    struct timespec st_atim;
+    struct timespec st_mtim;
+    struct timespec st_ctim;
+};
+
+#define st_atime st_atim.tv_sec
+#define st_mtime st_mtim.tv_sec
+#define st_ctime st_ctim.tv_sec
 
 #endif // !_SYS_STAT_H
