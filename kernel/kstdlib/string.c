@@ -3,6 +3,7 @@
  * Distributed under the MIT license.
  */
 
+#include <dxgmx/kmalloc.h>
 #include <dxgmx/string.h>
 #include <dxgmx/types.h>
 
@@ -104,5 +105,14 @@ size_t strnlen(const char* str, size_t n)
     size_t ret = 0;
     while (str[ret] != '\0' && ret < n)
         ++ret;
+    return ret;
+}
+
+char* strdup(const char* str)
+{
+    char* ret = kmalloc(strlen(str));
+    if (ret)
+        strcpy(ret, str);
+
     return ret;
 }

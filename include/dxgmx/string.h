@@ -1,5 +1,5 @@
 /**
- * Copyright 2021 Alexandru Olaru.
+ * Copyright 2022 Alexandru Olaru.
  * Distributed under the MIT license.
  */
 
@@ -28,6 +28,10 @@ char* strcpy(char* __restrict dest, const char* __restrict src)
 
 char* strncpy(char* __restrict dest, const char* __restrict src, size_t n)
     _ATTR_NONNULL(1, 2);
+
+/* The pointer returned by this function needs to be free'd using kfree()
+once it's no longer needed. */
+_ATTR_NONNULL(1) char* strdup(const char* __restrict str);
 
 void* memset(void* __restrict s, int c, size_t n) _ATTR_NONNULL(1);
 
