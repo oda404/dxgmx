@@ -41,6 +41,7 @@
 #define EDOM 33
 #define ERANGE 34
 #define EDEADLK 35
+#define ENAMETOOLONG 36
 
 int* _get_errno_addr();
 /*
