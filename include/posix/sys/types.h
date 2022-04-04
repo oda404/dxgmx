@@ -25,4 +25,6 @@ typedef uint32_t blkcnt_t;
 typedef int64_t time_t;
 typedef int64_t clock_t;
 
+typedef int64_t loff_t;
+
 #endif // !_SYS_TYPES_H
