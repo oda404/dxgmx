@@ -32,14 +32,14 @@
 #define S_IWRITE S_IWUSR
 #define S_IEXEC S_IXUSR
 
-#define S_IFIFO  0x1000
-#define S_IFCHR  0x2000
-#define S_IFDIR  0x4000
-#define S_IFBLK  0x6000
-#define S_IFREG  0x8000
-#define S_IFLNK  0xa000
+#define S_IFIFO 0x1000
+#define S_IFCHR 0x2000
+#define S_IFDIR 0x4000
+#define S_IFBLK 0x6000
+#define S_IFREG 0x8000
+#define S_IFLNK 0xa000
 #define S_IFSOCK 0xc000
-#define S_IFMT   0xf000
+#define S_IFMT 0xf000
 
 struct stat
 {
