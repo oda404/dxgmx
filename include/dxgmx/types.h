@@ -1,5 +1,5 @@
 /**
- * Copyright 2021 Alexandru Olaru.
+ * Copyright 2022 Alexandru Olaru.
  * Distributed under the MIT license.
  */
 
@@ -37,5 +37,11 @@ typedef u64 ptr;
 #define MIB (KIB * 1024)
 #define GIB (MIB * 1024)
 #define TIB (GIB * 1024)
+
+#define typeof __typeof__ // we out here (re)defining keywords :)
+
+/* For each loop to simplify looping over a dynamic array. */
+#define FOR_EACH_ELEM_IN_DARR(arr, count, elem)                                \
+    for (typeof(arr) elem = arr; elem < arr + count; ++elem)
 
 #endif //!_DXGMX_TYPES_H
