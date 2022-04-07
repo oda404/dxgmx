@@ -7,7 +7,7 @@
 #define _DXGMX_STORAGE_MBR_H
 
 #include <dxgmx/compiler_attrs.h>
-#include <dxgmx/storage/drive.h>
+#include <dxgmx/storage/blkdev.h>
 #include <dxgmx/types.h>
 
 typedef struct _ATTR_PACKED S_MBRPartitionTableEntry
@@ -21,7 +21,7 @@ typedef struct _ATTR_PACKED S_MBRPartitionTableEntry
     u8 chs_ending_sector : 6;
     u16 chs_ending_cylinder : 10;
     u32 lba_start;
-    u32 total_sectors;
+    u32 sector_count;
 } MBRPartitionTableEntry;
 
 typedef struct _ATTR_PACKED S_MBR
@@ -29,14 +29,13 @@ typedef struct _ATTR_PACKED S_MBR
     u8 bootstrap[440];
     u32 uid;
     u16 reserved;
-    MBRPartitionTableEntry partition1;
-    MBRPartitionTableEntry partition2;
-    MBRPartitionTableEntry partition3;
-    MBRPartitionTableEntry partition4;
+    MBRPartitionTableEntry part1;
+    MBRPartitionTableEntry part2;
+    MBRPartitionTableEntry part3;
+    MBRPartitionTableEntry part4;
     u16 signature;
 } MBR;
 
-bool mbr_drive_has_mbr(const GenericDrive* drive);
-bool mbr_parse_drive_info(GenericDrive* drive);
+int mbr_read(BlockDevice* dev, MBR* mbr_out);
 
 #endif // !_DXGMX_STORAGE_MBR_H

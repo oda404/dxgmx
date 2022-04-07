@@ -3,72 +3,19 @@
  * Distributed under the MIT license.
  */
 
+#include <dxgmx/errno.h>
+#include <dxgmx/klog.h>
 #include <dxgmx/kmalloc.h>
 #include <dxgmx/storage/mbr.h>
 #include <dxgmx/string.h>
 
-bool mbr_drive_has_mbr(const GenericDrive* drive)
+int mbr_read(BlockDevice* dev, MBR* mbr_out)
 {
-    if (!drive)
-        return false;
+    if (!dev || !mbr_out)
+        return -EINVAL;
 
-    MBR* mbr = kmalloc(512);
-    if (!mbr || !drive->dev->read(0, 1, (void*)mbr, drive->dev))
-    {
-        kfree(mbr);
-        return false;
-    }
+    if (!dev->read(dev, 0, 1, mbr_out))
+        return -EIO;
 
-    const bool ret = mbr->signature == 0xAA55;
-
-    kfree(mbr);
-    return ret;
-}
-
-bool mbr_parse_drive_info(GenericDrive* drive)
-{
-    if (!drive)
-        return false;
-
-    MBR* mbr = kmalloc(512);
-    if (!mbr || !drive->dev->read(0, 1, (void*)mbr, drive->dev))
-    {
-        kfree(mbr);
-        return false;
-    }
-
-    drive->uid = mbr->uid;
-
-    const MBRPartitionTableEntry* mbrpart = &mbr->partition1;
-    for (size_t i = 0; i < 4; ++i, ++mbrpart)
-    {
-        if (!mbrpart->lba_start || !mbrpart->total_sectors)
-            continue; // consider unallocated.
-
-        /* Try to enlarge the partition table. */
-        GenericDrivePartition* tmp = krealloc(
-            drive->partitions,
-            sizeof(GenericDrivePartition) * (drive->partitions_count + 1));
-
-        if (!tmp)
-        {
-            kfree(mbr);
-            return false;
-        }
-
-        /* If successful update the partition table. */
-        drive->partitions = tmp;
-        ++drive->partitions_count;
-
-        GenericDrivePartition* part =
-            &drive->partitions[drive->partitions_count - 1];
-        memset(part, 0, sizeof(GenericDrivePartition));
-
-        part->lba_start = mbrpart->lba_start;
-        part->sectors_count = mbrpart->total_sectors;
-        part->number = i;
-    }
-
-    kfree(mbr);
-    return true;
+    return 0;
 }

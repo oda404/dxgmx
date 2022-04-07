@@ -1,3 +1,4 @@
 
 HEADERS += \
-$(INCLUDEDIR)/dxgmx/storage/drive.h \
+$(INCLUDEDIR)/dxgmx/storage/blkdev.h \
+$(INCLUDEDIR)/dxgmx/storage/types.h \

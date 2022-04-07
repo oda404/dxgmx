@@ -6,7 +6,7 @@
 #ifndef _DXGMX_X86_ATA_H
 #define _DXGMX_X86_ATA_H
 
-#include <dxgmx/storage/device.h>
+#include <dxgmx/storage/blkdev.h>
 #include <dxgmx/types.h>
 
 #define ATA_DEVICE_CTRL_PORT 0x3F6
@@ -58,43 +58,8 @@ typedef struct S_AtaStorageDevice
 
 int ata_init();
 
-/**
- * @brief Reads from an ATA device, using the best available method (PIO or
- * DMA).
- *
- * @param lba LBA from which to start reading.
- * @param sectors How many sectors to read.
- * @param buf Destination buffer.
- * @param dev The ATA device.
- * @return true if successful, false otherwise.
- */
-bool ata_read(
-    lba_t lba, sector_t sectors, void* buf, const GenericStorageDevice* dev);
-/**
- * @brief Writes to an ATA device using the best available method (PIO or DMA).
- *
- * @param lba LBA which to start writing.
- * @param sectors How many sectors to write.
- * @param buf Source data buffer.
- * @param dev The ATA device.
- * @return true if successful, false otherwise.
- */
-bool ata_write(
-    lba_t lba,
-    sector_t sectors,
-    const void* buf,
-    const GenericStorageDevice* dev);
-/**
- * @brief Reads sectors from an ATA device using PIO.
- *
- * @param lba LBA from which to start reading.
- * @param sectors How many sectors to read.
- * @param buf Destination buffer.
- * @param dev The ATA device.
- * @return true if successful, false otherwise.
- */
-bool atapio_read(
-    lba_t lba, sector_t sectors, void* buf, const GenericStorageDevice* dev);
+ssize_t
+atapio_read(const BlockDevice* dev, lba_t lba, sectorcnt_t sectors, void* dest);
 /**
  * @brief Writes sectors to an ATA device using PIO.
  *
@@ -104,10 +69,7 @@ bool atapio_read(
  * @param dev The ATA device.
  * @return true if successful, false otherwise.
  */
-bool atapio_write(
-    lba_t lba,
-    sector_t sectors,
-    const void* buf,
-    const GenericStorageDevice* dev);
+ssize_t atapio_write(
+    const BlockDevice* dev, lba_t lba, sectorcnt_t sectors, const void* src);
 
 #endif // !_DXGMX_X86_ATA_H

@@ -11,6 +11,7 @@
 #include <dxgmx/ksyms.h>
 #include <dxgmx/mem/mmanager.h>
 #include <dxgmx/panic.h>
+#include <dxgmx/storage/blkdevmanager.h>
 #include <dxgmx/timekeep.h>
 #include <dxgmx/x86/ata.h>
 #include <dxgmx/x86/gdt.h>

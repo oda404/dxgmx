@@ -19,7 +19,7 @@
 #define ATAPIO_WRITE_TIMEOUT_MS 200
 #define ATAPIO_FLUSH_SECTORS_TIMEOUT_MS 200
 
-typedef u8 atasector_t;
+typedef u8 atasectorcnt_t;
 
 /**
  * @brief Converts 'sectors' to internal ATAPIO sectors.
@@ -30,7 +30,7 @@ typedef u8 atasector_t;
  * is given, it will be capped at 256.
  * @return The sector count that can be passed to the ATAPIO drive.
  */
-static atasector_t atapio_internal_sectors(sector_t sectors)
+static atasectorcnt_t atapio_internal_sectors(sectorcnt_t sectors)
 {
     return sectors >= 256 ? 0 : sectors;
 }
@@ -69,8 +69,8 @@ static const char* ata_error_to_str(u8 error)
  * @param dev The device.
  * @return false: If the device is not a PIO device.
  */
-static bool atapio_send_read_cmd(
-    lba_t lba, atasector_t sectors, const GenericStorageDevice* dev)
+static bool
+atapio_send_read_cmd(lba_t lba, atasectorcnt_t sectors, const BlockDevice* dev)
 {
     const AtaStorageDevice* atadev = dev->extra;
 
@@ -127,8 +127,8 @@ static bool atapio_send_read_cmd(
  * @param dev The device.
  * @return false: If the device is not a PIO device.
  */
-static bool atapio_send_write_cmd(
-    lba_t lba, atasector_t sectors, const GenericStorageDevice* dev)
+static bool
+atapio_send_write_cmd(lba_t lba, atasectorcnt_t sectors, const BlockDevice* dev)
 {
     const AtaStorageDevice* atadev = dev->extra;
 
@@ -177,8 +177,7 @@ static bool atapio_send_write_cmd(
     return true;
 }
 
-static bool
-atapio_flush_sectors(time_t timeout_ms, const GenericStorageDevice* dev)
+static bool atapio_flush_sectors(time_t timeout_ms, const BlockDevice* dev)
 {
     const AtaStorageDevice* atadev = dev->extra;
     /* Send the actual command. */
@@ -201,8 +200,7 @@ atapio_flush_sectors(time_t timeout_ms, const GenericStorageDevice* dev)
     return true;
 }
 
-static bool
-atapio_wait_for_ready(time_t timeout_ms, const GenericStorageDevice* dev)
+static bool atapio_wait_for_ready(time_t timeout_ms, const BlockDevice* dev)
 {
     const AtaStorageDevice* atadev = dev->extra;
 
@@ -236,18 +234,18 @@ atapio_wait_for_ready(time_t timeout_ms, const GenericStorageDevice* dev)
     return true;
 }
 
-static _ATTR_ALWAYS_INLINE bool atapio_is_valid_range(
-    lba_t lba, sector_t sectors, const GenericStorageDevice* dev)
+static _ATTR_ALWAYS_INLINE bool
+atapio_is_valid_range(lba_t lba, sectorcnt_t sectors, const BlockDevice* dev)
 {
     /* Check for possible underflow. */
-    if (lba > dev->sectors_count || sectors == 0)
+    if (lba > dev->sector_count || sectors == 0)
         return false;
 
-    return (sectors <= dev->sectors_count - lba);
+    return (sectors <= dev->sector_count - lba);
 }
 
-bool atapio_read(
-    lba_t lba, sector_t sectors, void* buf, const GenericStorageDevice* dev)
+ssize_t
+atapio_read(const BlockDevice* dev, lba_t lba, sectorcnt_t sectors, void* dest)
 {
     if (!atapio_is_valid_range(lba, sectors, dev))
     {
@@ -283,8 +281,8 @@ bool atapio_read(
                 the logic simpler, but that means we fuck up the
                 alignment of buf. */
                 u16 w = port_inw(ATA_DATA_REG(atadev->bus_io));
-                ((u8*)buf)[i * 2] = w;
-                ((u8*)buf)[i * 2 + 1] = (w >> 8) & 0xFF;
+                ((u8*)dest)[i * 2] = w;
+                ((u8*)dest)[i * 2 + 1] = (w >> 8) & 0xFF;
             }
         }
 
@@ -295,13 +293,10 @@ bool atapio_read(
     return true;
 }
 
-bool atapio_write(
-    lba_t lba,
-    sector_t sectors,
-    const void* buf,
-    const GenericStorageDevice* dev)
+ssize_t
+atapio_write(const BlockDevice* dev, lba_t lba, sectorcnt_t n, const void* src)
 {
-    if (!atapio_is_valid_range(lba, sectors, dev))
+    if (!atapio_is_valid_range(lba, n, dev))
     {
         KLOGF(ERR, "[%s] Out of range write!", dev->name);
         return false;
@@ -309,9 +304,9 @@ bool atapio_write(
 
     const AtaStorageDevice* atadev = dev->extra;
 
-    while (sectors)
+    while (n)
     {
-        const size_t workingsectors = min(sectors, 256);
+        const size_t workingsectors = min(n, 256);
 
         if (!atapio_send_write_cmd(
                 lba, atapio_internal_sectors(workingsectors), dev))
@@ -331,9 +326,9 @@ bool atapio_write(
                 /* We could cast buf to an u16* which would make
                 the logic simpler, but that means we fuck up the
                 alignment of buf. */
-                u16 w = ((u8*)buf)[i * 2 + 1];
+                u16 w = ((u8*)src)[i * 2 + 1];
                 w <<= 8;
-                w |= ((u8*)buf)[i * 2];
+                w |= ((u8*)src)[i * 2];
 
                 port_outw(w, ATA_DATA_REG(atadev->bus_io));
 
@@ -345,7 +340,7 @@ bool atapio_write(
         if (!atapio_flush_sectors(ATAPIO_FLUSH_SECTORS_TIMEOUT_MS, dev))
             return false;
 
-        sectors -= workingsectors;
+        n -= workingsectors;
         lba += workingsectors;
     }
 

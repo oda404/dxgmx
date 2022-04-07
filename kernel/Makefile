@@ -19,3 +19,4 @@ include $(KERNEL_SRCDIR)/mem/Makefile
 include $(KERNEL_SRCDIR)/utils/Makefile
 include $(KERNEL_SRCDIR)/crypto/Makefile
 include $(KERNEL_SRCDIR)/kstdlib/Makefile
+include $(KERNEL_SRCDIR)/storage/Makefile
