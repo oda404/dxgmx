@@ -6,10 +6,10 @@
 #include <dxgmx/attrs.h>
 #include <dxgmx/klog.h>
 #include <dxgmx/kmalloc.h>
+#include <dxgmx/storage/blkdevmanager.h>
 #include <dxgmx/string.h>
 #include <dxgmx/todo.h>
 #include <dxgmx/utils/bytes.h>
-#include <dxgmx/vfs.h>
 #include <dxgmx/x86/ata.h>
 #include <dxgmx/x86/idt.h>
 #include <dxgmx/x86/portio.h>
@@ -283,7 +283,7 @@ _INIT int ata_init()
     /* Hardcoded at 1 because the bus reports 2 identical drives
     (master & slave) even though only one is being emulated ??? */
     for (size_t i = 0; i < 1; ++i)
-        vfs_add_drive(&g_ata_devices[i]);
+        blkdevmanager_register_dev(&g_ata_devices[i]);
 
     return 0;
 }
