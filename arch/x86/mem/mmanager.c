@@ -23,7 +23,8 @@
 #include <dxgmx/x86/pagedir_ptrtable.h>
 #include <dxgmx/x86/pagetable.h>
 
-#define KLOGF(lvl, fmt, ...) klogln(lvl, "mmanager: " fmt, ##__VA_ARGS__)
+#define KLOGF(lvl, fmt, ...)                                                   \
+    klogln(lvl, "mmanager: " fmt __VA_OPT__(, ) __VA_ARGS__)
 
 #define RET_IF_NOT(x, ret)                                                     \
     if (!(x))                                                                  \

@@ -1,5 +1,5 @@
 /**
- * Copyright 2021 Alexandru Olaru.
+ * Copyright 2022 Alexandru Olaru.
  * Distributed under the MIT license.
  */
 
@@ -55,11 +55,25 @@ _ATTR_ALWAYS_INLINE static void sha1_pad(SHA1Context* ctx)
     size_t paddingsize = 64 - ctx->block.size;
     u64 bitsinmsg = ctx->msg.initsize * 8;
 
-    switch (paddingsize)
+    if (!paddingsize)
     {
-    case 1 ... 8:
+        /* No padding is added to the original block, but an extra
+        one is needed. */
+        /* Zero out padding  */
+        memset(ctx->extrapadding.buf + 1, 0, 47);
+        ctx->extrapadding.buf[0] = (1 << 7);
+        /* Store the number of bits in the original message in the last
+        16 bytes. */
+        ((u32*)ctx->extrapadding.buf)[14] =
+            bw_u32_flip_endianness((bitsinmsg >> 32) & 0xFFFFFFFF);
+        ((u32*)ctx->extrapadding.buf)[15] =
+            bw_u32_flip_endianness(bitsinmsg & 0xFFFFFFFF);
+        ctx->extrapadding.has = true;
+    }
+    else if (paddingsize >= 1 && paddingsize <= 8)
+    {
         /*  Padding needs to be started from the original block,
-        and continued onto an extra one.  */
+       and continued onto an extra one.  */
         ctx->block.buf[ctx->block.size] = (1 << 7);
         memset(ctx->block.buf + ctx->block.size + 1, 0, paddingsize - 1);
         ctx->block.size = 64;
@@ -73,24 +87,9 @@ _ATTR_ALWAYS_INLINE static void sha1_pad(SHA1Context* ctx)
         ((u32*)ctx->extrapadding.buf)[15] =
             bw_u32_flip_endianness(bitsinmsg & 0xFFFFFFFF);
         ctx->extrapadding.has = true;
-        break;
-
-    case 0:
-        /* No padding is added to the original block, but an extra
-        one is needed. */
-        /* Zero out padding  */
-        memset(ctx->extrapadding.buf + 1, 0, 47);
-        ctx->extrapadding.buf[0] = (1 << 7);
-        /* Store the number of bits in the original message in the last
-        16 bytes. */
-        ((u32*)ctx->extrapadding.buf)[14] =
-            bw_u32_flip_endianness((bitsinmsg >> 32) & 0xFFFFFFFF);
-        ((u32*)ctx->extrapadding.buf)[15] =
-            bw_u32_flip_endianness(bitsinmsg & 0xFFFFFFFF);
-        ctx->extrapadding.has = true;
-        break;
-
-    default:
+    }
+    else
+    {
         /* The only padding added is to the original block. */
         memset(ctx->block.buf + ctx->block.size, 0, paddingsize - 16);
         /* Append 128 (0b10000000) after the message. */
@@ -102,7 +101,6 @@ _ATTR_ALWAYS_INLINE static void sha1_pad(SHA1Context* ctx)
         ((u32*)ctx->block.buf)[15] =
             bw_u32_flip_endianness(bitsinmsg & 0xFFFFFFFF);
         ctx->block.size = 64;
-        break;
     }
 }
 
@@ -121,27 +119,29 @@ static void sha1_process_block(SHA1Context* ctx)
         u32 f;
         u32 k;
 
-        switch (t)
+        if (t >= 0 && t <= 19)
         {
-        case 0 ... 19:
             f = (b & c) | ((~b) & d);
             k = 0x5A827999;
-            break;
-
-        case 20 ... 39:
+        }
+        else if (t >= 20 && t <= 39)
+        {
             f = b ^ c ^ d;
             k = 0x6ED9EBA1;
-            break;
-
-        case 40 ... 59:
+        }
+        else if (t >= 40 && t <= 59)
+        {
             f = (b & c) | (b & d) | (c & d);
             k = 0x8F1BBCDC;
-            break;
-
-        case 60 ... 79:
+        }
+        else if (t >= 60 && t <= 79)
+        {
             f = b ^ c ^ d;
             k = 0xCA62C1D6;
-            break;
+        }
+        else
+        {
+            ASSERT(false);
         }
 
         u32 tmp =

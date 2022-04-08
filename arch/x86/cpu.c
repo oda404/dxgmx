@@ -1,5 +1,5 @@
 /**
- * Copyright 2021 Alexandru Olaru.
+ * Copyright 2022 Alexandru Olaru.
  * Distributed under the MIT license.
  */
 
@@ -20,7 +20,8 @@ static int g_cpu_identified = 0;
 #define CPU_VENDORSTR_INTEL "GenuineIntel"
 #define CPU_VENDORSTR_AMD "AuthenticAMD"
 
-#define KLOGF(lvl, fmt, ...) klogln(lvl, "cpu: " fmt, ##__VA_ARGS__);
+#define KLOGF(lvl, fmt, ...)                                                   \
+    klogln(lvl, "cpu: " fmt __VA_OPT__(, ) __VA_ARGS__);
 
 _INIT static void cpu_set_common_features(u32 edx)
 {

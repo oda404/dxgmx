@@ -13,7 +13,7 @@
 #include <dxgmx/x86/pit.h>
 #include <dxgmx/x86/portio.h>
 
-#define KLOGF(lvl, fmt, ...) klogln(lvl, "pit: " fmt, ##__VA_ARGS__)
+#define KLOGF(lvl, fmt, ...) klogln(lvl, "pit: " fmt __VA_OPT__(, ) __VA_ARGS__)
 
 #define PIT_BASE_FREQ_HZ 1193181
 

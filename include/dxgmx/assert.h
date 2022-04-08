@@ -11,7 +11,7 @@
 #define ASSERT_MSG(x, msg, ...)                                                \
     if (!(x))                                                                  \
     {                                                                          \
-        panic(msg, ##__VA_ARGS__);                                             \
+        panic(msg __VA_OPT__(, ) __VA_ARGS__);                                 \
     }
 
 #define ASSERT(x)                                                              \

@@ -11,7 +11,8 @@
 #include <dxgmx/x86/pit.h>
 #include <dxgmx/x86/rtc.h>
 
-#define KLOGF(lvl, fmt, ...) klogln(lvl, "timekeep: " fmt, ##__VA_ARGS__)
+#define KLOGF(lvl, fmt, ...)                                                   \
+    klogln(lvl, "timekeep: " fmt __VA_OPT__(, ) __VA_ARGS__)
 
 Timer g_uptime_timer;
 

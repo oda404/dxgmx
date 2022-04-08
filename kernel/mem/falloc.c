@@ -1,5 +1,5 @@
 /**
- * Copyright 2021 Alexandru Olaru.
+ * Copyright 2022 Alexandru Olaru.
  * Distributed under the MIT license.
  */
 
@@ -15,7 +15,8 @@
 #include <dxgmx/utils/bitwise.h>
 #include <dxgmx/utils/bytes.h>
 
-#define KLOGF(lvl, fmt, ...) klogln(lvl, "falloc: " fmt, ##__VA_ARGS__)
+#define KLOGF(lvl, fmt, ...)                                                   \
+    klogln(lvl, "falloc: " fmt __VA_OPT__(, ) __VA_ARGS__)
 
 /*
  * This whole page frame allocator is not really following

@@ -10,7 +10,7 @@
 #include <dxgmx/x86/pci.h>
 #include <dxgmx/x86/portio.h>
 
-#define KLOGF(lvl, fmt, ...) klogln(lvl, "pci: " fmt, ##__VA_ARGS__)
+#define KLOGF(lvl, fmt, ...) klogln(lvl, "pci: " fmt __VA_OPT__(, ) __VA_ARGS__)
 
 #define ACPI_CONFIG_ADDRESS_PORT 0xCF8
 #define ACPI_CONFIG_DATA_PORT 0xCFC

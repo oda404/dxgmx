@@ -11,7 +11,7 @@
 #include <dxgmx/string.h>
 #include <dxgmx/vfs.h>
 
-#define KLOGF(lvl, fmt, ...) klogln(lvl, "vfs: " fmt, ##__VA_ARGS__)
+#define KLOGF(lvl, fmt, ...) klogln(lvl, "vfs: " fmt __VA_OPT__(, ) __VA_ARGS__)
 
 static GenericDrive* g_drives = NULL;
 static size_t g_drives_count = 0;

@@ -10,7 +10,8 @@
 #include <dxgmx/string.h>
 #include <dxgmx/x86/acpi.h>
 
-#define KLOGF(lvl, fmt, ...) klogln(lvl, "acpi: " fmt, ##__VA_ARGS__)
+#define KLOGF(lvl, fmt, ...)                                                   \
+    klogln(lvl, "acpi: " fmt __VA_OPT__(, ) __VA_ARGS__)
 
 extern u8 _kernel_map_offset[];
 static const AcpiRsdTable* g_rsd_table = NULL;
@@ -112,7 +113,7 @@ _INIT bool acpi_reserve_tables()
         else
             KLOGF(WARN, "Found invalid header at 0x%p.", header);
 
-        header = (void*)header + header->len;
+        header = (AcpiSdTableHeader*)((u8*)header + header->len);
     }
 
     return true;

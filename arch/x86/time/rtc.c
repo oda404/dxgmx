@@ -1,5 +1,5 @@
 /**
- * Copyright 2021 Alexandru Olaru.
+ * Copyright 2022 Alexandru Olaru.
  * Distributed under the MIT license.
  */
 
@@ -33,7 +33,7 @@
 #define RTC_REG_B_BINARY_MODE (1 << 2)
 #define RTC_REG_B_PERIODIC_INT_ENABLED (1 << 6)
 
-#define KLOGF(lvl, fmt, ...) klogln(lvl, "rtc: " fmt, ##__VA_ARGS__)
+#define KLOGF(lvl, fmt, ...) klogln(lvl, "rtc: " fmt __VA_OPT__(, ) __VA_ARGS__)
 
 typedef enum E_RTCFreq
 {

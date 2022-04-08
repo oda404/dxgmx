@@ -77,14 +77,11 @@ char* lltoa(long long n, char* str, int base)
 
 static int isbasedigit(int c, int base)
 {
-    switch (base)
-    {
-    case 2 ... 10:
+    if (base >= 2 && base <= 10)
         return (c >= '0' && c <= '0' + base - 1);
-    case 11 ... 32:
+    else if (base >= 11 && base <= 32)
         return (c >= '0' && c <= '9') || (c >= 'A' && c <= 'A' + base - 11) ||
                (c >= 'a' && c <= 'a' + base - 11);
-    }
 
     return 0;
 }
