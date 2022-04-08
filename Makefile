@@ -68,7 +68,8 @@ MACROS            := \
 -DDXGMX_CODENAME='"$(CODENAME)"' 
 
 WARNINGS          := -Wall -Wextra -Wshadow \
--Werror-implicit-function-declaration \
+-Werror-implicit-function-declaration -Werror=implicit-int \
+-Werror=incompatible-pointer-types \
 -Wunused -Wnull-dereference -Wdouble-promotion \
 -Wformat=2 -Wmisleading-indentation #-Wsign-conversion
 
