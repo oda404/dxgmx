@@ -38,10 +38,8 @@ typedef u64 ptr;
 #define GIB (MIB * 1024)
 #define TIB (GIB * 1024)
 
-#define typeof __typeof__ // we out here (re)defining keywords :)
-
 /* For each loop to simplify looping over a dynamic array. */
 #define FOR_EACH_ELEM_IN_DARR(arr, count, elem)                                \
-    for (typeof(arr) elem = arr; elem < arr + count; ++elem)
+    for (__typeof__(arr) elem = arr; elem < arr + count; ++elem)
 
 #endif //!_DXGMX_TYPES_H
