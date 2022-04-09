@@ -91,5 +91,10 @@ SECTIONS
         _init_sect_end = .;
     }
 
+    /DISCARD/ :
+    {
+        *(.comment)
+    }
+
     _kernel_size = . - _kernel_vaddr;
 }
