@@ -14,7 +14,7 @@ typedef struct S_Module
 {
     const char* const name;
     int (*init)();
-    void (*destroy)();
+    int (*destroy)();
 } Module;
 
 /* Init all built-in modules */

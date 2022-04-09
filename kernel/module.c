@@ -33,7 +33,7 @@ int module_init_builtins()
 
         KLOGF(INFO, "Found built-in module '%s'.", mod->name);
 
-        if(mod->init)
+        if (mod->init)
             mod->init();
     }
 
