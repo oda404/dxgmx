@@ -103,6 +103,15 @@ void* kmalloc(size_t size)
     return kmalloc_aligned(size, 4);
 }
 
+void* kcalloc(size_t size)
+{
+    void* addr = kmalloc(size);
+    if (addr)
+        memset(addr, 0, size);
+
+    return addr;
+}
+
 void* kmalloc_aligned(size_t size, size_t alignment)
 {
     if (!size || !bw_is_power_of_two(alignment))

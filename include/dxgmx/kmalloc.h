@@ -10,6 +10,7 @@
 
 bool kmalloc_init();
 void* kmalloc(size_t size);
+void* kcalloc(size_t size);
 void* kmalloc_aligned(size_t size, size_t alignment);
 void kfree(void* addr);
 /* This function should only be used for allocations made with
