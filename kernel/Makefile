@@ -8,6 +8,7 @@ $(KERNEL_SRCDIR)/ksyms.c \
 $(KERNEL_SRCDIR)/mbr.c \
 $(KERNEL_SRCDIR)/vfs.c \
 $(KERNEL_SRCDIR)/ksections.c \
+$(KERNEL_SRCDIR)/module.c \
 
 ifdef DXGMX_CONFIG_STACK_PROT
 	ifneq ($(DXGMX_CONFIG_STACK_PROT),none)

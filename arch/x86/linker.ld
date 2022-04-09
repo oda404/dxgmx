@@ -1,5 +1,5 @@
 /**
- * Copyright 2021 Alexandru Olaru.
+ * Copyright 2022 Alexandru Olaru.
  * Distributed under the MIT license.
 */
 
@@ -66,6 +66,13 @@ SECTIONS
     .shstrtab ALIGN(4K) : AT (ADDR(.shstrtab) - _kernel_map_offset)
     {
         *(.shstrtab*)
+    }
+
+    .modules ALIGN(4K) : AT(ADDR(.modules) - _kernel_map_offset)
+    {
+        _modules_sect_start = .;
+        *(.modules)
+        _modules_sect_end = .;
     }
 
     .ksyms ALIGN(4K) : AT(ADDR(.ksyms) - _kernel_map_offset)
