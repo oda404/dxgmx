@@ -11,8 +11,7 @@
 #include <dxgmx/x86/pit.h>
 #include <dxgmx/x86/rtc.h>
 
-#define KLOGF(lvl, fmt, ...)                                                   \
-    klogln(lvl, "timer: " fmt __VA_OPT__(, ) __VA_ARGS__)
+#define KLOGF_PREFIX "timer: "
 
 typedef struct S_TimerSource
 {

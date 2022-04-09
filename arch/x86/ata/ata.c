@@ -14,7 +14,7 @@
 #include <dxgmx/x86/idt.h>
 #include <dxgmx/x86/portio.h>
 
-#define KLOGF(lvl, fmt, ...) klogln(lvl, "ata: " fmt __VA_OPT__(, ) __VA_ARGS__)
+#define KLOGF_PREFIX "ata: "
 
 static BlockDevice* g_ata_devices = NULL;
 static size_t g_ata_devices_count = 0;

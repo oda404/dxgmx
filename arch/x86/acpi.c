@@ -10,8 +10,7 @@
 #include <dxgmx/string.h>
 #include <dxgmx/x86/acpi.h>
 
-#define KLOGF(lvl, fmt, ...)                                                   \
-    klogln(lvl, "acpi: " fmt __VA_OPT__(, ) __VA_ARGS__)
+#define KLOGF_PREFIX "acpi: "
 
 extern u8 _kernel_map_offset[];
 static const AcpiRsdTable* g_rsd_table = NULL;

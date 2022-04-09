@@ -12,8 +12,7 @@
 #include <dxgmx/stdlib.h>
 #include <dxgmx/string.h>
 
-#define KLOGF(lvl, fmt, ...)                                                   \
-    klogln(lvl, "ksyms: " fmt __VA_OPT__(, ) __VA_ARGS__)
+#define KLOGF_PREFIX "ksyms: "
 
 #define KSYMS_MAX_SYMBOLS 1024
 

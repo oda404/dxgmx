@@ -7,8 +7,7 @@
 #include <dxgmx/module.h>
 #include <dxgmx/types.h>
 
-#define KLOGF(lvl, fmt, ...)                                                   \
-    klogln(INFO, "module: " fmt __VA_OPT__(, ) __VA_ARGS__)
+#define KLOGF_PREFIX "module: "
 
 extern u8 _modules_sect_start[];
 extern u8 _modules_sect_end[];

@@ -13,8 +13,7 @@
 #include <dxgmx/x86/ata.h>
 #include <dxgmx/x86/portio.h>
 
-#define KLOGF(lvl, fmt, ...)                                                   \
-    klogln(lvl, "atapio: " fmt __VA_OPT__(, ) __VA_ARGS__)
+#define KLOGF_PREFIX "pio: "
 
 #define ATAPIO_READ_TIMEOUT_MS 200
 #define ATAPIO_WRITE_TIMEOUT_MS 200

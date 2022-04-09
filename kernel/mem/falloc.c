@@ -15,8 +15,7 @@
 #include <dxgmx/utils/bitwise.h>
 #include <dxgmx/utils/bytes.h>
 
-#define KLOGF(lvl, fmt, ...)                                                   \
-    klogln(lvl, "falloc: " fmt __VA_OPT__(, ) __VA_ARGS__)
+#define KLOGF_PREFIX "falloc: "
 
 /*
  * This whole page frame allocator is not really following

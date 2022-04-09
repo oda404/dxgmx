@@ -33,7 +33,7 @@
 #define RTC_REG_B_BINARY_MODE (1 << 2)
 #define RTC_REG_B_PERIODIC_INT_ENABLED (1 << 6)
 
-#define KLOGF(lvl, fmt, ...) klogln(lvl, "rtc: " fmt __VA_OPT__(, ) __VA_ARGS__)
+#define KLOGF_PREFIX "rtc: "
 
 typedef enum E_RTCFreq
 {

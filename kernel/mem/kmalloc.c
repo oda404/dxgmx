@@ -21,8 +21,7 @@
 #define KMALLOC_SLABS_PER_BLOCK 64
 #endif // defined(_X86_)
 
-#define KLOGF(lvl, fmt, ...)                                                   \
-    klogln(lvl, "kmalloc: " fmt __VA_OPT__(, ) __VA_ARGS__)
+#define KLOGF_PREFIX "kmalloc: "
 
 #define KMALLOC_BLOCKS_COUNT                                                   \
     (KERNEL_HEAP_SIZE / KMALLOC_SLABS_PER_BLOCK / KMALLOC_SLAB_SIZE)
