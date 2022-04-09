@@ -3,6 +3,8 @@
  * Distributed under the MIT license.
 */
 
+OUTPUT_FORMAT(elf32-i386)
+
 /* specify the entry point */
 ENTRY(_start)
 
