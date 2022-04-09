@@ -9,6 +9,7 @@
 #include <dxgmx/storage/blkdevmanager.h>
 #include <dxgmx/storage/mbr.h>
 #include <dxgmx/string.h>
+#include <dxgmx/utils/uuid.h>
 
 /* This is just a list of BlockDevices that have been registered
 by drivers. */
@@ -70,19 +71,27 @@ static BlockDevice** blkdevmanager_new_blkdev()
     return &g_blkdevices[g_blkdevices_count - 1];
 }
 
-static void blkdevmanager_parse_bootsector(BlockDevice* dev)
+static int blkdevmanager_parse_bootsector(BlockDevice* dev)
 {
     if (!dev)
-        return;
+        return -EINVAL;
 
     Mbr mbr;
-    if (mbr_read(dev, &mbr) < 0)
-        return;
+
+    {
+        const int st = mbr_read(dev, &mbr);
+        if (st < 0)
+            return st;
+    }
 
     if (mbr.signature != 0xAA55)
-        return;
+        return -ENODEV;
 
-    dev->uid = mbr.uid;
+    dev->uuid = kmalloc(UUID_LENGTH + 1);
+    if (!dev->uuid)
+        return -ENOMEM;
+
+    mbr_uuid_for_disk(&mbr, dev->uuid);
 
     for (size_t i = 0; i < 4; ++i)
     {
@@ -93,11 +102,11 @@ static void blkdevmanager_parse_bootsector(BlockDevice* dev)
 
         BlockDevice** part = blkdevmanager_new_blkdev();
         if (!part)
-            return;
+            return -ENOMEM;
 
         *part = kmalloc(sizeof(BlockDevice));
         if (!(*part))
-            return;
+            return -ENOMEM;
 
         /* The partition is the same as the parent device,
         with some minor changes. */
@@ -109,8 +118,17 @@ static void blkdevmanager_parse_bootsector(BlockDevice* dev)
         (*part)->write = part_write;
         (*part)->offset = mbrpart->lba_start;
         (*part)->sector_count = mbrpart->sector_count;
-        (*part)->uid = mbr.uid + i + 1;
         (*part)->parent = dev;
+
+        (*part)->uuid = kmalloc(UUID_LENGTH + 1);
+        if (!(*part)->uuid)
+        {
+            blkdevmanager_unregister_dev(*part);
+            return -ENOMEM;
+        }
+
+        mbr_uuid_for_part(&mbr, i, (*part)->uuid);
+
         blkdevmanager_gen_part_name(*part);
     }
 }

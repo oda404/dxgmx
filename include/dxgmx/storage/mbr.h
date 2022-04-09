@@ -34,5 +34,7 @@ typedef struct _ATTR_PACKED S_Mbr
 } Mbr;
 
 int mbr_read(BlockDevice* dev, Mbr* mbr_out);
+int mbr_uuid_for_disk(const Mbr* mbr, char* dest);
+int mbr_uuid_for_part(const Mbr* mbr, size_t part_idx, char* dest);
 
 #endif // !_DXGMX_STORAGE_MBR_H

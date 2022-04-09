@@ -22,7 +22,7 @@ typedef struct S_BlockDevice
 
     u16 physical_sectorsize;
 
-    u64 uid;
+    char* uuid;
 
     /* Offset to apply to this block device when reading from it. */
     lba_t offset;
