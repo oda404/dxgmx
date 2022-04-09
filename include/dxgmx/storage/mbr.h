@@ -10,7 +10,7 @@
 #include <dxgmx/storage/blkdev.h>
 #include <dxgmx/types.h>
 
-typedef struct _ATTR_PACKED S_MBRPartitionTableEntry
+typedef struct _ATTR_PACKED S_MbrPartition
 {
     u8 drive_attrs;
     u8 chs_head_start;
@@ -22,20 +22,17 @@ typedef struct _ATTR_PACKED S_MBRPartitionTableEntry
     u16 chs_ending_cylinder : 10;
     u32 lba_start;
     u32 sector_count;
-} MBRPartitionTableEntry;
+} MbrPartition;
 
-typedef struct _ATTR_PACKED S_MBR
+typedef struct _ATTR_PACKED S_Mbr
 {
     u8 bootstrap[440];
     u32 uid;
     u16 reserved;
-    MBRPartitionTableEntry part1;
-    MBRPartitionTableEntry part2;
-    MBRPartitionTableEntry part3;
-    MBRPartitionTableEntry part4;
+    MbrPartition partitions[4];
     u16 signature;
-} MBR;
+} Mbr;
 
-int mbr_read(BlockDevice* dev, MBR* mbr_out);
+int mbr_read(BlockDevice* dev, Mbr* mbr_out);
 
 #endif // !_DXGMX_STORAGE_MBR_H

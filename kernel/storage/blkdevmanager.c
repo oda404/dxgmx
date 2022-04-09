@@ -75,7 +75,7 @@ static void blkdevmanager_parse_bootsector(BlockDevice* dev)
     if (!dev)
         return;
 
-    MBR mbr;
+    Mbr mbr;
     if (mbr_read(dev, &mbr) < 0)
         return;
 
@@ -84,11 +84,12 @@ static void blkdevmanager_parse_bootsector(BlockDevice* dev)
 
     dev->uid = mbr.uid;
 
-    MBRPartitionTableEntry* mbrpart = &mbr.part1;
-    for (size_t i = 0; i < 4; ++i, ++mbrpart)
+    for (size_t i = 0; i < 4; ++i)
     {
+        MbrPartition* mbrpart = &mbr.partitions[i];
+
         if (!mbrpart->lba_start || !mbrpart->sector_count)
-            continue;
+            continue; // consider unallocated
 
         BlockDevice** part = blkdevmanager_new_blkdev();
         if (!part)

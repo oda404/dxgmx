@@ -9,7 +9,7 @@
 #include <dxgmx/storage/mbr.h>
 #include <dxgmx/string.h>
 
-int mbr_read(BlockDevice* dev, MBR* mbr_out)
+int mbr_read(BlockDevice* dev, Mbr* mbr_out)
 {
     if (!dev || !mbr_out)
         return -EINVAL;
