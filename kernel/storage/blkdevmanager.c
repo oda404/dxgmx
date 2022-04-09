@@ -186,3 +186,31 @@ int blkdevmanager_unregister_dev(BlockDevice* dev)
 
     return 0;
 }
+
+const BlockDevice* blkdevmanager_find_blkdev_by_name(const char* name)
+{
+    if (!name)
+        return NULL;
+
+    FOR_EACH_ELEM_IN_DARR (g_blkdevs, g_blkdevs_count, blk)
+    {
+        if ((*blk)->name && strcmp((*blk)->name, name) == 0)
+            return *blk;
+    }
+
+    return NULL;
+}
+
+const BlockDevice* blkdevmanager_find_blkdev_by_uuid(const char* uuid)
+{
+    if (!uuid)
+        return NULL;
+
+    FOR_EACH_ELEM_IN_DARR (g_blkdevs, g_blkdevs_count, blk)
+    {
+        if ((*blk)->uuid && strcmp((*blk)->uuid, uuid) == 0)
+            return *blk;
+    }
+
+    return NULL;
+}

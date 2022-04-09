@@ -15,4 +15,7 @@ bool blkdevmanager_init();
 int blkdevmanager_register_dev(BlockDevice* dev);
 int blkdevmanager_unregister_dev(BlockDevice* dev);
 
+const BlockDevice* blkdevmanager_find_blkdev_by_name(const char* name);
+const BlockDevice* blkdevmanager_find_blkdev_by_uuid(const char* uuid);
+
 #endif // !_DXGMX_STORAGE_BLKDEVMANAGER_H
