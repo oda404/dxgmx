@@ -5,10 +5,10 @@
 
 #include <dxgmx/attrs.h>
 #include <dxgmx/cpu.h>
+#include <dxgmx/fs/vfs.h>
 #include <dxgmx/module.h>
 #include <dxgmx/panic.h>
 #include <dxgmx/types.h>
-#include <dxgmx/vfs.h>
 
 _INIT bool kinit_stage2()
 {
