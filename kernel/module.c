@@ -24,7 +24,7 @@ int module_init_builtins()
 
     FOR_EACH_ELEM_IN_DARR (g_modules, g_modules_count, mod)
     {
-        if (!mod->name || !mod->init)
+        if (!mod->name || !mod->main)
         {
             KLOGF(ERR, "Found fucked-up module at 0x%p", (void*)mod);
             continue;
@@ -32,8 +32,8 @@ int module_init_builtins()
 
         KLOGF(INFO, "Found built-in module '%s'.", mod->name);
 
-        if (mod->init)
-            mod->init();
+        if (mod->main)
+            mod->main();
     }
 
     return 0;

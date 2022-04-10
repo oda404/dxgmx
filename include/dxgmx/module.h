@@ -13,8 +13,8 @@
 typedef struct S_Module
 {
     const char* const name;
-    int (*init)();
-    int (*destroy)();
+    int (*main)();
+    int (*exit)();
 } Module;
 
 /* Init all built-in modules */
