@@ -11,6 +11,10 @@
 
 struct S_FileSystem;
 
+/* If the file has been removed but metadata bits are still
+present on disk. */
+#define INODE_STATE_WILL_FREE 1
+
 typedef struct S_VirtualNode
 {
     /* The name of the file. */
@@ -22,6 +26,8 @@ typedef struct S_VirtualNode
     size_t size;
     /* Access mode. */
     mode_t mode;
+    /* If the file has been removed but is not  */
+    u16 state;
     /* The parent directory for this vnode. This is NULL for /. */
     struct S_VirtualNode* parent;
     /* The virtual device backing this vnode. */
