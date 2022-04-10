@@ -115,7 +115,7 @@ HEADERS           :=
 include $(ARCH_SRCDIR)/Makefile
 include $(INIT_SRCDIR)/Makefile
 include $(KERNEL_SRCDIR)/Makefile
-#include $(FS_SRCDIR)/Makefile
+include $(FS_SRCDIR)/Makefile
 include $(INCLUDE_SRCDIR)/Makefile
 
 ALL_SRC := $(ARCH_SRC) $(INIT_SRC) $(KERNEL_SRC) $(FS_SRC)
