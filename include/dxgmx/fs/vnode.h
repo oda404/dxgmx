@@ -1,3 +1,7 @@
+/**
+ * Copyright 2021 Alexandru Olaru.
+ * Distributed under the MIT license.
+ */
 
 #ifndef _DXGMX_FS_VNODE_H
 #define _DXGMX_FS_VNODE_H
