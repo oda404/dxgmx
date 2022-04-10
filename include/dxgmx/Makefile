@@ -36,3 +36,4 @@ include $(INCLUDE_SRCDIR)/dxgmx/$(SRCARCH)/Makefile
 include $(INCLUDE_SRCDIR)/dxgmx/utils/Makefile
 include $(INCLUDE_SRCDIR)/dxgmx/crypto/Makefile
 include $(INCLUDE_SRCDIR)/dxgmx/storage/Makefile
+include $(INCLUDE_SRCDIR)/dxgmx/fs/Makefile
