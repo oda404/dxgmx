@@ -36,6 +36,23 @@ static FileSystem* vfs_new_fs()
     return &g_filesystems[g_filesystems_count - 1];
 }
 
+static FileSystemOperations* vfs_new_fsops()
+{
+    FileSystemOperations* tmp = krealloc(
+        g_filesystem_ops,
+        (g_filesystem_ops_count + 1) * sizeof(FileSystemOperations));
+
+    if (!tmp)
+        return NULL;
+
+    g_filesystem_ops = tmp;
+    ++g_filesystem_ops_count;
+
+    FileSystemOperations* fsops = &g_filesystem_ops[g_filesystem_ops_count - 1];
+    memset(fsops, 0, sizeof(FileSystemOperations));
+    return fsops;
+}
+
 _INIT bool vfs_init()
 {
     if (vfs_mount("hdap0", "/", 0) < 0)
@@ -99,20 +116,19 @@ int vfs_unmount(const char* src_or_dest)
     if (!src_or_dest)
         return -EINVAL;
 
-    size_t idx = 0;
-    bool found = false;
-    for (; idx < g_filesystems_count; ++idx)
+    ssize_t idx = -1;
+    for (size_t i = 0; i < g_filesystems_count; ++i)
     {
-        FileSystem* tmp = &g_filesystems[idx];
+        FileSystem* tmp = &g_filesystems[i];
         if ((tmp->mountsrc && strcmp(tmp->mountsrc, src_or_dest) == 0) ||
             (tmp->mountpoint && strcmp(tmp->mountpoint, src_or_dest) == 0))
         {
-            found = true;
+            idx = i;
             break;
         }
     }
 
-    if (!found)
+    if (idx == -1)
         return -ENOENT;
 
     FileSystem* fs = &g_filesystems[idx];
@@ -147,19 +163,13 @@ int vfs_register_fs_operations(const FileSystemOperations* fsops)
             return -EEXIST;
     }
 
-    FileSystemOperations* tmp = krealloc(
-        g_filesystem_ops,
-        (g_filesystem_ops_count + 1) * sizeof(FileSystemOperations));
-
-    if (!tmp)
+    FileSystemOperations* newfsops = vfs_new_fsops();
+    if (!newfsops)
         return -ENOMEM;
 
-    g_filesystem_ops = tmp;
-    ++g_filesystem_ops_count;
+    *newfsops = *fsops;
 
-    g_filesystem_ops[g_filesystem_ops_count - 1] = *fsops;
-
-    KLOGF(INFO, "Registered filesystem: '%s'.", fsops->name);
+    KLOGF(INFO, "Registered filesystem: '%s'.", newfsops->name);
 
     return 0;
 }
@@ -169,40 +179,27 @@ int vfs_unregister_fs_operations(const char* name)
     if (!name)
         return -EINVAL;
 
-    size_t fsops_idx = 0;
-
+    ssize_t fsops_idx = -1;
+    /* Find the filesystem operations struct */
+    for (size_t i = 0; i < g_filesystem_ops_count; ++i)
     {
-        /* Find the filesystem operations struct */
-        bool found = false;
-        for (; fsops_idx < g_filesystem_ops_count; ++fsops_idx)
+        FileSystemOperations* fsops = &g_filesystem_ops[i];
+        if (fsops->name && strcmp(fsops->name, name) == 0)
         {
-            FileSystemOperations* fsops = &g_filesystem_ops[fsops_idx];
-            if (fsops->name && strcmp(fsops->name, name) == 0)
-            {
-                found = true;
-                break;
-            }
+            fsops_idx = i;
+            break;
         }
-
-        if (!found)
-            return -ENOENT;
     }
 
-    {
-        /* Check to see if it's in use by any filesystems */
-        bool inuse = false;
-        const FileSystemOperations* fsops = &g_filesystem_ops[fsops_idx];
-        FOR_EACH_ELEM_IN_DARR (g_filesystems, g_filesystems_count, fs)
-        {
-            /* We could also strcmp names ... */
-            if (fs->operations == fsops)
-            {
-                inuse = true;
-                break;
-            }
-        }
+    if (fsops_idx == -1)
+        return -ENOENT;
 
-        if (inuse)
+    /* Check to see if it's in use by any filesystems */
+    const FileSystemOperations* fsops = &g_filesystem_ops[fsops_idx];
+    FOR_EACH_ELEM_IN_DARR (g_filesystems, g_filesystems_count, fs)
+    {
+        /* We could also strcmp names ... */
+        if (fs->operations == fsops)
             return -EBUSY;
     }
 
