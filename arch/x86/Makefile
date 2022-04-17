@@ -11,6 +11,13 @@ $(ARCH_SRCDIR)/pci.c \
 $(ARCH_SRCDIR)/kstdio.c \
 $(ARCH_SRCDIR)/serial.c \
 
+MACROS += -D_X86_
+ifeq ($(ARCH),x86_64)
+    MACROS += -D_X86_64_
+else
+    CFLAGS += -m32
+endif
+
 LDSCRIPT := \
 $(ARCH_SRCDIR)/linker.ld
 
