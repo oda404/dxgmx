@@ -8,37 +8,16 @@ VER_MIN           := 10
 PATCH_N           := 0
 CODENAME          := angel_attack
 
-# Try to include the buildconfig
-ifdef BUILDCONFIG
-    -include $(BUILDCONFIG)
+ifdef TOOLCHAIN_FILE
+    include $(TOOLCHAIN_FILE)
 else
-    -include buildconfig
-    BUILDCONFIG := buildconfig
-endif
-
-# Try to include the buildtarget
-ifdef BUILDTARGET
-    -include $(BUILDTARGET)
-endif
-
-ifeq ($(MAKECMDGOALS),)
-    ifneq ($(HAS_BUILDCONFIG), 1)
-        $(error No buildconfig file was found. See docs/buildsystem.md)
-    endif
-    ifneq ($(HAS_BUILDTARGET), 1)
-        $(warning Building without a *.buildtarget file. See docs/buildsystem.md)
-    endif
+    $(error No TOOLCHAIN_FILE specified!)
 endif
 
 ### MISC DIRECTORIES ###
 BUILDDIR          := build/
 SYSROOTDIR        := $(BUILDDIR)/slash/
 SCRIPTSDIR        := scripts/
-
-ARCH              := $(shell $(SCRIPTSDIR)/arch.sh --from-target-trip $(TARGET_TRIPLET))
-ifeq ($(ARCH), undefined)
-    $(error Couldn't get arch from target triplet: '$(TARGET_TRIPLET'))
-endif
 
 SRCARCH           := $(shell $(SCRIPTSDIR)/arch.sh --to-srcarch $(ARCH))
 ifeq ($(SRCARCH), undefined)
@@ -56,7 +35,12 @@ INCLUDE_SRCDIR    := include/
 CFLAGS            := \
 -MD -MP -isystem=/usr/include -std=c2x \
 --sysroot=$(SYSROOTDIR) -fno-omit-frame-pointer \
--ffreestanding -fno-builtin -I$(INCLUDE_SRCDIR)
+-ffreestanding -fno-builtin -I$(INCLUDE_SRCDIR) \
+-march=$(ARCH)
+
+ifeq ($(LLVM),1)
+    CFLAGS += --target=$(TARGET_TRIP)
+endif
 
 CXXFLAGS          := $(CFLAGS)
 
@@ -72,25 +56,6 @@ WARNINGS          := -Wall -Wextra -Wshadow \
 -Werror=incompatible-pointer-types \
 -Wunused -Wnull-dereference -Wdouble-promotion \
 -Wformat=2 -Wmisleading-indentation #-Wsign-conversion
-
-### CONFIGURATION ###
-
-include $(SCRIPTSDIR)/configparser.mk
-
-ifeq ($(SRCARCH),x86)
-	CFLAGS += -march=$(ARCH) -m32
-	MACROS += -D_X86_
-endif
-
-ifeq ($(LLVM),1)
-	CFLAGS += --target=$(TARGET_TRIPLET)
-endif
-
-CFLAGS            += $(EXTRA_CFLAGS) $(WARNINGS) $(MACROS)
-CXXFLAGS          += $(EXTRA_CXXFLAGS) $(WARNINGS) $(MACROS)
-LDFLAGS           += $(EXTRA_LDFLAGS)
-
-# At this point CFLAGS, CXXFLAGS and LDFLAGS should be in their final forms.
 
 MAKEFLAGS         += --no-print-directory
 
@@ -111,6 +76,12 @@ LDSCRIPT          :=
 HEADERS           :=
 MODULES_SRC       :=
 
+ifdef TARGET_FILE
+    include $(TARGET_FILE)
+else
+    $(warning No TARGET_FILE specified!)
+endif
+
 # The above variables will be populated recursively by
 # these included makefiles.
 include $(ARCH_SRCDIR)/Makefile
@@ -118,6 +89,13 @@ include $(INIT_SRCDIR)/Makefile
 include $(KERNEL_SRCDIR)/Makefile
 include $(FS_SRCDIR)/Makefile
 include $(INCLUDE_SRCDIR)/Makefile
+
+CFLAGS            += $(EXTRA_CFLAGS) $(WARNINGS) $(EXTRA_WARNINGS) $(MACROS) $(EXTRA_MACROS)
+LDFLAGS           += $(EXTRA_LDFLAGS)
+
+# $(info Building for ARCH: $(ARCH))
+# $(info CFLAGS: $(CFLAGS))
+# $(info LDFLAGS: $(LDFLAGS))
 
 ALL_SRC := $(ARCH_SRC) $(INIT_SRC) $(KERNEL_SRC) $(FS_SRC)
 
