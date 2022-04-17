@@ -8,12 +8,6 @@ $(KERNEL_SRCDIR)/ksyms.c \
 $(KERNEL_SRCDIR)/ksections.c \
 $(KERNEL_SRCDIR)/module.c \
 
-ifdef DXGMX_CONFIG_STACK_PROT
-	ifneq ($(DXGMX_CONFIG_STACK_PROT),none)
-		KERNEL_SRC += $(KERNEL_SRCDIR)/stack_chk.c
-	endif 
-endif
-
 include $(KERNEL_SRCDIR)/mem/Makefile
 include $(KERNEL_SRCDIR)/utils/Makefile
 include $(KERNEL_SRCDIR)/crypto/Makefile
