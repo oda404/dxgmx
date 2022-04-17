@@ -109,6 +109,7 @@ KERNEL_SRC        :=
 FS_SRC            :=
 LDSCRIPT          :=
 HEADERS           :=
+MODULES_SRC       :=
 
 # The above variables will be populated recursively by
 # these included makefiles.
@@ -123,21 +124,18 @@ ALL_SRC := $(ARCH_SRC) $(INIT_SRC) $(KERNEL_SRC) $(FS_SRC)
 # Filter out and add TARGET_NAME to each object.
 COBJS             := $(filter %.c, $(ALL_SRC))
 COBJS             := $(COBJS:%.c=%_$(BUILDTARGET_NAME).c.o)
-
-CXXOBJS           := $(filter %.cpp, $(ALL_SRC))
-CXXOBJS           := $(CXXOBJS:%.cpp=%_$(BUILDTARGET_NAME).cpp.o)
+COBJS             := $(addprefix $(BUILDDIR)/, $(COBJS))
+CDEPS             := $(COBJS:%.o=%.d)
 
 ASMOBJS           := $(filter %.S, $(ALL_SRC))
 ASMOBJS           := $(ASMOBJS:%.S=%_$(BUILDTARGET_NAME).S.o)
-
-# Prefix each object with the build directory path.
-COBJS             := $(addprefix $(BUILDDIR)/, $(COBJS))
-CXXOBJS           := $(addprefix $(BUILDDIR)/, $(CXXOBJS))
 ASMOBJS           := $(addprefix $(BUILDDIR)/, $(ASMOBJS))
-
-CDEPS             := $(COBJS:%.o=%.d)
-CXXDEPS           := $(CXXOBJS:%.o=%.d)
 ASMDEPS           := $(ASMOBJS:%.o=%.d)
+
+MODOBJS           := $(filter %.c, $(MODULES_SRC))
+MODOBJS           := $(MODOBJS:%.c=%_mod_$(BUILDTARGET_NAME).c.o)
+MODOBJS           := $(addprefix $(BUILDDIR)/, $(MODOBJS))
+MODDEPS           := $(MODOBJS:%.o=%.d)
 
 SYSROOT_DIRS      := \
 $(SYSROOTDIR) $(SYSROOTDIR)/boot \
@@ -145,7 +143,7 @@ $(SYSROOTDIR) $(SYSROOTDIR)/boot \
 SYSROOT_HEADERS   := $(HEADERS:$(INCLUDE_SRCDIR)/%=$(SYSROOTDIR)/usr/include/%)
 
 DXGMX_DEPS        := $(SYSROOT_DIRS) \
-$(COBJS) $(CXXOBJS) $(ASMOBJS) $(LDSCRIPT)
+$(COBJS) $(CXXOBJS) $(ASMOBJS) $(LDSCRIPT) $(MODOBJS)
 
 DXGMX_COMMON_DEPS := Makefile $(BUILDCONFIG) $(BUILDTARGET)
 
@@ -156,7 +154,7 @@ all: $(KERNEL_BIN_PATH)
 
 $(KERNEL_BIN_PATH): $(DXGMX_DEPS) $(DXGMX_COMMON_DEPS)
 	@$(PRETTY_PRINT) LD $(notdir $(KERNEL_BIN_NAME))
-	@$(LD) -T $(LDSCRIPT) $(COBJS) $(CXXOBJS) $(ASMOBJS) $(LDFLAGS) -o $(KERNEL_BIN_PATH)
+	@$(LD) -T $(LDSCRIPT) $(COBJS) $(ASMOBJS) $(MODOBJS) $(LDFLAGS) -o $(KERNEL_BIN_PATH)
 
 	@[ -f build/image.img ] || $(SCRIPTSDIR)/create-disk.sh -p build/image.img
 	@NM=$(NM) OBJCOPY=$(OBJCOPY) $(SCRIPTSDIR)/bake_symbols.sh $(KERNEL_BIN_PATH) 
@@ -169,11 +167,11 @@ $(BUILDDIR)/%_$(BUILDTARGET_NAME).c.o: %.c $(DXGMX_COMMON_DEPS)
 	@$(PRETTY_PRINT) CC $<
 	@$(CC) -c $< $(CFLAGS) -o $@
 
--include $(CXXDEPS)
-$(BUILDDIR)/%_$(BUILDTARGET_NAME).cpp.o: %.cpp $(DXGMX_COMMON_DEPS)
+-include $(MODDEPS)
+$(BUILDDIR)/%_mod_$(BUILDTARGET_NAME).c.o: %.c $(DXGMX_COMMON_DEPS)
 	@mkdir -p $(dir $@)
-	@$(PRETTY_PRINT) CXX $<
-	@$(CXX) -c $< $(CXXFLAGS) -o $@
+	@$(PRETTY_PRINT) "CC MOD" $<
+	@$(CC) -c $< $(CFLAGS) -o $@
 
 -include $(ASMDEPS)
 $(BUILDDIR)/%_$(BUILDTARGET_NAME).S.o: %.S $(DXGMX_COMMON_DEPS)
@@ -209,8 +207,8 @@ run:
 
 PHONY += clean 
 clean:
-	@rm -f $(COBJS) $(CXXOBJS) $(ASMOBJS)
-	@rm -f $(CDEPS) $(CXXDEPS) $(ASMDEPS)
+	@rm -f $(COBJS) $(ASMOBJS) $(MODOBJS)
+	@rm -f $(CDEPS) $(ASMDEPS) $(MODDEPS)
 
 PHONY += mrclean 
 mrclean:
