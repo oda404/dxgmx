@@ -8,21 +8,23 @@ VER_MIN           := 10
 PATCH_N           := 0
 CODENAME          := angel_attack
 
-ifdef TOOLCHAIN_FILE
-    include $(TOOLCHAIN_FILE)
-else
-    $(error No TOOLCHAIN_FILE specified!)
+ifeq ($(DXGMX_ARCH),)
+    $(error DXGMX_ARCH is undefined!)
 endif
+
+DXGMX_TOOLCHAIN_ROOT ?= /
 
 ### MISC DIRECTORIES ###
 BUILDDIR          := build/
 SYSROOTDIR        := $(BUILDDIR)/slash/
 SCRIPTSDIR        := scripts/
 
-SRCARCH           := $(shell $(SCRIPTSDIR)/arch.sh --to-srcarch $(ARCH))
+SRCARCH           := $(shell $(SCRIPTSDIR)/arch.sh --to-srcarch $(DXGMX_ARCH))
 ifeq ($(SRCARCH), undefined)
-    $(error Unsupported arch: '$(ARCH)')
+    $(error Unsupported arch: '$(DXGMX_ARCH)')
 endif
+
+DXGMX_TARGET_TRIP := $(DXGMX_ARCH)-unknown-dxgmx
 
 ### SRC DIRECTORIES ###
 ARCH_SRCDIR       := arch/$(SRCARCH)/
@@ -36,15 +38,9 @@ CFLAGS            := \
 -MD -MP -isystem=/usr/include -std=c2x \
 --sysroot=$(SYSROOTDIR) -fno-omit-frame-pointer \
 -ffreestanding -fno-builtin -I$(INCLUDE_SRCDIR) \
--march=$(ARCH)
+-march=$(DXGMX_ARCH)
 
-ifeq ($(LLVM),1)
-    CFLAGS += --target=$(TARGET_TRIP)
-endif
-
-CXXFLAGS          := $(CFLAGS)
-
-LDFLAGS           := -nostdlib
+LDFLAGS           := -nostdlib -L $(DXGMX_TOOLCHAIN_ROOT)/usr/lib \
 
 MACROS            := \
 -D_DXGMX_ -DDXGMX_VER_MAJ=$(VER_MAJ) \
@@ -56,6 +52,11 @@ WARNINGS          := -Wall -Wextra -Wshadow \
 -Werror=incompatible-pointer-types \
 -Wunused -Wnull-dereference -Wdouble-promotion \
 -Wformat=2 -Wmisleading-indentation #-Wsign-conversion
+
+ifeq ($(LLVM),1)
+	CFLAGS += --target=$(DXGMX_TARGET_TRIP)
+	LDFLAGS += -L $(DXGMX_TOOLCHAIN_ROOT)/usr/lib/linux # ??
+endif
 
 MAKEFLAGS         += --no-print-directory
 
@@ -91,11 +92,17 @@ include $(FS_SRCDIR)/Makefile
 include $(INCLUDE_SRCDIR)/Makefile
 
 CFLAGS            += $(EXTRA_CFLAGS) $(WARNINGS) $(EXTRA_WARNINGS) $(MACROS) $(EXTRA_MACROS)
-LDFLAGS           += $(EXTRA_LDFLAGS)
+LDFLAGS           += $(EXTRA_LDFLAGS) $(LIBS) $(EXTRA_LIBS)
 
-# $(info Building for ARCH: $(ARCH))
-# $(info CFLAGS: $(CFLAGS))
-# $(info LDFLAGS: $(LDFLAGS))
+$(info CC: $(CC))
+$(info AS: $(AS))
+$(info LD: $(LD))
+$(info Build target name: $(shell [ $(shell expr length "$(TARGET_NAME)") -gt 0 ] && echo $(TARGET_NAME) || echo No target ))
+$(info Target architecture: $(DXGMX_ARCH))
+$(info Target triplet: $(DXGMX_TARGET_TRIP))
+$(info Toolchain root: $(DXGMX_TOOLCHAIN_ROOT))
+$(info CFLAGS: $(CFLAGS))
+$(info LDFLAGS: $(LDFLAGS))
 
 ALL_SRC := $(ARCH_SRC) $(INIT_SRC) $(KERNEL_SRC) $(FS_SRC)
 
@@ -121,7 +128,7 @@ $(SYSROOTDIR) $(SYSROOTDIR)/boot \
 SYSROOT_HEADERS   := $(HEADERS:$(INCLUDE_SRCDIR)/%=$(SYSROOTDIR)/usr/include/%)
 
 DXGMX_DEPS        := $(SYSROOT_DIRS) \
-$(COBJS) $(CXXOBJS) $(ASMOBJS) $(LDSCRIPT) $(MODOBJS)
+$(COBJS) $(ASMOBJS) $(LDSCRIPT) $(MODOBJS)
 
 DXGMX_COMMON_DEPS := Makefile $(BUILDCONFIG) $(BUILDTARGET)
 
@@ -175,13 +182,13 @@ PHONY += iso-run
 iso-run:
 	$(MAKE) iso
 	DXGMX_DISK=build/image.img DXGMX_MEM=128M \
-		$(SCRIPTSDIR)/run.sh -i $(KERNEL_ISO_PATH) -a $(ARCH)
+		$(SCRIPTSDIR)/run.sh -i $(KERNEL_ISO_PATH) -a $(DXGMX_ARCH)
 
 PHONY += run 
 run:
 	$(MAKE)
 	DXGMX_DISK=build/image.img DXGMX_MEM=128M \
-		$(SCRIPTSDIR)/run.sh -k $(KERNEL_BIN_PATH) -a $(ARCH)
+		$(SCRIPTSDIR)/run.sh -k $(KERNEL_BIN_PATH) -a $(DXGMX_ARCH)
 
 PHONY += clean 
 clean:
