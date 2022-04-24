@@ -1,1 +1,2 @@
-binroot
+*/*
+!*/make.sh
