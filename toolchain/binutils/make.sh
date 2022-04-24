@@ -9,36 +9,11 @@ TAR_MD5="1e55743d73c100b7a0d67ffb32398cdb"
 BUILD_DIR=$(dirname $0)/build
 SRC_DIR=$(dirname $0)/src
 
-while [[ "$#" -gt 0 ]]
-do
-    case "$1" in
-        "--target")
-            TARGET="$2"
-            shift 2
-        ;;
-        "--prefix")
-            PREFIX="$2"
-            shift 2
-        ;;
-        *)
-            shift
-        ;;
-    esac
-done
-
-if [ -z $TARGET ]; then
-    echo "No --target specified! Exiting."
-    exit 1
-fi
-
-if [ -z $PREFIX ]; then
-    echo "No --prefix specified! Exiting."
-    exit 1
-fi
-
 setup() {
     echo Setting up $PACKAGE_NAME...
     mkdir $BUILD_DIR $SRC_DIR 2> /dev/null || true
+
+    echo "Prefix is \"$PREFIX\""
 
     export PATH="$PREFIX/bin:$PATH"
 
