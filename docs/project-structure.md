@@ -4,6 +4,7 @@ Below is a description of the dxgmx source tree.
 ## Directories:
 - **arch/** - Architecture specific code.
 - **docs/** - Documentation.
+- **fs/** - Filesystem drivers.
 - **include/** - Headers for the entire kernel. (Even architecture specific headers are placed here.)
 - **init/** - Generic code used specifically for kernel initialization.
 - **kernel/** - Generic kernel code.

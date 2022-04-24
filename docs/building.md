@@ -1,35 +1,71 @@
 
 # The dxgmx build system
-The dxgmx build system uses good old Makefiles, but with a few practices that may be non-standard. 
+The dxgmx build system uses good old GNU Makefiles, but with a few practices that may be non-standard. 
 
 ## make
-### When calling `make`, the root Makefile expects the following files to be present in the root directory and/or explicitly set as env. variables:
-- [buildconfig](#buildconfig): Defines for which platform the kernel is built.
-- A [buildtarget](#buildtarget) file: Defines how the kernel is built.
+### When calling `make`, the root Makefile expects the following things:
+- [Toolchain](#Toolchain) variables to be exported.
+- A [target](#Target) file to be set as an env. variable. 
 
-## buildconfig
- A makefile-like file that defines variables about the toolchain and target architecture. The file can either be automatically picked up if it's name is 'buildconfig' and is placed in the root of the source tree, or it's path can be explictly set as an env. variable using **BUILDCONFIG=<...>**. **If no buildconfig file is found the build will fail early on.** Below is a list of all the relevant options that **can/must** be set in a buildconfig file.
-- **HAS_BUILDCONFIG**: Must be set to 1.
-- **CC**: The C compiler binary path.
-- **CXX**: The C++ compiler binary path(currently unused).
-- **AS**: The assembler binary path.
-- **LD**: The linker binary path.
-- **TARGET_TRIPLET**: The target triplet.
-- **IS_CROSS_COMP**: 1 if cross-compiling, 0 if not.
-- **LLVM**: [optional] 1 if an LLVM toolchain is used, 0 or left undefined otherwise.
-- **BUILDTARGET**: [optional] A [buildtarget](#buildtarget) file.
+## Toolchain
+ The dxgmx build system uses the following variables during the build:
+ - CC:
+ - AS:
+ - LD: (The actual linker binary).
+ - NM:
+ - OBJCOPY:
+ - LLVM: Set to 1 if a LLVM toolchain is used.
+ - DXGMX_ARCH: The target architecture. (For now i686)
+ - DXGMX_TOOLCHAIN_ROOT: The root of the toolchain dir. This is where the linker will look for libraries.
+ - LIBS: Any extra libraries that should be linked into the kernel. (Usually a runtime library like libgcc.a or libclang_rt.builtins.a is necessary).
 
-## buildtarget
- A makefile-like file defining build configuration options. A buildtarget file can have any name, and it's path can be set using **BUILDTARGET=<...>** either in the [buildconfig](#buildconfig) file or as an env. variable. If no buildtarget file is specifed the kernel *will* build but the output binary will be generic. Below is a list of all the relevant options that **can/must** be set in a buildtarget file:
-- **HAS_BUILDTARGET**: Must be set to 1.
-- **BUILDTARGET_NAME**: The name of the build target.
-- **Config options**: [optional] A list of configuration options. See [Config Options](config-options.md).
+ I recommend setting the above variables in a file named **toolchain-\<llvm/gcc>-\<arch>.sh** and then running:
+ ```console
+ source <script>
+ ```
+ when building.
 
-## Toolchains
+## Target
+ Targets are used for customizing the kernel. By default the kernel is built with no optimizations, no source level debug information, no extra protection, you get the ideea... The following variables shall be set in a target file: 
+ - TARGET_NAME: The name of the target.
+
+ It's now up to you to fuck with any flags you see fit, by appending what you want to variables like:
+ - EXTRA_CFLAGS
+ - EXTRA_LDFLAGS
+ - EXTRA_MACROS
+ - EXTRA_WARNINGS
+ - LIBS
+ - ...
+
+ I'd recommend at least appending **-DDXGMX_CONFIG_LOG_LEVEL=\<log-level>** to EXTRA_MACROS. See [log levels](logging.md##Levels).
+
+ Also note that if you enable optimizations the default -fno-omit-frame-pointer flag will get ignored and stack traces will not work. :)
+
+ You can also include any modules you want in the kernel by using:
+ ```console
+ include <path/to/module.mk>
+ ```
+
+ **Until further notice, the arch/x86/multiboot/module.mk module is mandatory for booting on x86.**
+
+ To use a given target just export it's path with **TARGET_FILE=\<path>**.
+
+I suggest using the following format when naming a target file: **target.\<name>.mk**.
+
+## How do I setup a toolchain ?
+### Notes:
 - The kernel has been tested with:
-    - clang 12.0.1
-- The kernel fails to compile with GCC because -std=c2x is being used and GCC just can't ??
+    - clang 12.0.1, 13.0.1
+- The kernel fails to compile with GCC because clang's -std=c2x is being used and GCC is a bit behind.
 
-## Notes
-- Regardless of the toolchain used, the kernel needs to be linked against libgcc or a suitable replacement, built for the target architecture (One way to do that is append the necessary flags to **EXTRA_LDFLAGS** in the buildconfig file).
+ I personally work on the kernel using my host's (arch latest) LLVM, as we don't yet require an OS specific toolchain and the kernel doesn't build with GCC. Nonetheless if you want to use GCC with Binutils, you will need to build them. You can do that by:
+- Exporting:
+    - TARGET: for now "i686-elf"
+    - PREFIX: where the toolchain should be installed **(DO NOT LEAVE THIS BLANK OR /)**.
+- Running:
+    - toolchain/binutils/make.sh
+    - toolchain/gcc/make.sh
 
+These commands will build Binutils & GCC and then install them in PREFIX. You will then need to set DXGMX_TOOLCHAIN_ROOT to whatever you PREFIX was, when actually building the kernel; CC, AS, LD, NM and OBJCOPY should point to your newly built binaries inside your toolchain root bin/.
+
+The exact same goes for building libclang_rt, except you run toolchain/llvm/make.sh instead of binuitls/gcc.
