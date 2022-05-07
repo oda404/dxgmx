@@ -30,8 +30,8 @@ typedef struct S_VirtualNode
     u16 state;
     /* The parent directory for this vnode. This is NULL for /. */
     struct S_VirtualNode* parent;
-    /* The virtual device backing this vnode. */
-    struct FileSystem* owner;
+    /* The filesystem backing this vnode. */
+    struct S_FileSystem* owner;
 } VirtualNode;
 
 #endif // !_DXGMX_FS_VNODE_H
