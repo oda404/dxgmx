@@ -529,8 +529,8 @@ static int fat_init(FileSystem* fs)
 static ssize_t fat_read(
     FileSystem* fs, const VirtualNode* vnode, void* buf, size_t n, loff_t off)
 {
-    if (!(fs && vnode && buf && n))
-        return -EINVAL;
+    if (n == 0)
+        return 0; // as per spec
 
     if (!(fs && vnode && buf) || off >= vnode->size)
     {
@@ -549,29 +549,43 @@ static ssize_t fat_read(
     const FatFsMetadata* meta = fs->driver_ctx;
 
     if (!(part && meta))
-        return -EINVAL;
+    {
+        errno = EINVAL;
+        return -1;
+    }
 
-    /* Cap n to the vnode size. */
-    n = min(n, vnode->size);
+    /* Cap n to the vnode size, taking into account the offset. */
+    n = min(n, vnode->size - off);
 
     const size_t sectors = ceil((double)n / part->physical_sectorsize);
 
     /* FIXME: This is a weird way to do this. */
     u8* tmpbuf = kmalloc(sectors * part->physical_sectorsize);
     if (!tmpbuf)
-        return -ENOMEM;
-
-    if (!part->read(
-            part, fat_cluster_to_sector(vnode->n, meta), sectors, tmpbuf))
     {
-        kfree(tmpbuf);
-        return -EIO;
+        errno = ENOMEM;
+        return -1;
     }
 
-    memcpy(buf, tmpbuf, n);
+    if (!part->read(
+            part,
+            fat_cluster_to_sector(vnode->n, meta) +
+                off / part->physical_sectorsize,
+            sectors,
+            tmpbuf))
+    {
+        kfree(tmpbuf);
+        errno = EIO;
+        return -1;
+    }
+
+    memcpy(buf, tmpbuf + off, n);
 
     kfree(tmpbuf);
-    return 0;
+
+    return n;
+}
+
 static VirtualNode* fat_vnode_for_path(FileSystem* fs, const char* path)
 {
     if (!fs || !path)

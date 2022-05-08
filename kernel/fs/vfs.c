@@ -245,19 +245,33 @@ int vfs_mount_by_uuid(const char* uuid, const char* dest, u32 flags)
     if (!fs_driver_hit)
         return -ENODEV;
 
-    FileSystem* fs = vfs_new_fs();
-    if (!fs)
+    FileSystem tmp = {
+        .backing.blkdev = blkdev,
+        .mountflags = flags,
+        .mountpoint = strdup(dest),
+        .mountsrc = "???",
+        .driver = fs_driver_hit,
+        .driver_ctx = NULL,
+        .vnodes = NULL,
+        .vnode_count = 0};
+
+    if (!tmp.mountpoint)
         return -ENOMEM;
 
-    fs->operations = fsops_hit;
-    fs->mountflags = flags;
-    fs->backing.blkdev = blkdev;
+    FileSystem* fs = vfs_new_fs();
+    if (!fs)
+    {
+        kfree(tmp.mountpoint);
+        return -ENOMEM;
+    }
+
+    *fs = tmp;
 
     int st = fs->driver->init(fs);
     if (st != 0)
     {
         kfree(tmp.mountpoint);
-        // delete new fs
+        // FIXME: delete new fs
     }
 
     return st;
