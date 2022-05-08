@@ -22,9 +22,8 @@ typedef struct S_FileSystemBacking
     };
 } FileSystemBacking;
 
-/* A set of operations to act upon a FileSystem struct.
-This defines the actual filesystem implementation. */
-typedef struct S_FileSystemOperations
+/* Defines the operations of a filesystem driver implementation. */
+typedef struct S_FileSystemDriver
 {
     char* name;
     /* Checks whether the given fs is valid. */
@@ -40,7 +39,7 @@ typedef struct S_FileSystemOperations
         void* buf,
         size_t n,
         loff_t off);
-} FileSystemOperations;
+} FileSystemDriver;
 
 /* Represents a mounted/mountable filesystem. It's imeplementation resides
 in 'operations'. */
@@ -52,10 +51,10 @@ typedef struct S_FileSystem
     char* mountpoint;
     /* Mount flags */
     u32 mountflags;
-    /* The filesystem implementation. */
-    FileSystemOperations* operations;
-    /* This is for use by the filesystem implementation. */
-    void* operations_ctx;
+    /* The filesystem driver. */
+    FileSystemDriver* driver;
+    /* This is free for use by the filesystem driver to store whatever. */
+    void* driver_ctx;
     /* Vnodes cache for this filesystem. */
     struct S_VirtualNode* vnodes;
     size_t vnode_count;

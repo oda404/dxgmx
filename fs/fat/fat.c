@@ -132,7 +132,7 @@ static i64 fat_get_fat_entry_for_clust(u32 clust, const FileSystem* fs)
         return -ENOMEM;
 
     const FatEntryAddress loc =
-        fat_get_fat_entry_addr_for_clust(clust, fs->operations_ctx);
+        fat_get_fat_entry_addr_for_clust(clust, fs->driver_ctx);
 
     if (!part->read(part, loc.cluster, 1, tmp))
     {
@@ -175,7 +175,7 @@ static ssize_t fat_read_entry(
         return -EINVAL;
 
     const BlockDevice* part = fs->backing.blkdev;
-    const FatFsMetadata* meta = fs->operations_ctx;
+    const FatFsMetadata* meta = fs->driver_ctx;
     if (!meta)
         return -EINVAL;
 
@@ -316,7 +316,7 @@ static int fat_enumerate_dir(VirtualNode* dir_vnode, FileSystem* fs)
     if ((dir_vnode->mode & S_IFMT) != S_IFDIR)
         return -EINVAL;
 
-    const FatFsMetadata* meta = fs->operations_ctx;
+    const FatFsMetadata* meta = fs->driver_ctx;
     if (!meta)
         return -EINVAL;
 
@@ -363,7 +363,7 @@ static int fat_parse_metadata(FileSystem* fs)
         return -EINVAL;
 
     const BlockDevice* part = fs->backing.blkdev;
-    FatFsMetadata* meta = fs->operations_ctx;
+    FatFsMetadata* meta = fs->driver_ctx;
 
     u8* buf = kmalloc(part->physical_sectorsize);
     if (!buf)
@@ -471,10 +471,10 @@ static int fat_valid(const BlockDevice* blkdev)
 
 static void fat_destroy(FileSystem* fs)
 {
-    if (fs->operations_ctx)
+    if (fs->driver_ctx)
     {
-        kfree(fs->operations_ctx);
-        fs->operations_ctx = NULL;
+        kfree(fs->driver_ctx);
+        fs->driver_ctx = NULL;
     }
 
     if (fs->vnodes)
@@ -495,7 +495,7 @@ static int fat_init(FileSystem* fs)
     if (!meta)
         return -ENOMEM;
 
-    fs->operations_ctx = meta;
+    fs->driver_ctx = meta;
 
     {
         int st = fat_parse_metadata(fs);
@@ -530,10 +530,21 @@ static ssize_t fat_read(
     if (!(fs && vnode && buf && n))
         return -EINVAL;
 
-    (void)off;
+    if (!(fs && vnode && buf) || off >= vnode->size)
+    {
+        errno = EINVAL;
+        return -1;
+    }
+
+    /* If the vnode is not part of this filesystem we fucked up. */
+    if (vnode->owner != fs)
+    {
+        errno = EINVAL;
+        return -1;
+    }
 
     const BlockDevice* part = fs->backing.blkdev;
-    const FatFsMetadata* meta = fs->operations_ctx;
+    const FatFsMetadata* meta = fs->driver_ctx;
 
     if (!(part && meta))
         return -EINVAL;
@@ -563,19 +574,19 @@ static ssize_t fat_read(
 
 static int fatfs_main()
 {
-    const FileSystemOperations fsops = {
+    const FileSystemDriver fs_driver = {
         .name = MODULE_NAME,
         .valid = fat_valid,
         .init = fat_init,
         .destroy = fat_destroy,
         .read = fat_read};
 
-    return vfs_register_fs_operations(&fsops);
+    return vfs_register_fs_driver(&fs_driver);
 }
 
 static int fatfs_exit()
 {
-    return vfs_unregister_fs_operations(MODULE_NAME);
+    return vfs_unregister_fs_driver(MODULE_NAME);
 }
 
 static MODULE const Module g_fat_module = {
