@@ -346,6 +346,7 @@ static int fat_enumerate_dir(VirtualNode* dir_vnode, FileSystem* fs)
         }
 
         vnode.parent = dir_vnode;
+        vnode.owner = fs;
 
         VirtualNode* tmp = fs_new_vnode(fs);
         if (!tmp)
@@ -518,6 +519,7 @@ static int fat_init(FileSystem* fs)
     root->size = 0;
     root->parent = NULL;
     root->name = "/";
+    root->owner = fs;
 
     fat_enumerate_dir(root, fs);
 
