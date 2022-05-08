@@ -53,6 +53,113 @@ static FileSystemDriver* vfs_new_fs_driver()
     memset(fs_driver, 0, sizeof(FileSystemDriver));
     return fs_driver;
 }
+
+/**
+ * @brief Gets the FileSystem on which 'path' resides.
+ * @return The fileystem, if NULL errno indicates the error.
+ */
+static FileSystem* vfs_topmost_fs_for_path(const char* path)
+{
+    /* We only allow absolute paths. */
+    if (!path || path[0] != '/')
+    {
+        errno = EINVAL;
+        return NULL;
+    }
+
+    char* pathdup = strdup(path);
+    if (!pathdup)
+    {
+        errno = ENOMEM;
+        return NULL;
+    }
+
+    FileSystem* fshit = NULL;
+    FOR_EACH_ELEM_IN_DARR (g_filesystems, g_filesystems_count, fs)
+    {
+        strcpy(pathdup, path);
+        ssize_t pathdup_len = strlen(pathdup);
+
+        while (pathdup_len >= 1)
+        {
+            if (fs->mountpoint && strcmp(fs->mountpoint, pathdup) == 0)
+            {
+                fshit = fs;
+                break;
+            }
+
+            for (ssize_t i = pathdup_len - 1; i >= 0; --i)
+            {
+                if (pathdup[i] == '/')
+                {
+                    if (i == pathdup_len - 1)
+                        pathdup[i] = '\0';
+                    else
+                        pathdup[i + 1] = '\0';
+                    break;
+                }
+            }
+
+            pathdup_len = strlen(pathdup);
+        }
+    }
+
+    kfree(pathdup);
+
+    if (!fshit)
+        errno = ENOENT;
+
+    return fshit;
+}
+
+/**
+ * @brief Gets the vnode for the given path.
+ * @return The vnode, if NULL errno indicates the error.
+ */
+static VirtualNode* vfs_vnode_for_path(const char* path)
+{
+    errno = 0;
+
+    if (!path)
+    {
+        errno = EINVAL;
+        return NULL;
+    }
+
+    FileSystem* fs = vfs_topmost_fs_for_path(path);
+    if (!fs)
+        return NULL; /* we keep the errno from vfs_topmost_fs_for_path(). */
+
+    if (!fs->driver || !fs->driver->vnode_for_path)
+    {
+        errno = EINVAL;
+        return NULL;
+    }
+
+    char* working_path = strdup(path);
+    if (!working_path)
+    {
+        errno = ENOMEM;
+        return NULL;
+    }
+
+    /* Chop of the prefix, leaving a path relative to the filesystem's
+     * mountpoint */
+    size_t prefixlen = strlen(fs->mountpoint);
+    while (prefixlen)
+    {
+        const size_t len = strlen(working_path);
+        for (size_t i = 0; i < len; ++i)
+            working_path[i] = working_path[i + 1];
+
+        --prefixlen;
+    }
+
+    VirtualNode* vnode = fs->driver->vnode_for_path(fs, working_path);
+
+    kfree(working_path);
+
+    return vnode;
 }
 
 _INIT bool vfs_init()
