@@ -32,8 +32,9 @@ int module_init_builtins()
 
         KLOGF(INFO, "Found built-in module '%s'.", mod->name);
 
-        if (mod->main)
-            mod->main();
+        int res = mod->main();
+        if (res)
+            KLOGF(ERR, "'%s' main() returned with %d.", mod->name, res);
     }
 
     return 0;
