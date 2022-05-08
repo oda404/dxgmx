@@ -3,8 +3,10 @@
  * Distributed under the MIT license.
  */
 
+#include <dxgmx/assert.h>
 #include <dxgmx/attrs.h>
 #include <dxgmx/errno.h>
+#include <dxgmx/fs/openfd.h>
 #include <dxgmx/fs/vfs.h>
 #include <dxgmx/klog.h>
 #include <dxgmx/kmalloc.h>
@@ -20,6 +22,22 @@ static size_t g_filesystem_drivers_count = 0;
 
 static FileSystem* g_filesystems = NULL;
 static size_t g_filesystems_count = 0;
+
+static OpenFileDescriptor* g_openfds = NULL;
+static size_t g_openfds_count = 0;
+
+/* Returns the next available file descriptor number for the given PID.
+A negative value means no file descriptors are available. */
+static int vfs_next_free_fd_for_pid(pid_t pid)
+{
+    int fd = 3;
+    FOR_EACH_ELEM_IN_DARR (g_openfds, g_openfds_count, openfd)
+    {
+        if (openfd->pid == pid)
+            ++fd;
+    }
+    return fd;
+}
 
 static FileSystem* vfs_new_fs()
 {
@@ -52,6 +70,23 @@ static FileSystemDriver* vfs_new_fs_driver()
         &g_filesystem_drivers[g_filesystem_drivers_count - 1];
     memset(fs_driver, 0, sizeof(FileSystemDriver));
     return fs_driver;
+}
+
+static OpenFileDescriptor* vfs_new_openfd()
+{
+    OpenFileDescriptor* tmp =
+        krealloc(g_openfds, (g_openfds_count + 1) * sizeof(OpenFileDescriptor));
+
+    if (!tmp)
+        return NULL;
+
+    g_openfds = tmp;
+    ++g_openfds_count;
+
+    OpenFileDescriptor* openfd = &g_openfds[g_openfds_count - 1];
+    memset(openfd, 0, sizeof(OpenFileDescriptor));
+
+    return openfd;
 }
 
 /**
@@ -331,5 +366,88 @@ int vfs_unregister_fs_driver(const char* name)
     return 0;
 }
 
+int vfs_open(const char* name, int flags, mode_t mode, pid_t pid)
+{
+    (void)flags;
+
+    ASSERT(pid == 0);
+
+    if (!name)
+    {
+        errno = EINVAL;
+        return -1;
+    }
+
+    OpenFileDescriptor tmpfd;
+    tmpfd.mode = mode;
+    tmpfd.off = 0;
+    tmpfd.pid = pid;
+
+    tmpfd.vnode = vfs_vnode_for_path(name);
+    if (!tmpfd.vnode)
+        return -1; /* errno should be set by vfs_vnode_for_path(). */
+
+    tmpfd.fd = vfs_next_free_fd_for_pid(pid);
+    if (tmpfd.fd < 0)
+    {
+        errno = ERANGE;
+        return -1;
+    }
+
+    OpenFileDescriptor* openfd = vfs_new_openfd();
+    if (!openfd)
+    {
+        errno = ENOMEM;
+        return -1;
+    }
+
+    *openfd = tmpfd;
+
+    return tmpfd.fd;
+}
+
+ssize_t vfs_read(int fd, void* buf, size_t n, pid_t pid)
+{
+    if (!buf || !n)
+    {
+        errno = EINVAL;
+        return -1;
+    }
+
+    OpenFileDescriptor* openfd = NULL;
+    FOR_EACH_ELEM_IN_DARR (g_openfds, g_openfds_count, tmpfd)
+    {
+        if (tmpfd->fd == fd && tmpfd->pid == pid)
+        {
+            openfd = tmpfd;
+            break;
+        }
+    }
+
+    if (!openfd || !openfd->vnode)
+    {
+        errno = ENOENT;
+        return -1;
+    }
+
+    FileSystem* fs = openfd->vnode->owner;
+    if (!fs)
+    {
+        errno = EINVAL;
+        return -1;
+    }
+
+    ssize_t read = fs->driver->read(fs, openfd->vnode, buf, n, openfd->off);
+    if (read < 0)
+        return -1; /* errno should already be set by fs->driver->read(). */
+
+    openfd->off += read;
+    return read;
+}
+
+int vfs_close(int fd, pid_t pid)
+{
+    (void)fd;
+    (void)pid;
     return 0;
 }
