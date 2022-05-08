@@ -23,6 +23,13 @@
         __FUNCTION__,                                                          \
         __LINE__)
 
+#define ASSERT_NOT_HIT()                                                       \
+    panic(                                                                     \
+        "Hit ASSERT_NOT_HIT() in %s at %s():%d.",                              \
+        __FILE__,                                                              \
+        __FUNCTION__,                                                          \
+        __LINE__)
+
 #if __STDC_VERSION__ >= 201112L
 #define STATIC_ASSERT(x, msg) _Static_assert(x, msg)
 #else
