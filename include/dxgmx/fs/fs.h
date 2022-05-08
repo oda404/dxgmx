@@ -39,6 +39,9 @@ typedef struct S_FileSystemDriver
         void* buf,
         size_t n,
         loff_t off);
+
+    struct S_VirtualNode* (*vnode_for_path)(
+        struct S_FileSystem* fs, const char* path);
 } FileSystemDriver;
 
 /* Represents a mounted/mountable filesystem. It's imeplementation resides

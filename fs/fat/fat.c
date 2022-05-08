@@ -570,6 +570,30 @@ static ssize_t fat_read(
 
     kfree(tmpbuf);
     return 0;
+static VirtualNode* fat_vnode_for_path(FileSystem* fs, const char* path)
+{
+    if (!fs || !path)
+    {
+        errno = EINVAL;
+        return NULL;
+    }
+
+    FatFsMetadata* meta = fs->driver_ctx;
+    if (!meta)
+    {
+        errno = EINVAL;
+        return NULL;
+    }
+
+    /* FIXME: don't walk the whole vnode table like an idiot... */
+    FOR_EACH_ELEM_IN_DARR (fs->vnodes, fs->vnode_count, vnode)
+    {
+        if (strcmp(vnode->name, path) == 0)
+            return vnode;
+    }
+
+    errno = ENOENT;
+    return NULL;
 }
 
 static int fatfs_main()
@@ -579,7 +603,8 @@ static int fatfs_main()
         .valid = fat_valid,
         .init = fat_init,
         .destroy = fat_destroy,
-        .read = fat_read};
+        .read = fat_read,
+        .vnode_for_path = fat_vnode_for_path};
 
     return vfs_register_fs_driver(&fs_driver);
 }
