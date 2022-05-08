@@ -91,9 +91,7 @@ bool kmalloc_init()
     /* FIXME: This creates a circular dependency where
     the hashtable needs kmalloc to be in working order and
     kmalloc needs the hashtable to keep track of all allocation sizes. */
-    hashtable_init(
-        (KMALLOC_SLAB_SIZE * KMALLOC_SLABS_PER_BLOCK) / sizeof(HashTableEntry),
-        &g_allocation_hashtable);
+    hashtable_init(512, &g_allocation_hashtable);
 
     return true;
 }
