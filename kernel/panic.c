@@ -1,24 +1,21 @@
-/**
- * Copyright 2021 Alexandru Olaru.
- * Distributed under the MIT license.
- */
 
+#include <dxgmx/attrs.h>
 #include <dxgmx/kabort.h>
 #include <dxgmx/klog.h>
-#include <dxgmx/panic.h>
 #include <dxgmx/stack_trace.h>
-#include <dxgmx/x86/cmos.h>
-#include <dxgmx/x86/interrupts.h>
 #include <stdarg.h>
 
 void panic(const char* lastmsg, ...)
 {
-    cmos_disable_nmi();
-    interrupts_disable();
+#ifdef _X86_
+    __asm__ volatile("cli");
+#endif
 
     klogln(FATAL, "");
-    klogln(FATAL, "---[ uh-oh kernel panic :( ]---");
+    klogln(FATAL, "--- uh-oh kernel panic :( ---");
+
     stack_trace_dump();
+
     if (lastmsg)
     {
         va_list list;
@@ -28,6 +25,6 @@ void panic(const char* lastmsg, ...)
     }
     else
         klogln(FATAL, "nothing to say...");
-    /* shit and cum my final message goodbye */
+
     kabort();
 }
