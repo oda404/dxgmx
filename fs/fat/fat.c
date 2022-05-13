@@ -14,6 +14,7 @@
 #include <dxgmx/math.h>
 #include <dxgmx/module.h>
 #include <dxgmx/string.h>
+#include <dxgmx/todo.h>
 #include <posix/sys/stat.h>
 
 #define KLOGF_PREFIX "fatfs: "
@@ -586,41 +587,36 @@ static ssize_t fat_read(
     return n;
 }
 
-static VirtualNode* fat_vnode_for_path(FileSystem* fs, const char* path)
+static ssize_t fat_write(
+    FileSystem* fs, VirtualNode* vnode, const void* buf, size_t n, loff_t off)
 {
-    if (!fs || !path)
-    {
-        errno = EINVAL;
-        return NULL;
-    }
+    (void)fs;
+    (void)vnode;
+    (void)buf;
+    (void)n;
+    (void)off;
+    TODO_FATAL();
+}
 
-    FatFsMetadata* meta = fs->driver_ctx;
-    if (!meta)
-    {
-        errno = EINVAL;
-        return NULL;
-    }
-
-    /* FIXME: don't walk the whole vnode table like an idiot... */
-    FOR_EACH_ELEM_IN_DARR (fs->vnodes, fs->vnode_count, vnode)
-    {
-        if (strcmp(vnode->name, path) == 0)
-            return vnode;
-    }
-
-    errno = ENOENT;
-    return NULL;
+static int fat_mkfile(FileSystem* fs, const char* path, mode_t mode)
+{
+    (void)fs;
+    (void)path;
+    (void)mode;
+    TODO_FATAL();
 }
 
 static int fatfs_main()
 {
     const FileSystemDriver fs_driver = {
         .name = MODULE_NAME,
+        .backing = FILESYSTEM_BACKING_DISK,
         .valid = fat_valid,
         .init = fat_init,
         .destroy = fat_destroy,
         .read = fat_read,
-        .vnode_for_path = fat_vnode_for_path};
+        .write = fat_write,
+        .mkfile = fat_mkfile};
 
     return vfs_register_fs_driver(&fs_driver);
 }

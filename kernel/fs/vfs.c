@@ -165,7 +165,7 @@ static VirtualNode* vfs_vnode_for_path(const char* path)
     if (!fs)
         return NULL; /* we keep the errno from vfs_topmost_fs_for_path(). */
 
-    if (!fs->driver || !fs->driver->vnode_for_path)
+    if (!fs->driver)
     {
         errno = EINVAL;
         return NULL;
@@ -190,11 +190,23 @@ static VirtualNode* vfs_vnode_for_path(const char* path)
         --prefixlen;
     }
 
-    VirtualNode* vnode = fs->driver->vnode_for_path(fs, working_path);
+    /* FIXME: handle directories */
+    VirtualNode* vnode_hit = NULL;
+    FOR_EACH_ELEM_IN_DARR (fs->vnodes, fs->vnode_count, vnode)
+    {
+        if (vnode->name && strcmp(vnode->name, working_path) == 0)
+        {
+            vnode_hit = vnode;
+            break;
+        }
+    }
 
     kfree(working_path);
 
-    return vnode;
+    if (!vnode_hit)
+        errno = ENOENT;
+
+    return vnode_hit;
 }
 
 _INIT bool vfs_init()
@@ -316,7 +328,7 @@ int vfs_unmount(const char* src_or_dest)
 
 int vfs_register_fs_driver(const FileSystemDriver* fs_driver)
 {
-    if (!(fs_driver && fs_driver->name && fs_driver->valid && fs_driver->init &&
+    if (!(fs_driver && fs_driver->name && fs_driver->init &&
           fs_driver->destroy && fs_driver->read))
     {
         return -EINVAL;

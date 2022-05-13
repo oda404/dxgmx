@@ -22,14 +22,22 @@ typedef struct S_FileSystemBacking
     };
 } FileSystemBacking;
 
+#define FILESYSTEM_BACKING_DISK 1
+#define FILESYSTEM_BACKING_RAM 2
+
 /* Defines the operations of a filesystem driver implementation. */
 typedef struct S_FileSystemDriver
 {
     char* name;
-    /* Checks whether the given fs is valid. */
+    u8 backing;
+
+    /* Checks whether the given BlockDevice holds a valid filesystem. Chould be
+     * left NULL, if the filesystem is backed by ram. */
     int (*valid)(const BlockDevice*);
+
     /* Initializes the fs. */
     int (*init)(struct S_FileSystem*);
+
     /* Destroys the fs. */
     void (*destroy)(struct S_FileSystem*);
 
@@ -40,8 +48,16 @@ typedef struct S_FileSystemDriver
         size_t n,
         loff_t off);
 
-    struct S_VirtualNode* (*vnode_for_path)(
-        struct S_FileSystem* fs, const char* path);
+    ssize_t (*write)(
+        struct S_FileSystem* fs,
+        struct S_VirtualNode* vnode,
+        const void* buf,
+        size_t n,
+        loff_t off);
+
+    /* Create a new empty file on the filesystem. */
+    int (*mkfile)(struct S_FileSystem* fs, const char* path, mode_t mode);
+
 } FileSystemDriver;
 
 /* Represents a mounted/mountable filesystem. It's imeplementation resides
