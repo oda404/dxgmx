@@ -82,5 +82,6 @@ typedef struct S_FileSystem
 } FileSystem;
 
 struct S_VirtualNode* fs_new_vnode(FileSystem* fs);
+int fs_rm_vnode(FileSystem* fs, struct S_VirtualNode* vnode);
 
 #endif // !_DXGMX_FS_FS_H
