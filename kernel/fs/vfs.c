@@ -54,6 +54,42 @@ static FileSystem* vfs_new_fs()
     return &g_filesystems[g_filesystems_count - 1];
 }
 
+static int vfs_rm_fs(FileSystem* fs)
+{
+    if (!fs || !g_filesystems)
+        return -EINVAL;
+
+    bool hit = false;
+    FOR_EACH_ELEM_IN_DARR (g_filesystems, g_filesystems_count, f)
+    {
+        if (f == fs)
+        {
+            hit = true;
+            break;
+        }
+    }
+
+    if (!hit)
+        return -ENOENT;
+
+    /* 'driver_ctx' and 'vnodes' are not freed here because they were the
+     * responsability of the filesystem driver, and they might as well just be
+     * statically allocated. */
+
+    if (fs->mountsrc)
+        kfree(fs->mountsrc);
+
+    if (fs->mountpoint)
+        kfree(fs->mountpoint);
+
+    for (FileSystem* f = fs; f < g_filesystems + g_filesystems_count - 1; ++f)
+        *f = *(f + 1);
+
+    --g_filesystems_count;
+
+    return 0;
+}
+
 static FileSystemDriver* vfs_new_fs_driver()
 {
     FileSystemDriver* tmp = krealloc(
@@ -324,6 +360,71 @@ int vfs_unmount(const char* src_or_dest)
     --g_filesystems_count;
 
     return 0;
+}
+
+int vfs_mount_ramfs(const char* driver_name, const char* dest, u32 flags)
+{
+    if (!driver_name || !dest)
+        return -EINVAL;
+
+    /* Try to find a suitable driver */
+    FileSystemDriver* fs_driver_hit = NULL;
+    FOR_EACH_ELEM_IN_DARR (
+        g_filesystem_drivers, g_filesystem_drivers_count, fsdriver)
+    {
+        if (fsdriver->backing == FILESYSTEM_BACKING_RAM &&
+            strcmp(fsdriver->name, driver_name) == 0)
+        {
+            fs_driver_hit = fsdriver;
+            break;
+        }
+    }
+
+    if (!fs_driver_hit)
+        return -ENODEV;
+
+    FileSystem tmp = {
+        .mountflags = flags,
+        .mountpoint = strdup(dest),
+        .mountsrc = strdup(driver_name),
+        .driver = fs_driver_hit,
+        .driver_ctx = NULL,
+        .vnodes = NULL,
+        .vnode_count = 0};
+
+    FileSystem* fs = NULL;
+    int st = 0;
+
+    if (!tmp.mountpoint || !tmp.mountsrc)
+    {
+        st = -ENOMEM;
+        goto fail;
+    }
+
+    if (!(fs = vfs_new_fs()))
+    {
+        st = -ENOMEM;
+        goto fail;
+    }
+
+    *fs = tmp;
+
+    if ((st = fs->driver->init(fs)) != 0)
+        goto fail;
+
+    return 0;
+
+fail:
+    if (tmp.mountpoint)
+        kfree(tmp.mountpoint);
+
+    if (tmp.mountsrc)
+        kfree(tmp.mountsrc);
+
+    if (fs)
+        vfs_rm_fs(fs);
+
+    return st;
 }
 
 int vfs_register_fs_driver(const FileSystemDriver* fs_driver)
