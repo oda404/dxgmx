@@ -15,6 +15,8 @@ typedef struct S_OpenFileDescriptor
     pid_t pid;
     /* The file descriptor number. */
     int fd;
+    /* open() flags. */
+    int flags;
     /* Access mode. */
     mode_t mode;
     /* Offset into the file */
