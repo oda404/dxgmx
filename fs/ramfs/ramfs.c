@@ -84,20 +84,29 @@ static void ramfs_destroy(FileSystem* fs)
 static int ramfs_mkfile(FileSystem* fs, const char* path, mode_t mode)
 {
     if (!fs || !path)
-        return -EINVAL;
+    {
+        errno = EINVAL;
+        return -1;
+    }
 
     /* FIXME: we should validate the fs driver. */
 
     RamFsMetadata* meta = fs->driver_ctx;
     if (!meta)
-        return -EINVAL;
+    {
+        errno = EINVAL;
+        return -1;
+    }
 
     VirtualNode free_file_vnode;
     memset(&free_file_vnode, 0, sizeof(free_file_vnode));
 
     free_file_vnode.name = strdup(path);
     if (!free_file_vnode.name)
-        return -ENOMEM;
+    {
+        errno = ENOMEM;
+        return -1;
+    }
 
     free_file_vnode.mode = mode;
     free_file_vnode.owner = fs;
@@ -124,7 +133,10 @@ static int ramfs_mkfile(FileSystem* fs, const char* path, mode_t mode)
                 meta->files, sizeof(RamFsMetadata) * meta->files_count * 2);
 
             if (!tmp)
-                return -ENOMEM;
+            {
+                errno = ENOMEM;
+                goto fail;
+            }
 
             meta->files = tmp;
 
@@ -142,11 +154,10 @@ static int ramfs_mkfile(FileSystem* fs, const char* path, mode_t mode)
 
     ASSERT(free_file);
 
-    int st = 0;
     VirtualNode* tmpvnode = fs_new_vnode(fs);
     if (!tmpvnode)
     {
-        st = ENOMEM;
+        errno = ENOMEM;
         goto fail;
     }
 
@@ -161,7 +172,7 @@ fail:
     if (free_file)
         memset(free_file, 0, sizeof(RamFsFileData));
 
-    return st;
+    return -1;
 }
 
 static ssize_t ramfs_read(
