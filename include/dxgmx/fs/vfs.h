@@ -23,6 +23,8 @@ int vfs_unregister_fs_driver(const char* name);
 
 int vfs_open(const char* name, int flags, mode_t mode, pid_t pid);
 ssize_t vfs_read(int fd, void* buf, size_t n, pid_t pid);
+ssize_t vfs_write(int fd, const void* buf, size_t n, pid_t pid);
+off_t vfs_lseek(int fd, off_t offset, int whence, pid_t pid);
 int vfs_close(int fd, pid_t pid);
 
 #endif // !_DXGMX_FS_VFS_H

@@ -6,6 +6,10 @@
 #ifndef _FCNTL_H
 #define _FCNTL_H
 
+#define SEEK_SET 1
+#define SEEK_CUR 2
+#define SEEK_END 3
+
 #define O_RDONLY 0x1
 #define O_WRONLY 0x2
 #define O_RDWR (O_RDONLY | O_WRONLY)

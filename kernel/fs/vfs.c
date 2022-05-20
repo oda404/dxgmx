@@ -14,6 +14,7 @@
 #include <dxgmx/stdio.h>
 #include <dxgmx/storage/blkdevmanager.h>
 #include <dxgmx/string.h>
+#include <posix/fcntl.h>
 
 #define KLOGF_PREFIX "vfs: "
 
@@ -570,6 +571,86 @@ ssize_t vfs_read(int fd, void* buf, size_t n, pid_t pid)
 
     openfd->off += read;
     return read;
+}
+
+ssize_t vfs_write(int fd, const void* buf, size_t n, pid_t pid)
+{
+    if (!buf || !n)
+    {
+        errno = EINVAL;
+        return -1;
+    }
+
+    OpenFileDescriptor* openfd = NULL;
+    FOR_EACH_ELEM_IN_DARR (g_openfds, g_openfds_count, tmpfd)
+    {
+        if (tmpfd->fd == fd && tmpfd->pid == pid)
+        {
+            openfd = tmpfd;
+            break;
+        }
+    }
+
+    if (!openfd || !openfd->vnode)
+    {
+        errno = ENOENT;
+        return -1;
+    }
+
+    FileSystem* fs = openfd->vnode->owner;
+    if (!fs)
+    {
+        errno = EINVAL;
+        return -1;
+    }
+
+    const ssize_t written =
+        fs->driver->write(fs, openfd->vnode, buf, n, openfd->off);
+
+    if (written < 0)
+        return -1; /* errno should already be set by fs->driver->write(). */
+
+    openfd->off += written;
+    return written;
+}
+
+off_t vfs_lseek(int fd, off_t off, int whence, pid_t pid)
+{
+    OpenFileDescriptor* openfd = NULL;
+    FOR_EACH_ELEM_IN_DARR (g_openfds, g_openfds_count, tmpfd)
+    {
+        if (tmpfd->fd == fd && tmpfd->pid == pid)
+        {
+            openfd = tmpfd;
+            break;
+        }
+    }
+
+    if (!openfd || !openfd->vnode)
+    {
+        errno = ENOENT;
+        return -1;
+    }
+
+    if (whence == SEEK_SET)
+    {
+        openfd->off = off;
+    }
+    else if (whence == SEEK_CUR)
+    {
+        openfd->off += off;
+    }
+    else if (whence == SEEK_END)
+    {
+        openfd->off = openfd->vnode->size + off;
+    }
+    else
+    {
+        errno = EINVAL;
+        return -1;
+    }
+
+    return openfd->off;
 }
 
 int vfs_close(int fd, pid_t pid)
