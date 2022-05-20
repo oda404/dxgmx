@@ -622,6 +622,12 @@ ssize_t vfs_read(int fd, void* buf, size_t n, pid_t pid)
         return -1;
     }
 
+    if (!(openfd->flags & O_RDONLY))
+    {
+        errno = EPERM;
+        return -1;
+    }
+
     FileSystem* fs = openfd->vnode->owner;
     if (!fs)
     {
@@ -658,6 +664,12 @@ ssize_t vfs_write(int fd, const void* buf, size_t n, pid_t pid)
     if (!openfd || !openfd->vnode)
     {
         errno = ENOENT;
+        return -1;
+    }
+
+    if (!(openfd->flags & O_WRONLY))
+    {
+        errno = EPERM;
         return -1;
     }
 
