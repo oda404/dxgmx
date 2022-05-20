@@ -15,6 +15,7 @@
 #include <dxgmx/storage/blkdevmanager.h>
 #include <dxgmx/string.h>
 #include <posix/fcntl.h>
+#include <posix/sys/stat.h>
 
 #define KLOGF_PREFIX "vfs: "
 
@@ -124,6 +125,39 @@ static OpenFileDescriptor* vfs_new_openfd()
     memset(openfd, 0, sizeof(OpenFileDescriptor));
 
     return openfd;
+}
+
+static int vfs_rm_openfd(OpenFileDescriptor* openfd)
+{
+    if (!openfd)
+        return -EINVAL;
+
+    bool hit = false;
+    FOR_EACH_ELEM_IN_DARR (g_openfds, g_openfds_count, fd)
+    {
+        if (fd == openfd)
+        {
+            hit = true;
+            break;
+        }
+    }
+
+    if (!hit)
+        return -ENOENT;
+
+    for (OpenFileDescriptor* f = openfd; f < g_openfds + g_openfds_count - 1;
+         ++f)
+        *f = *(f + 1);
+
+    OpenFileDescriptor* tmp =
+        krealloc(g_openfds, (g_openfds_count - 1) * sizeof(OpenFileDescriptor));
+
+    ASSERT(tmp);
+
+    g_openfds = tmp;
+    --g_openfds_count;
+
+    return 0;
 }
 
 /**
@@ -506,15 +540,20 @@ int vfs_open(const char* name, int flags, mode_t mode, pid_t pid)
         return -1;
     }
 
+    FileSystem* fs = vfs_topmost_fs_for_path(name);
+    if (!fs)
+    {
+        errno = EINVAL;
+        return -1;
+    }
+
     OpenFileDescriptor tmpfd;
     tmpfd.mode = mode;
+    tmpfd.flags = flags;
     tmpfd.off = 0;
     tmpfd.pid = pid;
 
-    tmpfd.vnode = vfs_vnode_for_path(name);
-    if (!tmpfd.vnode)
-        return -1; /* errno should be set by vfs_vnode_for_path(). */
-
+    /* get a new fd for the new file */
     tmpfd.fd = vfs_next_free_fd_for_pid(pid);
     if (tmpfd.fd < 0)
     {
@@ -522,10 +561,35 @@ int vfs_open(const char* name, int flags, mode_t mode, pid_t pid)
         return -1;
     }
 
+    /* create the open file descriptor */
     OpenFileDescriptor* openfd = vfs_new_openfd();
     if (!openfd)
     {
         errno = ENOMEM;
+        return -1;
+    }
+
+    /* Get the vnode for the path. */
+    tmpfd.vnode = vfs_vnode_for_path(name);
+    if (!tmpfd.vnode)
+    {
+        if (!(flags & O_CREAT))
+            return -1;
+
+        errno = 0;
+        if (fs->driver->mkfile(fs, name, mode) < 0)
+        {
+            vfs_rm_openfd(openfd);
+            return -1;
+        }
+
+        tmpfd.vnode = vfs_vnode_for_path(name);
+        ASSERT(tmpfd.vnode);
+    }
+    else if (tmpfd.vnode->mode & S_IFDIR)
+    {
+        vfs_rm_openfd(openfd);
+        errno = EISDIR;
         return -1;
     }
 
