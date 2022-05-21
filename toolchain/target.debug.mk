@@ -8,4 +8,5 @@ EXTRA_MACROS += -DDXGMX_CONFIG_LOG_LEVEL=5
 # Modules
 include kernel/stackprot/module.mk
 include fs/fat/module.mk
+include fs/ramfs/module.mk
 include arch/x86/multiboot/module.mk
