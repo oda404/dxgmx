@@ -279,8 +279,11 @@ static VirtualNode* vfs_vnode_for_path(const char* path)
 
 _INIT bool vfs_init()
 {
-    if (vfs_mount("hdap0", "/", 0) < 0)
-        panic("Failed to mount / :(");
+    if (vfs_mount_ramfs("ramfs", "/", 0) < 0)
+        panic("Failed to mount ramfs on / :(");
+
+    FOR_EACH_ELEM_IN_DARR (g_filesystems, g_filesystems_count, fs)
+        KLOGF(INFO, "%s on %s", fs->mountsrc, fs->mountpoint);
 
     return true;
 }
