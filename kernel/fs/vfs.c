@@ -34,10 +34,7 @@ static int vfs_next_free_fd_for_pid(pid_t pid)
 {
     int fd = 3;
     FOR_EACH_ELEM_IN_DARR (g_openfds, g_openfds_count, openfd)
-    {
-        if (openfd->pid == pid)
-            ++fd;
-    }
+        fd += (openfd->pid == pid);
     return fd;
 }
 
@@ -252,7 +249,7 @@ static VirtualNode* vfs_vnode_for_path(const char* path)
     /* Chop of the prefix, leaving a path relative to the filesystem's
      * mountpoint */
     size_t prefixlen = strlen(fs->mountpoint);
-    while (prefixlen)
+    while (prefixlen > 1)
     {
         const size_t len = strlen(working_path);
         for (size_t i = 0; i < len; ++i)
@@ -310,7 +307,7 @@ int vfs_mount_by_uuid(const char* uuid, const char* dest, u32 flags)
         return -EINVAL;
 
     const BlockDevice* blkdev = blkdevmanager_find_blkdev_by_uuid(uuid);
-    if (!blkdev)
+    if (!blkdev || !blkdev->name)
         return -ENOTBLK;
 
     /* Try to find a suitable driver */
@@ -332,65 +329,79 @@ int vfs_mount_by_uuid(const char* uuid, const char* dest, u32 flags)
         .backing.blkdev = blkdev,
         .mountflags = flags,
         .mountpoint = strdup(dest),
-        .mountsrc = "???",
+        .mountsrc = strdup(blkdev->name),
         .driver = fs_driver_hit,
         .driver_ctx = NULL,
         .vnodes = NULL,
         .vnode_count = 0};
 
-    if (!tmp.mountpoint)
-        return -ENOMEM;
+    FileSystem* fs = NULL;
+    int st = 0;
 
-    FileSystem* fs = vfs_new_fs();
-    if (!fs)
+    if (!tmp.mountpoint || !tmp.mountsrc)
     {
-        kfree(tmp.mountpoint);
-        return -ENOMEM;
+        st = -ENOMEM;
+        goto fail;
+    }
+
+    if (!(fs = vfs_new_fs()))
+    {
+        st = -ENOMEM;
+        goto fail;
     }
 
     *fs = tmp;
 
-    int st = fs->driver->init(fs);
-    if (st != 0)
-    {
+    if ((st = fs->driver->init(fs)) != 0)
+        goto fail;
+
+    return st;
+
+fail:
+    if (tmp.mountpoint)
         kfree(tmp.mountpoint);
-        // FIXME: delete new fs
-    }
+
+    if (tmp.mountsrc)
+        kfree(tmp.mountsrc);
+
+    if (fs)
+        vfs_rm_fs(fs);
 
     return st;
 }
 
-int vfs_unmount(const char* src_or_dest)
+int vfs_unmount(const char* src_or_mountpoint)
 {
-    if (!src_or_dest)
+    if (!src_or_mountpoint)
         return -EINVAL;
 
-    ssize_t idx = -1;
-    for (size_t i = 0; i < g_filesystems_count; ++i)
+    FileSystem* fs_hit = NULL;
+    FOR_EACH_ELEM_IN_DARR (g_filesystems, g_filesystems_count, fs)
     {
-        FileSystem* tmp = &g_filesystems[i];
-        if ((tmp->mountsrc && strcmp(tmp->mountsrc, src_or_dest) == 0) ||
-            (tmp->mountpoint && strcmp(tmp->mountpoint, src_or_dest) == 0))
+        if ((fs->mountsrc && strcmp(fs->mountsrc, src_or_mountpoint) == 0) ||
+            (fs->mountpoint && strcmp(fs->mountpoint, src_or_mountpoint) == 0))
         {
-            idx = i;
+            fs_hit = fs;
             break;
         }
     }
 
-    if (idx == -1)
+    if (!fs_hit)
         return -ENOENT;
 
-    FileSystem* fs = &g_filesystems[idx];
-    fs->driver->destroy(fs);
+    fs_hit->driver->destroy(fs_hit);
 
-    if (fs->mountsrc)
-        kfree(fs->mountsrc);
+    if (fs_hit->mountsrc)
+        kfree(fs_hit->mountsrc);
 
-    if (fs->mountpoint)
-        kfree(fs->mountpoint);
+    if (fs_hit->mountpoint)
+        kfree(fs_hit->mountpoint);
 
-    for (size_t i = idx; i < g_filesystems_count - 1; ++i)
-        g_filesystems[i] = g_filesystems[i + 1];
+    for (FileSystem* fs = fs_hit; fs < g_filesystems + g_filesystems_count - 1;
+         ++fs)
+    {
+        *fs = *(fs + 1);
+    }
 
     --g_filesystems_count;
 
@@ -494,34 +505,34 @@ int vfs_unregister_fs_driver(const char* name)
     if (!name)
         return -EINVAL;
 
-    ssize_t fs_driver_idx = -1;
-    /* Find the filesystem operations struct */
-    for (size_t i = 0; i < g_filesystem_drivers_count; ++i)
+    FileSystemDriver* fsdriver_hit = NULL;
+    FOR_EACH_ELEM_IN_DARR (
+        g_filesystem_drivers, g_filesystem_drivers_count, fsdriver)
     {
-        FileSystemDriver* fs_driver = &g_filesystem_drivers[i];
-        if (fs_driver->name && strcmp(fs_driver->name, name) == 0)
+        if (fsdriver->name && strcmp(fsdriver->name, name) == 0)
         {
-            fs_driver_idx = i;
+            fsdriver_hit = fsdriver;
             break;
         }
     }
 
-    if (fs_driver_idx == -1)
+    if (!fsdriver_hit)
         return -ENOENT;
 
     /* Check to see if it's in use by any filesystems */
-    const FileSystemDriver* fs_driver = &g_filesystem_drivers[fs_driver_idx];
     FOR_EACH_ELEM_IN_DARR (g_filesystems, g_filesystems_count, fs)
     {
         /* We could also strcmp names ... */
-        if (fs->driver == fs_driver)
+        if (fs->driver == fsdriver_hit)
             return -EBUSY;
     }
 
     /* If we got here the FileSystemDriver is valid, and it's not
     in use by any mounted filesystems, so we remove it. */
-    for (size_t i = fs_driver_idx; i < g_filesystem_drivers_count - 1; ++i)
-        g_filesystem_drivers[i] = g_filesystem_drivers[i + 1];
+    for (FileSystemDriver* d = fsdriver_hit;
+         d < g_filesystem_drivers + g_filesystem_drivers_count - 1;
+         ++d)
+        *d = *(d + 1);
 
     --g_filesystem_drivers_count;
 
