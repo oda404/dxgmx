@@ -128,9 +128,7 @@ static void idt_load(const IDTR* idtr)
 
 static u32 g_isr_trashcan = 0;
 
-static void dummy_cb(
-    const InterruptFrame _ATTR_MAYBE_UNUSED* frame,
-    const void _ATTR_MAYBE_UNUSED* data)
+static void dummy_cb(const InterruptFrame _ATTR_MAYBE_UNUSED* frame)
 {
     ++g_isr_trashcan;
 }
@@ -306,7 +304,7 @@ _INIT bool idt_register_isr(u8 irq, isr cb)
 #define TRAP_HANDLER_NO_DATA(n)                                                \
     _ATTR_USED static void trap##n##_handler(const InterruptFrame* frame)      \
     {                                                                          \
-        g_isrs[TRAP##n](frame, NULL);                                          \
+        g_isrs[TRAP##n](frame);                                                \
     }
 
 TRAP_HANDLER_NO_DATA(0)
@@ -345,7 +343,7 @@ TRAP_HANDLER_NO_DATA(31)
 #define IRQ_HANDLER_NO_DATA(n)                                                 \
     _ATTR_USED static void irq##n##_handler(const InterruptFrame* frame)       \
     {                                                                          \
-        g_isrs[IRQ##n](frame, NULL);                                           \
+        g_isrs[IRQ##n](frame);                                                 \
         pic8259_signal_eoi(n < 8 ? 0 : 1);                                     \
     }
 
@@ -356,7 +354,7 @@ IRQ_HANDLER_NO_DATA(0)
 _ATTR_USED static void irq1_handler(const InterruptFrame* frame)
 {
     unsigned char scan_code = port_inb(0x60);
-    g_isrs[IRQ1](frame, NULL);
+    g_isrs[IRQ1](frame);
     pic8259_signal_eoi(0);
 }
 

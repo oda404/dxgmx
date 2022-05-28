@@ -46,11 +46,8 @@ static volatile struct timespec g_periodic_int_timespec;
 static bool g_periodic_ints_enabled = false;
 static size_t g_freq = 0;
 
-static void
-pit_isr(const InterruptFrame _ATTR_UNUSED* frame, const void _ATTR_UNUSED* data)
+static void pit_isr(const InterruptFrame _ATTR_UNUSED* frame)
 {
-    ASSERT(!data);
-
     g_periodic_int_timespec.tv_nsec += 1.f / g_freq * 1000000000;
     while (g_periodic_int_timespec.tv_nsec >= 1000000000)
     {

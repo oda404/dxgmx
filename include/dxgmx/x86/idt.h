@@ -90,7 +90,7 @@ typedef struct _ATTR_PACKED S_IDTR
 
 #endif // _X86_
 
-typedef void (*isr)(const InterruptFrame* frame, const void* data);
+typedef void (*isr)(const InterruptFrame* frame);
 /* The ISR trashcan is an uint32 value that gets incremented every time an
 interrupt without a set ISR gets fired. Why does it exist ? idk. */
 u32 idt_get_isr_trashcan();

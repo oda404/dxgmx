@@ -9,25 +9,24 @@
 #include <dxgmx/x86/idt.h>
 #include <dxgmx/x86/interrupt_frame.h>
 
-static void divbyzero_isr(const InterruptFrame* frame, const void* data)
+static void divbyzero_isr(const InterruptFrame* frame)
 {
-    (void)data;
 
     panic(
         "Division by zero in ring 0 at EIP: 0x%p. Not proceeding.",
         (void*)frame->eip);
 }
 
-static void debug_isr(const InterruptFrame* frame, const void* data)
+static void debug_isr(const InterruptFrame* frame)
 {
     (void)frame;
-    (void)data;
+
     TODO();
 }
 
-static void overflow_isr(const InterruptFrame* frame, const void* data)
+static void overflow_isr(const InterruptFrame* frame)
 {
-    (void)data;
+
     klogln(
         WARN,
         "Overflow in ring 0 at EIP: 0x%p, EFLAGS: 0x%p.",
@@ -35,120 +34,105 @@ static void overflow_isr(const InterruptFrame* frame, const void* data)
         (void*)frame->eflags);
 }
 
-static void
-boundrange_exceeded_isr(const InterruptFrame* frame, const void* data)
+static void boundrange_exceeded_isr(const InterruptFrame* frame)
 {
     (void)frame;
-    (void)data;
+
     TODO_FATAL();
 }
 
-static void invalid_opcode_isr(const InterruptFrame* frame, const void* data)
+static void invalid_opcode_isr(const InterruptFrame* frame)
 {
     (void)frame;
-    (void)data;
+
     panic(
         "Invalid instruction at EIP: 0x%p. Not proceeding.", (void*)frame->eip);
 }
 
-static void fpu_not_available_isr(const InterruptFrame* frame, const void* data)
+static void fpu_not_available_isr(const InterruptFrame* frame)
 {
     (void)frame;
-    (void)data;
+
     TODO_FATAL();
 }
 
-static void double_fault_isr(const InterruptFrame* frame, const void* data)
+static void double_fault_isr(const InterruptFrame* frame)
 {
     (void)frame;
-    (void)data;
 
     panic(
         "Double fault! EIP: 0x%p. Obviously not proceeding.",
         (void*)frame->eip);
 }
 
-static void invalid_tss_isr(const InterruptFrame* frame, const void* data)
+static void invalid_tss_isr(const InterruptFrame* frame)
 {
     (void)frame;
-    (void)data;
 
     TODO_FATAL();
 }
 
-static void segment_absent_isr(const InterruptFrame* frame, const void* data)
+static void segment_absent_isr(const InterruptFrame* frame)
 {
     (void)frame;
-    (void)data;
 
     TODO_FATAL();
 }
 
-static void stack_seg_fault(const InterruptFrame* frame, const void* data)
+static void stack_seg_fault(const InterruptFrame* frame)
 {
     (void)frame;
-    (void)data;
 
     TODO_FATAL();
 }
 
-static void
-general_prot_fault_isr(const InterruptFrame* frame, const void* data)
+static void general_prot_fault_isr(const InterruptFrame* frame)
 {
     (void)frame;
-    (void)data;
 
     TODO_FATAL();
 }
 
-static void
-x87floating_point_err_isr(const InterruptFrame* frame, const void* data)
+static void x87floating_point_err_isr(const InterruptFrame* frame)
 {
     (void)frame;
-    (void)data;
 
     TODO_FATAL();
 }
 
-static void alignment_check_isr(const InterruptFrame* frame, const void* data)
+static void alignment_check_isr(const InterruptFrame* frame)
 {
     (void)frame;
-    (void)data;
 
     TODO_FATAL();
 }
 
-static void machine_check_isr(const InterruptFrame* frame, const void* data)
+static void machine_check_isr(const InterruptFrame* frame)
 {
     (void)frame;
-    (void)data;
 
     panic(
         "You just got machine checked, EIP: 0x%p. Not proceeding",
         (void*)frame->eip);
 }
 
-static void
-simdfloating_point_err_isr(const InterruptFrame* frame, const void* data)
+static void simdfloating_point_err_isr(const InterruptFrame* frame)
 {
     (void)frame;
-    (void)data;
 
     TODO_FATAL();
 }
 
-static void virt_err_isr(const InterruptFrame* frame, const void* data)
+static void virt_err_isr(const InterruptFrame* frame)
 {
     (void)frame;
-    (void)data;
 
     TODO_FATAL();
 }
 
-static void security_err_isr(const InterruptFrame* frame, const void* data)
+static void security_err_isr(const InterruptFrame* frame)
 {
     (void)frame;
-    (void)data;
 
     TODO_FATAL();
 }
