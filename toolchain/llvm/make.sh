@@ -14,6 +14,10 @@ setup() {
         echo "Skipping clone..."
     else
         git clone --depth 1 $URL $REPO_ROOT
+
+        pushd $REPO_ROOT
+            git checkout 1e1f60c605a9b1c803f3bbb1a1339c9bb1af4e34 
+        popd
     fi
 }
 
@@ -23,7 +27,10 @@ build() {
     echo "Prefix is \"$PREFIX\""
 
     pushd $REPO_ROOT
-        cmake -S compiler-rt -B build-compiler-rt -G "Unix Makefiles" \
+        cmake -S llvm -B build-llvm -G "Unix Makefiles" \
+            -DLLVM_ENABLE_PROJECTS='clang;compiler-rt;lld' \
+            -DLLVM_ENABLE_RUNTIMES='' \
+            -DLLVM_TARGETS_TO_BUILD='X86' \
             -DCMAKE_INSTALL_PREFIX="$PREFIX" \
             -DCMAKE_C_COMPILER=clang \
             -DCMAKE_CXX_COMPILER=clang++ \
@@ -43,14 +50,14 @@ build() {
             -DCOMPILER_RT_INCLUDE_TESTS=NO \
             -DCOMPILER_RT_DEFAULT_TARGET_TRIPLE=i686-unknown-dxgmx
 
-        make -j$(nproc) -C build-compiler-rt/
+        make -j$(nproc) -C build-llvm/
 
     popd
 }
 
 install() {
     pushd $REPO_ROOT
-        make install -C build-compiler-rt/
+        make install -C build-llvm/
     popd 
 }
 
