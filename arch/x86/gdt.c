@@ -1,47 +1,14 @@
 /**
- * Copyright 2021 Alexandru Olaru.
+ * Copyright 2022 Alexandru Olaru.
  * Distributed under the MIT license.
  */
 
+#include <dxgmx/assert.h>
 #include <dxgmx/attrs.h>
+#include <dxgmx/kstack.h>
+#include <dxgmx/string.h>
 #include <dxgmx/types.h>
 #include <dxgmx/x86/gdt.h>
-
-/* set to 1 by the cpu if
- * the segment is accessed,
- * defined just for completeness
- */
-#define GDT_SEG_ACCESSED (1 << 0)
-/* 1 for data/code segments, 0 otherwise. */
-#define GDT_SEG_TYPE(n) ((n & 1) << 4)
-/* ring number 0, 1, 2, 3 */
-#define GDT_SEG_PRIVILEGE(n) ((n & 3) << 5)
-/* Segment is present. */
-#define GDT_SEG_PRESENT (1 << 7)
-
-/* read */
-#define GDT_SEG_R (0 << 1)
-/* read, write */
-#define GDT_SEG_RW (0b001 << 1)
-/* read, segment grows down */
-#define GDT_SEG_R_GROW_DOWN (0b010 << 1)
-/* read, write, segment grows down */
-#define GDT_SEG_RW_GROW_DOWN (0b011 << 1)
-/* execute */
-#define GDT_SEG_X (0b100 << 1)
-/* read, execute */
-#define GDT_SEG_RX (0b101 << 1)
-/* execute, conforming */
-#define GDT_SEG_X_CONF (0b110 << 1)
-/* read, execute, conforming */
-#define GDT_SEG_RX_CONF (0b111 << 1)
-
-/* 1 for Page (4KiB) granularity, 0 for byte granularity. */
-#define GDT_SEG_GRANULARITY(n) ((n & 1) << 3)
-/* 0 for real mode, 1 for protected mode. */
-#define GDT_SEG_SIZE(n) ((n & 1) << 2)
-/* Long mode segment. */
-#define GDT_SEG_LONG (1 << 1)
 
 _INIT static void gdt_load(const GDTR* gdtr)
 {
@@ -60,68 +27,111 @@ _INIT static void gdt_load(const GDTR* gdtr)
 }
 
 _INIT static void
-gdt_encode_entry(u32 base, u32 limit, u8 access_byte, u8 flags, GDTEntry* entry)
+gdt_encode_entry_base_and_limit(u32 base, u32 limit, GDTEntry* entry)
 {
     entry->limit_0_15 = (limit & 0xFFFF);
     entry->base_0_15 = (base & 0xFFFF);
     entry->base_16_23 = (base & 0xFF0000) >> 16;
-
-    entry->accessed = 0;
-    entry->access = (access_byte & (0b111 << 1)) >> 1;
-    entry->type = (bool)(access_byte & (1 << 4));
-    entry->privilege = access_byte & (0b11 << 5);
-    entry->present = (bool)(access_byte & (1 << 7));
-
     entry->limit_16_19 = (limit & 0xF0000) >> 16;
-
-    entry->zero = 0;
-    entry->long_mode = (bool)(flags & GDT_SEG_LONG);
-    entry->size = (bool)(flags & GDT_SEG_SIZE(1));
-    entry->granularity = (bool)(flags & GDT_SEG_GRANULARITY(1));
-
     entry->base_24_31 = (base & 0xFF000000) >> 24;
 }
 
-#define GDT_ENTRIES_CNT 5
+#define GDT_ENTRIES_CNT 6
 static GDTEntry g_gdt[GDT_ENTRIES_CNT];
 static GDTR g_gdtr;
+static TssEntry g_tss;
+
+_ATTR_NAKED _INIT static void tss_flush()
+{
+    __asm__ volatile("cli \n"
+                     "mov %0, %%ax \n"
+                     "ltr %%ax \n"
+                     "sti \n"
+                     "ret \n"
+                     :
+                     : "i"(GDT_TSS));
+}
 
 _INIT void gdt_init()
 {
-    /* null segment, needs to be here */
-    gdt_encode_entry(0, 0, 0, 0, &g_gdt[0]);
+    memset(g_gdt, 0, sizeof(g_gdt));
+
+#define CS0_IDX (GDT_KERNEL_CS / sizeof(GDTEntry))
+#define DS0_IDX (GDT_KERNEL_DS / sizeof(GDTEntry))
+#define CS3_IDX (GDT_USER_CS / sizeof(GDTEntry))
+#define DS3_IDX (GDT_USER_DS / sizeof(GDTEntry))
+#define TSS_IDX (GDT_TSS / sizeof(GDTEntry))
+
+    STATIC_ASSERT(
+        (CS0_IDX < GDT_ENTRIES_CNT && DS0_IDX < GDT_ENTRIES_CNT &&
+         CS3_IDX < GDT_ENTRIES_CNT && DS3_IDX < GDT_ENTRIES_CNT &&
+         TSS_IDX < GDT_ENTRIES_CNT),
+        "Out of range GDT segment(s)!");
+
+    STATIC_ASSERT(
+        (CS0_IDX != DS0_IDX && DS0_IDX != CS3_IDX && CS3_IDX != DS3_IDX &&
+         DS3_IDX != TSS_IDX),
+        "Duplicate GDT segments(s)!");
+
     /* code ring 0 segment */
-    gdt_encode_entry(
-        0,
-        0xFFFFF,
-        (GDT_SEG_RX | GDT_SEG_PRIVILEGE(0) | GDT_SEG_TYPE(1) | GDT_SEG_PRESENT),
-        (GDT_SEG_GRANULARITY(1) | GDT_SEG_SIZE(1)),
-        &g_gdt[1]);
+    GDTEntry* entry = &g_gdt[CS0_IDX];
+    gdt_encode_entry_base_and_limit(0, 0xFFFFF, entry);
+    entry->access_rw = 1;
+    entry->access_exec = 1;
+    entry->access_dpl = 0;
+    entry->access_type = 1;
+    entry->access_present = 1;
+    entry->granularity = 1;
+    entry->size = 1;
+
     /* data ring 0 segment */
-    gdt_encode_entry(
-        0,
-        0xFFFFF,
-        (GDT_SEG_RW | GDT_SEG_PRIVILEGE(0) | GDT_SEG_TYPE(1) | GDT_SEG_PRESENT),
-        (GDT_SEG_GRANULARITY(1) | GDT_SEG_SIZE(1)),
-        &g_gdt[2]);
+    entry = &g_gdt[DS0_IDX];
+    gdt_encode_entry_base_and_limit(0, 0xFFFFF, entry);
+    entry->access_rw = 1;
+    entry->access_dpl = 0;
+    entry->access_type = 1;
+    entry->access_present = 1;
+    entry->granularity = 1;
+    entry->size = 1;
+
     /* code ring 3 segment */
-    gdt_encode_entry(
-        0,
-        0xFFFFF,
-        (GDT_SEG_RX | GDT_SEG_PRIVILEGE(3) | GDT_SEG_TYPE(1) | GDT_SEG_PRESENT),
-        (GDT_SEG_GRANULARITY(1) | GDT_SEG_SIZE(1)),
-        &g_gdt[3]);
+    entry = &g_gdt[CS3_IDX];
+    gdt_encode_entry_base_and_limit(0, 0xFFFFF, entry);
+    entry->access_rw = 1;
+    entry->access_exec = 1;
+    entry->access_dpl = 3;
+    entry->access_type = 1;
+    entry->access_present = 1;
+    entry->granularity = 1;
+    entry->size = 1;
+
     /* data ring 3 segment */
-    gdt_encode_entry(
-        0,
-        0xFFFFF,
-        (GDT_SEG_RW | GDT_SEG_PRIVILEGE(3) | GDT_SEG_TYPE(1) | GDT_SEG_PRESENT),
-        (GDT_SEG_GRANULARITY(1) | GDT_SEG_SIZE(1)),
-        &g_gdt[4]);
-    // TODO: add tss
+    entry = &g_gdt[DS3_IDX];
+    gdt_encode_entry_base_and_limit(0, 0xFFFFF, entry);
+    entry->access_rw = 1;
+    entry->access_dpl = 3;
+    entry->access_type = 1;
+    entry->access_present = 1;
+    entry->granularity = 1;
+    entry->size = 1;
+
+    /* tss */
+    entry = &g_gdt[TSS_IDX];
+    gdt_encode_entry_base_and_limit((ptr)&g_tss, sizeof(g_tss), entry);
+    entry->access_accessed = 1; /* For a system segment 1: a TSS and 0: LDT */
+    entry->access_exec = 1;     /* For a TSS 1: 32bit and 0: 16bit */
+    entry->access_present = 1;
 
     g_gdtr.base = g_gdt;
     g_gdtr.limit = sizeof(g_gdt) - 1;
 
     gdt_load(&g_gdtr);
+
+    /* Prepare the TSS */
+    memset(&g_tss, 0, sizeof(TssEntry));
+    g_tss.ss0 = GDT_KERNEL_DS;
+    /* !! FIXME: create a separate kernel stack. */
+    g_tss.esp0 = _kernel_stack_top;
+
+    tss_flush();
 }
