@@ -28,8 +28,8 @@ typedef struct S_VirtualNode
     mode_t mode;
     /* If the file has been removed but is not  */
     u16 state;
-    /* The parent directory for this vnode. This is NULL for /. */
-    struct S_VirtualNode* parent;
+    /* The parent directory's inode number. This is 0 for /. */
+    ino_t parent_n;
     /* The filesystem backing this vnode. */
     struct S_FileSystem* owner;
 } VirtualNode;

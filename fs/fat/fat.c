@@ -346,7 +346,7 @@ static int fat_enumerate_dir(VirtualNode* dir_vnode, FileSystem* fs)
             ++cluster;
         }
 
-        vnode.parent = dir_vnode;
+        vnode.parent_n = dir_vnode->n;
         vnode.owner = fs;
 
         VirtualNode* tmp = fs_new_vnode(fs);
@@ -518,7 +518,7 @@ static int fat_init(FileSystem* fs)
     root->mode = FAT_DIR_MODE;
     root->n = meta->root_dir_cluster;
     root->size = 0;
-    root->parent = NULL;
+    root->parent_n = 0;
     root->name = "/";
     root->owner = fs;
 
