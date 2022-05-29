@@ -37,11 +37,11 @@ void stack_trace_dump()
     klogln(INFO, "Call stack backtrace:");
     if (!frame)
     {
-        klogln(ERR, "-- ebp is NULL, aborting stack trace dump!");
+        klogln(ERR, "- ebp is NULL, aborting stack trace dump!");
         return;
     }
 
-#define FRAMES_UNWIND_MAX 15
+#define FRAMES_UNWIND_MAX 20
 #define FUNC_BUF_MAX 49
 
     size_t frames = 0;
@@ -49,7 +49,7 @@ void stack_trace_dump()
     {
         if (!stack_frame_is_valid(frame))
         {
-            klogln(ERR, "-- Invalid stack frame, aborting stack trace dump!");
+            klogln(ERR, "- Invalid stack frame, aborting stack trace dump!");
             return;
         }
 
@@ -67,5 +67,8 @@ void stack_trace_dump()
         frame = (StackFrame*)frame->baseptr;
 
         ++frames;
+
+        if (frames == FRAMES_UNWIND_MAX)
+            klogln(WARN, "- Hit FRAMES_UNWIND_MAX, truncated stack strace!");
     }
 }
