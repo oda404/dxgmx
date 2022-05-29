@@ -5,7 +5,7 @@ KERNEL_NAME       := dxgmx
 
 VER_MAJ           := 0
 VER_MIN           := 11
-PATCH_N           := 2
+PATCH_N           := 3
 CODENAME          := angel_attack
 
 ifeq ($(DXGMX_ARCH),)
