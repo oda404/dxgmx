@@ -37,6 +37,10 @@ typedef u64 ptr;
 #define GIB (MIB * 1024)
 #define TIB (GIB * 1024)
 
+#if __STDC_VERSION__ <= 201710L
+#include <stdbool.h>
+#endif
+
 /* For each loop to simplify looping over a dynamic array. */
 #define FOR_EACH_ELEM_IN_DARR(arr, count, elem)                                \
     for (__typeof__(arr) elem = arr; elem < arr + count; ++elem)
