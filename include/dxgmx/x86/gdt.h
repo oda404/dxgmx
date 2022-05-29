@@ -94,5 +94,6 @@ typedef struct _ATTR_PACKED S_GDTR
 #define GDT_TSS 0x28
 
 void gdt_init();
+void tss_init();
 
 #endif // _DXGMX_X86_GDT_H

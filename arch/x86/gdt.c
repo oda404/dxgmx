@@ -10,23 +10,25 @@
 #include <dxgmx/types.h>
 #include <dxgmx/x86/gdt.h>
 
-_INIT static void gdt_load(const GDTR* gdtr)
+static _INIT void gdt_load(const GDTR* gdtr)
 {
-    __asm__ volatile("lgdt (%0)                \n"
+    __asm__ volatile("cli                      \n"
+                     "lgdt (%0)                \n"
                      "ljmp %1, $reload_segs    \n"
                      "                         \n"
                      "reload_segs:             \n"
-                     "  movw %2, %%ax       \n"
+                     "  movw %2, %%ax          \n"
                      "  movw %%ax, %%ds        \n"
                      "  movw %%ax, %%es        \n"
                      "  movw %%ax, %%fs        \n"
                      "  movw %%ax, %%gs        \n"
                      "  movw %%ax, %%ss        \n"
+                     "  sti                    \n"
                      :
                      : "b"(gdtr), "i"(GDT_KERNEL_CS), "i"(GDT_KERNEL_DS));
 }
 
-_INIT static void
+static _INIT void
 gdt_encode_entry_base_and_limit(u32 base, u32 limit, GDTEntry* entry)
 {
     entry->limit_0_15 = (limit & 0xFFFF);
@@ -36,21 +38,20 @@ gdt_encode_entry_base_and_limit(u32 base, u32 limit, GDTEntry* entry)
     entry->base_24_31 = (base & 0xFF000000) >> 24;
 }
 
+static _INIT void tss_load()
+{
+    __asm__ volatile("cli           \n"
+                     "mov %0, %%ax  \n"
+                     "ltr %%ax      \n"
+                     "sti           \n"
+                     :
+                     : "i"(GDT_TSS));
+}
+
 #define GDT_ENTRIES_CNT 6
 static GDTEntry g_gdt[GDT_ENTRIES_CNT];
 static GDTR g_gdtr;
 static TssEntry g_tss;
-
-_ATTR_NAKED _INIT static void tss_flush()
-{
-    __asm__ volatile("cli \n"
-                     "mov %0, %%ax \n"
-                     "ltr %%ax \n"
-                     "sti \n"
-                     "ret \n"
-                     :
-                     : "i"(GDT_TSS));
-}
 
 _INIT void gdt_init()
 {
@@ -126,12 +127,15 @@ _INIT void gdt_init()
     g_gdtr.limit = sizeof(g_gdt) - 1;
 
     gdt_load(&g_gdtr);
+}
 
+_INIT void tss_init()
+{
     /* Prepare the TSS */
     memset(&g_tss, 0, sizeof(TssEntry));
     g_tss.ss0 = GDT_KERNEL_DS;
     /* !! FIXME: create a separate kernel stack. */
     g_tss.esp0 = _kernel_stack_top;
 
-    tss_flush();
+    tss_load();
 }

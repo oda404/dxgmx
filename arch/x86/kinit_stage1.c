@@ -26,6 +26,7 @@ _INIT bool kinit_stage1()
     interrupts_disable();
 
     gdt_init();
+    tss_init();
     idt_init();
 
     /* Back in business. */
