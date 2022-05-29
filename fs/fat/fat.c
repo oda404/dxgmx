@@ -309,7 +309,7 @@ static ssize_t fat_read_entry(
     return entries_read;
 }
 
-static int fat_enumerate_dir(VirtualNode* dir_vnode, FileSystem* fs)
+static int fat_enumerate_dir(const VirtualNode* dir_vnode, FileSystem* fs)
 {
     if (!dir_vnode || !fs)
         return -EINVAL;
@@ -346,6 +346,12 @@ static int fat_enumerate_dir(VirtualNode* dir_vnode, FileSystem* fs)
             ++cluster;
         }
 
+        /* Skip the current and previous directory */
+        if (vnode.name)
+        {
+            if (*vnode.name == '.' || strcmp(vnode.name, "..") == 0)
+                continue;
+        }
 
         VirtualNode* tmp = fs_new_vnode(fs, vnode.n, dir_vnode);
         if (!tmp)
@@ -355,6 +361,9 @@ static int fat_enumerate_dir(VirtualNode* dir_vnode, FileSystem* fs)
         tmp->name = vnode.name;
         tmp->size = vnode.size;
         tmp->state = vnode.state;
+
+        if (tmp->mode & S_IFDIR)
+            fat_enumerate_dir(tmp, fs);
     }
 
     return 0;
