@@ -346,14 +346,15 @@ static int fat_enumerate_dir(VirtualNode* dir_vnode, FileSystem* fs)
             ++cluster;
         }
 
-        vnode.parent_n = dir_vnode->n;
-        vnode.owner = fs;
 
-        VirtualNode* tmp = fs_new_vnode(fs);
+        VirtualNode* tmp = fs_new_vnode(fs, vnode.n, dir_vnode);
         if (!tmp)
-            return -ENOMEM;
+            return -errno;
 
-        *tmp = vnode;
+        tmp->mode = vnode.mode;
+        tmp->name = vnode.name;
+        tmp->size = vnode.size;
+        tmp->state = vnode.state;
     }
 
     return 0;
@@ -508,21 +509,18 @@ static int fat_init(FileSystem* fs)
         }
     }
 
-    VirtualNode* root = fs_new_vnode(fs);
-    if (!root)
+    VirtualNode* rootvnode = fs_new_vnode(fs, meta->root_dir_cluster, NULL);
+    if (!rootvnode)
     {
         fat_destroy(fs);
-        return -ENOMEM;
+        return -errno;
     }
 
-    root->mode = FAT_DIR_MODE;
-    root->n = meta->root_dir_cluster;
-    root->size = 0;
-    root->parent_n = 0;
-    root->name = "/";
-    root->owner = fs;
+    rootvnode->mode = FAT_DIR_MODE;
+    rootvnode->size = 0;
+    rootvnode->name = "/";
 
-    fat_enumerate_dir(root, fs);
+    fat_enumerate_dir(rootvnode, fs);
 
     return 0;
 }

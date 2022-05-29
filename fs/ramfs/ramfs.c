@@ -154,14 +154,16 @@ static int ramfs_mkfile(FileSystem* fs, const char* path, mode_t mode)
 
     ASSERT(free_file);
 
-    VirtualNode* tmpvnode = fs_new_vnode(fs);
-    if (!tmpvnode)
-    {
-        errno = ENOMEM;
-        goto fail;
-    }
+    VirtualNode* tmpvnode =
+        fs_new_vnode(fs, free_file_vnode.n, NULL /* FIXME */);
 
-    *tmpvnode = free_file_vnode;
+    if (!tmpvnode)
+        goto fail;
+
+    tmpvnode->mode = free_file_vnode.mode;
+    tmpvnode->name = free_file_vnode.name;
+    tmpvnode->size = free_file_vnode.size;
+    tmpvnode->state = free_file_vnode.state;
 
     return 0;
 

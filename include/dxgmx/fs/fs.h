@@ -81,7 +81,8 @@ typedef struct S_FileSystem
     FileSystemBacking backing;
 } FileSystem;
 
-struct S_VirtualNode* fs_new_vnode(FileSystem* fs);
+struct S_VirtualNode*
+fs_new_vnode(FileSystem* fs, ino_t n, const VirtualNode* parent);
 int fs_rm_vnode(FileSystem* fs, struct S_VirtualNode* vnode);
 
 #endif // !_DXGMX_FS_FS_H
