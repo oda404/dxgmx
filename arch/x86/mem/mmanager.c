@@ -183,9 +183,10 @@ static void pagefault_isr(const InterruptFrame* frame)
             msg = "read from";
 
         panic(
-            "Page protection violation: tried to %s 0x%p. Not proceeding.",
+            "Page protection violation: tried to %s 0x%p (ring %u). Not proceeding.",
             msg,
-            (void*)faultaddr);
+            (void*)faultaddr,
+            frame->cs & 3);
     }
     else
         TODO_FATAL();
