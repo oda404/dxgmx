@@ -22,15 +22,9 @@
 
 _INIT bool kinit_stage1()
 {
-    /* Hang interrupts until a predictable gdt/idt is set up. */
-    interrupts_disable();
-
     gdt_init();
     tss_init();
     idt_init();
-
-    /* Back in business. */
-    interrupts_enable();
 
     /* Initialize logging early on, so if something goes wrong we see it. */
     kstdio_init();
