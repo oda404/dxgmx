@@ -398,12 +398,6 @@ int vfs_mount_by_uuid(const char* uuid, const char* dest, u32 flags)
     return st;
 
 fail:
-    if (tmp.mountpoint)
-        kfree(tmp.mountpoint);
-
-    if (tmp.mountsrc)
-        kfree(tmp.mountsrc);
-
     if (fs)
         vfs_rm_fs(fs);
 
@@ -501,12 +495,6 @@ int vfs_mount_ramfs(const char* driver_name, const char* dest, u32 flags)
     return 0;
 
 fail:
-    if (tmp.mountpoint)
-        kfree(tmp.mountpoint);
-
-    if (tmp.mountsrc)
-        kfree(tmp.mountsrc);
-
     if (fs)
         vfs_rm_fs(fs);
 
