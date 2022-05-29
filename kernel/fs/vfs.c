@@ -10,6 +10,7 @@
 #include <dxgmx/fs/vfs.h>
 #include <dxgmx/klog.h>
 #include <dxgmx/kmalloc.h>
+#include <dxgmx/limits.h>
 #include <dxgmx/panic.h>
 #include <dxgmx/stdio.h>
 #include <dxgmx/storage/blkdevmanager.h>
@@ -221,8 +222,6 @@ static FileSystem* vfs_topmost_fs_for_path(const char* path)
  */
 static VirtualNode* vfs_vnode_for_path(const char* path)
 {
-    errno = 0;
-
     if (!path)
     {
         errno = EINVAL;
@@ -258,11 +257,49 @@ static VirtualNode* vfs_vnode_for_path(const char* path)
         --prefixlen;
     }
 
-    /* FIXME: handle directories */
+    /* There are definitely better ways to do this, but for now this works
+     * :)
+     */
     VirtualNode* vnode_hit = NULL;
     FOR_EACH_ELEM_IN_DARR (fs->vnodes, fs->vnode_count, vnode)
     {
-        if (vnode->name && strcmp(vnode->name, working_path) == 0)
+        VirtualNode* workingnode = vnode;
+        char tmp[PATH_MAX] = {0};
+        size_t running_len = 0;
+        bool addslash = false;
+
+        while (workingnode)
+        {
+            const size_t cur_len = strlen(workingnode->name) + addslash;
+            if (running_len + cur_len >= PATH_MAX)
+                break; // FIXME: errno ENAMETOOLONG
+
+            for (size_t i = running_len + cur_len - 1; i >= cur_len; --i)
+                tmp[i] = tmp[i - cur_len];
+
+            memcpy(tmp, workingnode->name, cur_len - addslash);
+            if (addslash)
+                memcpy(tmp + cur_len - 1, "/", 1);
+
+            running_len += cur_len;
+
+            bool hit = false;
+            FOR_EACH_ELEM_IN_DARR (fs->vnodes, fs->vnode_count, v)
+            {
+                if (v->n == workingnode->parent_n)
+                {
+                    workingnode = v;
+                    hit = true;
+                }
+            }
+
+            if (!hit)
+                break;
+
+            addslash = workingnode->parent_n != 0;
+        }
+
+        if (strcmp(tmp, working_path) == 0)
         {
             vnode_hit = vnode;
             break;
