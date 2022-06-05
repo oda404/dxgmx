@@ -84,5 +84,10 @@ typedef struct S_FileSystem
 struct S_VirtualNode*
 fs_new_vnode(FileSystem* fs, ino_t n, const VirtualNode* parent);
 int fs_rm_vnode(FileSystem* fs, struct S_VirtualNode* vnode);
+/* Takes in a given path and makes sure it is relative to the given filesystem.
+ */
+int fs_make_path_relative(const FileSystem* fs, char* path);
+int fs_make_path_canonical(char* path);
+VirtualNode* fs_vnode_for_path(FileSystem* fs, const char* path);
 
 #endif // !_DXGMX_FS_FS_H

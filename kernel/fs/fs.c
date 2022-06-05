@@ -8,7 +8,9 @@
 #include <dxgmx/fs/vnode.h>
 #include <dxgmx/klog.h>
 #include <dxgmx/kmalloc.h>
+#include <dxgmx/limits.h>
 #include <dxgmx/string.h>
+#include <dxgmx/todo.h>
 
 VirtualNode* fs_new_vnode(FileSystem* fs, ino_t n, const VirtualNode* parent)
 {
@@ -75,4 +77,114 @@ int fs_rm_vnode(FileSystem* fs, struct S_VirtualNode* vnode)
     --fs->vnode_count;
 
     return 0;
+}
+
+int fs_make_path_relative(const FileSystem* fs, char* path)
+{
+    if (!path || !fs || !fs->mountpoint)
+        return -EINVAL;
+
+    size_t pathlen = strlen(path);
+    size_t prefixlen = strlen(fs->mountpoint);
+
+    if (prefixlen > pathlen)
+        return -EINVAL;
+
+    if (prefixlen == 1 && fs->mountpoint[0] == '/')
+        return 0; /* That's it :) */
+
+    size_t matching = 0;
+    for (size_t i = 0; i < prefixlen; ++i)
+        matching += (path[i] == fs->mountpoint[i]);
+
+    if (matching != prefixlen)
+        return -ENAMETOOLONG;
+
+    for (size_t i = 0; i < prefixlen; ++i)
+    {
+        for (size_t k = 0; k < pathlen; ++k)
+            path[k] = path[k + 1];
+    }
+
+    return 0;
+}
+
+int fs_make_path_canonical(char* path)
+{
+    (void)path;
+    TODO_FATAL();
+}
+
+VirtualNode* fs_vnode_for_path(FileSystem* fs, const char* path)
+{
+    if (!fs || !path)
+    {
+        errno = EINVAL;
+        return NULL;
+    }
+
+    char* working_path = strdup(path);
+    if (!working_path)
+    {
+        errno = ENOMEM;
+        return NULL;
+    }
+
+    fs_make_path_relative(fs, working_path);
+
+    /* There are definitely better ways to do this, but for now this works
+     * :)
+     */
+    VirtualNode* vnode_hit = NULL;
+    FOR_EACH_ELEM_IN_DARR (fs->vnodes, fs->vnode_count, vnode)
+    {
+        VirtualNode* workingnode = vnode;
+        char tmp[PATH_MAX] = {0};
+        size_t running_len = 0;
+        bool addslash = false;
+
+        while (workingnode)
+        {
+            const size_t cur_len = strlen(workingnode->name) + addslash;
+            if (running_len + cur_len >= PATH_MAX)
+                break; // FIXME: errno ENAMETOOLONG
+
+            for (size_t i = running_len + cur_len - 1; i >= cur_len; --i)
+                tmp[i] = tmp[i - cur_len];
+
+            memcpy(tmp, workingnode->name, cur_len - addslash);
+            if (addslash)
+                memcpy(tmp + cur_len - 1, "/", 1);
+
+            running_len += cur_len;
+
+            bool hit = false;
+            FOR_EACH_ELEM_IN_DARR (fs->vnodes, fs->vnode_count, v)
+            {
+                if (v->n == workingnode->parent_n)
+                {
+                    workingnode = v;
+                    hit = true;
+                }
+            }
+
+            if (!hit)
+                break;
+
+            addslash = workingnode->parent_n != 0;
+        }
+
+        if (strcmp(tmp, working_path) == 0)
+        {
+            vnode_hit = vnode;
+            break;
+        }
+    }
+
+    kfree(working_path);
+
+    if (!vnode_hit)
+        errno = ENOENT;
+
+    return vnode_hit;
 }

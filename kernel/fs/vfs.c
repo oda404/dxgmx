@@ -216,104 +216,6 @@ static FileSystem* vfs_topmost_fs_for_path(const char* path)
     return fshit;
 }
 
-/**
- * @brief Gets the vnode for the given path.
- * @return The vnode, if NULL errno indicates the error.
- */
-static VirtualNode* vfs_vnode_for_path(const char* path)
-{
-    if (!path)
-    {
-        errno = EINVAL;
-        return NULL;
-    }
-
-    FileSystem* fs = vfs_topmost_fs_for_path(path);
-    if (!fs)
-        return NULL; /* we keep the errno from vfs_topmost_fs_for_path(). */
-
-    if (!fs->driver)
-    {
-        errno = EINVAL;
-        return NULL;
-    }
-
-    char* working_path = strdup(path);
-    if (!working_path)
-    {
-        errno = ENOMEM;
-        return NULL;
-    }
-
-    /* Chop of the prefix, leaving a path relative to the filesystem's
-     * mountpoint */
-    size_t prefixlen = strlen(fs->mountpoint);
-    while (prefixlen > 1)
-    {
-        const size_t len = strlen(working_path);
-        for (size_t i = 0; i < len; ++i)
-            working_path[i] = working_path[i + 1];
-
-        --prefixlen;
-    }
-
-    /* There are definitely better ways to do this, but for now this works
-     * :)
-     */
-    VirtualNode* vnode_hit = NULL;
-    FOR_EACH_ELEM_IN_DARR (fs->vnodes, fs->vnode_count, vnode)
-    {
-        VirtualNode* workingnode = vnode;
-        char tmp[PATH_MAX] = {0};
-        size_t running_len = 0;
-        bool addslash = false;
-
-        while (workingnode)
-        {
-            const size_t cur_len = strlen(workingnode->name) + addslash;
-            if (running_len + cur_len >= PATH_MAX)
-                break; // FIXME: errno ENAMETOOLONG
-
-            for (size_t i = running_len + cur_len - 1; i >= cur_len; --i)
-                tmp[i] = tmp[i - cur_len];
-
-            memcpy(tmp, workingnode->name, cur_len - addslash);
-            if (addslash)
-                memcpy(tmp + cur_len - 1, "/", 1);
-
-            running_len += cur_len;
-
-            bool hit = false;
-            FOR_EACH_ELEM_IN_DARR (fs->vnodes, fs->vnode_count, v)
-            {
-                if (v->n == workingnode->parent_n)
-                {
-                    workingnode = v;
-                    hit = true;
-                }
-            }
-
-            if (!hit)
-                break;
-
-            addslash = workingnode->parent_n != 0;
-        }
-
-        if (strcmp(tmp, working_path) == 0)
-        {
-            vnode_hit = vnode;
-            break;
-        }
-    }
-
-    kfree(working_path);
-
-    if (!vnode_hit)
-        errno = ENOENT;
-
-    return vnode_hit;
-}
-
 _INIT bool vfs_init()
 {
     if (vfs_mount_ramfs("ramfs", "/", 0) < 0)
@@ -609,7 +511,7 @@ int vfs_open(const char* name, int flags, mode_t mode, pid_t pid)
     }
 
     /* Get the vnode for the path. */
-    tmpfd.vnode = vfs_vnode_for_path(name);
+    tmpfd.vnode = fs_vnode_for_path(fs, name);
     if (!tmpfd.vnode)
     {
         if (!(flags & O_CREAT))
@@ -622,7 +524,7 @@ int vfs_open(const char* name, int flags, mode_t mode, pid_t pid)
             return -1;
         }
 
-        tmpfd.vnode = vfs_vnode_for_path(name);
+        tmpfd.vnode = fs_vnode_for_path(fs, name);
         ASSERT(tmpfd.vnode);
     }
     else if (tmpfd.vnode->mode & S_IFDIR)
