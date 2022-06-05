@@ -6,6 +6,7 @@
 #ifndef _DXGMX_FS_VNODE_H
 #define _DXGMX_FS_VNODE_H
 
+#include <dxgmx/storage/blkdev.h>
 #include <dxgmx/types.h>
 #include <posix/sys/types.h>
 
@@ -32,6 +33,12 @@ typedef struct S_VirtualNode
     ino_t parent_n;
     /* The filesystem backing this vnode. */
     struct S_FileSystem* owner;
+
+    union
+    {
+        /* If (mode & S_IFMT) == S_IFBLK */
+        const BlockDevice* blkdev;
+    } private;
 } VirtualNode;
 
 #endif // !_DXGMX_FS_VNODE_H
