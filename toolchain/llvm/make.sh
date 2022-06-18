@@ -13,10 +13,11 @@ setup() {
     if [[ -d $REPO_ROOT ]]; then
         echo "Skipping clone..."
     else
-        git clone --depth 1 $URL $REPO_ROOT
+        git clone $URL $REPO_ROOT || exit 1
 
         pushd $REPO_ROOT
-            git checkout 1e1f60c605a9b1c803f3bbb1a1339c9bb1af4e34 
+            git checkout 1e1f60c605a9b1c803f3bbb1a1339c9bb1af4e34 || exit 1
+            git apply ../patches/1.patch || exit 1
         popd
     fi
 }
@@ -28,15 +29,16 @@ build() {
 
     pushd $REPO_ROOT
         cmake -S llvm -B build-llvm -G "Unix Makefiles" \
-            -DLLVM_ENABLE_PROJECTS='clang;compiler-rt;lld' \
-            -DLLVM_ENABLE_RUNTIMES='' \
+            -DLLVM_DEFAULT_TARGET_TRIPLE='i686-unknown-dxgmx' \
             -DLLVM_TARGETS_TO_BUILD='X86' \
+            -DLLVM_ENABLE_PROJECTS='clang;lld' \
+            -DLLVM_ENABLE_RUNTIMES='compiler-rt' \
             -DCMAKE_INSTALL_PREFIX="$PREFIX" \
             -DCMAKE_C_COMPILER=clang \
             -DCMAKE_CXX_COMPILER=clang++ \
-            -DCMAKE_BUILD_TYPE=Release \
-            -DCOMPILER_RT_BUILD_CRT=OFF \
-            -DCOMPILER_RT_CRT_USE_EH_FRAME_REGISTRY=OFF \
+            -DCMAKE_BUILD_TYPE='Release' \
+            -DCOMPILER_RT_BUILD_BUILTINS=ON \
+            -DCOMPILER_RT_BUILD_CRT=ON \
             -DCOMPILER_RT_BUILD_SANITIZERS=OFF \
             -DCOMPILER_RT_BUILD_XRAY=OFF \
             -DCOMPILER_RT_BUILD_LIBFUZZER=OFF \
@@ -46,19 +48,24 @@ build() {
             -DCOMPILER_RT_BUILD_ORC=OFF \
             -DCOMPILER_RT_BUILD_GWP_ASAN=OFF \
             -DCOMPILER_RT_ENABLE_CET=OFF \
-            -DCOMPILER_RT_BAREMETAL_BUILD=ON \
-            -DCOMPILER_RT_INCLUDE_TESTS=NO \
-            -DCOMPILER_RT_DEFAULT_TARGET_TRIPLE=i686-unknown-dxgmx
+            -DCOMPILER_RT_INCLUDE_TESTS=OFF
 
-        make -j$(nproc) -C build-llvm/
-
+	make -j$(nproc) -C build-llvm
     popd
 }
 
 install() {
+
     pushd $REPO_ROOT
-        make install -C build-llvm/
-    popd 
+        make -C build-llvm install
+    popd
+
+    CLANG=${PREFIX}/bin/clang
+    CLANG_VERSION=$(${CLANG} --version | awk 'NR==1 { print $3 }')
+    CLANG_LIB_DIR=${PREFIX}/lib/clang/${CLANG_VERSION}/lib
+
+    mkdir ${CLANG_LIB_DIR}/dxgmx 2> /dev/null || true
+    cp ${CLANG_LIB_DIR}/i386-unknown-dxgmx/libclang_rt.builtins.a ${CLANG_LIB_DIR}/dxgmx/libclang_rt.builtins-i386.a
 }
 
 clean() {
