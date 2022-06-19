@@ -16,7 +16,7 @@ DXGMX_TOOLCHAIN_ROOT ?= /
 
 ### MISC DIRECTORIES ###
 BUILDDIR          := build/
-SYSROOTDIR        := $(BUILDDIR)/slash/
+SYSROOTDIR        := $(PWD)/sysroot/
 SCRIPTSDIR        := scripts/
 
 SRCARCH           := $(shell $(SCRIPTSDIR)/arch.sh --to-srcarch $(DXGMX_ARCH))
@@ -101,6 +101,7 @@ $(info Build target name: $(shell [ $(shell expr length "$(TARGET_NAME)") -gt 0 
 $(info Target architecture: $(DXGMX_ARCH))
 $(info Target triplet: $(DXGMX_TARGET_TRIP))
 $(info Toolchain root: $(DXGMX_TOOLCHAIN_ROOT))
+$(info System root: $(SYSROOTDIR))
 $(info CFLAGS: $(CFLAGS))
 $(info LDFLAGS: $(LDFLAGS))
 
@@ -122,12 +123,7 @@ MODOBJS           := $(MODOBJS:%.c=%_mod_$(BUILDTARGET_NAME).c.o)
 MODOBJS           := $(addprefix $(BUILDDIR)/, $(MODOBJS))
 MODDEPS           := $(MODOBJS:%.o=%.d)
 
-SYSROOT_DIRS      := \
-$(SYSROOTDIR) $(SYSROOTDIR)/boot \
-
-SYSROOT_HEADERS   := $(HEADERS:$(INCLUDE_SRCDIR)/%=$(SYSROOTDIR)/usr/include/%)
-
-DXGMX_DEPS        := $(SYSROOT_DIRS) \
+DXGMX_DEPS        := \
 $(COBJS) $(ASMOBJS) $(LDSCRIPT) $(MODOBJS)
 
 DXGMX_COMMON_DEPS := Makefile $(BUILDCONFIG) $(BUILDTARGET)
@@ -163,9 +159,6 @@ $(BUILDDIR)/%_$(BUILDTARGET_NAME).S.o: %.S $(DXGMX_COMMON_DEPS)
 	@mkdir -p $(dir $@)
 	@$(PRETTY_PRINT) AS $<
 	@$(AS) -c $< $(CFLAGS) -o $@
-
-$(SYSROOT_DIRS):
-	@mkdir -p $(SYSROOT_DIRS)
 
 PHONY += iso 
 iso: $(KERNEL_ISO_PATH)
