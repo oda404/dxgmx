@@ -36,11 +36,11 @@ INCLUDE_SRCDIR    := include/
 ### BASE FLAGS ###
 CFLAGS            := \
 -MD -MP -isystem=/usr/include -std=c2x \
---sysroot=$(SYSROOTDIR) -fno-omit-frame-pointer \
--ffreestanding -fno-builtin -I$(INCLUDE_SRCDIR) \
--march=$(DXGMX_ARCH)
+-fno-omit-frame-pointer -ffreestanding \
+-fno-builtin -I$(INCLUDE_SRCDIR) -march=$(DXGMX_ARCH) \
+-fno-pie -fno-pic
 
-LDFLAGS           := -nostdlib -L $(DXGMX_TOOLCHAIN_ROOT)/usr/lib \
+LDFLAGS           := -nostdlib
 
 MACROS            := \
 -D_DXGMX_ -DDXGMX_VER_MAJ=$(VER_MAJ) \
@@ -52,11 +52,6 @@ WARNINGS          := -Wall -Wextra -Wshadow \
 -Werror=incompatible-pointer-types \
 -Wunused -Wnull-dereference -Wdouble-promotion \
 -Wformat=2 -Wmisleading-indentation #-Wsign-conversion
-
-ifeq ($(LLVM),1)
-	CFLAGS += --target=$(DXGMX_TARGET_TRIP)
-	LDFLAGS += -L $(DXGMX_TOOLCHAIN_ROOT)/usr/lib/linux # ??
-endif
 
 MAKEFLAGS         += --no-print-directory
 
