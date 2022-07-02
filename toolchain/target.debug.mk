@@ -10,3 +10,4 @@ include kernel/stackprot/module.mk
 include fs/fat/module.mk
 include fs/ramfs/module.mk
 include arch/x86/multiboot/module.mk
+include kernel/builtins/module.mk
