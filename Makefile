@@ -16,7 +16,7 @@ DXGMX_TOOLCHAIN_ROOT ?= /
 
 ### MISC DIRECTORIES ###
 BUILDDIR          := build/
-SYSROOTDIR        := $(PWD)/sysroot/
+DXGMX_SYSROOT     ?= $(PWD)/sysroot/
 SCRIPTSDIR        := scripts/
 
 SRCARCH           := $(shell $(SCRIPTSDIR)/arch.sh --to-srcarch $(DXGMX_ARCH))
@@ -96,7 +96,7 @@ $(info Build target name: $(shell [ $(shell expr length "$(TARGET_NAME)") -gt 0 
 $(info Target architecture: $(DXGMX_ARCH))
 $(info Target triplet: $(DXGMX_TARGET_TRIP))
 $(info Toolchain root: $(DXGMX_TOOLCHAIN_ROOT))
-$(info System root: $(SYSROOTDIR))
+$(info System root: $(DXGMX_SYSROOT))
 $(info CFLAGS: $(CFLAGS))
 $(info LDFLAGS: $(LDFLAGS))
 
@@ -135,7 +135,7 @@ $(KERNEL_BIN_PATH): $(DXGMX_DEPS) $(DXGMX_COMMON_DEPS)
 	@[ -f build/image.img ] || $(SCRIPTSDIR)/create-disk.sh -p build/image.img
 	@NM=$(NM) OBJCOPY=$(OBJCOPY) $(SCRIPTSDIR)/bake_symbols.sh $(KERNEL_BIN_PATH) 
 
-	@cp $(KERNEL_BIN_PATH) $(SYSROOTDIR)/boot/
+	@cp $(KERNEL_BIN_PATH) $(DXGMX_SYSROOT)/boot/
 
 -include $(CDEPS)
 $(BUILDDIR)/%_$(BUILDTARGET_NAME).c.o: %.c $(DXGMX_COMMON_DEPS)
@@ -159,12 +159,12 @@ PHONY += iso
 iso: $(KERNEL_ISO_PATH)
 $(KERNEL_ISO_PATH): $(KERNEL_BIN_PATH)
 	$(MAKE)
-	@mkdir -p $(SYSROOTDIR)/boot/grub
-	@echo "timeout=0"                      >> $(SYSROOTDIR)/boot/grub/grub.cfg
-	@echo "menuentry \"$(KERNEL_BIN_NAME)\" {"    >> $(SYSROOTDIR)/boot/grub/grub.cfg
-	@echo "	multiboot /boot/$(KERNEL_BIN_NAME)"   >> $(SYSROOTDIR)/boot/grub/grub.cfg
-	@echo "}"                              >> $(SYSROOTDIR)/boot/grub/grub.cfg
-	@grub-mkrescue -o $(KERNEL_ISO_PATH) $(SYSROOTDIR)
+	@mkdir -p $(DXGMX_SYSROOT)/boot/grub
+	@echo "timeout=0"                      >> $(DXGMX_SYSROOT)/boot/grub/grub.cfg
+	@echo "menuentry \"$(KERNEL_BIN_NAME)\" {"    >> $(DXGMX_SYSROOT)/boot/grub/grub.cfg
+	@echo "	multiboot /boot/$(KERNEL_BIN_NAME)"   >> $(DXGMX_SYSROOT)/boot/grub/grub.cfg
+	@echo "}"                              >> $(DXGMX_SYSROOT)/boot/grub/grub.cfg
+	@grub-mkrescue -o $(KERNEL_ISO_PATH) $(DXGMX_SYSROOT)
 
 PHONY += iso-run 
 iso-run:
