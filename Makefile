@@ -40,6 +40,12 @@ CFLAGS            := \
 -fno-builtin -I$(INCLUDE_SRCDIR) -march=$(DXGMX_ARCH) \
 -fno-pie -fno-pic
 
+LLVM=$(shell $(SCRIPTSDIR)/is-llvm.sh)
+
+ifeq ($(LLVM),1)
+    CFLAGS += --target=$(DXGMX_ARCH)-unknown-dxgmx
+endif
+
 LDFLAGS           := -nostdlib
 
 MACROS            := \
