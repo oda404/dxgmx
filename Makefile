@@ -43,7 +43,7 @@ CFLAGS            := \
 LDFLAGS           := -nostdlib
 
 MACROS            := \
--D_DXGMX_ -DDXGMX_VER_MAJ=$(VER_MAJ) \
+-DDXGMX_VER_MAJ=$(VER_MAJ) \
 -DDXGMX_VER_MIN=$(VER_MIN) -DDXGMX_PATCH_N=$(PATCH_N) \
 -DDXGMX_CODENAME='"$(CODENAME)"' 
 
@@ -89,16 +89,19 @@ include $(INCLUDE_SRCDIR)/Makefile
 CFLAGS            += $(EXTRA_CFLAGS) $(WARNINGS) $(EXTRA_WARNINGS) $(MACROS) $(EXTRA_MACROS)
 LDFLAGS           += $(EXTRA_LDFLAGS) $(LIBS) $(EXTRA_LIBS)
 
-$(info CC: $(CC))
-$(info AS: $(AS))
-$(info LD: $(LD))
-$(info Build target name: $(shell [ $(shell expr length "$(TARGET_NAME)") -gt 0 ] && echo $(TARGET_NAME) || echo No target ))
-$(info Target architecture: $(DXGMX_ARCH))
-$(info Target triplet: $(DXGMX_TARGET_TRIP))
-$(info Toolchain root: $(DXGMX_TOOLCHAIN_ROOT))
-$(info System root: $(DXGMX_SYSROOT))
-$(info CFLAGS: $(CFLAGS))
-$(info LDFLAGS: $(LDFLAGS))
+ifeq ($(MAKECMDGOALS),)
+    $(info CC: $(CC))
+    $(info AS: $(AS))
+    $(info LD: $(LD))
+    $(info Build target name: $(shell [ $(shell expr length "$(TARGET_NAME)") -gt 0 ] && echo $(TARGET_NAME) || echo No target ))
+    $(info Target architecture: $(DXGMX_ARCH))
+    $(info Target triplet: $(DXGMX_TARGET_TRIP))
+    $(info Toolchain root: $(DXGMX_TOOLCHAIN_ROOT))
+    $(info System root: $(DXGMX_SYSROOT))
+    $(info CFLAGS: $(CFLAGS))
+    $(info LDFLAGS: $(LDFLAGS))
+    $(info )
+endif
 
 ALL_SRC := $(ARCH_SRC) $(INIT_SRC) $(KERNEL_SRC) $(FS_SRC)
 
