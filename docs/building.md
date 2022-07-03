@@ -55,17 +55,18 @@ I suggest using the following format when naming a target file: **target.\<name>
 ## How do I setup a toolchain ?
 ### Notes:
 - The kernel has been tested with:
-    - clang 12.0.1, 13.0.1
+    - clang 12.0.1, 13.0.1 and 15.0.0
 - The kernel fails to compile with GCC because clang's -std=c2x is being used and GCC is a bit behind.
 
- I personally work on the kernel using my host's (arch latest) LLVM, as we don't yet require an OS specific toolchain and the kernel doesn't build with GCC. Nonetheless if you want to use GCC with Binutils, you will need to build them. You can do that by:
-- Exporting:
-    - TARGET: for now "i686-elf"
-    - PREFIX: where the toolchain should be installed **(DO NOT LEAVE THIS BLANK OR /)**.
-- Running:
-    - toolchain/binutils/make.sh
-    - toolchain/gcc/make.sh
+### Building the os-specific LLVM:
+- Create a directory on disk that will serve as the toolchain root.
+- cd into the dxgmx source tree.
+- Run PREFIX=\<path/to/toolchain/dir\> toolchain/llvm/make.sh.
 
-These commands will build Binutils & GCC and then install them in PREFIX. You will then need to set DXGMX_TOOLCHAIN_ROOT to whatever you PREFIX was, when actually building the kernel; CC, AS, LD, NM and OBJCOPY should point to your newly built binaries inside your toolchain root bin/.
+This is going to take a while depending on your cpu, the script is set to build with -j$(nproc) and compiles clang, lld and compiler_rt.builtins. Once finished it will install everything in PREFIX.
 
-The exact same goes for building libclang_rt, except you run toolchain/llvm/make.sh instead of binuitls/gcc.
+### Using the host LLVM:
+If you don't need the os-specific toolchain and just want to compile the kernel, you could use your host's LLVM, since clang is a cross compiler by default. This method is way faster since you don't have to go through LLVM's balls dropping compile times.
+
+### GCC:
+There is a generic GCC port available, but as mentioned above the code base uses clang's -std=c2x and GCC is behind. Nonetheless if you want to experiment with GCC, you can build Binutils and then GCC in the same way you would build the os-specific LLVM, replacing the relevant paths.
