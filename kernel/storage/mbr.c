@@ -53,7 +53,7 @@ int mbr_uuid_for_part(const Mbr* mbr, size_t part_idx, char* dest)
             mbr->bootstrap[3];
     u16 d = mbr->bootstrap[4] ^ mbr->bootstrap[5] ^ mbr->bootstrap[6] ^
             mbr->bootstrap[7];
-    u64 e = 0;
+    u64 e = part_idx + 1;
 
     return uuid_format(a, b, c, d, e, dest);
 }
