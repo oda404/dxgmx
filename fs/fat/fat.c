@@ -613,6 +613,11 @@ static int fat_mkfile(FileSystem* fs, const char* path, mode_t mode)
     TODO_FATAL();
 }
 
+static int fat_mkdir(FileSystem*, const char*, mode_t)
+{
+    TODO_FATAL();
+}
+
 static int fatfs_main()
 {
     const FileSystemDriver fs_driver = {
@@ -623,7 +628,8 @@ static int fatfs_main()
         .destroy = fat_destroy,
         .read = fat_read,
         .write = fat_write,
-        .mkfile = fat_mkfile};
+        .mkfile = fat_mkfile,
+        .mkdir = fat_mkdir};
 
     return vfs_register_fs_driver(&fs_driver);
 }

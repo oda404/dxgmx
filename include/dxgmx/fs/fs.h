@@ -57,6 +57,7 @@ typedef struct S_FileSystemDriver
 
     /* Create a new empty file on the filesystem. */
     int (*mkfile)(struct S_FileSystem* fs, const char* path, mode_t mode);
+    int (*mkdir)(struct S_FileSystem* fs, const char* path, mode_t mode);
 
 } FileSystemDriver;
 

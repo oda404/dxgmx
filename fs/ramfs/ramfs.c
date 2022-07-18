@@ -13,6 +13,7 @@
 #include <dxgmx/module.h>
 #include <dxgmx/storage/blkdev.h>
 #include <dxgmx/string.h>
+#include <dxgmx/todo.h>
 #include <dxgmx/types.h>
 
 #define KLOGF_PREFIX "ramfs: "
@@ -252,6 +253,11 @@ static ssize_t ramfs_write(
     return n;
 }
 
+static int ramfs_mkdir(FileSystem*, const char*, mode_t)
+{
+    TODO_FATAL();
+}
+
 #define MODULE_NAME "ramfs"
 
 static int ramfs_main()
@@ -263,7 +269,8 @@ static int ramfs_main()
         .destroy = ramfs_destroy,
         .read = ramfs_read,
         .write = ramfs_write,
-        .mkfile = ramfs_mkfile};
+        .mkfile = ramfs_mkfile,
+        .mkdir = ramfs_mkdir};
 
     return vfs_register_fs_driver(&ramfs_driver);
 }
