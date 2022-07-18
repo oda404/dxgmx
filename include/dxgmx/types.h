@@ -37,7 +37,8 @@ typedef u64 ptr;
 #define GIB (MIB * 1024)
 #define TIB (GIB * 1024)
 
-#if __STDC_VERSION__ <= 201710L
+#if (__STDC_VERSION__ <= 201710L) || (!defined(__clang__)) ||                  \
+    (defined(__clang__) && __clang_major__ < 15)
 #include <stdbool.h>
 #endif
 
