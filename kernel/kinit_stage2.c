@@ -10,7 +10,7 @@
 #include <dxgmx/panic.h>
 #include <dxgmx/types.h>
 
-_INIT bool kinit_stage2()
+bool kinit_stage2()
 {
     module_init_builtins();
 
