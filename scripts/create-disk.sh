@@ -37,7 +37,7 @@ fi
 
 IMG_SIZE=256M
 
-qemu-img create -f raw $IMG_PATH $IMG_SIZE
+dd if=/dev/zero of=$IMG_PATH bs=$IMG_SIZE count=1
 
 LOOPDEV=$(sudo losetup --find --show --partscan $IMG_PATH)
 
