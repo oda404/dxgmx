@@ -30,6 +30,7 @@ __asm__(".type isr_exit, @function                       \n"
             ".local trap" #id "_handler                          \n"           \
             "pusha                                             \n"             \
             "pushl %esp              # set the InterruptFrame* \n"             \
+            "cld                                               \n"             \
             "call  trap" #id "_handler                            \n"          \
             "jmp isr_exit                                      \n");           \
     }
@@ -43,6 +44,7 @@ __asm__(".type isr_exit, @function                       \n"
             "pushl $0                #push a fake code        \n"              \
             "pusha                                            \n"              \
             "pushl %esp              #set the InterruptFrame* \n"              \
+            "cld                                              \n"              \
             "call  trap" #id "_handler                           \n"           \
             "jmp isr_exit                                     \n");            \
     }
@@ -54,6 +56,7 @@ __asm__(".type isr_exit, @function                       \n"
                          "pushl $0                 \n"                         \
                          "pusha                    \n"                         \
                          "pushl %esp               \n"                         \
+                         "cld                      \n"                         \
                          "call irq" #id "_handler    \n"                       \
                          "jmp isr_exit             \n");                       \
     }
