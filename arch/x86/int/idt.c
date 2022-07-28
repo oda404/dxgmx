@@ -111,6 +111,8 @@ IRQ_ENTRY(13)
 IRQ_ENTRY(14)
 IRQ_ENTRY(15)
 
+IRQ_ENTRY(0x80)
+
 static void idt_encode_entry(ptr base, u16 selector, u8 flags, IDTEntry* entry)
 {
 #ifdef _X86_
@@ -287,6 +289,9 @@ _INIT void idt_init()
         COMMON_IRQ_GATE,
         &g_idt[15 + MASTER_PIC_OFFSET]);
 
+    idt_encode_entry(
+        (ptr)irq0x80, GDT_KERNEL_CS, COMMON_IRQ_GATE, &g_idt[0x80]);
+
     g_idtr.base = g_idt;
     g_idtr.limit = sizeof(g_idt) - 1;
 
@@ -402,3 +407,6 @@ IRQ_HANDLER_NO_DATA(14)
 
 /* secondary ATA hard disk */
 IRQ_HANDLER_NO_DATA(15)
+
+#define IRQ0x80 0x80
+IRQ_HANDLER_NO_DATA(0x80)
