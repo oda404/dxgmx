@@ -15,3 +15,4 @@ include $(KERNEL_SRCDIR)/crypto/Makefile
 include $(KERNEL_SRCDIR)/kstdlib/Makefile
 include $(KERNEL_SRCDIR)/storage/Makefile
 include $(KERNEL_SRCDIR)/fs/Makefile
+include $(KERNEL_SRCDIR)/elf/Makefile
