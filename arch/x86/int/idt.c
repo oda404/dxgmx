@@ -133,7 +133,7 @@ static void idt_load(const IDTR* idtr)
 
 static u32 g_isr_trashcan = 0;
 
-static void dummy_cb(const InterruptFrame _ATTR_MAYBE_UNUSED* frame)
+static void dummy_cb(InterruptFrame _ATTR_MAYBE_UNUSED* frame)
 {
     ++g_isr_trashcan;
 }
@@ -143,8 +143,8 @@ u32 idt_get_isr_trashcan()
     return g_isr_trashcan;
 }
 
-/* TRAP callbacks */
-static isr g_isrs[256];
+/* The interrupt service routine callbacks. */
+static isr_t g_isrs[256];
 static IDTEntry g_idt[256];
 static IDTR g_idtr;
 
@@ -303,14 +303,14 @@ _INIT void idt_init()
     interrupts_enable();
 }
 
-_INIT bool idt_register_isr(u8 irq, isr cb)
+_INIT bool idt_register_isr(u8 irqn, isr_t callback)
 {
-    g_isrs[irq] = cb;
+    g_isrs[irqn] = callback;
     return true;
 }
 
 #define TRAP_HANDLER_NO_DATA(n)                                                \
-    _ATTR_USED static void trap##n##_handler(const InterruptFrame* frame)      \
+    _ATTR_USED static void trap##n##_handler(InterruptFrame* frame)            \
     {                                                                          \
         g_isrs[TRAP##n](frame);                                                \
     }
@@ -349,7 +349,7 @@ TRAP_HANDLER_NO_DATA(30)
 TRAP_HANDLER_NO_DATA(31)
 
 #define IRQ_HANDLER_NO_DATA(n)                                                 \
-    _ATTR_USED static void irq##n##_handler(const InterruptFrame* frame)       \
+    _ATTR_USED static void irq##n##_handler(InterruptFrame* frame)             \
     {                                                                          \
         g_isrs[IRQ##n](frame);                                                 \
         pic8259_signal_eoi(n < 8 ? 0 : 1);                                     \
@@ -359,7 +359,7 @@ TRAP_HANDLER_NO_DATA(31)
 IRQ_HANDLER_NO_DATA(0)
 
 /* PS2 keyboard */
-_ATTR_USED static void irq1_handler(const InterruptFrame* frame)
+_ATTR_USED static void irq1_handler(InterruptFrame* frame)
 {
     unsigned char scan_code = port_inb(0x60);
     g_isrs[IRQ1](frame);
@@ -409,4 +409,9 @@ IRQ_HANDLER_NO_DATA(14)
 IRQ_HANDLER_NO_DATA(15)
 
 #define IRQ0x80 0x80
-IRQ_HANDLER_NO_DATA(0x80)
+/* FIXME: InterruptFrame doesn't take into account the esp and ss pushed onto
+the stack py a cross CPL interrupt. */
+_ATTR_USED static void irq0x80_handler(InterruptFrame* frame)
+{
+    g_isrs[0x80](frame);
+}

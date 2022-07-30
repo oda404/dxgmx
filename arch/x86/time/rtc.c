@@ -127,7 +127,7 @@ static void rtc_set_date()
     interrupts_enable();
 }
 
-static void rtc_isr(const InterruptFrame _ATTR_MAYBE_UNUSED* frame)
+static void rtc_isr(InterruptFrame _ATTR_MAYBE_UNUSED* frame)
 {
     u8 c = cmos_port_inb(RTC_REG_C, NMIENABLED);
 

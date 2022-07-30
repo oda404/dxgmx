@@ -161,7 +161,7 @@ map_page(ptr frame_base, ptr vaddr, PageDirectoryPointerTable* pdpt)
 }
 #endif // defined(_X86_)
 
-static void pagefault_isr(const InterruptFrame* frame)
+static void pagefault_isr(InterruptFrame* frame)
 {
 #define PAGEFAULT_IS_PROT_VIOL(x) (x & 1)
 #define PAGEFAULT_IS_WRITE(x) (x & (1 << 1))

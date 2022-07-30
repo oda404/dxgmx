@@ -258,12 +258,12 @@ static u8 ata_identify_bus(atabus_t bus_io, atabus_t bus_ctrl)
     return ret;
 }
 
-static void ata_primary_isr(const InterruptFrame* frame)
+static void ata_primary_isr(InterruptFrame* frame)
 {
     (void)frame;
 }
 
-static void ata_secondary_isr(const InterruptFrame* frame)
+static void ata_secondary_isr(InterruptFrame* frame)
 {
     (void)frame;
 }
