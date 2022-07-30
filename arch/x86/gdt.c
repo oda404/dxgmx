@@ -39,10 +39,8 @@ gdt_encode_entry_base_and_limit(u32 base, u32 limit, GDTEntry* entry)
 
 static _INIT void tss_load()
 {
-    __asm__ volatile("cli           \n"
-                     "mov %0, %%ax  \n"
+    __asm__ volatile("mov %0, %%ax  \n"
                      "ltr %%ax      \n"
-                     "sti           \n"
                      :
                      : "i"(GDT_TSS));
 }
