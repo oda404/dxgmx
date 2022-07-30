@@ -290,7 +290,10 @@ _INIT void idt_init()
         &g_idt[15 + MASTER_PIC_OFFSET]);
 
     idt_encode_entry(
-        (ptr)irq0x80, GDT_KERNEL_CS, COMMON_IRQ_GATE, &g_idt[0x80]);
+        (ptr)irq0x80,
+        GDT_KERNEL_CS,
+        IDT_DESC_PRIV_3 | IDT_GATE_TYPE_INT_32 | IDT_INT_PRESENT,
+        &g_idt[0x80]);
 
     g_idtr.base = g_idt;
     g_idtr.limit = sizeof(g_idt) - 1;
