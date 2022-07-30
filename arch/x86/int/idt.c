@@ -121,7 +121,7 @@ static void idt_encode_entry(ptr base, u16 selector, u8 flags, IDTEntry* entry)
     entry->selector = selector;
     entry->unused = 0;
     entry->type = flags & 0b11111;
-    entry->privilege = flags & (0b11 << 5);
+    entry->privilege = (flags & (0b11 << 5)) >> 5;
     entry->present = (bool)(flags & (1 << 7));
 #endif // _X86_
 }
