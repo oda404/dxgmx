@@ -12,38 +12,43 @@
 typedef struct _ATTR_PACKED S_GDTEntry
 {
     /* First 16 bits of the limit. */
-    u16 limit_0_15;
-    /* First 16 bits of the base. */
-    u16 base_0_15;
-    /* Bits 16-23 of the base. */
-    u8 base_16_23;
-    /* Set to one by the cpu if the segment has been accessed. */
+    u16 limit_lo;
+    /* First 24 bits of the base. */
+    u32 base_lo : 24;
     union
     {
         u8 access_byte;
         struct
         {
-            u8 access_accessed : 1;
-            u8 access_rw : 1;
-            u8 access_dc : 1;
-            u8 access_exec : 1;
-            u8 access_type : 1;
-            u8 access_dpl : 2;
-            u8 access_present : 1;
+            /* Set to 1 by the CPU if the segment was accessed. */
+            u8 accessed : 1;
+            /* 1 if the segment is read/write, 0 if the segment is read-only. */
+            u8 rw : 1;
+            /* I don't even know, look it up. */
+            u8 direction_conforming : 1;
+            /* 1 if the segment is executable (code segment)  */
+            u8 exec : 1;
+            /* 1 for a code or data segment, 0 for a system segment (tss/ldt) */
+            u8 code_or_data : 1;
+            /* Privilege level. */
+            u8 dpl : 2;
+            /* 1 for a valid segment. */
+            u8 present : 1;
         };
     };
+
     /* Bits 16-19 of the limit. */
-    u8 limit_16_19 : 4;
+    u8 limit_hi : 4;
     /* Must be 0. */
     u8 reserved : 1;
     /* If the segment is for long mode. See GDT_SEG_LONG. */
     u8 longmode : 1;
-    /* See GDT_SEG_SIZE. */
-    u8 size : 1;
+    /* 0 for a 16 bit segment, 1 for a 32bit segment. */
+    u8 bits32 : 1;
     /* See GDT_SEG_GRANULARITY */
     u8 granularity : 1;
     /* Bits 24-31 of the base. */
-    u8 base_24_31;
+    u8 base_hi;
 } GDTEntry;
 
 typedef struct _ATTR_PACKED S_TssEntry

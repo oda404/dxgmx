@@ -31,11 +31,10 @@ static _INIT void gdt_load(const GDTR* gdtr)
 static _INIT void
 gdt_encode_entry_base_and_limit(u32 base, u32 limit, GDTEntry* entry)
 {
-    entry->limit_0_15 = (limit & 0xFFFF);
-    entry->base_0_15 = (base & 0xFFFF);
-    entry->base_16_23 = (base & 0xFF0000) >> 16;
-    entry->limit_16_19 = (limit & 0xF0000) >> 16;
-    entry->base_24_31 = (base & 0xFF000000) >> 24;
+    entry->limit_lo = (limit & 0xFFFF);
+    entry->base_lo = (base & 0xFFFFFF);
+    entry->limit_hi = (limit & 0xF0000) >> 16;
+    entry->base_hi = (base & 0xFF000000) >> 24;
 }
 
 static _INIT void tss_load()
@@ -77,51 +76,51 @@ _INIT void gdt_init()
     /* code ring 0 segment */
     GDTEntry* entry = &g_gdt[CS0_IDX];
     gdt_encode_entry_base_and_limit(0, 0xFFFFF, entry);
-    entry->access_rw = 1;
-    entry->access_exec = 1;
-    entry->access_dpl = 0;
-    entry->access_type = 1;
-    entry->access_present = 1;
+    entry->rw = 1;
+    entry->exec = 1;
+    entry->dpl = 0;
+    entry->code_or_data = 1;
+    entry->present = 1;
     entry->granularity = 1;
-    entry->size = 1;
+    entry->bits32 = 1;
 
     /* data ring 0 segment */
     entry = &g_gdt[DS0_IDX];
     gdt_encode_entry_base_and_limit(0, 0xFFFFF, entry);
-    entry->access_rw = 1;
-    entry->access_dpl = 0;
-    entry->access_type = 1;
-    entry->access_present = 1;
+    entry->rw = 1;
+    entry->dpl = 0;
+    entry->code_or_data = 1;
+    entry->present = 1;
     entry->granularity = 1;
-    entry->size = 1;
+    entry->bits32 = 1;
 
     /* code ring 3 segment */
     entry = &g_gdt[CS3_IDX];
     gdt_encode_entry_base_and_limit(0, 0xFFFFF, entry);
-    entry->access_rw = 1;
-    entry->access_exec = 1;
-    entry->access_dpl = 3;
-    entry->access_type = 1;
-    entry->access_present = 1;
+    entry->rw = 1;
+    entry->exec = 1;
+    entry->dpl = 3;
+    entry->code_or_data = 1;
+    entry->present = 1;
     entry->granularity = 1;
-    entry->size = 1;
+    entry->bits32 = 1;
 
     /* data ring 3 segment */
     entry = &g_gdt[DS3_IDX];
     gdt_encode_entry_base_and_limit(0, 0xFFFFF, entry);
-    entry->access_rw = 1;
-    entry->access_dpl = 3;
-    entry->access_type = 1;
-    entry->access_present = 1;
+    entry->rw = 1;
+    entry->dpl = 3;
+    entry->code_or_data = 1;
+    entry->present = 1;
     entry->granularity = 1;
-    entry->size = 1;
+    entry->bits32 = 1;
 
     /* tss */
     entry = &g_gdt[TSS_IDX];
     gdt_encode_entry_base_and_limit((ptr)&g_tss, sizeof(g_tss), entry);
-    entry->access_accessed = 1; /* For a system segment 1: a TSS and 0: LDT */
-    entry->access_exec = 1;     /* For a TSS 1: 32bit and 0: 16bit */
-    entry->access_present = 1;
+    entry->accessed = 1; /* For a system segment 1: a TSS and 0: LDT */
+    entry->exec = 1;     /* For a TSS 1: 32bit and 0: 16bit */
+    entry->present = 1;
 
     g_gdtr.base = g_gdt;
     g_gdtr.limit = sizeof(g_gdt) - 1;
