@@ -10,6 +10,7 @@ $(ARCH_SRCDIR)/pci.c \
 $(ARCH_SRCDIR)/kstdio.c \
 $(ARCH_SRCDIR)/serial.c \
 $(ARCH_SRCDIR)/panic.c \
+$(ARCH_SRCDIR)/syscalls.c \
 
 MACROS += -D_X86_
 ifeq ($(ARCH),x86_64)
