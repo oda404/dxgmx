@@ -78,6 +78,10 @@
 #define EDEADLK 35
 /* File name too long */
 #define ENAMETOOLONG 36
+/* No locks available. */
+#define ENOLCK 37
+/* Function/syscall not implemented. */
+#define ENOSYS 38
 
 int* _get_errno_addr();
 /*
