@@ -6,6 +6,8 @@
 #ifndef _DXGMX_X86_GDT_H
 #define _DXGMX_X86_GDT_H
 
+#ifndef _ASM
+
 #include <dxgmx/compiler_attrs.h>
 #include <dxgmx/types.h>
 
@@ -88,6 +90,11 @@ typedef struct _ATTR_PACKED S_GDTR
     GDTEntry* base;
 } GDTR;
 
+void gdt_init();
+void tss_init();
+
+#endif // !_ASM
+
 /* The ring 0 mode code segment */
 #define GDT_KERNEL_CS 0x8
 /* The ring 0 data segment. */
@@ -97,8 +104,5 @@ typedef struct _ATTR_PACKED S_GDTR
 /* The ring 3 data segment */
 #define GDT_USER_DS 0x20
 #define GDT_TSS 0x28
-
-void gdt_init();
-void tss_init();
 
 #endif // _DXGMX_X86_GDT_H
