@@ -8,6 +8,7 @@ $(KERNEL_SRCDIR)/ksyms.c \
 $(KERNEL_SRCDIR)/ksections.c \
 $(KERNEL_SRCDIR)/module.c \
 $(KERNEL_SRCDIR)/panic.c \
+$(KERNEL_SRCDIR)/userspace.c \
 
 include $(KERNEL_SRCDIR)/mem/Makefile
 include $(KERNEL_SRCDIR)/utils/Makefile
