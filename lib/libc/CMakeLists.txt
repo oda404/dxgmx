@@ -8,7 +8,9 @@ set(CMAKE_C_FLAGS "-fno-builtin ${CMAKE_C_FLAGS}")
 # libc.a
 add_library(c STATIC
     stdlib.c
+    syscalls.c
 )
+target_include_directories(c PRIVATE include)
 install(TARGETS c DESTINATION ${CMAKE_SYSROOT}/usr/lib/)
 
 # Install headers
