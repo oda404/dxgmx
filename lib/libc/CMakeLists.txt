@@ -14,7 +14,9 @@ target_include_directories(c PRIVATE include)
 install(TARGETS c DESTINATION ${CMAKE_SYSROOT}/usr/lib/)
 
 # Install headers
-file(GLOB LIBC_HEADERS "include/*.h")
+set(LIBC_HEADERS
+    include/stdlib.h
+)
 install(FILES ${LIBC_HEADERS} DESTINATION ${CMAKE_SYSROOT}/usr/include/)
 
 # crt0.o
