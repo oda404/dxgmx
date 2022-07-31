@@ -90,7 +90,6 @@ include $(ARCH_SRCDIR)/Makefile
 include $(INIT_SRCDIR)/Makefile
 include $(KERNEL_SRCDIR)/Makefile
 include $(FS_SRCDIR)/Makefile
-include $(INCLUDE_SRCDIR)/Makefile
 
 CFLAGS            += $(EXTRA_CFLAGS) $(WARNINGS) $(EXTRA_WARNINGS) $(MACROS) $(EXTRA_MACROS)
 LDFLAGS           += $(EXTRA_LDFLAGS) $(LIBS) $(EXTRA_LIBS)
