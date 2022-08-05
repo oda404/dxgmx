@@ -41,7 +41,6 @@ static MemoryRegionMap g_sys_mregmap = {
     .regions = g_sys_mregs,
     .regions_size = 0,
     .regions_capacity = SYS_MEMORY_REGIONS_MAX};
-static bool g_sys_mmap_locked = false;
 
 extern u8 _kernel_base[];
 extern u8 _kernel_vaddr[];
@@ -314,25 +313,16 @@ _INIT int mmanager_init()
 
     /* Now that we have a memory map, we can start allocating page frames. */
     falloc_init();
-
     kheap_init();
-
-    /* The heap can finally be initialized. */
     kmalloc_init();
 
-    /* ACPI could potentially modify the system memory regions map
-    before we lock it down. */
     acpi_reserve_tables();
-    g_sys_mmap_locked = true;
 
     return 0;
 }
 
 _INIT int mmanager_reserve_acpi_range(ptr base, size_t size)
 {
-    if (g_sys_mmap_locked)
-        return 1;
-
     ptr aligned_base = base - base % PAGE_SIZE;
     size_t aligned_size = size;
     aligned_size = (aligned_size + PAGE_SIZE - 1) & ~(PAGE_SIZE - 1);
