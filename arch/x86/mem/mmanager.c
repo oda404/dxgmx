@@ -66,6 +66,11 @@ static _ATTR_NEVER_INLINE void tlb_flush_whole()
     cpu_write_cr3(cpu_read_cr3());
 }
 
+static void tlb_flush_single(ptr vaddr)
+{
+    __asm__ volatile("invlpg (%0)" : : "a"(&vaddr) : "memory");
+}
+
 static _ATTR_ALWAYS_INLINE PageDirectoryPointerTableEntry*
 pdpte_from_vaddr(ptr vaddr, PageDirectoryPointerTable* pdpt)
 {
@@ -152,7 +157,7 @@ map_page(ptr frame_base, ptr vaddr, PageDirectoryPointerTable* pdpt)
 
     pte->present = true;
 
-    tlb_flush_whole();
+    tlb_flush_single(vaddr);
 
     return pte;
 }
@@ -198,6 +203,8 @@ _INIT static int setup_definitive_paging()
     g_pdpt =
         (PageDirectoryPointerTable*)(cpu_read_cr3() + (ptr)_kernel_map_offset);
 
+    tlb_flush_whole();
+
     return 0;
 }
 
@@ -241,6 +248,8 @@ _INIT static void enforce_ksections_perms()
     FOR_EACH_PTE_IN_RANGE (
         (ptr)_ro_post_init_sect_start, (ptr)_ro_post_init_sect_end, pt, pte)
         pte->exec_disable = true;
+
+    tlb_flush_whole();
 }
 
 static _INIT bool mmanager_setup_sys_mregmap()
