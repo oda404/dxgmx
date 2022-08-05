@@ -61,8 +61,6 @@ extern u8 _bootloader_sect_end[];
 extern u8 _kernel_map_offset[];
 extern u8 _kernel_size[];
 
-#if defined(_X86_)
-
 static _ATTR_NEVER_INLINE void tlb_flush_whole()
 {
     cpu_write_cr3(cpu_read_cr3());
@@ -158,7 +156,6 @@ map_page(ptr frame_base, ptr vaddr, PageDirectoryPointerTable* pdpt)
 
     return pte;
 }
-#endif // defined(_X86_)
 
 static void pagefault_isr(InterruptFrame* frame)
 {
