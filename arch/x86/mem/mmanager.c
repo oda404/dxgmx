@@ -91,11 +91,36 @@ pte_from_vaddr(ptr vaddr, PageTable* pt)
     return &pt->entries[(vaddr / PAGE_SIZE) - off];
 }
 
-static ptr vaddr_to_physaddr(ptr vaddr, const PageDirectoryPointerTable* pdpt)
+/* Returns the vaddr of any paddr that is part of the kernel. Since the kernel
+ * image is mapped 1:1 to wherever it's loaded, this is as simple
+ * as adding the kernel's map offset to the paging struct paddr. */
+static _ATTR_ALWAYS_INLINE ptr kimage_paddr2vaddr(ptr paddr)
 {
-    PageDirectory* pd =
-        (PageDirectory*)((ptr)pdpte_pagedir_base(&pdpt->entries[vaddr / GIB]) + (ptr)_kernel_map_offset);
+    return paddr + (ptr)_kernel_map_offset;
+}
+
+static PageDirectory*
+pd_from_vaddr_abs(ptr vaddr, const PageDirectoryPointerTable* pdpt)
+{
+    PageDirectory* pd = pdpte_pagedir_base(&pdpt->entries[vaddr / GIB]);
+    return pd ? (PageDirectory*)kimage_paddr2vaddr((ptr)pd) : NULL;
+}
+
+static PageDirectoryEntry*
+pde_from_vaddr_abs(ptr vaddr, const PageDirectoryPointerTable* pdpt)
+{
+    PageDirectory* pd = pd_from_vaddr_abs(vaddr, pdpt);
+    return pd ? pde_from_vaddr(vaddr, pd) : NULL;
+}
+
+static PageTable*
+pt_from_vaddr_abs(ptr vaddr, const PageDirectoryPointerTable* pdpt)
+{
+    PageDirectory* pd = pdpte_pagedir_base(&pdpt->entries[vaddr / GIB]);
     RET_IF_NOT(pd, 0);
+
+    /* Get the vaddr of the pagedir, as the base from the pdpte is physical. */
+    pd = (PageDirectory*)kimage_paddr2vaddr((ptr)pd);
 
     PageDirectoryEntry* pde = pde_from_vaddr(vaddr, pd);
     RET_IF_NOT(pde, 0);
@@ -103,9 +128,22 @@ static ptr vaddr_to_physaddr(ptr vaddr, const PageDirectoryPointerTable* pdpt)
     PageTable* pt = pde_table_base(pde);
     RET_IF_NOT(pt, 0);
 
-    PageTableEntry* pte =
-        (PageTableEntry*)((ptr)pte_from_vaddr(vaddr, pt) + (ptr)_kernel_map_offset);
+    /* Return the vaddr of the pagetable. */
+    return (PageTable*)kimage_paddr2vaddr((ptr)pt);
+}
 
+static PageTableEntry*
+pte_from_vaddr_abs(ptr vaddr, const PageDirectoryPointerTable* pdpt)
+{
+    PageTable* pt = pt_from_vaddr_abs(vaddr, pdpt);
+    return pt ? pte_from_vaddr(vaddr, pt) : NULL;
+}
+
+/* Find the physical address corresponding to the given vaddr inside the
+ * given pdpt. Maybe FIXME: Returns 0 if an error occured. */
+static ptr vaddr2paddr(ptr vaddr, const PageDirectoryPointerTable* pdpt)
+{
+    PageTableEntry* pte = pte_from_vaddr_abs(vaddr, pdpt);
     return pte ? (ptr)pte_frame_base(pte) + vaddr % PAGE_SIZE : (ptr)NULL;
 }
 
@@ -126,11 +164,11 @@ map_page(ptr frame_base, ptr vaddr, PageDirectoryPointerTable* pdpt)
         RET_IF_NOT(pd, NULL);
 
         memset(pd, 0, sizeof(PageDirectory));
-        pdpte_set_pagedir_base(vaddr_to_physaddr((ptr)pd, pdpt), pdpte);
+        pdpte_set_pagedir_base(vaddr2paddr((ptr)pd, g_pdpt), pdpte);
     }
     else
     {
-        pd = (PageDirectory*)((ptr)pd + (ptr)_kernel_map_offset);
+        pd = (PageDirectory*)kimage_paddr2vaddr((ptr)pd);
     }
 
     PageDirectoryEntry* pde = pde_from_vaddr(vaddr, pd);
@@ -141,11 +179,11 @@ map_page(ptr frame_base, ptr vaddr, PageDirectoryPointerTable* pdpt)
         RET_IF_NOT(pt, NULL);
 
         memset(pt, 0, sizeof(PageTable));
-        pde_set_table_base(vaddr_to_physaddr((ptr)pt, pdpt), pde);
+        pde_set_table_base(vaddr2paddr((ptr)pt, g_pdpt), pde);
     }
     else
     {
-        pt = (PageTable*)((ptr)pt + (ptr)_kernel_map_offset);
+        pt = (PageTable*)kimage_paddr2vaddr((ptr)pt);
     }
 
     PageTableEntry* pte = pte_from_vaddr(vaddr, pt);
@@ -202,8 +240,7 @@ _INIT static int setup_definitive_paging()
     /* Enable NXE bit. */
     cpu_write_msr(cpu_read_msr(MSR_EFER) | EFER_NXE, MSR_EFER);
 
-    g_pdpt =
-        (PageDirectoryPointerTable*)(cpu_read_cr3() + (ptr)_kernel_map_offset);
+    g_pdpt = (PageDirectoryPointerTable*)kimage_paddr2vaddr(cpu_read_cr3());
 
     tlb_flush_whole();
 
@@ -213,13 +250,8 @@ _INIT static int setup_definitive_paging()
 /* Enforce all sections permissions. */
 _INIT static void enforce_ksections_perms()
 {
-    PageDirectoryPointerTableEntry* pdpte =
-        pdpte_from_vaddr((ptr)_kernel_vaddr, g_pdpt);
-    PageDirectory* pd =
-        (PageDirectory*)((ptr)pdpte_pagedir_base(pdpte) + (ptr)_kernel_map_offset);
-    PageDirectoryEntry* pde = pde_from_vaddr((ptr)_kernel_vaddr, pd);
-    PageTable* pt =
-        (PageTable*)((ptr)pde_table_base(pde) + (ptr)_kernel_map_offset);
+    // FIXME: handle the kernel spanning multiple page tables
+    PageTable* pt = pt_from_vaddr_abs((ptr)_kernel_vaddr, g_pdpt);
 
     /* Text section can't be written to. */
     FOR_EACH_PTE_IN_RANGE ((ptr)_text_sect_start, (ptr)_text_sect_end, pt, pte)
