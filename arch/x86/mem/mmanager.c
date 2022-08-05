@@ -171,7 +171,9 @@ static void pagefault_isr(InterruptFrame* frame)
     ptr faultaddr = cpu_read_cr2();
 
     if (faultaddr < PAGE_SIZE)
-        panic("Possible NULL dereference in ring 0 :(. Not proceeding.");
+        panic(
+            "Possible NULL dereference in ring %d :(. Not proceeding.",
+            frame->cs & 3);
 
     if (PAGEFAULT_IS_PROT_VIOL(frame->code))
     {
