@@ -4,6 +4,7 @@
  */
 
 #include <dxgmx/compiler_attrs.h>
+#include <dxgmx/errno.h>
 #include <dxgmx/klog.h>
 #include <dxgmx/kmalloc.h>
 #include <dxgmx/panic.h>
@@ -105,14 +106,18 @@ static u32 pci_read_4bytes(u8 bus, u8 dev, u8 func, u8 offset)
     return port_inl(ACPI_CONFIG_DATA_PORT);
 }
 
-static void pci_register_device(u8 bus, u8 dev, u8 func)
+static int pci_register_device(u8 bus, u8 dev, u8 func)
 {
     u32 tmp = pci_read_4bytes(bus, dev, func, 0);
     if ((tmp & 0xFFFF) == 0xFFFF)
-        return;
+        return -ENODEV;
 
     g_pci_devices =
         krealloc(g_pci_devices, (++g_pci_devices_count) * sizeof(PCIDevice));
+
+    if (!g_pci_devices)
+        return -ENOMEM;
+
     PCIDevice* device = &g_pci_devices[g_pci_devices_count - 1];
     device->bus = bus;
     device->dev = dev;
@@ -134,6 +139,8 @@ static void pci_register_device(u8 bus, u8 dev, u8 func)
         pci_class_to_string(device->class, device->subclass),
         device->class,
         device->subclass);
+
+    return 0;
 }
 
 void pci_enumerate_bus(u8 bus)
@@ -141,7 +148,19 @@ void pci_enumerate_bus(u8 bus)
     for (u8 dev = 0; dev < 32; ++dev)
     {
         for (size_t i = 0; i < 8; ++i)
-            pci_register_device(bus, dev, i);
+        {
+            int st = pci_register_device(bus, dev, i);
+            if (st && st != -ENODEV)
+            {
+                KLOGF(
+                    ERR,
+                    "Failed to register device (%02X:%02X.%X), error: %d.",
+                    bus,
+                    dev,
+                    i,
+                    st);
+            }
+        }
     }
 }
 
