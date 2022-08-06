@@ -367,7 +367,9 @@ _INIT int mmanager_reserve_acpi_range(ptr base, size_t size)
     size_t aligned_size = size;
     aligned_size = (aligned_size + PAGE_SIZE - 1) & ~(PAGE_SIZE - 1);
 
-    map_page(aligned_base, aligned_base, g_pdpt);
+    PageTableEntry* pte = map_page(aligned_base, aligned_base, g_pdpt);
+    if (!pte)
+        return -ENOMEM;
 
     mregmap_rm_reg(base, size, &g_sys_mregmap);
 
