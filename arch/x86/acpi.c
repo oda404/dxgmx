@@ -69,12 +69,22 @@ static _INIT bool acpi_is_sdt_header_valid(const AcpiSdTableHeader* header)
     return !(sum & 0xFF);
 }
 
-static _INIT void acpi_reserve_hpet_table(AcpiSdTableHeader* header)
+static int
+acpi_reserve_table(const char* name, size_t size, AcpiSdTableHeader* hdr)
 {
-    g_hpet_table = (AcpiHpetTable*)header;
+    const int st = mmanager_reserve_acpi_range((ptr)hdr, size);
 
-    KLOGF(INFO, "Reserving HPET table at 0x%p.", (void*)header);
-    mmanager_reserve_acpi_range((ptr)g_hpet_table, sizeof(AcpiHpetTable));
+    if (!st)
+        KLOGF(INFO, "Reserved %s table at 0x%p.", name, (void*)hdr);
+    else
+        KLOGF(
+            ERR,
+            "Failed to reserve %s table at 0x%p, error: %d.",
+            name,
+            (void*)hdr,
+            st);
+
+    return st;
 }
 
 _INIT bool acpi_reserve_tables()
@@ -87,10 +97,15 @@ _INIT bool acpi_reserve_tables()
         return false;
     }
 
-    g_rsd_table = (AcpiRsdTable*)rsdp->rsdp_v1.rsdt_base;
+    int st = acpi_reserve_table(
+        "RSD",
+        sizeof(AcpiRsdTable),
+        (AcpiSdTableHeader*)rsdp->rsdp_v1.rsdt_base);
 
-    KLOGF(INFO, "Reserving RSD table at 0x%p.", g_rsd_table);
-    mmanager_reserve_acpi_range((ptr)g_rsd_table, sizeof(AcpiRsdTable));
+    if (st)
+        return st;
+
+    g_rsd_table = (AcpiRsdTable*)rsdp->rsdp_v1.rsdt_base;
 
     if (!acpi_is_sdt_header_valid(&g_rsd_table->header))
     {
@@ -107,10 +122,18 @@ _INIT bool acpi_reserve_tables()
         if (acpi_is_sdt_header_valid(header))
         {
             if (memcmp(header->signature, "HPET", 4) == 0)
-                acpi_reserve_hpet_table(header);
+            {
+                st = acpi_reserve_table("HPET", sizeof(AcpiHpetTable), header);
+                if (st)
+                    continue;
+
+                g_hpet_table = (AcpiHpetTable*)header;
+            }
         }
         else
+        {
             KLOGF(WARN, "Found invalid header at 0x%p.", header);
+        }
 
         header = (AcpiSdTableHeader*)((u8*)header + header->len);
     }
