@@ -93,9 +93,5 @@ _ATTR_ALWAYS_INLINE u32 bw_u32_flip_endianness(u32 n)
 
 _ATTR_ALWAYS_INLINE bool bw_is_power_of_two(u64 n)
 {
-    u8 setbits = 0;
-    for (size_t i = 0; i < 64; ++i)
-        setbits += (n >> i) & 1;
-
-    return setbits == 1;
+    return n != 0 && (n & (n - 1)) == 0;
 }
