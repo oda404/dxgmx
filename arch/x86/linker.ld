@@ -96,5 +96,7 @@ SECTIONS
         *(.comment)
     }
 
+    . = ALIGN(4K);
+
     _kernel_size = . - _kernel_vaddr;
 }
