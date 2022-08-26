@@ -36,3 +36,16 @@ float bytes_to_human_readable(u32 bytes, char unit[4])
     }
     return fbytes;
 }
+
+u64 bytes_align_up64(u64 n, u64 alignment)
+{
+    if (n % alignment == 0)
+        return n;
+
+    return n + (alignment - n % alignment);
+}
+
+u64 bytes_align_down64(u64 n, u64 alignment)
+{
+    return n - (n % alignment);
+}
