@@ -27,6 +27,8 @@ static void ata_dump_device_info(const BlockDevice* dev)
         dev->sector_count * dev->physical_sectorsize, unit);
 
     AtaStorageDevice* atadev = dev->extra;
+    if (!atadev)
+        return;
 
     switch (atadev->type)
     {
