@@ -331,7 +331,7 @@ int vsnprintf(char* dest, size_t n, const char* fmt, va_list arglist)
         {
             ultoa(va_arg(arglist, ptr), tmpbuf, 16);
             flags = PRITNF_FLAG_PAD_ZERO;
-            width = PTR_DIG;
+            width = sizeof(ptr) == 4 ? 8 : 16;
 
             outbuf_len = printf_apply_flags_and_width(tmpbuf, 21, flags, width);
             outbuf = tmpbuf;
