@@ -6,31 +6,28 @@
 #ifndef _DXGMX_TYPES_H
 #define _DXGMX_TYPES_H
 
-#include <stddef.h>
-#include <stdint.h>
+#define NULL ((void*)0)
 
-typedef uint8_t u8;
-typedef uint16_t u16;
-typedef uint32_t u32;
-typedef uint64_t u64;
-typedef int8_t i8;
-typedef int16_t i16;
-typedef int32_t i32;
-typedef int64_t i64;
+typedef __UINT8_TYPE__ u8;
+typedef __UINT16_TYPE__ u16;
+typedef __UINT32_TYPE__ u32;
+typedef __UINT64_TYPE__ u64;
+typedef __INT8_TYPE__ i8;
+typedef __INT16_TYPE__ i16;
+typedef __INT32_TYPE__ i32;
+typedef __INT64_TYPE__ i64;
 
-#if defined(_X86_)
+typedef __UINTPTR_TYPE__ ptr;
+
+typedef __SIZE_TYPE__ size_t;
+
+#if __SIZE_WIDTH__ == 32
 typedef i32 ssize_t;
-#elif defined(_X86_64_)
+#elif __SIZE_WIDTH__ == 64
 typedef i64 ssize_t;
+#else
+#error "Weird __SIZE_WIDTH__!"
 #endif
-
-#if defined(_X86_)
-typedef u32 ptr;
-#define PTR_DIG 8
-#elif defined(_X86_64_)
-typedef u64 ptr;
-#define PTR_DIG 16
-#endif //_X86_
 
 #define KIB 1024
 #define MIB (KIB * 1024)
