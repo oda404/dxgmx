@@ -3,7 +3,9 @@
  * Distributed under the MIT license.
  */
 
+#include <dxgmx/assert.h>
 #include <dxgmx/attrs.h>
+#include <dxgmx/errno.h>
 #include <dxgmx/klog.h>
 #include <dxgmx/mem/falloc.h>
 #include <dxgmx/mem/mmanager.h>
@@ -17,24 +19,46 @@
 
 #define KLOGF_PREFIX "falloc: "
 
-/*
- * This whole page frame allocator is not really following
- * any strict known allocator scheme, is custom built
- * and is trash, but where's the fun in following a tutorial.
+/**
+ * This pageframe allocator is built with the kernel heap in mind.
+ * The 'official' way of allocating page frames, is using falloc_one_user(). The
+ * thing to keep in mind about this function is that it allocates it's frames
+ * starting from the end of the bitmap, going backwards. This way the starting
+ * frames (the ones that may get used by the kernel heap are left available).
+ * This doesn't mean that they are guaranteed to be available through the whole
+ * runtime of the kernel, the userspace may allocate a lot of pageframes which
+ * may result in falloc_one_user() to start allocation frames that "belong" to
+ * the kernel heap. A map of the free pageframes may look like this:
+ *
+ *                      'kernel heap (low-address) frames'
+ *                                     |
+ * [ x frames ] [ kernel image ] [ y frames ] --->           <--- [ z frames ]
+ *       ^                                                             ^
+ *  We should minimize these.                       'user (high-address) frames'
+ *
+ * Of course, in a real system we may have a lot of memory holes, but the point
+ * still stands. The kernel is loaded at a low-ish address in memory, in hopes
+ * of minimizing the number of "x frames" (frames before the kernel image).
+ * falloc_one_user() tries allocating as many high-address frames as possible,
+ * leaving the low-address frames, to be requested manually through
+ * falloc_one_at().
  */
 
 /* 1024 * 16 64-bit numbers are enough to hold the
 state of 1048576 4KiB pages which hold a total of 4GiB of memory. */
 #define PAGEFRAME_POOL_SIZE (1024 * 16)
+
+/* MAYBE FIXME: This whole thing is 128 KiB of memory, which at the time of
+ * writting, is about 1/3 of the kernel binary size... */
 static u64 g_pgframe_pool[PAGEFRAME_POOL_SIZE];
-static u32 g_pgframes_cnt = 0;
+static size_t g_pgframes_cnt = 0;
 
 /* Adds any complete PAGE_FRAME_SIZE sized frames from the given area. */
 static void pageframe_add_available(const MemoryRegion* region)
 {
     for (u64 frame = region->start; frame < region->start + region->size;
-         frame += PAGE_SIZE)
-        ffree(frame, 1);
+         frame += PAGESIZE)
+        ffree_one(frame);
 }
 
 _INIT int falloc_init()
@@ -50,38 +74,63 @@ _INIT int falloc_init()
     char unit[4];
     KLOGF(
         INFO,
-        "Using %lu free %d%s page frames.",
-        (unsigned long)g_pgframes_cnt,
-        (int)bytes_to_human_readable(PAGE_SIZE, unit),
+        "Using %u free %u%s page frames.",
+        (size_t)g_pgframes_cnt,
+        (size_t)bytes_to_human_readable(PAGESIZE, unit),
         unit);
 
     return 0;
 }
 
 /* Returns a free page's address */
-ptr falloc(size_t n)
+ptr falloc_one_user()
 {
-    if (!n)
-        return 0;
-
-    if (n > 1)
-        TODO_FATAL();
-
     // TODO: implement some sort of cache so we don't iterate over the whole
     // pool everytime.
-    for (size_t i = 0; i < PAGEFRAME_POOL_SIZE; ++i)
+
+    for (ssize_t i = PAGEFRAME_POOL_SIZE - 1; i >= 0; --i)
     {
         u64* pageframe_pool = &g_pgframe_pool[i];
-        for (u8 k = 0; k < 64; ++k)
+
+        for (i8 k = 63; k >= 0; --k)
         {
             if (!((*pageframe_pool >> k) & 1))
             {
                 bw_set(pageframe_pool, k);
                 --g_pgframes_cnt;
-                return i * 64 * PAGE_SIZE + k * PAGE_SIZE;
+                return i * 64 * PAGESIZE + k * PAGESIZE;
             }
         }
     }
+
+    return 0;
+}
+
+bool falloc_is_frame_available(ptr base)
+{
+    ASSERT(base % PAGESIZE == 0);
+
+    u64 bit = base / PAGESIZE;
+    u16 i = bit / 64;
+    bit -= i * 64;
+
+    bool st = (g_pgframe_pool[i] >> bit) & 1;
+    return !st;
+}
+
+int falloc_one_at(ptr base)
+{
+    ASSERT(base % PAGESIZE == 0);
+
+    if (!falloc_is_frame_available(base))
+        return -ENOMEM;
+
+    u64 bit = base / PAGESIZE;
+    u16 i = bit / 64;
+    bit -= i * 64;
+
+    bw_set(&g_pgframe_pool[i], bit);
+
     return 0;
 }
 
@@ -90,15 +139,11 @@ size_t falloc_get_free_frames_count()
     return g_pgframes_cnt;
 }
 
-void ffree(ptr base, size_t n)
+void ffree_one(ptr base)
 {
-    if (!n)
-        return;
+    ASSERT(base % PAGESIZE == 0);
 
-    if (n > 1)
-        TODO_FATAL();
-
-    u64 bit = base / PAGE_SIZE;
+    u64 bit = base / PAGESIZE;
     u16 i = bit / 64;
     bit -= i * 64;
 

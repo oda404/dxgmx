@@ -1,5 +1,5 @@
 /**
- * Copyright 2021 Alexandru Olaru.
+ * Copyright 2022 Alexandru Olaru.
  * Distributed under the MIT license.
  */
 
@@ -12,19 +12,38 @@
 
 /**
  * Initializes the page frame allocator.
- * @return 0 on success.
+ * Returns 0 on success, negative on error.
  */
 int falloc_init();
+
 /**
- *  Tries to allocate 'n' contiguous page frames.
- * @return 0 on failure. Otherwise the base of the page frame(s).
+ * Tries to allocate one 'user' pageframe.
+ * This pageframe should not be used for the kernel heap, as it's not guaranteed
+ * to be mapped in a higher-half fashion in the kernel page table. Kheap page
+ * frames need to be allocated 'manually' using falloc_one_at() where we can
+ * request frames that we can map in a higher half function overselvers.
+ * Returns the page frame physical address on success, 0 on failure.
  */
-ptr falloc(size_t n);
+ptr falloc_one_user();
+
+/* Returns true if the pageframe at starting at 'base' is not
+ * allocated.
+ */
+bool falloc_is_frame_available(ptr base);
+
 /**
- * @return the number of page frames that are currently free.
+ * Tries to allocate the pageframe starting at physical address 'base'.
+ * Returns 0 on success,
+ * -ENOMEM if the requested pageframe is already allocated.
+ */
+int falloc_one_at(ptr base);
+
+/**
+ * Returns the number of page frames that are currently free.
  */
 size_t falloc_get_free_frames_count();
-/* Frees 'n' page frames starting from 'base'. */
-void ffree(ptr base, size_t n);
+
+/* Free the pageframe starting at 'base'. */
+void ffree_one(ptr base);
 
 #endif // _DXGMX_MEM_FALLOC_H
