@@ -4,22 +4,22 @@
  */
 
 #include <dxgmx/cpu.h>
+#include <dxgmx/kimg.h>
 #include <dxgmx/klog.h>
-#include <dxgmx/ksections.h>
 #include <dxgmx/ksyms.h>
 #include <dxgmx/stack_trace.h>
 
 static bool stack_frame_is_valid(const StackFrame* frame)
 {
     bool instptr_ok =
-        ((frame->instptr >= ksections_get_text_start() &&
-          frame->instptr <= ksections_get_text_end()) ||
-         (frame->instptr >= ksections_get_init_start() &&
-          frame->instptr <= ksections_get_init_end()));
+        ((frame->instptr >= kimg_text_start() &&
+          frame->instptr <= kimg_text_end()) ||
+         (frame->instptr >= kimg_init_start() &&
+          frame->instptr <= kimg_init_end()));
 
     bool baseptr_ok =
-        ((frame->baseptr <= ksections_get_kstack_top() &&
-          frame->baseptr >= ksections_get_kstack_bot()) ||
+        ((frame->baseptr <= kimg_stack_top() &&
+          frame->baseptr >= kimg_stack_bot()) ||
          frame->baseptr == 0);
 
     return instptr_ok && baseptr_ok;
