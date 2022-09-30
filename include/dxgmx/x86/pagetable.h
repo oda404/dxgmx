@@ -47,8 +47,16 @@ typedef struct S_PageTable
     PageTableEntry entries[512];
 } PageTable;
 
+typedef PageTable pt_t;
+typedef PageTableEntry pte_t;
+
 void pagetable_init(PageTable* pt);
-void pte_set_frame_base(u64 base, PageTableEntry* pte);
-u64 pte_frame_base(PageTableEntry* pte);
+/* This function does not take in a void* as 'base' to avoid confusion with a
+ * virtual address, since it excepts a physical address. */
+void pte_set_frame_base(ptr base, PageTableEntry* pte);
+/* This function does not return a void*, to avoid "blind" dereferencing since
+ * the return value is a physical address, and needs to be translated. */
+ptr pte_frame_base(PageTableEntry* pte);
+PageTableEntry* pte_from_vaddr(ptr vaddr, PageTable* pt);
 
 #endif //!_DXGMX_X86_PAGETABLE_H

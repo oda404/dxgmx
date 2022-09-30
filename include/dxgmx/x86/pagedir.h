@@ -47,8 +47,16 @@ typedef struct S_PageDirectory
     PageDirectoryEntry entries[512];
 } PageDirectory;
 
+typedef PageDirectory pd_t;
+typedef PageDirectoryEntry pde_t;
+
 void pagedir_init(PageDirectory* pd);
-void pde_set_table_base(u64 base, PageDirectoryEntry* pde);
-PageTable* pde_table_base(PageDirectoryEntry* pde);
+/* This function does not take in a pt_t* as 'base' to avoid confusion with a
+ * virtual address, since it excepts a physical address. */
+void pde_set_table_base(ptr base, PageDirectoryEntry* pde);
+/* This function does not return a pt_t*, to avoid "blind" dereferencing since
+ * the return value is a physical address, and needs to be translated. */
+ptr pde_table_base(PageDirectoryEntry* pde);
+PageDirectoryEntry* pde_from_vaddr(ptr vaddr, PageDirectory* pd);
 
 #endif //!_DXGMX_X86_PAGEDIR_H
