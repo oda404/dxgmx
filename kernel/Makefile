@@ -5,7 +5,7 @@ $(KERNEL_SRCDIR)/kabort.c \
 $(KERNEL_SRCDIR)/klog.c \
 $(KERNEL_SRCDIR)/kinit_stage2.c \
 $(KERNEL_SRCDIR)/ksyms.c \
-$(KERNEL_SRCDIR)/ksections.c \
+$(KERNEL_SRCDIR)/kimg.c \
 $(KERNEL_SRCDIR)/module.c \
 $(KERNEL_SRCDIR)/panic.c \
 $(KERNEL_SRCDIR)/userspace.c \
