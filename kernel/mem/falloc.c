@@ -8,7 +8,7 @@
 #include <dxgmx/errno.h>
 #include <dxgmx/klog.h>
 #include <dxgmx/mem/falloc.h>
-#include <dxgmx/mem/mmanager.h>
+#include <dxgmx/mem/mm.h>
 #include <dxgmx/mem/pagesize.h>
 #include <dxgmx/panic.h>
 #include <dxgmx/string.h>
@@ -65,7 +65,7 @@ _INIT int falloc_init()
 {
     memset(g_pgframe_pool, 0xFF, sizeof(g_pgframe_pool));
 
-    FOR_EACH_MEM_REGION (area, mmanager_get_sys_mregmap())
+    FOR_EACH_MEM_REGION (area, mm_get_sys_mregmap())
         pageframe_add_available(area);
 
     if (!g_pgframes_cnt)

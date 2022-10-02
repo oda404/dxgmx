@@ -23,6 +23,8 @@ endif
 LDSCRIPT := \
 $(ARCH_SRCDIR)/linker.ld
 
+INCLUDEDIRS += -I$(ARCH_SRCDIR)/include
+
 include $(ARCH_SRCDIR)/boot/Makefile
 include $(ARCH_SRCDIR)/video/Makefile
 include $(ARCH_SRCDIR)/int/Makefile

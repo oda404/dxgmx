@@ -11,7 +11,8 @@
 
 typedef struct S_PagingStruct
 {
-    ptr vaddr;
+    /* Whatever architecture specific struct is being used. */
+    void* data;
 } PagingStruct;
 
 #endif // !_DXGMX_MEM_PAGING_H

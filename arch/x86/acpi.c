@@ -5,10 +5,10 @@
 
 #include <dxgmx/attrs.h>
 #include <dxgmx/klog.h>
-#include <dxgmx/mem/mmanager.h>
 #include <dxgmx/panic.h>
 #include <dxgmx/string.h>
 #include <dxgmx/x86/acpi.h>
+#include <dxgmx/x86/mm.h>
 
 #define KLOGF_PREFIX "acpi: "
 
@@ -72,7 +72,7 @@ static _INIT bool acpi_is_sdt_header_valid(const AcpiSdTableHeader* header)
 static int
 acpi_reserve_table(const char* name, size_t size, AcpiSdTableHeader* hdr)
 {
-    const int st = mmanager_reserve_acpi_range((ptr)hdr, size);
+    const int st = mm_reserve_acpi_range((ptr)hdr, size);
 
     if (!st)
         KLOGF(INFO, "Reserved %s table at 0x%p.", name, (void*)hdr);

@@ -9,7 +9,7 @@
 #include <dxgmx/klog.h>
 #include <dxgmx/kstdio.h>
 #include <dxgmx/ksyms.h>
-#include <dxgmx/mem/mmanager.h>
+#include <dxgmx/mem/mm.h>
 #include <dxgmx/panic.h>
 #include <dxgmx/storage/blkdevmanager.h>
 #include <dxgmx/timekeep.h>
@@ -39,7 +39,7 @@ _INIT bool kinit_stage1()
 
     timekeep_init();
 
-    mmanager_init();
+    mm_init();
 
     ksyms_load();
 
