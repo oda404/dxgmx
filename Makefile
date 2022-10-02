@@ -37,8 +37,10 @@ INCLUDE_SRCDIR    := include/
 CFLAGS            := \
 -MD -MP -isystem=/usr/include -std=c2x \
 -fno-omit-frame-pointer -ffreestanding \
--fno-builtin -I$(INCLUDE_SRCDIR) -march=$(DXGMX_ARCH) \
+-fno-builtin -march=$(DXGMX_ARCH) \
 -fno-pie -fno-pic
+
+INCLUDEDIRS := -I$(INCLUDE_SRCDIR) 
 
 LLVM=$(shell $(SCRIPTSDIR)/is-llvm.sh)
 
@@ -91,7 +93,7 @@ include $(INIT_SRCDIR)/Makefile
 include $(KERNEL_SRCDIR)/Makefile
 include $(FS_SRCDIR)/Makefile
 
-CFLAGS            += $(EXTRA_CFLAGS) $(WARNINGS) $(EXTRA_WARNINGS) $(MACROS) $(EXTRA_MACROS)
+CFLAGS            += $(INCLUDEDIRS) $(EXTRA_CFLAGS) $(WARNINGS) $(EXTRA_WARNINGS) $(MACROS) $(EXTRA_MACROS)
 LDFLAGS           += $(EXTRA_LDFLAGS) $(LIBS) $(EXTRA_LIBS)
 
 ifeq ($(MAKECMDGOALS),)
