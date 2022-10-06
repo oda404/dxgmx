@@ -24,7 +24,7 @@
 #define FAT_FILE_MODE (S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH)
 #define FAT_DIR_MODE (FAT_FILE_MODE | S_IFDIR)
 
-typedef struct S_FatFsMetadata
+typedef struct S_FatFs
 {
     u16 sectorsize;
     /* How many sectors one FAT occupies. */
@@ -47,7 +47,7 @@ typedef struct S_FatFsMetadata
     /*  */
     u32 first_data_sector;
     FatType type;
-} FatFsMetadata;
+} FatFs;
 
 #define FAT_ENTRY_RO 0x01
 #define FAT_ENTRY_HIDDEN 0x02
@@ -109,13 +109,13 @@ typedef struct S_FatEntryAddress
 /* Returns the sector and offset into that sector for the FAT entry which
 corresponds to the given cluster. */
 static _ATTR_ALWAYS_INLINE FatEntryAddress
-fat_get_fat_entry_addr_for_clust(u32 clust, const FatFsMetadata* meta)
+fat_get_fat_entry_addr_for_clust(u32 clust, const FatFs* fatfs)
 {
-    const u32 fat_offset = meta->type == FAT32 ? clust * 4 : clust * 2;
+    const u32 fat_offset = fatfs->type == FAT32 ? clust * 4 : clust * 2;
     return (FatEntryAddress){
         .cluster =
-            meta->reserved_sectors_count + (fat_offset / meta->sectorsize),
-        .offset = fat_offset % meta->sectorsize};
+            fatfs->reserved_sectors_count + (fat_offset / fatfs->sectorsize),
+        .offset = fat_offset % fatfs->sectorsize};
 }
 
 static i64 fat_get_fat_entry_for_clust(u32 clust, const FileSystem* fs)
@@ -147,9 +147,10 @@ static i64 fat_get_fat_entry_for_clust(u32 clust, const FileSystem* fs)
 }
 
 static _ATTR_ALWAYS_INLINE u32
-fat_cluster_to_sector(u32 cluster, const FatFsMetadata* meta)
+fat_cluster_to_sector(u32 cluster, const FatFs* fatfs)
 {
-    return (cluster - 2) * meta->sectors_per_cluster + meta->first_data_sector;
+    return (cluster - 2) * fatfs->sectors_per_cluster +
+           fatfs->first_data_sector;
 }
 
 /**
@@ -176,8 +177,8 @@ static ssize_t fat_read_entry(
         return -EINVAL;
 
     const BlockDevice* part = fs->backing.blkdev;
-    const FatFsMetadata* meta = fs->driver_ctx;
-    if (!meta)
+    const FatFs* fatfs = fs->driver_ctx;
+    if (!fatfs)
         return -EINVAL;
 
     /* The buffer into which we read the cluster sectors */
@@ -186,7 +187,7 @@ static ssize_t fat_read_entry(
         return -ENOMEM;
 
     /* Try to read the first cluster sector */
-    const u32 sector = fat_cluster_to_sector(loc.cluster, meta);
+    const u32 sector = fat_cluster_to_sector(loc.cluster, fatfs);
     if (!(part->read(part, sector, 1, buf)))
     {
         kfree(buf);
@@ -262,7 +263,7 @@ static ssize_t fat_read_entry(
                 idx = 0;
                 const u32 clust = fat_get_fat_entry_for_clust(loc.cluster, fs);
 
-                if (clust > 1 && clust <= meta->clusters_count)
+                if (clust > 1 && clust <= fatfs->clusters_count)
                 {
                     loc.cluster = clust;
                 }
@@ -272,7 +273,7 @@ static ssize_t fat_read_entry(
                     return -ENFILE;
                 }
 
-                const u32 sec = fat_cluster_to_sector(loc.cluster, meta);
+                const u32 sec = fat_cluster_to_sector(loc.cluster, fatfs);
                 if (!(part->read(part, sec, 1, buf)))
                 {
                     kfree(buf);
@@ -317,8 +318,8 @@ static int fat_enumerate_dir(const VirtualNode* dir_vnode, FileSystem* fs)
     if ((dir_vnode->mode & S_IFMT) != S_IFDIR)
         return -EINVAL;
 
-    const FatFsMetadata* meta = fs->driver_ctx;
-    if (!meta)
+    const FatFs* fatfs = fs->driver_ctx;
+    if (!fatfs)
         return -EINVAL;
 
     u32 cluster = dir_vnode->n;
@@ -338,7 +339,7 @@ static int fat_enumerate_dir(const VirtualNode* dir_vnode, FileSystem* fs)
         offset += entries_read;
 
         const size_t entries_per_cluster =
-            (meta->sectors_per_cluster * meta->sectorsize) / 32;
+            (fatfs->sectors_per_cluster * fatfs->sectorsize) / 32;
 
         while (offset >= entries_per_cluster)
         {
@@ -375,7 +376,7 @@ static int fat_parse_metadata(FileSystem* fs)
         return -EINVAL;
 
     const BlockDevice* part = fs->backing.blkdev;
-    FatFsMetadata* meta = fs->driver_ctx;
+    FatFs* fatfs = fs->driver_ctx;
 
     u8* buf = kmalloc(part->physical_sectorsize);
     if (!buf)
@@ -393,51 +394,52 @@ static int fat_parse_metadata(FileSystem* fs)
 
     /* Set the sectors per fat */
     if (bpb->sectors_per_fat16 == 0)
-        meta->sectors_per_fat = bpb32->sectors_per_fat32;
+        fatfs->sectors_per_fat = bpb32->sectors_per_fat32;
     else
-        meta->sectors_per_fat = bpb->sectors_count16;
+        fatfs->sectors_per_fat = bpb->sectors_count16;
 
-    meta->sectorsize = bpb->sectorsize;
+    fatfs->sectorsize = bpb->sectorsize;
     /* Sector count is the biggest out of the sector_count16 or 32. */
-    meta->sectors_count = max(bpb->sectors_count16, bpb->sectors_count32);
+    fatfs->sectors_count = max(bpb->sectors_count16, bpb->sectors_count32);
 
     /* How many sectors the root directories occupy. */
-    meta->root_dir_sectors_count =
+    fatfs->root_dir_sectors_count =
         ((bpb->root_dir_entries_count * 32) + (bpb->sectorsize - 1)) /
         bpb->sectorsize;
 
     /* Most likely 1 */
-    meta->sectors_per_cluster = bpb->sectors_per_cluster;
+    fatfs->sectors_per_cluster = bpb->sectors_per_cluster;
 
     /* Calculate how many data sectors there are. */
-    meta->data_sectors_count =
-        meta->sectors_count -
-        (bpb->reserved_sectors_count + bpb->fats_count * meta->sectors_per_fat +
-         meta->root_dir_sectors_count);
+    fatfs->data_sectors_count =
+        fatfs->sectors_count - (bpb->reserved_sectors_count +
+                                bpb->fats_count * fatfs->sectors_per_fat +
+                                fatfs->root_dir_sectors_count);
 
     /* Clusters are just groups of sectors that hold file/dir data. */
-    meta->clusters_count = meta->data_sectors_count / meta->sectors_per_cluster;
+    fatfs->clusters_count =
+        fatfs->data_sectors_count / fatfs->sectors_per_cluster;
 
-    meta->reserved_sectors_count = bpb->reserved_sectors_count;
+    fatfs->reserved_sectors_count = bpb->reserved_sectors_count;
 
-    meta->first_data_sector = meta->reserved_sectors_count +
-                              (bpb->fats_count * meta->sectors_per_fat) +
-                              meta->root_dir_sectors_count;
+    fatfs->first_data_sector = fatfs->reserved_sectors_count +
+                               (bpb->fats_count * fatfs->sectors_per_fat) +
+                               fatfs->root_dir_sectors_count;
 
-    if (meta->clusters_count < 4085)
+    if (fatfs->clusters_count < 4085)
     {
-        meta->root_dir_cluster = 0;
-        meta->type = FAT12;
+        fatfs->root_dir_cluster = 0;
+        fatfs->type = FAT12;
     }
-    else if (meta->clusters_count < 65525)
+    else if (fatfs->clusters_count < 65525)
     {
-        meta->root_dir_cluster = 0;
-        meta->type = FAT16;
+        fatfs->root_dir_cluster = 0;
+        fatfs->type = FAT16;
     }
     else
     {
-        meta->root_dir_cluster = bpb32->root_dir_cluster;
-        meta->type = FAT32;
+        fatfs->root_dir_cluster = bpb32->root_dir_cluster;
+        fatfs->type = FAT32;
     }
 
     kfree(buf);
@@ -503,11 +505,11 @@ static int fat_init(FileSystem* fs)
         return -EINVAL;
 
     /* Try to allocate and set the FAT metadata. */
-    FatFsMetadata* meta = kmalloc(sizeof(FatFsMetadata));
-    if (!meta)
+    FatFs* fatfs = kmalloc(sizeof(FatFs));
+    if (!fatfs)
         return -ENOMEM;
 
-    fs->driver_ctx = meta;
+    fs->driver_ctx = fatfs;
 
     {
         int st = fat_parse_metadata(fs);
@@ -518,7 +520,7 @@ static int fat_init(FileSystem* fs)
         }
     }
 
-    VirtualNode* rootvnode = fs_new_vnode(fs, meta->root_dir_cluster, NULL);
+    VirtualNode* rootvnode = fs_new_vnode(fs, fatfs->root_dir_cluster, NULL);
     if (!rootvnode)
     {
         fat_destroy(fs);
@@ -554,9 +556,9 @@ static ssize_t fat_read(
     }
 
     const BlockDevice* part = fs->backing.blkdev;
-    const FatFsMetadata* meta = fs->driver_ctx;
+    const FatFs* fatfs = fs->driver_ctx;
 
-    if (!(part && meta))
+    if (!(part && fatfs))
     {
         errno = EINVAL;
         return -1;
@@ -577,7 +579,7 @@ static ssize_t fat_read(
 
     if (!part->read(
             part,
-            fat_cluster_to_sector(vnode->n, meta) +
+            fat_cluster_to_sector(vnode->n, fatfs) +
                 off / part->physical_sectorsize,
             sectors,
             tmpbuf))
