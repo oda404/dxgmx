@@ -37,4 +37,6 @@ void* memset(void* __restrict s, int c, size_t n) _ATTR_NONNULL(1);
 
 void* memcpy(void* dest, const void* src, size_t n) _ATTR_NONNULL(1, 2);
 
+const char* strstr(const char* haystack, const char* needle);
+
 #endif // _DXGMX_STRING_H

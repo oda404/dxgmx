@@ -116,3 +116,20 @@ char* strdup(const char* str)
 
     return ret;
 }
+
+const char* strstr(const char* haystack, const char* needle)
+{
+    size_t haylen = strlen(haystack);
+    const size_t needlelen = strlen(needle);
+
+    while (haylen >= needlelen)
+    {
+        if (memcmp(haystack, needle, needlelen) == 0)
+            return haystack;
+
+        ++haystack;
+        --haylen;
+    }
+
+    return NULL;
+}
