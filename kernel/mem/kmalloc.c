@@ -46,13 +46,39 @@ static int kmalloc_check_driver(const KMallocDriver* drv)
 static void*
 kmalloc_aligned_with_heap(size_t size, size_t alignment, Heap* heap)
 {
-    return g_driver.alloc_aligned(size, alignment, heap);
+    void* addr = g_driver.alloc_aligned(size, alignment, heap);
+
+#if KMALLOC_VERBOSE == 1
+    if (addr)
+    {
+        KLOGF(
+            DEBUG,
+            "Allocated 0x%X bytes at 0x%p (alignment 0x%X)",
+            size,
+            addr,
+            alignment);
+    }
+    else
+    {
+        KLOGF(
+            DEBUG,
+            "Failed to allocate 0x%X bytes (alignment 0x%X)",
+            size,
+            alignment);
+    }
+#endif
+
+    return addr;
 }
 
 /* kfree() that specifically takes in a heap. */
 static void kfree_with_heap(void* addr, Heap* heap)
 {
     g_driver.free(addr, heap);
+
+#if KMALLOC_VERBOSE == 1
+    KLOGF(DEBUG, "Freed address 0x%p", addr);
+#endif
 }
 
 int kmalloc_register_kernel_heap(Heap heap)
@@ -141,26 +167,6 @@ void* kmalloc_aligned(size_t size, size_t alignment)
     /* Sanity check */
     ASSERT(((ptr)addr % alignment) == 0);
 
-#if KMALLOC_VERBOSE == 1
-    if (addr)
-    {
-        KLOGF(
-            DEBUG,
-            "Allocated 0x%X bytes at 0x%p (alignment 0x%X)",
-            size,
-            addr,
-            alignment);
-    }
-    else
-    {
-        KLOGF(
-            DEBUG,
-            "Failed to allocate 0x%X bytes (alignment 0x%X)",
-            size,
-            alignment);
-    }
-#endif
-
     return addr;
 }
 
@@ -177,10 +183,6 @@ void kfree(void* addr)
         panic("kfree: Tried to free an invalid address (0x%p)!", addr);
 
     kfree_with_heap(addr, heap);
-
-#if KMALLOC_VERBOSE == 1
-    KLOGF(DEBUG, "Freed address 0x%p", addr);
-#endif
 }
 
 void* krealloc(void* addr, size_t size)
