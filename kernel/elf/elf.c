@@ -18,13 +18,13 @@ int elf_read_generic_hdr(int fd, ElfGenericHdr* hdr)
     if (fd < 0 || !hdr)
         return -EINVAL;
 
-    if (vfs_lseek(fd, 0, SEEK_SET, 0) < 0)
+    if (vfs_lseek(fd, 0, SEEK_SET) < 0)
         return -errno;
 
 #define HEADER_SIZE ((ssize_t)sizeof(ElfGenericHdr))
 
     u8 buf[HEADER_SIZE] = {0};
-    if (vfs_read(fd, buf, HEADER_SIZE, 0) < HEADER_SIZE)
+    if (vfs_read(fd, buf, HEADER_SIZE) < HEADER_SIZE)
         return -errno;
 
     ElfGenericHdr* tmpheader = (ElfGenericHdr*)buf;
@@ -43,13 +43,13 @@ int elf_read_hdr32(int fd, Elf32Hdr* hdr)
     if (fd < 0 || !hdr)
         return -EINVAL;
 
-    if (vfs_lseek(fd, 0, SEEK_SET, 0) < 0)
+    if (vfs_lseek(fd, 0, SEEK_SET) < 0)
         return -errno;
 
 #define HEADER_SIZE ((ssize_t)sizeof(Elf32Hdr))
 
     u8 buf[HEADER_SIZE] = {0};
-    if (vfs_read(fd, buf, HEADER_SIZE, 0) < HEADER_SIZE)
+    if (vfs_read(fd, buf, HEADER_SIZE) < HEADER_SIZE)
         return -errno;
 
     Elf32Hdr* tmpheader = (Elf32Hdr*)buf;
@@ -63,8 +63,7 @@ int elf_read_hdr32(int fd, Elf32Hdr* hdr)
     return 0;
 }
 
-int elf_read_phdrs32(
-    int fd, const Elf32Hdr* hdr, Elf32Phdr* phdrs)
+int elf_read_phdrs32(int fd, const Elf32Hdr* hdr, Elf32Phdr* phdrs)
 {
     if (fd < 0 || !hdr || !phdrs)
         return -EINVAL;
@@ -78,10 +77,10 @@ int elf_read_phdrs32(
     for (size_t i = 0; i < hdr->phdr_table_entry_count; ++i)
     {
         const off_t offset = hdr->phdr_table + i * sizeof(Elf32Phdr);
-        if (vfs_lseek(fd, offset, SEEK_SET, 0) < 0)
+        if (vfs_lseek(fd, offset, SEEK_SET) < 0)
             return -errno;
 
-        if (vfs_read(fd, &phdrs[i], sizeof(Elf32Phdr), 0) < 0)
+        if (vfs_read(fd, &phdrs[i], sizeof(Elf32Phdr)) < 0)
             return -errno;
     }
 

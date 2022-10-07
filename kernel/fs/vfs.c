@@ -469,11 +469,9 @@ int vfs_unregister_fs_driver(const char* name)
     return 0;
 }
 
-int vfs_open(const char* name, int flags, mode_t mode, pid_t pid)
+int vfs_open(const char* name, int flags, mode_t mode)
 {
     (void)flags;
-
-    ASSERT(pid == 0);
 
     if (!name)
     {
@@ -492,10 +490,10 @@ int vfs_open(const char* name, int flags, mode_t mode, pid_t pid)
     tmpfd.mode = mode;
     tmpfd.flags = flags;
     tmpfd.off = 0;
-    tmpfd.pid = pid;
+    tmpfd.pid = 0;
 
     /* get a new fd for the new file */
-    tmpfd.fd = vfs_next_free_fd_for_pid(pid);
+    tmpfd.fd = vfs_next_free_fd_for_pid(0);
     if (tmpfd.fd < 0)
     {
         errno = ERANGE;
@@ -539,7 +537,7 @@ int vfs_open(const char* name, int flags, mode_t mode, pid_t pid)
     return tmpfd.fd;
 }
 
-ssize_t vfs_read(int fd, void* buf, size_t n, pid_t pid)
+ssize_t vfs_read(int fd, void* buf, size_t n)
 {
     if (!buf || !n)
     {
@@ -550,7 +548,7 @@ ssize_t vfs_read(int fd, void* buf, size_t n, pid_t pid)
     OpenFileDescriptor* openfd = NULL;
     FOR_EACH_ELEM_IN_DARR (g_openfds, g_openfds_count, tmpfd)
     {
-        if (tmpfd->fd == fd && tmpfd->pid == pid)
+        if (tmpfd->fd == fd)
         {
             openfd = tmpfd;
             break;
@@ -584,7 +582,7 @@ ssize_t vfs_read(int fd, void* buf, size_t n, pid_t pid)
     return read;
 }
 
-ssize_t vfs_write(int fd, const void* buf, size_t n, pid_t pid)
+ssize_t vfs_write(int fd, const void* buf, size_t n)
 {
     if (!buf || !n)
     {
@@ -595,7 +593,7 @@ ssize_t vfs_write(int fd, const void* buf, size_t n, pid_t pid)
     OpenFileDescriptor* openfd = NULL;
     FOR_EACH_ELEM_IN_DARR (g_openfds, g_openfds_count, tmpfd)
     {
-        if (tmpfd->fd == fd && tmpfd->pid == pid)
+        if (tmpfd->fd == fd)
         {
             openfd = tmpfd;
             break;
@@ -631,12 +629,12 @@ ssize_t vfs_write(int fd, const void* buf, size_t n, pid_t pid)
     return written;
 }
 
-off_t vfs_lseek(int fd, off_t off, int whence, pid_t pid)
+off_t vfs_lseek(int fd, off_t off, int whence)
 {
     OpenFileDescriptor* openfd = NULL;
     FOR_EACH_ELEM_IN_DARR (g_openfds, g_openfds_count, tmpfd)
     {
-        if (tmpfd->fd == fd && tmpfd->pid == pid)
+        if (tmpfd->fd == fd)
         {
             openfd = tmpfd;
             break;
@@ -670,9 +668,8 @@ off_t vfs_lseek(int fd, off_t off, int whence, pid_t pid)
     return openfd->off;
 }
 
-int vfs_close(int fd, pid_t pid)
+int vfs_close(int fd)
 {
     (void)fd;
-    (void)pid;
     return 0;
 }
