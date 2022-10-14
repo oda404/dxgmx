@@ -187,6 +187,22 @@ int blkdevmanager_unregister_dev(BlockDevice* dev)
     return 0;
 }
 
+const BlockDevice* blkdevm_find_blkdev_by_id(const char* id)
+{
+    if (!id)
+        return NULL;
+
+    if (strstr(id, "UUID=") == id)
+    {
+        const char* rawuuid = id + sizeof("UUID=");
+        return blkdevmanager_find_blkdev_by_uuid(rawuuid);
+    }
+    else
+    {
+        return blkdevmanager_find_blkdev_by_name(id);
+    }
+}
+
 const BlockDevice* blkdevmanager_find_blkdev_by_name(const char* name)
 {
     if (!name)
