@@ -18,30 +18,6 @@
 
 #define KLOGF_PREFIX "ramfs: "
 
-static int ramfs_init(FileSystem* fs)
-{
-    fs->driver_ctx = kmalloc(sizeof(RamFsMetadata));
-    if (!fs->driver_ctx)
-        return -ENOMEM;
-
-    RamFsMetadata* meta = fs->driver_ctx;
-
-#define STARTING_FILES_COUNT 8
-
-    meta->files = kcalloc(sizeof(RamFsFileData) * STARTING_FILES_COUNT);
-    if (!meta->files)
-    {
-        kfree(meta);
-        return -ENOMEM;
-    }
-
-    meta->files_count = STARTING_FILES_COUNT;
-
-#undef STARTING_FILES_COUNT
-
-    return 0;
-}
-
 static void ramfs_destroy(FileSystem* fs)
 {
     if (!fs)
@@ -58,6 +34,12 @@ static void ramfs_destroy(FileSystem* fs)
         kfree(fs->vnodes);
         fs->vnodes = NULL;
         fs->vnode_count = 0;
+    }
+
+    if (fs->mntsrc)
+    {
+        kfree(fs->mntsrc);
+        fs->mntsrc = NULL;
     }
 
     RamFsMetadata* meta = fs->driver_ctx;
@@ -80,6 +62,41 @@ static void ramfs_destroy(FileSystem* fs)
         kfree(meta);
         fs->driver_ctx = NULL;
     }
+}
+
+static int
+ramfs_init(const char* src, const char* type, const char* args, FileSystem* fs)
+{
+    if (!type || strcmp(type, "ramfs") != 0)
+        return -EINVAL;
+
+    RamFsMetadata* meta = kmalloc(sizeof(RamFsMetadata));
+    if (!meta)
+        return -ENOMEM;
+
+    fs->driver_ctx = meta;
+    fs->mntsrc = strdup(src == NULL ? "ramfs" : src);
+
+    if (!fs->mntsrc)
+    {
+        ramfs_destroy(fs);
+        return -ENOMEM;
+    }
+
+#define STARTING_FILES_COUNT 8
+
+    meta->files = kcalloc(sizeof(RamFsFileData) * STARTING_FILES_COUNT);
+    if (!meta->files)
+    {
+        ramfs_destroy(fs);
+        return -ENOMEM;
+    }
+
+    meta->files_count = STARTING_FILES_COUNT;
+
+#undef STARTING_FILES_COUNT
+
+    return 0;
 }
 
 static int ramfs_mkfile(FileSystem* fs, const char* path, mode_t mode)
@@ -264,7 +281,6 @@ static int ramfs_main()
 {
     const FileSystemDriver ramfs_driver = {
         .name = MODULE_NAME,
-        .backing = FILESYSTEM_BACKING_RAM,
         .init = ramfs_init,
         .destroy = ramfs_destroy,
         .read = ramfs_read,
@@ -272,7 +288,7 @@ static int ramfs_main()
         .mkfile = ramfs_mkfile,
         .mkdir = ramfs_mkdir};
 
-    return vfs_register_fs_driver(&ramfs_driver);
+    return vfs_register_fs_driver(ramfs_driver);
 }
 
 static int ramfs_exit()

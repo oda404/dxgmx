@@ -11,76 +11,84 @@
 #include <dxgmx/types.h>
 #include <posix/sys/types.h>
 
-struct S_FileSystem;
-struct S_VirtualNode;
-
-typedef struct S_FileSystemBacking
-{
-    union
-    {
-        const BlockDevice* blkdev;
-    };
-} FileSystemBacking;
-
-#define FILESYSTEM_BACKING_DISK 1
-#define FILESYSTEM_BACKING_RAM 2
-
-/* Defines the operations of a filesystem driver implementation. */
-typedef struct S_FileSystemDriver
-{
-    char* name;
-    u8 backing;
-
-    /* Checks whether the given BlockDevice holds a valid filesystem. Chould be
-     * left NULL, if the filesystem is backed by ram. */
-    int (*valid)(const BlockDevice*);
-
-    /* Initializes the fs. */
-    int (*init)(struct S_FileSystem*);
-
-    /* Destroys the fs. */
-    void (*destroy)(struct S_FileSystem*);
-
-    ssize_t (*read)(
-        struct S_FileSystem* fs,
-        const struct S_VirtualNode* vnode,
-        void* buf,
-        size_t n,
-        loff_t off);
-
-    ssize_t (*write)(
-        struct S_FileSystem* fs,
-        struct S_VirtualNode* vnode,
-        const void* buf,
-        size_t n,
-        loff_t off);
-
-    /* Create a new empty file on the filesystem. */
-    int (*mkfile)(struct S_FileSystem* fs, const char* path, mode_t mode);
-    int (*mkdir)(struct S_FileSystem* fs, const char* path, mode_t mode);
-
-} FileSystemDriver;
+struct S_FileSystemDriver;
 
 /* Represents a mounted/mountable filesystem. It's imeplementation resides
 in 'operations'. */
 typedef struct S_FileSystem
 {
     /* The name of the mount. */
-    char* mountsrc;
+    char* mntsrc;
     /* Where this mountpoint resides */
-    char* mountpoint;
+    char* mntpoint;
     /* Mount flags */
-    u32 mountflags;
+    u32 mntflags;
     /* The filesystem driver. */
-    FileSystemDriver* driver;
-    /* This is free for use by the filesystem driver to store whatever. */
+    struct S_FileSystemDriver* driver;
+    /* This is free for use by the filesystem driver to store whatever. Like the
+     * block device (if the filesystem is backed by a block device) */
     void* driver_ctx;
     /* Vnodes cache for this filesystem. */
-    struct S_VirtualNode* vnodes;
+    VirtualNode* vnodes;
     size_t vnode_count;
-    /* The thing backing this filesystem (disk/ram) */
-    FileSystemBacking backing;
 } FileSystem;
+
+/**
+ * Defines the operations of a filesystem driver implementation.
+ * Any arguments passed to any functions MAY be null, unless otherwise
+ * specified. A filesystem driver module should register it's own
+ * FileSystemDriver struct using vfs_register_fs_driver().
+ */
+typedef struct S_FileSystemDriver
+{
+    char* name;
+
+    /* Checks whether the given BlockDevice holds a valid filesystem. Chould be
+     * left NULL, if the filesystem is backed by ram. */
+    int (*valid)(const BlockDevice*);
+
+    /** Prepare 'fs' for mounting.
+     * 'src' is the mount source
+     *
+     * 'type' is the driver name the filesystem is expecting. If the type does
+     * not match the driver's name, the driver should instantly return with a
+     * -EINVAL.
+     *
+     * 'args' string with driver specific arguments.
+     *
+     * 'fs' is the target filesystem. The filesystem will already have
+     * 'mountpoint' and 'flags' set. Also 'driver' will be set to this driver.
+     * The driver should not touch the before-mentioned fields. Guaranteed to be
+     * non-null.
+     *
+     * This function is not explicitly passed the mount point, as the driver
+     * should be agnostic to that.
+     */
+    int (*init)(
+        const char* src, const char* type, const char* args, FileSystem* fs);
+
+    /* Destroys the fs. */
+    void (*destroy)(FileSystem*);
+
+    ssize_t (*read)(
+        FileSystem* fs,
+        const struct S_VirtualNode* vnode,
+        void* buf,
+        size_t n,
+        loff_t off);
+
+    ssize_t (*write)(
+        FileSystem* fs,
+        struct S_VirtualNode* vnode,
+        const void* buf,
+        size_t n,
+        loff_t off);
+
+    /* Create a new empty file on the filesystem. */
+    int (*mkfile)(FileSystem* fs, const char* path, mode_t mode);
+    int (*mkdir)(FileSystem* fs, const char* path, mode_t mode);
+
+} FileSystemDriver;
 
 struct S_VirtualNode*
 fs_new_vnode(FileSystem* fs, ino_t n, const VirtualNode* parent);

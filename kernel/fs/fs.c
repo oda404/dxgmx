@@ -81,21 +81,21 @@ int fs_rm_vnode(FileSystem* fs, struct S_VirtualNode* vnode)
 
 int fs_make_path_relative(const FileSystem* fs, char* path)
 {
-    if (!path || !fs || !fs->mountpoint)
+    if (!path || !fs || !fs->mntpoint)
         return -EINVAL;
 
     size_t pathlen = strlen(path);
-    size_t prefixlen = strlen(fs->mountpoint);
+    size_t prefixlen = strlen(fs->mntpoint);
 
     if (prefixlen > pathlen)
         return -EINVAL;
 
-    if (prefixlen == 1 && fs->mountpoint[0] == '/')
+    if (prefixlen == 1 && fs->mntpoint[0] == '/')
         return 0; /* That's it :) */
 
     size_t matching = 0;
     for (size_t i = 0; i < prefixlen; ++i)
-        matching += (path[i] == fs->mountpoint[i]);
+        matching += (path[i] == fs->mntpoint[i]);
 
     if (matching != prefixlen)
         return -ENAMETOOLONG;

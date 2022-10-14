@@ -11,14 +11,27 @@
 #include <dxgmx/types.h>
 #include <posix/sys/types.h>
 
-bool vfs_init();
+int vfs_init();
 
-int vfs_mount(const char* src, const char* dest, u32 flags);
-int vfs_unmount(const char* src_or_dest);
-int vfs_mount_by_uuid(const char* uuid, const char* dest, u32 flags);
-int vfs_mount_ramfs(const char* driver_name, const char* dest, u32 flags);
+/** Mount a partition.
+ * 'src' is the mount source, could be anything from a block device path, uuid,
+ * or nothing at all. Only the respective driver knows what to do with this.
+ * 'mntpoint' is the mount mount starting from the filesystem root.
+ * 'type' is the name of the filesystem (driver). If null all filesystem drivers
+ * are probed to see if any fit.
+ * 'args' is a string of driver-specific options.
+ * 'flags' are driver agnostic mount options.
+ */
+int vfs_mount(
+    const char* src,
+    const char* mntpoint,
+    const char* type,
+    const char* args,
+    u32 flags);
 
-int vfs_register_fs_driver(const FileSystemDriver*);
+int vfs_unmount(const char* src_or_mntpoint);
+
+int vfs_register_fs_driver(FileSystemDriver);
 int vfs_unregister_fs_driver(const char* name);
 
 int vfs_open(const char* name, int flags, mode_t mode);

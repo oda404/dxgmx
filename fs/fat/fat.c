@@ -6,6 +6,7 @@
 // https://aboutitdata.files.wordpress.com/2020/07/fat32-spec-sda-contribution.pdf
 
 #include "fat.h"
+#include <dxgmx/assert.h>
 #include <dxgmx/errno.h>
 #include <dxgmx/fs/vfs.h>
 #include <dxgmx/fs/vnode.h>
@@ -13,6 +14,7 @@
 #include <dxgmx/kmalloc.h>
 #include <dxgmx/math.h>
 #include <dxgmx/module.h>
+#include <dxgmx/storage/blkdevmanager.h>
 #include <dxgmx/string.h>
 #include <dxgmx/todo.h>
 #include <posix/sys/stat.h>
@@ -47,6 +49,8 @@ typedef struct S_FatFs
     /*  */
     u32 first_data_sector;
     FatType type;
+
+    const BlockDevice* blkdev;
 } FatFs;
 
 #define FAT_ENTRY_RO 0x01
@@ -123,9 +127,9 @@ static i64 fat_get_fat_entry_for_clust(u32 clust, const FileSystem* fs)
     if (!fs)
         return -EINVAL;
 
-    const BlockDevice* part = fs->backing.blkdev;
-    if (!part)
-        return -EINVAL;
+    const FatFs* fatfs = fs->driver_ctx;
+    const BlockDevice* part = fatfs->blkdev;
+    ASSERT(part);
 
     // FIX returns.
     u8* tmp = kmalloc(part->physical_sectorsize);
@@ -176,10 +180,11 @@ static ssize_t fat_read_entry(
     if (loc.offset > 31)
         return -EINVAL;
 
-    const BlockDevice* part = fs->backing.blkdev;
     const FatFs* fatfs = fs->driver_ctx;
-    if (!fatfs)
-        return -EINVAL;
+    ASSERT(fatfs);
+
+    const BlockDevice* part = fatfs->blkdev;
+    ASSERT(part);
 
     /* The buffer into which we read the cluster sectors */
     u8* buf = kmalloc(part->physical_sectorsize);
@@ -375,8 +380,11 @@ static int fat_parse_metadata(FileSystem* fs)
     if (!fs)
         return -EINVAL;
 
-    const BlockDevice* part = fs->backing.blkdev;
     FatFs* fatfs = fs->driver_ctx;
+    ASSERT(fatfs);
+
+    const BlockDevice* part = fatfs->blkdev;
+    ASSERT(part);
 
     u8* buf = kmalloc(part->physical_sectorsize);
     if (!buf)
@@ -485,6 +493,12 @@ static int fat_valid(const BlockDevice* blkdev)
 
 static void fat_destroy(FileSystem* fs)
 {
+    if (fs->mntsrc)
+    {
+        kfree(fs->mntsrc);
+        fs->mntsrc = NULL;
+    }
+
     if (fs->driver_ctx)
     {
         kfree(fs->driver_ctx);
@@ -499,17 +513,37 @@ static void fat_destroy(FileSystem* fs)
     }
 }
 
-static int fat_init(FileSystem* fs)
+static int
+fat_init(const char* src, const char* type, const char* args, FileSystem* fs)
 {
-    if (!fs)
+    /* This driver requires a src. */
+    if (!fs || !src)
         return -EINVAL;
 
-    /* Try to allocate and set the FAT metadata. */
+    /* If the type is explicitly NOT fat, it's not our business */
+    if (type && strcmp(type, "fat") != 0)
+        return -EINVAL;
+
+    /* Find the block device using src */
+    const BlockDevice* blkdev = blkdevm_find_blkdev_by_id(src);
+    if (!blkdev)
+        return -ENOTBLK;
+
+    /* Allocate the Fat filesystem meta. */
     FatFs* fatfs = kmalloc(sizeof(FatFs));
     if (!fatfs)
         return -ENOMEM;
 
+    /* Allocat any other variables we need to. */
+    fs->mntsrc = strdup(src);
+    if (!fs->mntsrc)
+    {
+        fat_destroy(fs);
+        return -ENOMEM;
+    }
+
     fs->driver_ctx = fatfs;
+    fatfs->blkdev = blkdev;
 
     {
         int st = fat_parse_metadata(fs);
@@ -555,8 +589,11 @@ static ssize_t fat_read(
         return -1;
     }
 
-    const BlockDevice* part = fs->backing.blkdev;
     const FatFs* fatfs = fs->driver_ctx;
+    ASSERT(fatfs);
+
+    const BlockDevice* part = fatfs->blkdev;
+    ASSERT(part);
 
     if (!(part && fatfs))
     {
@@ -624,7 +661,6 @@ static int fatfs_main()
 {
     const FileSystemDriver fs_driver = {
         .name = MODULE_NAME,
-        .backing = FILESYSTEM_BACKING_DISK,
         .valid = fat_valid,
         .init = fat_init,
         .destroy = fat_destroy,
@@ -633,7 +669,7 @@ static int fatfs_main()
         .mkfile = fat_mkfile,
         .mkdir = fat_mkdir};
 
-    return vfs_register_fs_driver(&fs_driver);
+    return vfs_register_fs_driver(fs_driver);
 }
 
 static int fatfs_exit()
