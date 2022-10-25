@@ -12,6 +12,7 @@
 #include <dxgmx/mem/mm.h>
 #include <dxgmx/mem/pagesize.h>
 #include <dxgmx/panic.h>
+#include <dxgmx/string.h>
 #include <dxgmx/todo.h>
 #include <dxgmx/utils/bytes.h>
 #include <dxgmx/x86/idt.h>
@@ -102,6 +103,9 @@ static void handle_absent_kernel_heap_page(ptr faultaddr)
     pte->exec_disable = true;
     pte->present = true;
     pte->writable = true;
+
+    // Kernel heap pages are zereod out
+    memset((void*)bytes_align_down64(faultaddr, PAGESIZE), 0, PAGESIZE);
 
     mm_tlb_flush_single(faultaddr);
 }
