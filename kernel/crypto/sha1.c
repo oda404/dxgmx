@@ -91,7 +91,7 @@ _ATTR_ALWAYS_INLINE static void sha1_pad(SHA1Context* ctx)
     else
     {
         /* The only padding added is to the original block. */
-        memset(ctx->block.buf + ctx->block.size, 0, paddingsize - 16);
+        memset(ctx->block.buf + ctx->block.size, 0, paddingsize);
         /* Append 128 (0b10000000) after the message. */
         ctx->block.buf[ctx->block.size] = (1 << 7);
         /* Store the number of bits in the original message in the last
