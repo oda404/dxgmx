@@ -10,7 +10,7 @@ float bytes_to_human_readable(u32 bytes, char unit[4])
 {
     float fbytes = bytes;
     u8 i = 0;
-    while (fbytes > 1024)
+    while (fbytes >= 1024)
     {
         ++i;
         fbytes /= 1024.f;
