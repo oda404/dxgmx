@@ -34,7 +34,7 @@ FS_SRCDIR         := fs/
 INCLUDE_SRCDIR    := include/
 
 ### BASE FLAGS ###
-CFLAGS            := \
+BASE_CFLAGS            := \
 -MD -MP -isystem=/usr/include -std=c2x \
 -fno-omit-frame-pointer -ffreestanding \
 -fno-builtin -march=$(DXGMX_ARCH) \
@@ -45,7 +45,7 @@ INCLUDEDIRS := -I$(INCLUDE_SRCDIR)
 LLVM=$(shell $(SCRIPTSDIR)/is-llvm.sh)
 
 ifeq ($(LLVM),1)
-    CFLAGS += --target=$(DXGMX_ARCH)-unknown-dxgmx
+    BASE_CFLAGS += --target=$(DXGMX_ARCH)-unknown-dxgmx
 endif
 
 LDFLAGS           := -nostdlib
@@ -79,6 +79,7 @@ FS_SRC            :=
 LDSCRIPT          :=
 HEADERS           :=
 MODULES_SRC       :=
+KINIT_STAGE3_SRC  :=
 
 ifdef TARGET_FILE
     include $(TARGET_FILE)
@@ -93,7 +94,8 @@ include $(INIT_SRCDIR)/Makefile
 include $(KERNEL_SRCDIR)/Makefile
 include $(FS_SRCDIR)/Makefile
 
-CFLAGS            += $(INCLUDEDIRS) $(EXTRA_CFLAGS) $(WARNINGS) $(EXTRA_WARNINGS) $(MACROS) $(EXTRA_MACROS)
+BASE_CFLAGS       += $(INCLUDEDIRS) $(WARNINGS) $(MACROS)
+CFLAGS            += $(BASE_CFLAGS) $(EXTRA_CFLAGS) $(EXTRA_WARNINGS) $(EXTRA_MACROS)
 LDFLAGS           += $(EXTRA_LDFLAGS) $(LIBS) $(EXTRA_LIBS)
 
 ifeq ($(MAKECMDGOALS),)
@@ -128,8 +130,13 @@ MODOBJS           := $(MODOBJS:%.c=%_mod_$(BUILDTARGET_NAME).c.o)
 MODOBJS           := $(addprefix $(BUILDDIR)/, $(MODOBJS))
 MODDEPS           := $(MODOBJS:%.o=%.d)
 
+KINIT_STAGE3_OBJ := $(filter %.c, $(KINIT_STAGE3_SRC))
+KINIT_STAGE3_OBJ := $(KINIT_STAGE3_OBJ:%.c=%_kinit3_$(BUILDTARGET_NAME).c.o)
+KINIT_STAGE3_OBJ := $(addprefix $(BUILDDIR)/, $(KINIT_STAGE3_OBJ))
+KINIT_STAGE3_DEP := $(KINIT_STAGE3_OBJ:%.o=%.d)
+
 DXGMX_DEPS        := \
-$(COBJS) $(ASMOBJS) $(LDSCRIPT) $(MODOBJS)
+$(COBJS) $(KINIT_STAGE3_OBJ) $(ASMOBJS) $(LDSCRIPT) $(MODOBJS)
 
 DXGMX_COMMON_DEPS := Makefile $(BUILDCONFIG) $(BUILDTARGET)
 
@@ -140,7 +147,7 @@ all: $(KERNEL_BIN_PATH)
 
 $(KERNEL_BIN_PATH): $(DXGMX_DEPS) $(DXGMX_COMMON_DEPS)
 	@$(PRETTY_PRINT) LD $(notdir $(KERNEL_BIN_NAME))
-	@$(LD) -T $(LDSCRIPT) $(COBJS) $(ASMOBJS) $(MODOBJS) $(LDFLAGS) -o $(KERNEL_BIN_PATH)
+	@$(LD) -T $(LDSCRIPT) $(COBJS) $(KINIT_STAGE3_OBJ) $(ASMOBJS) $(MODOBJS) $(LDFLAGS) -o $(KERNEL_BIN_PATH)
 
 	@[ -f build/image.img ] || $(SCRIPTSDIR)/create-disk.sh -p build/image.img
 	@NM=$(NM) OBJCOPY=$(OBJCOPY) $(SCRIPTSDIR)/bake_symbols.sh $(KERNEL_BIN_PATH) 
@@ -152,6 +159,12 @@ $(BUILDDIR)/%_$(BUILDTARGET_NAME).c.o: %.c $(DXGMX_COMMON_DEPS)
 	@mkdir -p $(dir $@)
 	@$(PRETTY_PRINT) CC $<
 	@$(CC) -c $< $(CFLAGS) -o $@
+
+-include $(KINIT_STAGE3_DEP)
+$(BUILDDIR)/%_kinit3_$(BUILDTARGET_NAME).c.o: %.c $(DXGMX_COMMON_DEPS)
+	@mkdir -p $(dir $@)
+	@$(PRETTY_PRINT) CC $<
+	@$(CC) -c $< $(BASE_CFLAGS) -o $@
 
 -include $(MODDEPS)
 $(BUILDDIR)/%_mod_$(BUILDTARGET_NAME).c.o: %.c $(DXGMX_COMMON_DEPS)

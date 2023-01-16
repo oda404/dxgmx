@@ -91,6 +91,13 @@ SECTIONS
         _init_sect_end = .;
     }
 
+    .kinit_stage3_text ALIGN(4K) : AT (ADDR(.kinit_stage3_text) - _kernel_map_offset)
+    {
+        _kinit_stage3_text_start = .;
+        *(.kinit_stage3_text)
+        _kinit_stage3_text_end = .;
+    }
+
     /DISCARD/ :
     {
         *(.comment)

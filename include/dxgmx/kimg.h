@@ -34,6 +34,9 @@ ptr kimg_ro_postinit_end();
 ptr kimg_init_start();
 ptr kimg_init_end();
 
+ptr kimg_kinit_stage3_text_start();
+ptr kimg_kinit_stage3_text_end();
+
 /* The higher half map offset. */
 size_t kimg_map_offset();
 

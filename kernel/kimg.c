@@ -22,6 +22,8 @@ extern u8 _bss_sect_start[];
 extern u8 _bss_sect_end[];
 extern u8 _bootloader_sect_start[];
 extern u8 _bootloader_sect_end[];
+extern u8 _kinit_stage3_text_start[];
+extern u8 _kinit_stage3_text_end[];
 extern u8 _kernel_map_offset[];
 extern u8 _kernel_size[];
 
@@ -102,6 +104,15 @@ ptr kimg_init_start()
 ptr kimg_init_end()
 {
     return (ptr)_init_sect_end;
+}
+
+ptr kimg_kinit_stage3_text_start()
+{
+    return (ptr)_kinit_stage3_text_start;
+}
+ptr kimg_kinit_stage3_text_end()
+{
+    return (ptr)_kinit_stage3_text_end;
 }
 
 size_t kimg_map_offset()

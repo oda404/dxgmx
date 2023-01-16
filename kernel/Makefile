@@ -10,6 +10,8 @@ $(KERNEL_SRCDIR)/module.c \
 $(KERNEL_SRCDIR)/panic.c \
 $(KERNEL_SRCDIR)/userspace.c \
 
+KINIT_STAGE3_SRC := $(KERNEL_SRCDIR)/kinit_stage3.c
+
 include $(KERNEL_SRCDIR)/mem/Makefile
 include $(KERNEL_SRCDIR)/utils/Makefile
 include $(KERNEL_SRCDIR)/crypto/Makefile
