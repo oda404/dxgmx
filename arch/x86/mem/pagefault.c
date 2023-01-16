@@ -142,26 +142,27 @@ static void pagefault_isr(InterruptFrame* frame)
     const ptr faultaddr = cpu_read_cr2();
 
 #if PAGEFAULT_VERBOSE == 1
-    const char* msg = NULL;
-    if (PAGEFAULT_IS_PROT_VIOL(frame->code))
-    {
-        if (PAGEFAULT_IS_EXEC(frame->code))
-            msg = "exec";
-        else if (PAGEFAULT_IS_WRITE(frame->code))
-            msg = "write";
-        else
-            msg = "read";
-    }
+    const char* action_msg = NULL;
+    if (PAGEFAULT_IS_EXEC(frame->code))
+        action_msg = "exec";
+    else if (PAGEFAULT_IS_WRITE(frame->code))
+        action_msg = "write";
     else
-    {
-        msg = "absent";
-    }
+        action_msg = "read";
+
+    const char* result_msg = NULL;
+
+    if (PAGEFAULT_IS_PROT_VIOL(frame->code))
+        result_msg = "prot. violation";
+    else
+        result_msg = "absent";
 
     KLOGF(
         DEBUG,
-        "Fault at: 0x%p (%s), cpl: %d.",
+        "Fault at: 0x%p (%s/%s), cpl: %d.",
         (void*)faultaddr,
-        msg,
+        action_msg,
+        result_msg,
         frame->cs & 3);
 #endif // PAGEFAULT_VERBOSE == 1
 
