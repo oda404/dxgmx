@@ -19,4 +19,5 @@ include $(KERNEL_SRCDIR)/kstdlib/Makefile
 include $(KERNEL_SRCDIR)/storage/Makefile
 include $(KERNEL_SRCDIR)/fs/Makefile
 include $(KERNEL_SRCDIR)/elf/Makefile
+include $(KERNEL_SRCDIR)/proc/Makefile
 include $(KERNEL_SRCDIR)/syscalls/Makefile
