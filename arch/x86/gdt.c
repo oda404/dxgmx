@@ -131,8 +131,11 @@ _INIT void tss_init()
     /* Prepare the TSS */
     memset(&g_tss, 0, sizeof(TssEntry));
     g_tss.ss0 = GDT_KERNEL_DS;
-    /* !! FIXME: create a separate kernel stack. */
-    g_tss.esp0 = _kernel_stack_top;
 
     tss_load();
+}
+
+void tss_set_esp0(ptr esp)
+{
+    g_tss.esp0 = esp;
 }

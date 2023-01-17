@@ -93,6 +93,8 @@ typedef struct _ATTR_PACKED S_GDTR
 void gdt_init();
 void tss_init();
 
+void tss_set_esp0(ptr esp);
+
 #endif // !_ASM
 
 /* The ring 0 mode code segment */
