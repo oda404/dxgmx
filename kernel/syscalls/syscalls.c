@@ -8,13 +8,19 @@
 #include <dxgmx/syscalls.h>
 #include <stdarg.h>
 
+/* Actual system calls. */
+void syscall_exit(int status);
+ssize_t syscall_read(int fd, void* buf, size_t n);
+int syscall_execve(const char* path, const char* argv[], const char* envv[]);
+
+/* No such syscall */
 static int syscall_undefined(syscall_t sysn)
 {
     klogln(WARN, "Invalid syscall number: 0x%X!", sysn);
     return -ENOSYS;
 }
 
-syscall_ret_t syscalls_do_handle(syscall_t n, ...)
+static syscall_ret_t syscalls_do_handle(syscall_t n, ...)
 {
     va_list list;
     va_start(list, n);
@@ -32,6 +38,13 @@ syscall_ret_t syscalls_do_handle(syscall_t n, ...)
             va_arg(list, int), va_arg(list, void*), va_arg(list, size_t));
         break;
 
+    case SYSCALL_EXECVE:
+        ret = syscall_execve(
+            va_arg(list, const char*),
+            va_arg(list, const char**),
+            va_arg(list, const char**));
+        break;
+
     default:
         ret = syscall_undefined(n);
         break;
@@ -42,7 +55,9 @@ syscall_ret_t syscalls_do_handle(syscall_t n, ...)
     return ret;
 }
 
+_INIT int syscalls_arch_init(syscall_ret_t (*)(syscall_t, ...));
+
 int syscalls_init()
 {
-    return syscalls_arch_init();
+    return syscalls_arch_init(syscalls_do_handle);
 }

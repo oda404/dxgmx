@@ -7,16 +7,19 @@
 #include <dxgmx/todo.h>
 #include <dxgmx/x86/idt.h>
 
+static _RO_POST_INIT syscall_handler_t g_global_syscall_handler = NULL;
+
 static void x86syscall_isr(InterruptFrame* frame)
 {
     /* Return value of syscall goes in eax. Note that even if the syscall
      * returns void, we still return and set eax to 0. Should we fix this ? */
-    frame->eax = syscalls_do_handle(
+    frame->eax = g_global_syscall_handler(
         frame->eax, frame->ebx, frame->ecx, frame->edx, frame->esi, frame->edi);
 }
 
-int syscalls_arch_init()
+int syscalls_arch_init(syscall_handler_t handler)
 {
+    g_global_syscall_handler = handler;
     idt_register_isr(0x80, x86syscall_isr);
     return 0;
 }
