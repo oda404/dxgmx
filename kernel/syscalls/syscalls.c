@@ -9,9 +9,9 @@
 #include <stdarg.h>
 
 /* Actual system calls. */
-void syscall_exit(int status);
-ssize_t syscall_read(int fd, void* buf, size_t n);
-int syscall_execve(const char* path, const char* argv[], const char* envv[]);
+extern void syscall_exit(int status);
+extern ssize_t syscall_read(int fd, void* buf, size_t n);
+extern void syscall_dxgmx_log(const char* fmt, ...);
 
 /* No such syscall */
 static int syscall_undefined(syscall_t sysn)
@@ -43,6 +43,10 @@ static syscall_ret_t syscalls_do_handle(syscall_t n, ...)
             va_arg(list, const char*),
             va_arg(list, const char**),
             va_arg(list, const char**));
+        break;
+
+    case SYSCALL_DXGMX_LOG:
+        syscall_dxgmx_log(va_arg(list, const char*), list);
         break;
 
     default:
