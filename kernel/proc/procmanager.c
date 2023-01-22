@@ -29,6 +29,9 @@
 /* Size of a process' kernel stack. */
 #define PROC_KSTACK_SIZE (PAGESIZE)
 
+/* Default stack size for a process. */
+#define PROC_STACK_SIZE (8 * KIB)
+
 static Process* g_procs = NULL;
 static size_t g_proc_count = 0;
 static size_t g_running_pids = 1;
@@ -93,6 +96,26 @@ static void procm_free_proc(Process* proc)
     kfree(proc);
 }
 
+static int procm_create_proc_stack(size_t pagespan, Process* proc)
+{
+    ptr stage3_stack_top = PROC_VIRTUAL_HIGH_ADDRESS - PAGESIZE;
+
+    // FIXME: don't explictly map all stack pages here.
+    for (size_t i = 0; i < pagespan; ++i)
+    {
+        int st = mm_new_user_page(
+            stage3_stack_top - ((i + 1) * PAGESIZE), 0, &proc->paging_struct);
+
+        if (st)
+            return st;
+    }
+
+    proc->stack_top = stage3_stack_top;
+    proc->stack_pagespan = pagespan;
+    proc->stack_ptr = proc->stack_top - sizeof(ptr);
+
+    return 0;
+}
 pid_t procm_spawn_proc(const char* path)
 {
     (void)path;
@@ -133,14 +156,10 @@ pid_t procm_spawn_init()
         /* FIXME: Enforce page permissions once we have the API for that. */
     }
 
-    /* Stack section, normal stack, only smaller. */
-    ptr stage3_stack_top = PROC_VIRTUAL_HIGH_ADDRESS - PAGESIZE;
-
-    /* Map the lower portion of the stack. */
-    mm_new_user_page(
-        stage3_stack_top - (1 * PAGESIZE), 0, &proc->paging_struct);
-    /* Map the starting point of the stack */
-    mm_new_user_page(stage3_stack_top, 0, &proc->paging_struct);
+    /* Creat process stack */
+    st = procm_create_proc_stack(PROC_STACK_SIZE / PAGESIZE, proc);
+    if (st)
+        return st;
 
     /* Switch to the process' paging struct, and start copying stuff. */
     mm_load_paging_struct(&proc->paging_struct);
@@ -157,7 +176,6 @@ pid_t procm_spawn_init()
     /* Since the kinit_stage3 sections contains one thing (a function), we can
      * just point it to the beginning of where that section was coppied. */
     proc->inst_ptr = PROC_VIRTUAL_START_OFFSET;
-    proc->stack_ptr = stage3_stack_top;
 
     /* Create the process' kernel stack. */
     proc->kstack_top = procm_new_proc_kstack();

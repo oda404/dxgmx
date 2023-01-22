@@ -25,6 +25,12 @@ typedef struct S_Process
     /* Instruction pointer to which we should jump when running this process */
     ptr inst_ptr;
 
+    /* Start address of the stack. */
+    ptr stack_top;
+
+    /* Pagespan of the stack. */
+    size_t stack_pagespan;
+
     /* Stack pointer we should load when running this process */
     ptr stack_ptr;
 
