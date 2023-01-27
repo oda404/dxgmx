@@ -212,4 +212,15 @@ mrclean:
 	@rm -f $$(ls | grep -Eo '^dxgmx-[0-9]+.[0-9]+.[0-9]+(.iso)?$$')
 	@rm -r $(BUILDDIR) 2> /dev/null || true
 
+PHONY += mount-root
+mount-root: build/image.img
+	$(SCRIPTSDIR)/mount-root.sh \
+	--image-path build/image.img \
+	--mountpoint /mnt/dxgmx-root \
+	--cachefile $(BUILDDIR)/root-loopdev
+
+PHONY += unmount-root
+unmount-root:
+	$(SCRIPTSDIR)/unmount-root.sh --cachefile $(BUILDDIR)/root-loopdev
+
 .PHONY: $(PHONY)
