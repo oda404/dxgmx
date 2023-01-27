@@ -23,8 +23,10 @@ typedef __SIZE_TYPE__ size_t;
 
 #if __SIZE_WIDTH__ == 32
 typedef i32 ssize_t;
+#define PLATFORM_MAX_UNSIGNED 0xFFFFFFFF
 #elif __SIZE_WIDTH__ == 64
 typedef i64 ssize_t;
+#define PLATFORM_MAX_UNSIGNED 0xFFFFFFFFFFFFFFFF
 #else
 #error "Weird __SIZE_WIDTH__!"
 #endif
