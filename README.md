@@ -41,10 +41,20 @@ $ make run
 ```
 
 ## Customizing the system root
-When building the kernel it will create, make will create <b>build/image.img</b>. This is a fat32 formatted disk image that the kernel will mount as it's root. If you want to put anything here for the kernel to interact with, first:
-- Mount it using ```consolemake mount-root</b>. By default, it will get mounted on <b>/mnt/dxgmx-sysroot/</b>.
-- Make your changes 
-- Unmount it using <b>make unmount-root</b>.
+When building for the first time a disk image <b>build/image.img</b> will be created. This is a fat32 formatted disk image that the kernel will mount as it's root. If you want to put anything here for the kernel to interact with:<br>
+
+Mount it:
+```console
+$ make mount-root
+```
+By default it will get mounted on <b>/mnt/dxgmx-sysroot/</b>.<br>
+
+**Make your changes**
+
+Unmount it:
+```console
+$ make unmount-root
+```
 
 ## Bare-metal
 Never tried, as it stands it won't boot on anything newer than ~2007.
