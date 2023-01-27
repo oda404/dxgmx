@@ -7,6 +7,7 @@
 #define _DXGMX_ELF_ELF_H
 
 #include <dxgmx/compiler_attrs.h>
+#include <dxgmx/proc/proc.h>
 #include <dxgmx/types.h>
 
 #define ELF_ARCH_UNSPECIFIED 0x0
@@ -123,9 +124,9 @@ typedef struct _ATTR_PACKED S_Elf32ProgramHdr
     u32 alignment;
 } Elf32Phdr;
 
-int elf_read_generic_hdr(int fd, ElfGenericHdr* hdr);
-int elf_read_hdr32(int fd, Elf32Hdr* hdr);
+int elf_read_generic_hdr(int fd, Process* proc, ElfGenericHdr* hdr);
+int elf_read_hdr32(int fd, Process* proc, Elf32Hdr* hdr);
 int elf_read_phdrs32(
-    int fd, const Elf32Hdr* hdr, Elf32Phdr* phdrs);
+    int fd, Process* proc, const Elf32Hdr* hdr, Elf32Phdr* phdrs);
 
 #endif // !_DXGMX_ELF_ELF_H

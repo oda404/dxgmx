@@ -22,7 +22,7 @@ typedef struct S_FileSystem
     /* Where this mountpoint resides */
     char* mntpoint;
     /* Mount flags */
-    u32 mntflags;
+    u32 flags;
     /* The filesystem driver. */
     struct S_FileSystemDriver* driver;
     /* This is free for use by the filesystem driver to store whatever. Like the

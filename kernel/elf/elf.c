@@ -12,19 +12,24 @@
 
 #define KLOGF_PREFIX "elf: "
 
-int elf_read_generic_hdr(int fd, ElfGenericHdr* hdr)
+int elf_read_generic_hdr(int fd, Process* proc, ElfGenericHdr* hdr)
 {
     if (fd < 0 || !hdr)
         return -EINVAL;
 
-    if (vfs_lseek(fd, 0, SEEK_SET) < 0)
-        return -errno;
+    off_t off = vfs_lseek(fd, 0, SEEK_SET, proc);
+    if (off < 0)
+        return off;
 
 #define HEADER_SIZE ((ssize_t)sizeof(ElfGenericHdr))
 
     u8 buf[HEADER_SIZE] = {0};
-    if (vfs_read(fd, buf, HEADER_SIZE) < HEADER_SIZE)
-        return -errno;
+
+    ssize_t read = vfs_read(fd, buf, HEADER_SIZE, proc);
+    if (read < 0)
+        return read; // An error happened
+    else if (read < HEADER_SIZE)
+        return -EINVAL; // No error occured but the file is invalid
 
     ElfGenericHdr* tmpheader = (ElfGenericHdr*)buf;
     if (tmpheader->magic != ELF_MAGIC)
@@ -37,19 +42,24 @@ int elf_read_generic_hdr(int fd, ElfGenericHdr* hdr)
     return 0;
 }
 
-int elf_read_hdr32(int fd, Elf32Hdr* hdr)
+int elf_read_hdr32(int fd, Process* proc, Elf32Hdr* hdr)
 {
     if (fd < 0 || !hdr)
         return -EINVAL;
 
-    if (vfs_lseek(fd, 0, SEEK_SET) < 0)
-        return -errno;
+    off_t off = vfs_lseek(fd, 0, SEEK_SET, proc);
+    if (off < 0)
+        return off;
 
 #define HEADER_SIZE ((ssize_t)sizeof(Elf32Hdr))
 
     u8 buf[HEADER_SIZE] = {0};
-    if (vfs_read(fd, buf, HEADER_SIZE) < HEADER_SIZE)
-        return -errno;
+
+    ssize_t read = vfs_read(fd, buf, HEADER_SIZE, proc);
+    if (read < 0)
+        return read; // An error happened
+    else if (read < HEADER_SIZE)
+        return -EINVAL; // No error occured but the file is invalid
 
     Elf32Hdr* tmpheader = (Elf32Hdr*)buf;
     if (tmpheader->magic != ELF_MAGIC || tmpheader->bits != ELF_BITS_32)
@@ -62,7 +72,8 @@ int elf_read_hdr32(int fd, Elf32Hdr* hdr)
     return 0;
 }
 
-int elf_read_phdrs32(int fd, const Elf32Hdr* hdr, Elf32Phdr* phdrs)
+int elf_read_phdrs32(
+    int fd, Process* proc, const Elf32Hdr* hdr, Elf32Phdr* phdrs)
 {
     if (fd < 0 || !hdr || !phdrs)
         return -EINVAL;
@@ -76,11 +87,16 @@ int elf_read_phdrs32(int fd, const Elf32Hdr* hdr, Elf32Phdr* phdrs)
     for (size_t i = 0; i < hdr->phdr_table_entry_count; ++i)
     {
         const off_t offset = hdr->phdr_table + i * sizeof(Elf32Phdr);
-        if (vfs_lseek(fd, offset, SEEK_SET) < 0)
-            return -errno;
 
-        if (vfs_read(fd, &phdrs[i], sizeof(Elf32Phdr)) < 0)
-            return -errno;
+        off_t off = vfs_lseek(fd, offset, SEEK_SET, proc);
+        if (off < 0)
+            return off;
+
+        ssize_t read = vfs_read(fd, &phdrs[i], sizeof(Elf32Phdr), proc);
+        if (read < 0)
+            return read;
+        else if (read < (ssize_t)sizeof(Elf32Phdr))
+            return -EINVAL;
     }
 
     return 0;

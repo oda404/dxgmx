@@ -3,32 +3,101 @@
  * Distributed under the MIT license.
  */
 
+/**
+ * Virtual filesystem implementation
+ * A lot of data structures in here are trash but they work for now.
+ */
+
 #include <dxgmx/assert.h>
 #include <dxgmx/attrs.h>
 #include <dxgmx/errno.h>
-#include <dxgmx/fs/openfd.h>
+#include <dxgmx/fs/fd.h>
 #include <dxgmx/fs/vfs.h>
 #include <dxgmx/klog.h>
 #include <dxgmx/kmalloc.h>
 #include <dxgmx/limits.h>
 #include <dxgmx/panic.h>
+#include <dxgmx/proc/procmanager.h>
+#include <dxgmx/sched/scheduler.h>
 #include <dxgmx/stdio.h>
-#include <dxgmx/storage/blkdevmanager.h>
 #include <dxgmx/string.h>
+#include <dxgmx/todo.h>
+#include <dxgmx/utils/bitwise.h>
 #include <posix/sys/stat.h>
 
 #define KLOGF_PREFIX "vfs: "
 
+/**
+ * Global file descriptor table.
+ */
+static FileDescriptor* g_sys_fds = NULL;
+static size_t g_sys_fd_count = 0;
+
+/* Registered filesystem drivers. */
 static FileSystemDriver* g_fs_drivers = NULL;
 static size_t g_fs_drivers_count = 0;
 
+/* Mounted filesystems */
 static FileSystem* g_filesystems = NULL;
 static size_t g_filesystems_count = 0;
 
-/* The vfs is only responsible for setting the 'mntpoint', 'mntflags' and
- * 'driver' of a FileSystem. The rest is handled by the driver. This function
- * does not take in a 'driver' pointer as the driver may not be known yet. */
-static FileSystem* vfs_new_fs(const char* mntpoint, u32 mntflags)
+/**
+ * Create a new system-wide open file description.
+ * Retuns a FileDescriptor* on sucess, NULL on out memory.
+ */
+static FileDescriptor* vfs_new_file_descriptor()
+{
+    /* Try finding any allocated but unused fds. */
+    for (size_t i = 0; i < g_sys_fd_count; ++i)
+    {
+        if (g_sys_fds[i].fd == 0)
+            return &g_sys_fds[i];
+    }
+
+    /* If none were found, we allocate one. FIXME: maybe multiple ? */
+    FileDescriptor* tmp =
+        krealloc(g_sys_fds, (g_sys_fd_count + 1) * sizeof(FileDescriptor));
+
+    if (!tmp)
+        return NULL;
+
+    g_sys_fds = tmp;
+    ++g_sys_fd_count;
+
+    tmp = &g_sys_fds[g_sys_fd_count - 1];
+    memset(tmp, 0, sizeof(FileDescriptor));
+
+    return tmp;
+}
+
+/* Destroy a system-wide file description. */
+static int vfs_free_file_descriptor(FileDescriptor* fd)
+{
+    /* Check if fd is actually part of g_sys_fds */
+    ASSERT(
+        fd >= g_sys_fds && fd < g_sys_fds + g_filesystems_count &&
+        (size_t)fd % sizeof(ptr) == 0);
+
+    /**
+     * We do not shrink nor shift the array. This is beacause:
+     * 1) Files are often opened and closed, shrinking this array every time
+     * would cause a lot of overhead
+     * 2) This array is indexed by the local file descriptor table of every
+     * process. Shifting the elements in this array would mean messing up those
+     * offsets.
+     */
+    memset(fd, 0, sizeof(FileDescriptor));
+
+    return 0;
+}
+
+/**
+ * Create a new fileystem
+ * 'mntpoint' is the mount destination.
+ *
+ * Returns a FilesSystem with 'mntpoint' set on sucess, NULL on out of memory.
+ */
+static FileSystem* vfs_new_fs(const char* mntpoint)
 {
     char* newmntpoint = strdup(mntpoint);
     if (!newmntpoint)
@@ -52,13 +121,12 @@ static FileSystem* vfs_new_fs(const char* mntpoint, u32 mntflags)
     memset(newfs, 0, sizeof(FileSystem));
 
     newfs->mntpoint = newmntpoint;
-    newfs->mntflags = mntflags;
 
     return newfs;
 }
 
 /* Remove a filesystem, freeing any resources that were allocated by the vfs. */
-static int vfs_rm_fs_by_idx(size_t idx)
+static int vfs_free_fs_by_idx(size_t idx)
 {
     ASSERT(idx < g_filesystems_count);
 
@@ -91,13 +159,13 @@ static int vfs_rm_fs_by_idx(size_t idx)
     return 0;
 }
 
-static int vfs_rm_fs(FileSystem* fs)
+static int vfs_free_fs(FileSystem* fs)
 {
     /* We could also check for bounds and alignemnt... */
     for (size_t i = 0; i < g_filesystems_count; ++i)
     {
         if (&g_filesystems[i] == fs)
-            return vfs_rm_fs_by_idx(i);
+            return vfs_free_fs_by_idx(i);
     }
 
     return -ENOENT;
@@ -170,13 +238,55 @@ static FileSystem* vfs_topmost_fs_for_path(const char* path)
     return fshit;
 }
 
+static FileSystem* vfs_find_fs_by_src_or_dest(const char* src_or_dest)
+{
+    FOR_EACH_ELEM_IN_DARR (g_filesystems, g_filesystems_count, fs)
+    {
+        if ((fs->mntsrc && strcmp(fs->mntsrc, src_or_dest) == 0) ||
+            (fs->mntpoint && strcmp(fs->mntpoint, src_or_dest) == 0))
+        {
+            return fs;
+        }
+    }
+
+    return NULL;
+}
+
+/**
+ * Get the system-wide file descriptor for 'fd' and 'proc'.
+ * 'fd' is a local file descriptor for the 'proc' process.
+ * Does not do safety checks.
+ */
+static FileDescriptor* vfs_get_sysfd(fd_t fd, Process* proc)
+{
+    if (fd < 0 || (size_t)fd >= proc->fd_count)
+        return NULL;
+
+    size_t idx = proc->fds[fd];
+    if (idx >= g_sys_fd_count)
+        return NULL; // someone's doing shady stuff.
+
+    return &g_sys_fds[idx];
+}
+
+/**
+ * Transform a system wide file descriptor into it's index in the system wide fd
+ * table.
+ */
+static size_t vfs_sysfd_to_idx(FileDescriptor* fd)
+{
+    ASSERT(
+        fd >= g_sys_fds && fd < g_sys_fds + g_sys_fd_count &&
+        (ptr)fd % sizeof(ptr) == 0);
+
+    return (ptr)fd - (ptr)g_sys_fds;
+}
+
 _INIT int vfs_init()
 {
     int st = vfs_mount("hdap0", "/", NULL, NULL, 0);
     if (st < 0)
         panic("Failed to mount / %d :(", st);
-
-    vfs_mount(NULL, "/bin/a", "ramf", NULL, 0);
 
     FOR_EACH_ELEM_IN_DARR (g_filesystems, g_filesystems_count, fs)
         KLOGF(INFO, "%s on %s", fs->mntsrc, fs->mntpoint);
@@ -194,12 +304,16 @@ int vfs_mount(
     if (!dest)
         return -EINVAL;
 
-    FileSystem* fs = vfs_new_fs(dest, flags);
+    /* Create new filesystem structure */
+    FileSystem* fs = vfs_new_fs(dest);
     if (!fs)
         return -ENOMEM;
 
-    int st;
+    /* The vfs only sets fs->mntpoint, fs->flags, and fs->driver. The rest is up
+     * to the driver */
+    fs->flags = flags;
 
+    int st;
     FOR_EACH_ELEM_IN_DARR (g_fs_drivers, g_fs_drivers_count, driver)
     {
         /* Set the driver to the one we are probing. */
@@ -214,37 +328,27 @@ int vfs_mount(
 
     if (st < 0)
     {
-        vfs_rm_fs(fs);
+        vfs_free_fs(fs);
         return st;
     }
 
     return 0;
 }
 
-int vfs_unmount(const char* src_or_mountpoint)
+int vfs_unmount(const char* src_or_dest)
 {
-    if (!src_or_mountpoint)
+    if (!src_or_dest)
         return -EINVAL;
 
-    // TODO: Further validation
-
-    FileSystem* fs_hit = NULL;
-    FOR_EACH_ELEM_IN_DARR (g_filesystems, g_filesystems_count, fs)
-    {
-        if ((fs->mntsrc && strcmp(fs->mntsrc, src_or_mountpoint) == 0) ||
-            (fs->mntpoint && strcmp(fs->mntpoint, src_or_mountpoint) == 0))
-        {
-            fs_hit = fs;
-            break;
-        }
-    }
-
-    if (!fs_hit)
+    FileSystem* fs = vfs_find_fs_by_src_or_dest(src_or_dest);
+    if (!fs)
         return -ENOENT;
 
-    fs_hit->driver->destroy(fs_hit);
+    /* Cleanup driver */
+    fs->driver->destroy(fs);
 
-    vfs_rm_fs(fs_hit);
+    /* Cleanup vfs */
+    vfs_free_fs(fs);
 
     return 0;
 }
@@ -258,9 +362,9 @@ int vfs_register_fs_driver(FileSystemDriver fs_driver)
     }
 
     /* Check to see if there is already a driver with the same name. */
-    FOR_EACH_ELEM_IN_DARR (g_fs_drivers, g_fs_drivers_count, ops)
+    FOR_EACH_ELEM_IN_DARR (g_fs_drivers, g_fs_drivers_count, driv)
     {
-        if (strcmp(ops->name, fs_driver.name) == 0)
+        if (strcmp(driv->name, fs_driver.name) == 0)
             return -EEXIST;
     }
 
@@ -313,207 +417,142 @@ int vfs_unregister_fs_driver(const char* name)
     return 0;
 }
 
-int vfs_open(const char* name, int flags, mode_t mode)
+int vfs_open(const char* path, int flags, mode_t mode, Process* proc)
 {
-    (void)flags;
+    if (!path || !proc)
+        return -EINVAL;
 
-    if (!name)
-    {
-        errno = EINVAL;
-        return -1;
-    }
-
-    FileSystem* fs = vfs_topmost_fs_for_path(name);
+    FileSystem* fs = vfs_topmost_fs_for_path(path);
     if (!fs)
+        return -ENOMEM;
+
+    VirtualNode* vnode = fs_vnode_for_path(fs, path);
+    if (!vnode)
     {
-        errno = EINVAL;
-        return -1;
-    }
-
-    OpenFileDescriptor tmpfd;
-    tmpfd.mode = mode;
-    tmpfd.flags = flags;
-    tmpfd.off = 0;
-    tmpfd.pid = 0;
-
-    /* get a new fd for the new file */
-    tmpfd.fd = vfs_next_free_fd_for_pid(0);
-    if (tmpfd.fd < 0)
-    {
-        errno = ERANGE;
-        return -1;
-    }
-
-    /* create the open file descriptor */
-    OpenFileDescriptor* openfd = vfs_new_openfd();
-    if (!openfd)
-    {
-        errno = ENOMEM;
-        return -1;
-    }
-
-    /* Get the vnode for the path. */
-    tmpfd.vnode = fs_vnode_for_path(fs, name);
-    if (!tmpfd.vnode)
-    {
-        if (!(flags & O_CREAT))
-            return -1;
-
-        errno = 0;
-        if (fs->driver->mkfile(fs, name, mode) < 0)
+        /* Try to create it */
+        if (flags & O_CREAT)
         {
-            vfs_rm_openfd(openfd);
-            return -1;
+            int st = vnode->owner->driver->mkfile(vnode->owner, path, mode);
+            if (st < 0)
+                return st;
         }
 
-        tmpfd.vnode = fs_vnode_for_path(fs, name);
-        ASSERT(tmpfd.vnode);
+        /* Try again, this time it should work */
+        vnode = fs_vnode_for_path(fs, path);
+        ASSERT(vnode);
     }
-    else if (tmpfd.vnode->mode & S_IFDIR)
+
+    /* Create a new system-wide file descriptor */
+    FileDescriptor* sysfd = vfs_new_file_descriptor();
+    if (!sysfd)
+        return -ENOMEM;
+
+    /* Get current process and create a new process fd */
+    int procfd = proc_new_fd(vfs_sysfd_to_idx(sysfd), proc);
+    if (procfd < 0)
     {
-        vfs_rm_openfd(openfd);
-        errno = EISDIR;
-        return -1;
+        /* FIXME: delete file if it was created with O_CREAT */
+        vfs_free_file_descriptor(sysfd);
+        return procfd;
     }
 
-    *openfd = tmpfd;
+    if ((flags & O_RDWR) && (flags & O_TRUNC))
+        TODO();
 
-    return tmpfd.fd;
+    /* Fill out sysfd */
+    sysfd->fd = procfd;
+    sysfd->pid = proc->pid;
+    sysfd->off = 0;
+    sysfd->flags = flags;
+    sysfd->mode = mode;
+    sysfd->vnode = vnode;
+
+    return sysfd->fd;
 }
 
-ssize_t vfs_read(int fd, void* buf, size_t n)
+ssize_t vfs_read(fd_t fd, void* buf, size_t n, Process* proc)
 {
-    if (!buf || !n)
-    {
-        errno = EINVAL;
-        return -1;
-    }
+    if (!buf || !n || !proc)
+        return -EINVAL;
 
-    OpenFileDescriptor* openfd = NULL;
-    FOR_EACH_ELEM_IN_DARR (g_openfds, g_openfds_count, tmpfd)
-    {
-        if (tmpfd->fd == fd)
-        {
-            openfd = tmpfd;
-            break;
-        }
-    }
+    FileDescriptor* sysfd = vfs_get_sysfd(fd, proc);
+    if (!sysfd)
+        return -ENOENT;
 
-    if (!openfd || !openfd->vnode)
-    {
-        errno = ENOENT;
-        return -1;
-    }
+    if (!BW_MASK(sysfd->flags, O_RDONLY))
+        return -EPERM;
 
-    if (!(openfd->flags & O_RDONLY))
-    {
-        errno = EPERM;
-        return -1;
-    }
-
-    FileSystem* fs = openfd->vnode->owner;
+    FileSystem* fs = sysfd->vnode->owner;
     if (!fs)
-    {
-        errno = EINVAL;
-        return -1;
-    }
+        return -EINVAL;
 
-    ssize_t read = fs->driver->read(fs, openfd->vnode, buf, n, openfd->off);
+    ssize_t read = fs->driver->read(fs, sysfd->vnode, buf, n, sysfd->off);
     if (read < 0)
         return -1; /* errno should already be set by fs->driver->read(). */
 
-    openfd->off += read;
+    sysfd->off += read;
     return read;
 }
 
-ssize_t vfs_write(int fd, const void* buf, size_t n)
+ssize_t vfs_write(fd_t fd, const void* buf, size_t n, Process* proc)
 {
-    if (!buf || !n)
-    {
-        errno = EINVAL;
-        return -1;
-    }
+    if (!buf || !n || !proc)
+        return -EINVAL;
 
-    OpenFileDescriptor* openfd = NULL;
-    FOR_EACH_ELEM_IN_DARR (g_openfds, g_openfds_count, tmpfd)
-    {
-        if (tmpfd->fd == fd)
-        {
-            openfd = tmpfd;
-            break;
-        }
-    }
+    FileDescriptor* sysfd = vfs_get_sysfd(fd, proc);
+    if (!sysfd)
+        return -ENOENT;
 
-    if (!openfd || !openfd->vnode)
-    {
-        errno = ENOENT;
-        return -1;
-    }
+    if (!BW_MASK(sysfd->flags, O_WRONLY))
+        return -EPERM;
 
-    if (!(openfd->flags & O_WRONLY))
-    {
-        errno = EPERM;
-        return -1;
-    }
-
-    FileSystem* fs = openfd->vnode->owner;
+    FileSystem* fs = sysfd->vnode->owner;
     if (!fs)
-    {
-        errno = EINVAL;
-        return -1;
-    }
+        return -EINVAL;
 
-    const ssize_t written =
-        fs->driver->write(fs, openfd->vnode, buf, n, openfd->off);
+    /* Set offset to the end of the file if appending */
+    if (sysfd->flags & O_APPEND)
+        sysfd->off = sysfd->vnode->size;
 
+    ssize_t written = fs->driver->write(fs, sysfd->vnode, buf, n, sysfd->off);
     if (written < 0)
-        return -1; /* errno should already be set by fs->driver->write(). */
+        return -1; /* FIXME: error is in errno */
 
-    openfd->off += written;
+    sysfd->off += written;
     return written;
 }
 
-off_t vfs_lseek(int fd, off_t off, int whence)
+off_t vfs_lseek(fd_t fd, off_t off, int whence, Process* proc)
 {
-    OpenFileDescriptor* openfd = NULL;
-    FOR_EACH_ELEM_IN_DARR (g_openfds, g_openfds_count, tmpfd)
-    {
-        if (tmpfd->fd == fd)
-        {
-            openfd = tmpfd;
-            break;
-        }
-    }
+    if (!proc)
+        return -EINVAL;
 
-    if (!openfd || !openfd->vnode)
-    {
-        errno = ENOENT;
-        return -1;
-    }
+    FileDescriptor* sysfd = vfs_get_sysfd(fd, proc);
+    if (!sysfd)
+        return -ENOENT;
 
     if (whence == SEEK_SET)
-    {
-        openfd->off = off;
-    }
+        sysfd->off = off;
     else if (whence == SEEK_CUR)
-    {
-        openfd->off += off;
-    }
+        sysfd->off += off;
     else if (whence == SEEK_END)
-    {
-        openfd->off = openfd->vnode->size + off;
-    }
+        sysfd->off = sysfd->vnode->size + off;
     else
-    {
-        errno = EINVAL;
-        return -1;
-    }
+        return -EINVAL;
 
-    return openfd->off;
+    return sysfd->off;
 }
 
-int vfs_close(int fd)
+int vfs_close(fd_t fd, Process* proc)
 {
-    (void)fd;
-    return 0;
+    if (!proc)
+        return -EINVAL;
+
+    size_t idx = proc_free_fd(fd, proc);
+    if (idx == PLATFORM_MAX_UNSIGNED)
+        return -EINVAL;
+
+    ASSERT(idx < g_sys_fd_count);
+
+    return vfs_free_file_descriptor(&g_sys_fds[idx]);
 }
