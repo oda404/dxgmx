@@ -11,6 +11,30 @@
 #include <dxgmx/types.h>
 #include <posix/sys/types.h>
 
+/* Set to new offset */
+#define SEEK_SET 1
+/* Set to current offset + new offset */
+#define SEEK_CUR 2
+/* Set to end of file + new offset  */
+#define SEEK_END 3
+
+/* Read permissions */
+#define O_RDONLY 0x1
+/* Write permissions */
+#define O_WRONLY 0x2
+/* R/W permissions */
+#define O_RDWR (O_RDONLY | O_WRONLY)
+/* If the file does not exist, create it */
+#define O_CREAT 0x8
+/* Combined with O_CREAT, this fails if the file already exists  */
+#define O_EXCL 0x10
+#define O_NOCTTY 0x20
+#define O_TRUNC 0x40
+/* Set the file offset to the end of the file before each write. */
+#define O_APPEND 0x80
+#define O_NONBLOCK 0x100
+#define O_SYNC 0x2000
+
 int vfs_init();
 
 /** Mount a partition.

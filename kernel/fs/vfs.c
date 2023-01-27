@@ -15,7 +15,6 @@
 #include <dxgmx/stdio.h>
 #include <dxgmx/storage/blkdevmanager.h>
 #include <dxgmx/string.h>
-#include <posix/fcntl.h>
 #include <posix/sys/stat.h>
 
 #define KLOGF_PREFIX "vfs: "

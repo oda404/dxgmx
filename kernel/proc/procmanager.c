@@ -15,7 +15,6 @@
 #include <dxgmx/todo.h>
 #include <dxgmx/userspace.h>
 #include <dxgmx/utils/bytes.h>
-#include <posix/fcntl.h>
 
 #define KLOGF_PREFIX "procmanager: "
 

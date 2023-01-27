@@ -9,7 +9,6 @@
 #include <dxgmx/fs/vfs.h>
 #include <dxgmx/klog.h>
 #include <dxgmx/string.h>
-#include <posix/fcntl.h>
 
 #define KLOGF_PREFIX "elf: "
 
