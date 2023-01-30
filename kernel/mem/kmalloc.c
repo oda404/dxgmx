@@ -15,6 +15,7 @@
 #include <dxgmx/string.h>
 #include <dxgmx/todo.h>
 #include <dxgmx/utils/bitwise.h>
+#include <dxgmx/utils/bytes.h>
 
 #define KLOGF_PREFIX "kmalloc: "
 /* KLOG informations about each kmalloc/free call. Very verbose! */
@@ -91,6 +92,16 @@ int kmalloc_register_kernel_heap(Heap heap)
     /* The kernel heap should start after the kernel image. */
     if (heap.vaddr < kimg_vaddr() + kimg_size() || heap.pagespan == 0)
         return -EINVAL;
+
+    /* FIXME: this is an ugly hack to make sure the kernel heap is zeroed out.
+    Right now we map the first 2 MiB of memory to 3 GiB. The kernel is loaded at
+    1 MiB, and is around ~300 KiB. Everything after the kernel image is
+    considered kernel heap, part of which is already mapped. That mapped portion
+    may have garbage data, and we zero it out here. Note that when an
+    unmapped part of the kernel heap gets accessed, and as a result mapped, it's
+    automatically zeroed out. */
+    size_t sz = bytes_align_up64(heap.vaddr, 0x100'000) - heap.vaddr;
+    memset((void*)heap.vaddr, 0, sz);
 
     g_kheap = heap;
 
