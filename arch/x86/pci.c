@@ -112,11 +112,13 @@ static int pci_register_device(u8 bus, u8 dev, u8 func)
     if ((tmp & 0xFFFF) == 0xFFFF)
         return -ENODEV;
 
-    g_pci_devices =
-        krealloc(g_pci_devices, (++g_pci_devices_count) * sizeof(PCIDevice));
-
-    if (!g_pci_devices)
+    PCIDevice* tmpalloc =
+        krealloc(g_pci_devices, (g_pci_devices_count + 1) * sizeof(PCIDevice));
+    if (!tmpalloc)
         return -ENOMEM;
+
+    g_pci_devices = tmpalloc;
+    ++g_pci_devices_count;
 
     PCIDevice* device = &g_pci_devices[g_pci_devices_count - 1];
     device->bus = bus;
