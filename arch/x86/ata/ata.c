@@ -282,9 +282,7 @@ _INIT int ata_init()
     for (size_t i = 0; i < g_ata_devices_count; ++i)
         ata_dump_device_info(&g_ata_devices[i]);
 
-    /* Hardcoded at 1 because the bus reports 2 identical drives
-    (master & slave) even though only one is being emulated ??? */
-    for (size_t i = 0; i < 1; ++i)
+    for (size_t i = 0; i < g_ata_devices_count; ++i)
         blkdevmanager_register_dev(&g_ata_devices[i]);
 
     return 0;
