@@ -6,37 +6,47 @@
 #ifndef _DXGMX_ELF_ELF_H
 #define _DXGMX_ELF_ELF_H
 
+/* API for reading and parsing ELF files. Names of structs and struct memebers
+ * have been taken from the ELF spec and adapted to fit the dxgmx naming scheme.
+ */
+
 #include <dxgmx/compiler_attrs.h>
 #include <dxgmx/proc/proc.h>
 #include <dxgmx/types.h>
 
-#define ELF_ARCH_UNSPECIFIED 0x0
-#define ELF_ARCH_SPARC 0x2
-#define ELF_ARCH_X86 0x3
-#define ELF_ARCH_MIPS 0x8
-#define ELF_ARCH_PPC 0x14
-#define ELF_ARCH_ARM 0x28
-#define ELF_ARCH_SUPERH 0x2A
-#define ELF_ARCH_IA64 0x32
-#define ELF_ARCH_X86_64 0x3E
-#define ELF_ARCH_AARCH64 0xB7
-#define ELF_ARCH_RISCV 0xF3
+#define EI_MAG0 0
+#define EI_MAG1 1
+#define EI_MAG2 2
+#define EI_MAG3 3
+#define EI_CLASS 4
+#define EI_DATA 5
+#define EI_VERSION 6
+#define EI_PAD 7
+#define EI_NIDENT 16
 
-#define ELF_BITS_32 1
-#define ELF_BITS_64 2
-
-#define ELF_ENDIANNESS_LITTLE 1
-#define ELF_ENDIANNESS_BIG 2
+#define ELFCLASSNONE 0
+#define ELFCLASS32 1
+#define ELFCLASS64 2
 
 #define ET_NONE 0
 #define ET_REL 1
 #define ET_EXEC 2
 #define ET_DYN 3
 #define ET_CORE 4
-#define ET_LOOS 0xFE00
-#define ET_HIOS 0xFEFF
 #define ET_LOPROC 0xFF00
 #define ET_HIPROC 0xFFFF
+
+#define EM_M32 1
+#define EM_SPARC 2
+#define EM_386 3
+#define EM_68K 4
+#define EM_88K 5
+#define EM_860 7
+#define EM_MIPS 8
+#define EM_MIPS_RS4_BE 10
+
+#define EV_NONE 0
+#define EV_CURRENT 1
 
 #define PT_NULL 0
 #define PT_LOAD 1
@@ -48,66 +58,82 @@
 #define PT_LOPROC 0x70000000
 #define PT_HIPROC 0x7fffffff
 
-#define ELF_MAGIC 0x464C457F
+#define PF_X 1
+#define PF_W 2
+#define PF_R 4
 
-#define ELF_GENERIC_HEADER                                                     \
-    struct _ATTR_PACKED                                                        \
-    {                                                                          \
-        /* 0x7F, 'E', 'L', 'F' */                                              \
-        u32 magic;                                                             \
-        /* See ELF_BITS_* */                                                   \
-        u8 bits;                                                               \
-        /* See ELF_ENDIANNESS_* */                                             \
-        u8 endianness;                                                         \
-        /* ??? */                                                              \
-        u8 header_version;                                                     \
-        /* ??? */                                                              \
-        u8 abi;                                                                \
-        u64 unused;                                                            \
-        /* The file type. See ELF_TYPE_* */                                    \
-        u16 type;                                                              \
-        /* The architecture. See ELF_ARCH_* */                                 \
-        u16 arch;                                                              \
-        /* ??? */                                                              \
-        u32 elf_version;                                                       \
-    }
-
-typedef ELF_GENERIC_HEADER ElfGenericHdr;
-
-typedef struct _ATTR_PACKED S_Elf32Hdr
+typedef struct _ATTR_PACKED S_ElfGenericEhdr
 {
-    ELF_GENERIC_HEADER;
-    u32 entry_point;
-    u32 phdr_table;
-    u32 shdr_table;
-    u32 flags;
-    u16 header_size;
-    u16 phdr_table_entry_size;
-    u16 phdr_table_entry_count;
-    u16 shdr_table_entry_size;
-    u16 shdr_table_entry_count;
-    u16 section_names_idx;
-} Elf32Hdr;
+    u8 ident[EI_NIDENT];
+    u16 type;
+    u16 machine;
+    u32 version;
+} ElfGenericEhdr;
 
-typedef struct _ATTR_PACKED S_Elf64Hdr
+/* ELF32 header. */
+typedef struct _ATTR_PACKED S_Elf32Ehdr
 {
-    ELF_GENERIC_HEADER;
-    u64 entry_point;
-    u64 phdr_table;
-    u64 shdr_table;
+    u8 ident[EI_NIDENT];
+    u16 type;
+    u16 machine;
+    u32 version;
+
+    /* Entry point of the program */
+    u32 entry;
+    /* Offset of the program header table */
+    u32 phoff;
+    /* Offset of the section header table */
+    u32 shoff;
+    /* Processor specific flags */
     u32 flags;
-    u16 header_size;
-    u16 phdr_table_entry_size;
-    u16 phdr_table_entry_count;
-    u16 shdr_table_entry_size;
-    u16 shdr_table_entry_count;
-    u16 section_names_idx;
-} Elf64Hdr;
+    /* Elf header size */
+    u16 ehsize;
+    /* Size of one program header */
+    u16 phentsize;
+    /* Number of program headers. 0 if none. */
+    u16 phnum;
+    /* Size of one section header */
+    u16 shentsize;
+    /* Number of section headers */
+    u16 shnum;
+    /* Incomprehensible, have a good day */
+    u16 shstrndx;
+} Elf32Ehdr;
+
+typedef struct _ATTR_PACKED S_Elf64Ehdr
+{
+    u8 ident[EI_NIDENT];
+    u16 type;
+    u16 machine;
+    u32 version;
+
+    /* Entry point of the program */
+    u64 entry;
+    /* Offset of the program header table */
+    u64 phoff;
+    /* Offset of the section header table */
+    u64 shoff;
+    /* Processor specific flags */
+    u32 flags;
+    /* Elf header size */
+    u16 ehsize;
+    /* Size of one program header */
+    u16 phentsize;
+    /* Number of program headers. 0 if none. */
+    u16 phnum;
+    /* Size of one section header */
+    u16 shentsize;
+    /* Number of section headers */
+    u16 shnum;
+    /* Incomprehensible, have a good day */
+    u16 shstrndx;
+} Elf64Ehdr;
 
 #define ELF_HEADER_MAX_SIZE sizeof(Elf64Hdr)
 
-typedef struct _ATTR_PACKED S_Elf32ProgramHdr
+typedef struct _ATTR_PACKED S_Elf32Phdr
 {
+    /* Type of this section described by this program header. See PT_* */
     u32 type;
     /* Offset into the file for this segment. */
     u32 offset;
@@ -119,14 +145,65 @@ typedef struct _ATTR_PACKED S_Elf32ProgramHdr
     u32 filesize;
     /* The size of this segment in memory. */
     u32 memsize;
+    /* Access flags for this segment */
     u32 flags;
     /* Alignement of this segments in the file and in the memory. */
-    u32 alignment;
+    u32 align;
 } Elf32Phdr;
 
-int elf_read_generic_hdr(int fd, Process* proc, ElfGenericHdr* hdr);
-int elf_read_hdr32(int fd, Process* proc, Elf32Hdr* hdr);
+/**
+ * Read ELF generic header. The ELF generic header is the first few bitsize
+ * agnostic bytes. Read this header to figure out if the ELF is 32 or 64 bit.
+ *
+ * No NULL pointers should be passed to this function.
+ * No invalid file descriptors should be passed to this function.
+ *
+ * 'fd' Open fd of the file.
+ * 'proc' Acting process.
+ * 'ehdr' Destination generic ELF header.
+ *
+ * Returns:
+ * 0 on success.
+ * -EINVAL on invalid arguments.
+ * Other values are errors from the vfs.
+ */
+int elf_read_generic_ehdr(fd_t fd, Process* proc, ElfGenericEhdr* ehdr);
+
+/**
+ * Read 32-bit ELF header.
+ *
+ * No NULL pointers should be passed to this function.
+ * No invalid file descriptors should be passed to this function.
+ *
+ * 'fd' Open fd of the file.
+ * 'proc' Acting process.
+ * 'ehdr' Destination 32-bit ELF header.
+ *
+ * Returns:
+ * 0 on success.
+ * -EINVAL on invalid arguments.
+ * Other values are errors from the vfs.
+ */
+int elf_read_ehdr32(fd_t fd, Process* proc, Elf32Ehdr* ehdr32);
+
+/**
+ * Read ELF program headers.
+ *
+ * No NULL pointers should be passed to this function.
+ * No invalid file descriptors should be passed to this function.
+ *
+ *
+ * 'fd' Open fd of the file.
+ * 'proc' Acting process.
+ * 'hdr32' The already parsed Ehdr32.
+ * 'phdrs32' Destination array of however many program headers are to be read
+ * (the exact number can be found in hdr32->phnum).
+ *
+ * Returns:
+ * 0 on success.
+ * -EINVAL on invalid arguments.
+ */
 int elf_read_phdrs32(
-    int fd, Process* proc, const Elf32Hdr* hdr, Elf32Phdr* phdrs);
+    fd_t fd, Process* proc, const Elf32Ehdr* hdr32, Elf32Phdr* phdrs32);
 
 #endif // !_DXGMX_ELF_ELF_H

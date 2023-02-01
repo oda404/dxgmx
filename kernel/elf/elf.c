@@ -3,99 +3,89 @@
  * Distributed under the MIT license.
  */
 
-#include <dxgmx/assert.h>
 #include <dxgmx/elf/elf.h>
 #include <dxgmx/errno.h>
 #include <dxgmx/fs/vfs.h>
-#include <dxgmx/klog.h>
-#include <dxgmx/string.h>
 
 #define KLOGF_PREFIX "elf: "
 
-int elf_read_generic_hdr(int fd, Process* proc, ElfGenericHdr* hdr)
-{
-    if (fd < 0 || !hdr)
-        return -EINVAL;
+#define GENERIC_EHDR_SIZE sizeof(ElfGenericEhdr)
+#define EHDR32_SIZE sizeof(Elf32Ehdr)
 
+static bool elf_valid_magic(const u8 ident[EI_NIDENT])
+{
+    return ident[EI_MAG0] == 0x7f && ident[EI_MAG1] == 'E' &&
+           ident[EI_MAG2] == 'L' && ident[EI_MAG3] == 'F';
+}
+
+int elf_read_generic_ehdr(fd_t fd, Process* proc, ElfGenericEhdr* hdr)
+{
     off_t off = vfs_lseek(fd, 0, SEEK_SET, proc);
     if (off < 0)
         return off;
 
-#define HEADER_SIZE ((ssize_t)sizeof(ElfGenericHdr))
+    u8 buf[GENERIC_EHDR_SIZE];
 
-    u8 buf[HEADER_SIZE] = {0};
-
-    ssize_t read = vfs_read(fd, buf, HEADER_SIZE, proc);
+    ssize_t read = vfs_read(fd, buf, GENERIC_EHDR_SIZE, proc);
     if (read < 0)
         return read; // An error happened
-    else if (read < HEADER_SIZE)
+    else if ((size_t)read < GENERIC_EHDR_SIZE)
         return -EINVAL; // No error occured but the file is invalid
 
-    ElfGenericHdr* tmpheader = (ElfGenericHdr*)buf;
-    if (tmpheader->magic != ELF_MAGIC)
+    ElfGenericEhdr* tmpheader = (ElfGenericEhdr*)buf;
+    if (!elf_valid_magic(tmpheader->ident))
         return -EINVAL;
 
     *hdr = *tmpheader;
-
-#undef HEADER_SIZE
 
     return 0;
 }
 
-int elf_read_hdr32(int fd, Process* proc, Elf32Hdr* hdr)
+int elf_read_ehdr32(fd_t fd, Process* proc, Elf32Ehdr* hdr32)
 {
-    if (fd < 0 || !hdr)
-        return -EINVAL;
-
+    /* Make sure we are at the start */
     off_t off = vfs_lseek(fd, 0, SEEK_SET, proc);
     if (off < 0)
         return off;
 
-#define HEADER_SIZE ((ssize_t)sizeof(Elf32Hdr))
+    u8 buf[EHDR32_SIZE];
 
-    u8 buf[HEADER_SIZE] = {0};
-
-    ssize_t read = vfs_read(fd, buf, HEADER_SIZE, proc);
+    ssize_t read = vfs_read(fd, buf, EHDR32_SIZE, proc);
     if (read < 0)
         return read; // An error happened
-    else if (read < HEADER_SIZE)
+    else if ((size_t)read < EHDR32_SIZE)
         return -EINVAL; // No error occured but the file is invalid
 
-    Elf32Hdr* tmpheader = (Elf32Hdr*)buf;
-    if (tmpheader->magic != ELF_MAGIC || tmpheader->bits != ELF_BITS_32)
+    Elf32Ehdr* tmp = (Elf32Ehdr*)buf;
+    if (!elf_valid_magic(tmp->ident) || tmp->ident[EI_CLASS] != ELFCLASS32)
         return -EINVAL;
 
-    *hdr = *tmpheader;
-
-#undef HEADER_SIZE
+    *hdr32 = *tmp;
 
     return 0;
 }
 
 int elf_read_phdrs32(
-    int fd, Process* proc, const Elf32Hdr* hdr, Elf32Phdr* phdrs)
+    fd_t fd, Process* proc, const Elf32Ehdr* hdr32, Elf32Phdr* phdrs32)
 {
-    if (fd < 0 || !hdr || !phdrs)
+    if (sizeof(Elf32Phdr) != hdr32->phentsize)
         return -EINVAL;
 
-    if (sizeof(Elf32Phdr) != hdr->phdr_table_entry_size)
+    if (!elf_valid_magic(hdr32->ident))
         return -EINVAL;
 
-    if (hdr->magic != ELF_MAGIC)
-        return -EINVAL;
-
-    for (size_t i = 0; i < hdr->phdr_table_entry_count; ++i)
+    for (size_t i = 0; i < hdr32->phnum; ++i)
     {
-        const off_t offset = hdr->phdr_table + i * sizeof(Elf32Phdr);
+        const off_t offset = hdr32->phoff + i * sizeof(Elf32Phdr);
 
         off_t off = vfs_lseek(fd, offset, SEEK_SET, proc);
         if (off < 0)
             return off;
 
-        ssize_t read = vfs_read(fd, &phdrs[i], sizeof(Elf32Phdr), proc);
+        ssize_t read = vfs_read(fd, &phdrs32[i], sizeof(Elf32Phdr), proc);
         if (read < 0)
             return read;
-        else if (read < (ssize_t)sizeof(Elf32Phdr))
+        else if ((size_t)read < sizeof(Elf32Phdr))
             return -EINVAL;
     }
 
