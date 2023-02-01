@@ -21,7 +21,7 @@ void stack_trace_dump()
     klogln(INFO, "Call stack backtrace:");
     if (!frame)
     {
-        klogln(ERR, "- ebp is NULL, aborting stack trace dump!");
+        klogln(ERR, "- ebp is NULL, aborting stack trace!");
         return;
     }
 
@@ -31,6 +31,13 @@ void stack_trace_dump()
     size_t frames = 0;
     while (frame && frames < FRAMES_UNWIND_MAX)
     {
+        if (frame->instptr < kimg_vaddr())
+        {
+            /* This pointer belongs to the userspace */
+            klogln(ERR, "- next ip is in userspace, aborting stack trace!");
+            return;
+        }
+
         char buf[FUNC_BUF_MAX + 1] = "???";
 
         ptr offset = 0;
@@ -42,6 +49,7 @@ void stack_trace_dump()
             (void*)(frame->instptr - 1),
             buf,
             offset);
+
         frame = (StackFrame*)frame->baseptr;
 
         ++frames;
