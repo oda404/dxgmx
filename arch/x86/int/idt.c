@@ -31,6 +31,7 @@ __asm__(".type isr_exit, @function                       \n"
             "pusha                                             \n"             \
             "pushl %esp              # set the InterruptFrame* \n"             \
             "cld                                               \n"             \
+            "movl $0, %ebp            \n"                                      \
             "call  trap" #id "_handler                            \n"          \
             "jmp isr_exit                                      \n");           \
     }
@@ -45,6 +46,7 @@ __asm__(".type isr_exit, @function                       \n"
             "pusha                                            \n"              \
             "pushl %esp              #set the InterruptFrame* \n"              \
             "cld                                              \n"              \
+            "movl $0, %ebp            \n"                                      \
             "call  trap" #id "_handler                           \n"           \
             "jmp isr_exit                                     \n");            \
     }
@@ -57,6 +59,7 @@ __asm__(".type isr_exit, @function                       \n"
                          "pusha                    \n"                         \
                          "pushl %esp               \n"                         \
                          "cld                      \n"                         \
+                         "movl $0, %ebp            \n"                         \
                          "call irq" #id "_handler    \n"                       \
                          "jmp isr_exit             \n");                       \
     }
