@@ -1,16 +1,19 @@
 /**
- * Copyright 2022 Alexandru Olaru.
+ * Copyright 2023 Alexandru Olaru.
  * Distributed under the MIT license.
  */
 
 #include <dxgmx/assert.h>
+#include <dxgmx/attrs.h>
 #include <dxgmx/elf/elf.h>
+#include <dxgmx/elf/elfloader.h>
 #include <dxgmx/errno.h>
 #include <dxgmx/fs/vfs.h>
 #include <dxgmx/kimg.h>
 #include <dxgmx/klog.h>
 #include <dxgmx/kmalloc.h>
 #include <dxgmx/proc/proc.h>
+#include <dxgmx/sched/scheduler.h>
 #include <dxgmx/string.h>
 #include <dxgmx/todo.h>
 #include <dxgmx/userspace.h>
@@ -28,111 +31,272 @@
 /* Size of a process' kernel stack. */
 #define PROC_KSTACK_SIZE (PAGESIZE)
 
-/* Default stack size for a process. */
+/* Size of a process' stack. */
 #define PROC_STACK_SIZE (8 * KIB)
+
+#define PROC_STACK_PAGESPAN (PROC_STACK_SIZE / PAGESIZE)
 
 static Process* g_procs = NULL;
 static size_t g_proc_count = 0;
 static size_t g_running_pids = 1;
 
-/* Architecture specific function for loading a process' ctx. */
-int procm_arch_load_ctx(Process* proc);
+static pid_t procm_next_available_pid()
+{
+    return g_running_pids++;
+}
+
+/**
+ * Load a process' context. If successful, should be followed by a
+ * userspace_jump2user.
+ *
+ * Returns:
+ * 0 on sucess.
+ * -errno values on error.
+ */
+static int procm_load_ctx(Process* proc)
+{
+    extern int procm_arch_load_ctx(Process * proc);
+
+    /* Switch to this process' paging struct */
+    int st = mm_load_paging_struct(&proc->paging_struct);
+    if (st < 0)
+        return st;
+
+    /* Let the architecture do anything it needs */
+    st = procm_arch_load_ctx(proc);
+
+    return st;
+}
 
 /* Create a new kernel stack for a process used for context switches */
-static ptr procm_new_proc_kstack()
+static ptr procm_create_proc_kstack(Process* targetproc)
 {
-    /* I don't think this is a good ideea for many reasons, but it will do for
-     * now. */
+    /* FIXME: I don't think this is a good ideea for many reasons, but it will
+     * do for now. */
     ptr stack_top = (ptr)kmalloc_aligned(PROC_KSTACK_SIZE, sizeof(ptr));
     if (!stack_top)
         return ENOMEM;
 
-    /* stack grows down */
+    /* The stack grows down, so we shift it's starting point. */
     stack_top += PROC_KSTACK_SIZE;
 
-    return stack_top;
+    targetproc->kstack_top = stack_top;
+
+    return 0;
 }
 
-static void procm_free_proc_kstack(ptr kstack_top)
+static void procm_destroy_proc_kstack(Process* targetproc)
 {
-    kstack_top -= PROC_KSTACK_SIZE;
-    kfree((void*)kstack_top);
+    if (targetproc->kstack_top)
+        kfree((void*)(targetproc->kstack_top - PROC_KSTACK_SIZE));
 }
 
-static Process* procm_new_proc()
-{
-    Process proc = {0};
-
-    int st = mm_init_paging_struct(&proc.paging_struct);
-    if (st < 0)
-        return NULL;
-
-    proc.pid = g_running_pids++;
-
-    /* Allocate new Process */
-    Process* tmp = krealloc(g_procs, sizeof(Process) * (g_proc_count + 1));
-    if (!tmp)
-    {
-        mm_destroy_paging_struct(&proc.paging_struct);
-        return NULL;
-    }
-
-    g_procs = tmp;
-    ++g_proc_count;
-
-    g_procs[g_proc_count - 1] = proc;
-    return &g_procs[g_proc_count - 1];
-}
-
-static void procm_free_proc(Process* proc)
-{
-    // FIXME: shrink array
-    if (proc->path)
-        kfree(proc->path);
-
-    mm_destroy_paging_struct(&proc->paging_struct);
-    procm_free_proc_kstack(proc->kstack_top);
-    kfree(proc);
-}
-
-static int procm_create_proc_stack(size_t pagespan, Process* proc)
+/* Create and map the stack for targetproc */
+static int procm_create_proc_stack(Process* targetproc)
 {
     ptr stage3_stack_top = PROC_VIRTUAL_HIGH_ADDRESS - PAGESIZE;
 
     // FIXME: don't explictly map all stack pages here.
-    for (size_t i = 0; i < pagespan; ++i)
+    for (size_t i = 0; i < PROC_STACK_PAGESPAN; ++i)
     {
-        int st = mm_new_user_page(
-            stage3_stack_top - ((i + 1) * PAGESIZE), 0, &proc->paging_struct);
+        ptr vaddr = stage3_stack_top - ((i + 1) * PAGESIZE);
+        int st = mm_new_user_page(vaddr, 0, &targetproc->paging_struct);
 
         if (st)
             return st;
     }
 
-    proc->stack_top = stage3_stack_top;
-    proc->stack_pagespan = pagespan;
-    proc->stack_ptr = proc->stack_top - sizeof(ptr);
+    targetproc->stack_top = stage3_stack_top;
+    targetproc->stack_pagespan = PROC_STACK_PAGESPAN;
+    targetproc->stack_ptr = targetproc->stack_top;
+
+    /* This stack if freed whenever the process' paging struct is freed */
 
     return 0;
 }
-pid_t procm_spawn_proc(const char* path)
+
+static int procm_add_proc_to_pool(Process* proc)
 {
-    (void)path;
-    TODO_FATAL();
+    /* Allocate new Process */
+    Process* tmp = krealloc(g_procs, sizeof(Process) * (g_proc_count + 1));
+    if (!tmp)
+        return -ENOMEM;
+
+    g_procs = tmp;
+    ++g_proc_count;
+
+    g_procs[g_proc_count - 1] = *proc;
+    return 0;
+}
+
+static void procm_free_proc_data(Process* proc)
+{
+    if (proc->path)
+        kfree(proc->path);
+
+    procm_destroy_proc_kstack(proc);
+
+    mm_destroy_paging_struct(&proc->paging_struct);
+}
+
+static void procm_free_proc(Process* proc)
+{
+    // FIXME: shrink array
+    procm_free_proc_data(proc);
+    kfree(proc);
+}
+
+/* Copy the process from disk in memory. The new process' paging structure
+ * should already be loaded before calling this function. */
+static int procm_load_proc(
+    const char* _USERPTR path, Process* actingproc, Process* targetproc)
+{
+    fd_t fd = vfs_open(path, O_RDONLY, 0, actingproc);
+    if (fd < 0)
+        return fd;
+
+    int st = elfloader_validate_file(fd, actingproc);
+    if (st < 0)
+        return st;
+
+    st = elfloader_load_from_file(fd, actingproc, targetproc);
+
+    vfs_close(fd, actingproc);
+
+    return st;
+}
+
+static int procm_setup_proc_memory(
+    const char* _USERPTR path, Process* actingproc, Process* targetproc)
+{
+    /* Initialize the paging structure */
+    int st = mm_init_paging_struct(&targetproc->paging_struct);
+    if (st < 0)
+    {
+        kfree(targetproc->path);
+        return st;
+    }
+
+    /* Copy the kernel */
+    mm_map_kernel_into_paging_struct(&targetproc->paging_struct);
+
+    /* Once we swap paging structures all arguments marked _USERPTR will become
+     * inaccessible, because their mapping is gone, so we make some copies while
+     * we have the chance. */
+
+    /* procm_load_proc copies the binary from disk into memory */
+    st = procm_load_proc(path, actingproc, targetproc);
+    if (st < 0)
+        goto err;
+
+    st = procm_create_proc_stack(targetproc);
+    if (st < 0)
+        goto err;
+
+    st = procm_create_proc_kstack(targetproc);
+    if (st < 0)
+        goto err;
+
+    return 0;
+
+err:
+    procm_free_proc_data(targetproc);
+    return st;
+}
+
+int procm_replace_proc(
+    const char* path, const char** argv, const char** envp, Process* actingproc)
+{
+    (void)argv;
+    (void)envp;
+
+    if (!path)
+        return -EINVAL;
+
+    /* Make a copy of the old process. procm_setup_proc_memory will make the
+     * needed changes. */
+    Process newproc = {0};
+
+    int st = procm_setup_proc_memory(path, actingproc, &newproc);
+    if (st < 0)
+        return st;
+
+    /* Change path */
+    newproc.path = strdup(path);
+    if (!newproc.path)
+    {
+        procm_free_proc_data(&newproc);
+        return -ENOMEM;
+    }
+
+    newproc.pid = actingproc->pid;
+    newproc.fds = actingproc->fds;
+    newproc.fd_count = actingproc->fd_count;
+
+    procm_free_proc_data(actingproc);
+
+    *actingproc = newproc;
+
+    /* At this point the old process is gone, and the new one is waiting to
+     * run
+     */
+    sched_yield();
+}
+
+pid_t procm_spawn_proc(
+    const char* path, const char** argv, const char** envp, Process* actingproc)
+{
+    (void)argv;
+    (void)envp;
+
+    if (!path)
+        return -EINVAL;
+
+    Process newproc = {0};
+
+    int st = procm_setup_proc_memory(path, actingproc, &newproc);
+    if (st < 0)
+        return st;
+
+    /* Change path */
+    newproc.path = strdup(path);
+    if (!newproc.path)
+    {
+        procm_free_proc_data(&newproc);
+        return -ENOMEM;
+    }
+
+    newproc.pid = procm_next_available_pid();
+    if (newproc.pid <= 0)
+    {
+        procm_free_proc_data(&newproc);
+        return -ENOSPC;
+    }
+
+    st = procm_add_proc_to_pool(&newproc);
+    if (st < 0)
+    {
+        procm_free_proc_data(&newproc);
+        return st;
+    }
+
+    return newproc.pid;
 }
 
 pid_t procm_spawn_init()
 {
-    Process* proc = procm_new_proc();
-    if (!proc)
-        return -ENOMEM;
+    Process proc = {0};
 
-    int st = mm_map_kernel_into_paging_struct(&proc->paging_struct);
+    proc.pid = procm_next_available_pid();
+    ASSERT(proc.pid == 1);
+
+    int st = mm_init_paging_struct(&proc.paging_struct);
     if (st < 0)
-    {
-        KLOGF(ERR, "Could not map kernel into PID 1's paging struct.");
         return st;
-    }
+
+    st = mm_map_kernel_into_paging_struct(&proc.paging_struct);
+    if (st < 0)
+        goto err;
 
     /* Model the binary image in memory */
     const size_t stage3_text_size =
@@ -147,21 +311,27 @@ pid_t procm_spawn_init()
      * process' text. */
     for (size_t page = 0; page < stage3_text_size_aligned; page += PAGESIZE)
     {
-        mm_new_user_page(
-            PROC_VIRTUAL_START_OFFSET + (page * PAGESIZE),
-            0,
-            &proc->paging_struct);
+        ptr vaddr = PROC_VIRTUAL_START_OFFSET + (page * PAGESIZE);
+        st = mm_new_user_page(vaddr, 0, &proc.paging_struct);
+
+        if (st < 0)
+            goto err;
 
         /* FIXME: Enforce page permissions once we have the API for that. */
     }
 
-    /* Creat process stack */
-    st = procm_create_proc_stack(PROC_STACK_SIZE / PAGESIZE, proc);
+    /* Creat process' stack */
+    st = procm_create_proc_stack(&proc);
     if (st)
-        return st;
+        goto err;
+
+    /* Create the process' kernel stack. */
+    st = procm_create_proc_kstack(&proc);
+    if (st < 0)
+        goto err;
 
     /* Switch to the process' paging struct, and start copying stuff. */
-    mm_load_paging_struct(&proc->paging_struct);
+    mm_load_paging_struct(&proc.paging_struct);
 
     /* Copy entire text section, meaning one function */
     memcpy(
@@ -169,23 +339,22 @@ pid_t procm_spawn_init()
         (void*)kimg_kinit_stage3_text_start(),
         stage3_text_size);
 
-    /* Go back to the kernel's paging struct. */
+    /* Go back to the kernel's paging struct. FIXME: Really necessary ? */
     mm_load_kernel_paging_struct();
 
     /* Since the kinit_stage3 sections contains one thing (a function), we can
      * just point it to the beginning of where that section was coppied. */
-    proc->inst_ptr = PROC_VIRTUAL_START_OFFSET;
+    proc.inst_ptr = PROC_VIRTUAL_START_OFFSET;
 
-    /* Create the process' kernel stack. */
-    proc->kstack_top = procm_new_proc_kstack();
-    if (proc->kstack_top < kimg_vaddr())
-    {
-        procm_free_proc(proc);
-        /* It's an errno since the kernel stack is always after kimg_vaddr */
-        return -proc->kstack_top;
-    }
+    st = procm_add_proc_to_pool(&proc);
+    if (st < 0)
+        goto err;
 
-    return proc->pid;
+    return proc.pid;
+
+err:
+    procm_free_proc_data(&proc);
+    return st;
 }
 
 int procm_kill(Process* proc)
@@ -204,19 +373,6 @@ int procm_mark_dead(int st, Process* proc)
     return 0;
 }
 
-int procm_load_ctx(Process* proc)
-{
-    ASSERT(proc);
-
-    int st = mm_load_paging_struct(&proc->paging_struct);
-    if (st < 0)
-        return st;
-
-    st = procm_arch_load_ctx(proc);
-
-    return st;
-}
-
 void procm_switch_ctx(Process* proc)
 {
     ASSERT(proc);
@@ -225,17 +381,6 @@ void procm_switch_ctx(Process* proc)
         return;
 
     userspace_jump2user(proc->inst_ptr, proc->stack_ptr);
-}
-
-Process* procm_proc_from_pid(pid_t pid)
-{
-    FOR_EACH_ELEM_IN_DARR (g_procs, g_proc_count, proc)
-    {
-        if (proc->pid == pid)
-            return proc;
-    }
-
-    return NULL;
 }
 
 Process* procm_procs()

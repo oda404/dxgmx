@@ -1,5 +1,5 @@
 /**
- * Copyright 2022 Alexandru Olaru.
+ * Copyright 2023 Alexandru Olaru.
  * Distributed under the MIT license.
  */
 
@@ -17,10 +17,42 @@
  * mentiond syscalls. Might have been linux-inspired */
 pid_t procm_spawn_init();
 
-/* Create a new process from 'path'. The process doesn't actually run until the
- * scheduler decides to run it.
- * Returns negative on errors, or the process id. */
-pid_t procm_spawn_proc(const char* path);
+/**
+ * Spawn a new process
+ *
+ * 'path' path of the new process. Should not be NULL.
+ * 'argv' Arguments.
+ * 'envp' Environment variables.
+ * 'proc' Acting process. Should not be NULL.
+ *
+ * Returns:
+ * 0 on success.
+ * -EINVAL on invalid arguments.
+ * -ENOMEM on out of memory.
+ * -ENOSPC if no pid could be allocated.
+ */
+pid_t procm_spawn_proc(
+    const char* path,
+    const char** argv,
+    const char** envp,
+    Process* actingproc);
+
+/**
+ * Replace a running process with a fresly spawned version of another one.
+ * Basically an execve.
+ * 'path' path of the new process. Should not be NULL.
+ * 'argv' Arguments.
+ * 'envp' Environment variables.
+ * 'proc' The process to be replaced. Should not be NULL.
+ *
+ * Returns:
+ * doesn't return on success.
+ */
+int procm_replace_proc(
+    const char* path,
+    const char** argv,
+    const char** envp,
+    Process* actingproc);
 
 /* Kill a process, freeing anything held by this process. */
 int procm_kill(Process* proc);
@@ -28,14 +60,8 @@ int procm_kill(Process* proc);
 /* Mark a process as dead, letting it be reaped by the scheduler. */
 int procm_mark_dead(int st, Process* proc);
 
-/* Preapres the system for a context switch to this process. */
-int procm_load_ctx(Process* proc);
-
 /* Start executing this process. */
 _ATTR_NORETURN void procm_switch_ctx(Process* proc);
-
-/* Returns the Process object associated with 'pid'. NULL if none. */
-Process* procm_proc_from_pid(pid_t pid);
 
 Process* procm_procs();
 size_t procm_proc_count();
