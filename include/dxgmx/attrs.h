@@ -38,4 +38,7 @@ and can be discarded once that is done. */
 kinit_stage1 function. */
 #define _RO_POST_INIT _ATTR_SECTION(".ro_post_init")
 
+/* Doesn't do jack shit. Just a visual cue that a pointer is from userspace. */
+#define _USERPTR
+
 #endif // _DXGMX_ATTRS_H
