@@ -110,6 +110,13 @@ static void handle_absent_kernel_heap_page(ptr faultaddr)
     mm_tlb_flush_single(faultaddr);
 }
 
+static void handle_absent_cpl3(ptr faultaddr, InterruptFrame* frame)
+{
+    (void)faultaddr;
+    (void)frame;
+    panic("Page fault in ring 3 :(");
+}
+
 /* Handler for an absent page fault. */
 static void handle_absent_pagefault(ptr faultaddr, InterruptFrame* frame)
 {
@@ -133,7 +140,7 @@ static void handle_absent_pagefault(ptr faultaddr, InterruptFrame* frame)
     }
     else
     {
-        TODO_FATAL();
+        handle_absent_cpl3(faultaddr, frame);
     }
 }
 
@@ -159,11 +166,12 @@ static void pagefault_isr(InterruptFrame* frame)
 
     KLOGF(
         DEBUG,
-        "Fault at: 0x%p (%s/%s), cpl: %d.",
+        "Fault at: 0x%p (%s/%s), cpl: %d, ip: 0x%p",
         (void*)faultaddr,
         action_msg,
         result_msg,
-        frame->cs & 3);
+        frame->cs & 3,
+        (void*)frame->eip);
 #endif // PAGEFAULT_VERBOSE == 1
 
     if ((frame->cs & 3) == 0 && faultaddr < PAGESIZE)
