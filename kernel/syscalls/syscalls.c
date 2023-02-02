@@ -1,5 +1,5 @@
 /**
- * Copyright 2022 Alexandru Olaru.
+ * Copyright 2023 Alexandru Olaru.
  * Distributed under the MIT license.
  */
 
@@ -11,6 +11,8 @@
 /* Actual system calls. */
 extern void syscall_exit(int status);
 extern ssize_t syscall_read(int fd, void* buf, size_t n);
+extern int
+syscall_execve(const char* path, const char* argv[], const char* envv[]);
 extern void syscall_dxgmx_log(const char* fmt, ...);
 
 /* No such syscall */
