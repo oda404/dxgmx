@@ -8,7 +8,7 @@
 #include <dxgmx/module.h>
 #include <dxgmx/panic.h>
 #include <dxgmx/proc/procm.h>
-#include <dxgmx/sched/scheduler.h>
+#include <dxgmx/sched/sched.h>
 #include <dxgmx/syscalls.h>
 #include <dxgmx/types.h>
 

@@ -1,10 +1,10 @@
 /**
- * Copyright 2022 Alexandru Olaru.
+ * Copyright 2023 Alexandru Olaru.
  * Distributed under the MIT license.
  */
 
-#ifndef _DXGMX_SCHED_SCHEDULER_H
-#define _DXGMX_SCHED_SCHEDULER_H
+#ifndef _DXGMX_SCHED_SCHED_H
+#define _DXGMX_SCHED_SCHED_H
 
 #include <dxgmx/proc/proc.h>
 
@@ -35,4 +35,4 @@ _ATTR_NORETURN void sched_init();
 /* Switch to next process waiting to run. This function does not return. */
 _ATTR_NORETURN void sched_yield();
 
-#endif // !_DXGMX_SCHED_SCHEDULER_H
+#endif // !_DXGMX_SCHED_SCHED_H

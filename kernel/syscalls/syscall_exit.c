@@ -5,7 +5,7 @@
 
 #include <dxgmx/klog.h>
 #include <dxgmx/proc/procm.h>
-#include <dxgmx/sched/scheduler.h>
+#include <dxgmx/sched/sched.h>
 #include <dxgmx/syscalls.h>
 #include <dxgmx/todo.h>
 

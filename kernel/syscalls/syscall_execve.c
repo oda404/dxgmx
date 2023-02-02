@@ -4,7 +4,7 @@
  */
 
 #include <dxgmx/proc/procm.h>
-#include <dxgmx/sched/scheduler.h>
+#include <dxgmx/sched/sched.h>
 #include <dxgmx/syscalls.h>
 
 int syscall_execve(const char* path, const char* argv[], const char* envp[])

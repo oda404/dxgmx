@@ -18,7 +18,6 @@
 #include <dxgmx/limits.h>
 #include <dxgmx/panic.h>
 #include <dxgmx/proc/procm.h>
-#include <dxgmx/sched/scheduler.h>
 #include <dxgmx/stdio.h>
 #include <dxgmx/string.h>
 #include <dxgmx/todo.h>

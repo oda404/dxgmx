@@ -14,7 +14,7 @@
 #include <dxgmx/kmalloc.h>
 #include <dxgmx/proc/proc.h>
 #include <dxgmx/proc/procm.h>
-#include <dxgmx/sched/scheduler.h>
+#include <dxgmx/sched/sched.h>
 #include <dxgmx/string.h>
 #include <dxgmx/todo.h>
 #include <dxgmx/userspace.h>
