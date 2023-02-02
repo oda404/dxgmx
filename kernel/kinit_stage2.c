@@ -1,5 +1,5 @@
 /**
- * Copyright 2022 Alexandru Olaru.
+ * Copyright 2023 Alexandru Olaru.
  * Distributed under the MIT license.
  */
 
@@ -7,7 +7,7 @@
 #include <dxgmx/fs/vfs.h>
 #include <dxgmx/module.h>
 #include <dxgmx/panic.h>
-#include <dxgmx/proc/procmanager.h>
+#include <dxgmx/proc/procm.h>
 #include <dxgmx/sched/scheduler.h>
 #include <dxgmx/syscalls.h>
 #include <dxgmx/types.h>

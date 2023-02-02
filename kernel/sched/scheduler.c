@@ -5,7 +5,7 @@
 
 #include <dxgmx/klog.h>
 #include <dxgmx/panic.h>
-#include <dxgmx/proc/procmanager.h>
+#include <dxgmx/proc/procm.h>
 #include <dxgmx/sched/scheduler.h>
 
 #define KLOGF_PREFIX "sched: "

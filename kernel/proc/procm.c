@@ -13,6 +13,7 @@
 #include <dxgmx/klog.h>
 #include <dxgmx/kmalloc.h>
 #include <dxgmx/proc/proc.h>
+#include <dxgmx/proc/procm.h>
 #include <dxgmx/sched/scheduler.h>
 #include <dxgmx/string.h>
 #include <dxgmx/todo.h>
@@ -378,8 +379,7 @@ void procm_switch_ctx(Process* proc)
 {
     ASSERT(proc);
 
-    if (procm_load_ctx(proc) < 0)
-        return;
+    procm_load_ctx(proc);
 
     userspace_jump2user(proc->inst_ptr, proc->stack_ptr);
 }

@@ -3,7 +3,7 @@
  * Distributed under the MIT license.
  */
 
-#include <dxgmx/proc/procmanager.h>
+#include <dxgmx/proc/procm.h>
 #include <dxgmx/sched/scheduler.h>
 #include <dxgmx/syscalls.h>
 

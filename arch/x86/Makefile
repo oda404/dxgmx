@@ -11,7 +11,7 @@ $(ARCH_SRCDIR)/kstdio.c \
 $(ARCH_SRCDIR)/serial.c \
 $(ARCH_SRCDIR)/panic.c \
 $(ARCH_SRCDIR)/syscalls.c \
-$(ARCH_SRCDIR)/procmanager.c \
+$(ARCH_SRCDIR)/procm.c \
 $(ARCH_SRCDIR)/userspace.S \
 
 MACROS += -D_X86_

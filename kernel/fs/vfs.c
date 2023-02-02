@@ -1,5 +1,5 @@
 /**
- * Copyright 2022 Alexandru Olaru.
+ * Copyright 2023 Alexandru Olaru.
  * Distributed under the MIT license.
  */
 
@@ -17,7 +17,7 @@
 #include <dxgmx/kmalloc.h>
 #include <dxgmx/limits.h>
 #include <dxgmx/panic.h>
-#include <dxgmx/proc/procmanager.h>
+#include <dxgmx/proc/procm.h>
 #include <dxgmx/sched/scheduler.h>
 #include <dxgmx/stdio.h>
 #include <dxgmx/string.h>
