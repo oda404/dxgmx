@@ -38,6 +38,7 @@
 
 static Process* g_procs = NULL;
 static size_t g_proc_count = 0;
+static size_t g_next_queued_proc_idx = 0;
 static size_t g_running_pids = 1;
 
 static pid_t procm_next_available_pid()
@@ -391,4 +392,27 @@ Process* procm_procs()
 size_t procm_proc_count()
 {
     return g_proc_count;
+}
+
+int procm_try_kill_proc(Process* actingproc, Process* targetproc)
+{
+    if (actingproc == targetproc)
+    {
+        /* pid 1 has exited. */
+        if (g_proc_count == 1)
+            panic("PID 1 returned %d, halt.", targetproc->exit_status);
+
+        return -EINVAL;
+    }
+
+    procm_kill(targetproc);
+    return 0;
+}
+
+Process* procm_next_queued_proc()
+{
+    if (g_next_queued_proc_idx >= g_proc_count)
+        g_next_queued_proc_idx = 0;
+
+    return &g_procs[g_next_queued_proc_idx++];
 }

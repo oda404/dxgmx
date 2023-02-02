@@ -66,4 +66,27 @@ _ATTR_NORETURN void procm_switch_ctx(Process* proc);
 Process* procm_procs();
 size_t procm_proc_count();
 
+/**
+ * Try to kill a process. This function can fail if we are trying to kill the
+ * acting process.
+ *
+ * No NULL pointers should be passed to this function.
+ *
+ * 'actingproc' Acting process.
+ * 'targetproc' The process to be kill.
+ *
+ * Returns:
+ * 0 on sucess.
+ * -EINVAL if targetproc == actingproc.
+ */
+int procm_try_kill_proc(Process* actingproc, Process* targetproc);
+
+/**
+ * Get the next process that is queued to run.
+ *
+ * Returns:
+ * A non-NULL Process*.
+ */
+Process* procm_next_queued_proc();
+
 #endif // !_DXGMX_PROC_PROCM_H
