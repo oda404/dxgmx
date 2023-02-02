@@ -63,7 +63,6 @@ int procm_mark_dead(int st, Process* proc);
 /* Start executing this process. */
 _ATTR_NORETURN void procm_switch_ctx(Process* proc);
 
-Process* procm_procs();
 size_t procm_proc_count();
 
 /**

@@ -384,11 +384,6 @@ void procm_switch_ctx(Process* proc)
     userspace_jump2user(proc->inst_ptr, proc->stack_ptr);
 }
 
-Process* procm_procs()
-{
-    return g_procs;
-}
-
 size_t procm_proc_count()
 {
     return g_proc_count;
