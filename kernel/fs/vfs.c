@@ -434,11 +434,13 @@ int vfs_open(const char* path, int flags, mode_t mode, Process* proc)
             int st = vnode->owner->driver->mkfile(vnode->owner, path, mode);
             if (st < 0)
                 return st;
+
+            /* Try again, this time it should work */
+            vnode = fs_vnode_for_path(fs, path);
+            ASSERT(vnode);
         }
 
-        /* Try again, this time it should work */
-        vnode = fs_vnode_for_path(fs, path);
-        ASSERT(vnode);
+        return -ENOENT;
     }
 
     /* Create a new system-wide file descriptor */
