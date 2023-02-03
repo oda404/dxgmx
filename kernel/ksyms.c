@@ -1,5 +1,5 @@
 /**
- * Copyright 2022 Alexandru Olaru.
+ * Copyright 2023 Alexandru Olaru.
  * Distributed under the MIT license.
  */
 
@@ -14,8 +14,6 @@
 
 #define KLOGF_PREFIX "ksyms: "
 
-#define KSYMS_MAX_SYMBOLS 1024
-
 #define KSYMS_SIZE (32 * KIB)
 
 typedef struct S_KernelSymbol
@@ -29,7 +27,7 @@ extern u8 _ksyms_section_base[];
 extern u8 _ksyms_section_end[];
 
 _ATTR_SECTION(".ksyms") static u8 g_ksyms[KSYMS_SIZE];
-static u32 g_ksyms_entries_cnt = 0;
+static unsigned long g_ksyms_entries_cnt = 0;
 static bool g_ksyms_available = false;
 static KernelSymbol* g_ksyms_table = NULL;
 
@@ -45,22 +43,20 @@ _INIT int ksyms_load()
         KLOGF(
             ERR,
             ".ksyms section doesn't contain the expected magic number. Kernel symbols will not be available!");
-        return -1;
+        return -EINVAL;
     }
 
     char buf[9] = {0};
     /* Jump over the magic number */
     memcpy(buf, g_ksyms + 9, 8);
 
-    errno = 0;
-    g_ksyms_entries_cnt = strtoul(buf, NULL, 16);
-    if (errno || *(g_ksyms + 17) != '\n')
+    int st = strtoul(buf, NULL, 16, &g_ksyms_entries_cnt);
+    if (st < 0 || *(g_ksyms + 17) != '\n')
     {
-        errno = 0;
         KLOGF(
             ERR,
             "Could not parse the symbol entries count. Kernel symbols will not be available!");
-        return -1;
+        return st;
     }
 
     g_ksyms_table = kmalloc(g_ksyms_entries_cnt * sizeof(KernelSymbol));
@@ -69,17 +65,9 @@ _INIT int ksyms_load()
         KLOGF(
             ERR,
             "Could not allocate the kernel symbol table. Kernel symbols will not be available!");
-        return -1;
+        return -ENOMEM;
     }
     memset(g_ksyms_table, 0, g_ksyms_entries_cnt * sizeof(KernelSymbol));
-
-    if (g_ksyms_entries_cnt > KSYMS_MAX_SYMBOLS)
-    {
-        KLOGF(
-            ERR,
-            ".ksyms section has grown too large. Symbol table will get truncated!");
-        g_ksyms_entries_cnt = KSYMS_MAX_SYMBOLS;
-    }
 
     const char* ksyms = (const char*)(g_ksyms + 18);
     for (size_t i = 0; i < g_ksyms_entries_cnt; ++i)
@@ -87,15 +75,14 @@ _INIT int ksyms_load()
         memcpy(buf, ksyms, 8);
 
         /* Parse the symbol address. */
-        errno = 0;
-        u32 addr = strtoul(buf, NULL, 16);
-        if (errno)
+        unsigned long addr;
+        st = strtoul(buf, NULL, 16, &addr);
+        if (st < 0)
         {
-            errno = 0;
             KLOGF(
                 ERR,
                 "Found invalid symbol entry. Kernel symbols will not be available!");
-            return -2;
+            return st;
         }
 
         /* Jump over the address, two whitespaces and the type,

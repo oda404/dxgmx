@@ -1,5 +1,5 @@
 /**
- * Copyright 2022 Alexandru Olaru.
+ * Copyright 2023 Alexandru Olaru.
  * Distributed under the MIT license.
  */
 
@@ -361,7 +361,7 @@ static int fat_enumerate_dir(const VirtualNode* dir_vnode, FileSystem* fs)
 
         VirtualNode* tmp = fs_new_vnode(fs, vnode.n, dir_vnode);
         if (!tmp)
-            return -errno;
+            return -ENOMEM;
 
         tmp->mode = vnode.mode;
         tmp->name = vnode.name;
@@ -516,6 +516,9 @@ static void fat_destroy(FileSystem* fs)
 static int
 fat_init(const char* src, const char* type, const char* args, FileSystem* fs)
 {
+    (void)type;
+    (void)args;
+
     /* This driver requires a src. */
     if (!fs || !src)
         return -EINVAL;
@@ -558,7 +561,7 @@ fat_init(const char* src, const char* type, const char* args, FileSystem* fs)
     if (!rootvnode)
     {
         fat_destroy(fs);
-        return -errno;
+        return -ENOMEM;
     }
 
     rootvnode->mode = FAT_DIR_MODE;
@@ -577,17 +580,11 @@ static ssize_t fat_read(
         return 0; // as per spec
 
     if (!(fs && vnode && buf) || off >= vnode->size)
-    {
-        errno = EINVAL;
-        return -1;
-    }
+        return -EINVAL;
 
     /* If the vnode is not part of this filesystem we fucked up. */
     if (vnode->owner != fs)
-    {
-        errno = EINVAL;
-        return -1;
-    }
+        return -EINVAL;
 
     const FatFs* fatfs = fs->driver_ctx;
     ASSERT(fatfs);
@@ -596,10 +593,7 @@ static ssize_t fat_read(
     ASSERT(part);
 
     if (!(part && fatfs))
-    {
-        errno = EINVAL;
-        return -1;
-    }
+        return -EINVAL;
 
     /* Cap n to the vnode size, taking into account the offset. */
     n = min(n, vnode->size - off);
@@ -609,11 +603,9 @@ static ssize_t fat_read(
     /* FIXME: This is a weird way to do this. */
     u8* tmpbuf = kmalloc(sectors * part->physical_sectorsize);
     if (!tmpbuf)
-    {
-        errno = ENOMEM;
-        return -1;
-    }
+        return -ENOMEM;
 
+    // FIXME: wth is this error checking
     if (!part->read(
             part,
             fat_cluster_to_sector(vnode->n, fatfs) +
@@ -622,8 +614,7 @@ static ssize_t fat_read(
             tmpbuf))
     {
         kfree(tmpbuf);
-        errno = EIO;
-        return -1;
+        return -EIO;
     }
 
     memcpy(buf, tmpbuf + off, n);

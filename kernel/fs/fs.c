@@ -1,5 +1,5 @@
 /**
- * Copyright 2022 Alexandru Olaru.
+ * Copyright 2023 Alexandru Olaru.
  * Distributed under the MIT license.
  */
 
@@ -14,19 +14,17 @@
 
 VirtualNode* fs_new_vnode(FileSystem* fs, ino_t n, const VirtualNode* parent)
 {
+    // FIXME: remove this
     if (!fs || !n || (parent && !parent->n))
-    {
-        errno = EINVAL;
         return NULL;
-    }
 
+    // FIXME: also remove tgis
     if (fs->vnodes)
     {
         FOR_EACH_ELEM_IN_DARR (fs->vnodes, fs->vnode_count, tmpvnode)
         {
             if (tmpvnode->n == n)
             {
-                errno = EEXIST;
                 return NULL;
             }
         }
@@ -117,18 +115,12 @@ int fs_make_path_canonical(char* path)
 
 VirtualNode* fs_vnode_for_path(FileSystem* fs, const char* path)
 {
+    // FIXME: remove this
     if (!fs || !path)
-    {
-        errno = EINVAL;
         return NULL;
-    }
 
-    char* working_path = strdup(path);
-    if (!working_path)
-    {
-        errno = ENOMEM;
-        return NULL;
-    }
+    char working_path[PATH_MAX];
+    strncpy(working_path, path, PATH_MAX);
 
     fs_make_path_relative(fs, working_path);
 
@@ -180,11 +172,6 @@ VirtualNode* fs_vnode_for_path(FileSystem* fs, const char* path)
             break;
         }
     }
-
-    kfree(working_path);
-
-    if (!vnode_hit)
-        errno = ENOENT;
 
     return vnode_hit;
 }

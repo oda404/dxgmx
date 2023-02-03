@@ -1,5 +1,5 @@
 /**
- * Copyright 2022 Alexandru Olaru.
+ * Copyright 2023 Alexandru Olaru.
  * Distributed under the MIT license.
  */
 
@@ -82,12 +82,5 @@
 #define ENOLCK 37
 /* Function/syscall not implemented. */
 #define ENOSYS 38
-
-int* _get_errno_addr();
-/*
- * errno is the one thing that is not prefixed with k
- * because of later libc usage
- */
-#define errno (*_get_errno_addr())
 
 #endif // _DXGMX_ERRNO_H

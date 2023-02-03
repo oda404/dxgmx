@@ -1,5 +1,5 @@
 /**
- * Copyright 2022 Alexandru Olaru.
+ * Copyright 2023 Alexandru Olaru.
  * Distributed under the MIT license.
  */
 
@@ -67,6 +67,9 @@ static void ramfs_destroy(FileSystem* fs)
 static int
 ramfs_init(const char* src, const char* type, const char* args, FileSystem* fs)
 {
+    (void)type;
+    (void)args;
+
     if (!type || strcmp(type, "ramfs") != 0)
         return -EINVAL;
 
@@ -102,29 +105,20 @@ ramfs_init(const char* src, const char* type, const char* args, FileSystem* fs)
 static int ramfs_mkfile(FileSystem* fs, const char* path, mode_t mode)
 {
     if (!fs || !path)
-    {
-        errno = EINVAL;
-        return -1;
-    }
+        return -EINVAL;
 
     /* FIXME: we should validate the fs driver. */
 
     RamFsMetadata* meta = fs->driver_ctx;
     if (!meta)
-    {
-        errno = EINVAL;
-        return -1;
-    }
+        return -EINVAL;
 
     VirtualNode free_file_vnode;
     memset(&free_file_vnode, 0, sizeof(free_file_vnode));
 
     free_file_vnode.name = strdup(path);
     if (!free_file_vnode.name)
-    {
-        errno = ENOMEM;
-        return -1;
-    }
+        return -ENOMEM;
 
     free_file_vnode.mode = mode;
     free_file_vnode.owner = fs;
@@ -152,8 +146,9 @@ static int ramfs_mkfile(FileSystem* fs, const char* path, mode_t mode)
 
             if (!tmp)
             {
-                errno = ENOMEM;
-                goto fail;
+                kfree(free_file_vnode.name);
+                memset(free_file, 0, sizeof(RamFsFileData));
+                return -ENOMEM;
             }
 
             meta->files = tmp;
@@ -176,7 +171,11 @@ static int ramfs_mkfile(FileSystem* fs, const char* path, mode_t mode)
         fs_new_vnode(fs, free_file_vnode.n, NULL /* FIXME */);
 
     if (!tmpvnode)
-        goto fail;
+    {
+        kfree(free_file_vnode.name);
+        memset(free_file, 0, sizeof(RamFsFileData));
+        return -ENOMEM;
+    }
 
     tmpvnode->mode = free_file_vnode.mode;
     tmpvnode->name = free_file_vnode.name;
@@ -184,35 +183,20 @@ static int ramfs_mkfile(FileSystem* fs, const char* path, mode_t mode)
     tmpvnode->state = free_file_vnode.state;
 
     return 0;
-
-fail:
-    if (free_file_vnode.name)
-        kfree(free_file_vnode.name);
-
-    if (free_file)
-        memset(free_file, 0, sizeof(RamFsFileData));
-
-    return -1;
 }
 
 static ssize_t ramfs_read(
     FileSystem* fs, const VirtualNode* vnode, void* buf, size_t n, loff_t off)
 {
     if (!fs || !vnode || !buf || vnode->owner != fs)
-    {
-        errno = EINVAL;
-        return -1;
-    }
+        return -EINVAL;
 
     if (!n || off >= vnode->size)
         return 0;
 
     RamFsMetadata* meta = fs->driver_ctx;
     if (!meta || !meta->files)
-    {
-        errno = EINVAL;
-        return -1;
-    }
+        return -EINVAL;
 
     ASSERT(vnode->n > 0 && vnode->n < meta->files_count);
 
@@ -227,20 +211,14 @@ static ssize_t ramfs_write(
     FileSystem* fs, VirtualNode* vnode, const void* buf, size_t n, loff_t off)
 {
     if (!fs || !vnode || !buf || vnode->owner != fs)
-    {
-        errno = EINVAL;
-        return -1;
-    }
+        return -EINVAL;
 
     if (!n)
         return 0;
 
     RamFsMetadata* meta = fs->driver_ctx;
     if (!meta || !meta->files)
-    {
-        errno = EINVAL;
-        return -1;
-    }
+        return -EINVAL;
 
     ASSERT(vnode->n > 0 && vnode->n < meta->files_count);
 
@@ -252,10 +230,7 @@ static ssize_t ramfs_write(
     {
         void* newdata = krealloc(filedata->data, write_size);
         if (!newdata)
-        {
-            errno = ENOMEM;
-            return -1;
-        }
+            return -ENOMEM;
 
         filedata->data = newdata;
 

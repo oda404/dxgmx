@@ -1,5 +1,5 @@
 /**
- * Copyright 2021 Alexandru Olaru.
+ * Copyright 2023 Alexandru Olaru.
  * Distributed under the MIT license.
  */
 
@@ -9,10 +9,14 @@
 #include <dxgmx/compiler_attrs.h>
 #include <stddef.h>
 
-long int strtol(const char* __restrict str, char** __restrict endptr, int base);
+int strtol(
+    const char* __restrict str, char** __restrict endptr, int base, long* dst);
 
-unsigned long
-strtoul(const char* __restrict str, char** __restrict endptr, int base);
+int strtoul(
+    const char* __restrict str,
+    char** __restrict endptr,
+    int base,
+    unsigned long* dst);
 
 int abs(int n) _ATTR_CONST;
 

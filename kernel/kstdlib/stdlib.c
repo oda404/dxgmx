@@ -1,5 +1,5 @@
 /**
- * Copyright 2022 Alexandru Olaru.
+ * Copyright 2023 Alexandru Olaru.
  * Distributed under the MIT license.
  */
 
@@ -86,7 +86,7 @@ static int isbasedigit(int c, int base)
     return 0;
 }
 
-unsigned long strtoul(const char* str, char** endptr, int base)
+int strtoul(const char* str, char** endptr, int base, unsigned long* dst)
 {
     if ((base < 2 && base != 0) || base > 36)
         return 0;
@@ -108,10 +108,7 @@ unsigned long strtoul(const char* str, char** endptr, int base)
     }
     /* if a digit isn't found after the potential sign return 0 */
     if (!isbasedigit(*str, base))
-    {
-        errno = EINVAL;
-        return 0;
-    }
+        return -EINVAL;
 
     unsigned long out = 0;
 
@@ -130,18 +127,21 @@ unsigned long strtoul(const char* str, char** endptr, int base)
 
         if (tmp < out) // overflow
         {
-            errno = ERANGE;
-            return ULONG_MAX;
+            *dst = ULONG_MAX;
+            return -ERANGE;
         }
+
         out = tmp;
     }
 
     if (endptr)
         *endptr = (char*)str; /* needed voodo to supress warnings */
-    return neg ? -out : out;
+
+    *dst = neg ? -out : out;
+    return 0;
 }
 
-long int strtol(const char* str, char** endptr, int base)
+int strtol(const char* str, char** endptr, int base, long* dst)
 {
     if ((base < 2 && base != 0) || base > 36)
         return 0;
@@ -163,10 +163,7 @@ long int strtol(const char* str, char** endptr, int base)
     }
     /* if a digit isn't found after the potential sign return 0 */
     if (!isbasedigit(*str, base))
-    {
-        errno = EINVAL;
-        return 0;
-    }
+        return -EINVAL;
 
     long int out = 0;
 
@@ -185,15 +182,17 @@ long int strtol(const char* str, char** endptr, int base)
 
         if (tmp < out) // over or under flow based on sign
         {
-            errno = ERANGE;
-            return neg ? LONG_MIN : LONG_MAX;
+            *dst = neg ? LONG_MIN : LONG_MAX;
+            return -ERANGE;
         }
         out = tmp;
     }
 
     if (endptr)
         *endptr = (char*)str; /* needed voodo to supress warnings */
-    return neg ? -out : out;
+
+    *dst = neg ? -out : out;
+    return 0;
 }
 
 char* utoa(unsigned n, char* str, int base)
