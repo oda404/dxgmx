@@ -172,45 +172,61 @@ _INIT static int setup_definitive_paging()
 
     g_pdpt = (PageDirectoryPointerTable*)mm_kpaddr2vaddr(cpu_read_cr3());
 
-    mm_tlb_flush_whole();
-
     return 0;
 }
 
 /* Enforce all sections permissions. */
 _INIT static void enforce_ksections_perms()
 {
-    // FIXME: handle the kernel spanning multiple page tables
-    PageTable* pt = pt_from_vaddr_abs(kimg_vaddr(), g_pdpt);
+    /* Unmap the bootloader section. */
+    FOR_EACH_KPTE_IN_RANGE (kimg_bootloader_start(), kimg_bootloader_end(), pte)
+        pte->present = false;
 
     /* Text section can't be written to. */
-    FOR_EACH_PTE_IN_RANGE (kimg_text_start(), kimg_text_end(), pt, pte)
+    FOR_EACH_KPTE_IN_RANGE (kimg_text_start(), kimg_text_end(), pte)
         pte->writable = false;
 
+    /* Can't write to modules */
+    FOR_EACH_KPTE_IN_RANGE (kimg_module_start(), kimg_module_end(), pte)
+        pte->writable = false;
+
+    /* Can't write to kinit_stage3 */
+    FOR_EACH_KPTE_IN_RANGE (
+        kimg_kinit_stage3_text_start(), kimg_kinit_stage3_text_end(), pte)
+    {
+        pte->writable = false;
+    }
+
+    /* Can't write to init, which is just text */
+    FOR_EACH_KPTE_IN_RANGE (kimg_init_start(), kimg_init_end(), pte)
+        pte->writable = false;
+
+    /* Can't execute from data. */
+    FOR_EACH_KPTE_IN_RANGE (kimg_data_start(), kimg_data_end(), pte)
+        pte->exec_disable = true;
+
+    /* For now only disable execution. */
+    FOR_EACH_KPTE_IN_RANGE (
+        kimg_ro_postinit_start(), kimg_ro_postinit_end(), pte)
+        pte->exec_disable = true;
+
     /* Rodata section can't be written to or executed from. */
-    FOR_EACH_PTE_IN_RANGE (kimg_rodata_start(), kimg_rodata_end(), pt, pte)
+    FOR_EACH_KPTE_IN_RANGE (kimg_rodata_start(), kimg_rodata_end(), pte)
     {
         pte->writable = false;
         pte->exec_disable = true;
     }
 
-    /* Can't execute from data. */
-    FOR_EACH_PTE_IN_RANGE (kimg_data_start(), kimg_data_end(), pt, pte)
-        pte->exec_disable = true;
-
     /* Can't execute from bss. */
-    FOR_EACH_PTE_IN_RANGE (kimg_bss_start(), kimg_bss_end(), pt, pte)
+    FOR_EACH_KPTE_IN_RANGE (kimg_bss_start(), kimg_bss_end(), pte)
         pte->exec_disable = true;
 
-    /* Unmap the bootloader section. */
-    FOR_EACH_PTE_IN_RANGE (
-        kimg_bootloader_start(), kimg_bootloader_end(), pt, pte)
-        pte->present = false;
-
-    /* For now only disable execution. */
-    FOR_EACH_PTE_IN_RANGE (
-        kimg_ro_postinit_start(), kimg_ro_postinit_end(), pt, pte)
+    /* Can't write or execute from ksyms */
+    FOR_EACH_KPTE_IN_RANGE (kimg_ksyms_start(), kimg_ksyms_end(), pte)
+    {
+        pte->writable = false;
         pte->exec_disable = true;
+    }
 
     mm_tlb_flush_whole();
 }
