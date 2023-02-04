@@ -203,8 +203,8 @@ run:
 
 PHONY += clean 
 clean:
-	@rm -f $(COBJS) $(ASMOBJS) $(MODOBJS)
-	@rm -f $(CDEPS) $(ASMDEPS) $(MODDEPS)
+	@rm -f $(COBJS) $(ASMOBJS) $(MODOBJS) $(KINIT_STAGE3_OBJ)
+	@rm -f $(CDEPS) $(ASMDEPS) $(MODDEPS) $(KINIT_STAGE3_DEP)
 
 PHONY += mrclean 
 mrclean:
