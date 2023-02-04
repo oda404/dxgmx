@@ -102,7 +102,8 @@ static int procm_create_proc_stack(Process* targetproc)
     for (size_t i = 0; i < PROC_STACK_PAGESPAN; ++i)
     {
         ptr vaddr = stage3_stack_top - ((i + 1) * PAGESIZE);
-        int st = mm_new_user_page(vaddr, 0, &targetproc->paging_struct);
+        int st = mm_new_user_page(
+            vaddr, PAGE_R | PAGE_W, &targetproc->paging_struct);
 
         if (st)
             return st;
@@ -314,7 +315,11 @@ pid_t procm_spawn_init()
     for (size_t page = 0; page < stage3_text_size_aligned; page += PAGESIZE)
     {
         ptr vaddr = PROC_VIRTUAL_START_OFFSET + (page * PAGESIZE);
-        st = mm_new_user_page(vaddr, 0, &proc.paging_struct);
+
+        /* I'm not event going to bother clearing PAGE_W as we spend so little
+         * time in kinit_stage3 and it's a *known* environment */
+        st = mm_new_user_page(
+            vaddr, PAGE_R | PAGE_W | PAGE_X, &proc.paging_struct);
 
         if (st < 0)
             goto err;

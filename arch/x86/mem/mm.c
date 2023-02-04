@@ -1,5 +1,5 @@
 /**
- * Copyright 2022 Alexandru Olaru.
+ * Copyright 2023 Alexandru Olaru.
  * Distributed under the MIT license.
  */
 
@@ -106,11 +106,33 @@ ptr mm_kvaddr2paddr(ptr vaddr)
     return mm_vaddr2paddr(vaddr, g_pdpt);
 }
 
+static void mm_set_page_flags_internal(pte_t* pte, pde_t* pde, u16 flags)
+{
+    /* If a pde has higher privileges, we don't demote them, because some other
+     * page tables might make use of those. */
+
+    if (!pde->writable && (flags & PAGE_W))
+        pde->writable = true;
+
+    pte->writable = !!(flags & PAGE_W);
+
+    if (pde->exec_disable && (flags & PAGE_X))
+        pde->exec_disable = false;
+
+    pte->exec_disable = !(flags & PAGE_X);
+
+    /* User access is different since we should not have, for example two
+     * pagetables with different user_acess values within the same pagedir
+     * anyway. */
+    pde->user_access = !!(flags & PAGE_USER);
+    pte->user_access = !!(flags & PAGE_USER);
+}
+
 /**
  * Maps a single 4KiB page from virtual vaddr to physical frame_base.
  */
 static PageTableEntry*
-map_page(ptr frame_base, ptr vaddr, PageDirectoryPointerTable* pdpt)
+map_page(ptr frame_base, ptr vaddr, u16 flags, PageDirectoryPointerTable* pdpt)
 {
     if (frame_base % PAGESIZE || vaddr % PAGESIZE)
         return NULL;
@@ -154,11 +176,12 @@ map_page(ptr frame_base, ptr vaddr, PageDirectoryPointerTable* pdpt)
     PageTableEntry* pte = pte_from_vaddr(vaddr, pt);
     pte_set_frame_base(frame_base, pte);
 
+    /* Everything is present */
     pdpte->present = true;
-
     pde->present = true;
-
     pte->present = true;
+
+    mm_set_page_flags_internal(pte, pde, flags);
 
     mm_tlb_flush_single(vaddr);
 
@@ -370,7 +393,8 @@ _INIT int mm_reserve_acpi_range(ptr base, size_t size)
 
     /* FIXME: a new page gets allocated everytime, discarding the previous valid
      * one! */
-    PageTableEntry* pte = map_page(aligned_base, aligned_base, g_pdpt);
+    PageTableEntry* pte =
+        map_page(aligned_base, aligned_base, PAGE_R | PAGE_W, g_pdpt);
     if (!pte)
         return -ENOMEM;
 
@@ -409,39 +433,62 @@ int mm_destroy_paging_struct(PagingStruct* ps)
     return 0;
 }
 
-int mm_new_user_page(ptr vaddr, u16 flags, PagingStruct* ps)
+int mm_set_page_flags(ptr vaddr, u16 flags, PagingStruct* ps)
 {
-    if (!ps)
-        return -EINVAL;
+    ASSERT(vaddr % PAGESIZE == 0);
 
     PageDirectoryPointerTable* pdpt = ps->data;
     if (!pdpt)
         return -EINVAL;
 
-    ptr paddr = falloc_one_user();
-    if (!paddr)
-        return -ENOMEM;
-
-    PageTableEntry* pte = map_page(paddr, vaddr, pdpt);
-    if (!pte)
-    {
-        ffree_one(paddr);
-        return -ENOMEM;
-    }
-
     PageDirectoryEntry* pde = pde_from_vaddr_abs(vaddr, pdpt);
-    ASSERT(pde);
+    if (!pde)
+        return -EINVAL;
 
-    (void)flags;
-    pde->user_access = 1;
-    pde->writable = 1;
+    ptr table_base = pde_table_base(pde);
+    if (!table_base)
+        return -EINVAL;
 
-    pte->user_access = 1;
-    pte->writable = 1;
+    PageTableEntry* pte = pte_from_vaddr(vaddr, mm_kpaddr2vaddr(table_base));
+    if (!pte)
+        return -EINVAL;
+
+    mm_set_page_flags_internal(pte, pde, flags);
 
     mm_tlb_flush_single(vaddr);
 
     return 0;
+}
+
+int mm_new_page(ptr vaddr, ptr paddr, u16 flags, PagingStruct* ps)
+{
+    ASSERT(vaddr % PAGESIZE == 0);
+    ASSERT(paddr % PAGESIZE == 0);
+
+    PageDirectoryPointerTable* pdpt = ps->data;
+    if (!pdpt)
+        return -EINVAL;
+
+    PageTableEntry* pte = map_page(paddr, vaddr, flags, pdpt);
+    if (!pte)
+        return -ENOMEM;
+
+    return 0;
+}
+
+int mm_new_user_page(ptr vaddr, u16 flags, PagingStruct* ps)
+{
+    ASSERT(vaddr % PAGESIZE == 0);
+
+    ptr paddr = falloc_one_user();
+    if (!paddr)
+        return -ENOMEM;
+
+    int st = mm_new_page(vaddr, paddr, flags | PAGE_USER, ps);
+    if (st < 0)
+        ffree_one(paddr);
+
+    return st;
 }
 
 int mm_map_kernel_into_paging_struct(PagingStruct* ps)

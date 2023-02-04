@@ -48,8 +48,12 @@ elfloader_load_from_file32(fd_t fd, Process* actingproc, Process* targetproc)
         /* Map pages */
         for (size_t i = 0; i < pagespan; ++i)
         {
-            st = mm_new_user_page(
-                aligned_start + i * PAGESIZE, 0, &targetproc->paging_struct);
+            ptr vaddr = aligned_start + i * PAGESIZE;
+            /* We force PAGE_W because we need to copy the code there, it is
+             * cleared later if necessary. */
+            u16 flags = (phdr->flags & PAGE_ACCESS_MODE) | PAGE_W;
+
+            st = mm_new_user_page(vaddr, flags, &targetproc->paging_struct);
 
             if (st < 0)
             {
@@ -99,6 +103,16 @@ elfloader_load_from_file32(fd_t fd, Process* actingproc, Process* targetproc)
             void* start = (void*)(phdr->vaddr + phdr->filesize);
             size_t size = phdr->memsize - phdr->filesize;
             memset(start, 0, size);
+        }
+
+        /* Remove the previously possibly forced PAGE_W and set PAGE_USER. */
+        for (size_t i = 0; i < pagespan; ++i)
+        {
+            ptr vaddr = aligned_start + i * PAGESIZE;
+            u16 flags = (phdr->flags & PAGE_ACCESS_MODE) | PAGE_USER;
+
+            st = mm_set_page_flags(vaddr, flags, &targetproc->paging_struct);
+            ASSERT(st == 0);
         }
 
         kfree(buf);
