@@ -6,8 +6,8 @@
 #include <dxgmx/kimg.h>
 #include <dxgmx/kstack.h>
 
-extern u8 _kernel_base[];
-extern u8 _kernel_vaddr[];
+extern u8 _kernel_pbase[];
+extern u8 _kernel_vbase[];
 extern u8 _text_sect_start[];
 extern u8 _text_sect_end[];
 extern u8 _rodata_sect_start[];
@@ -122,12 +122,12 @@ size_t kimg_map_offset()
 
 ptr kimg_paddr()
 {
-    return (ptr)_kernel_base;
+    return (ptr)_kernel_pbase;
 }
 
 ptr kimg_vaddr()
 {
-    return (ptr)_kernel_vaddr;
+    return (ptr)_kernel_vbase;
 }
 
 size_t kimg_size()
