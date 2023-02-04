@@ -168,7 +168,9 @@ StatementMacros:
 ForEachMacros:
   - 'FOR_EACH_MEM_REGION'
   - 'FOR_EACH_PTE_IN_RANGE'
+  - 'FOR_EACH_KPTE_IN_RANGE'
   - 'FOR_EACH_ELEM_IN_DARR'
+
 TabWidth:        4
 UseCRLF:         false
 UseTab:          Never

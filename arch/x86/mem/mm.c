@@ -32,11 +32,16 @@
     if (!(x))                                                                  \
         return ret;
 
+static PageDirectoryPointerTable* g_pdpt;
+
 #define FOR_EACH_PTE_IN_RANGE(s, e, pt, pte)                                   \
     for (PageTableEntry* pte = pte_from_vaddr(s, pt); pte; pte = NULL)         \
         for (ptr _i = s; _i < e; _i += PAGESIZE, pte = pte_from_vaddr(_i, pt))
 
-static PageDirectoryPointerTable* g_pdpt;
+#define FOR_EACH_KPTE_IN_RANGE(s, e, pte)                                      \
+    for (PageTableEntry* pte = pte_from_vaddr_abs(s, g_pdpt); pte; pte = NULL) \
+        for (ptr _i = s; _i < e;                                               \
+             _i += PAGESIZE, pte = pte_from_vaddr_abs(_i, g_pdpt))
 
 #define SYS_MEMORY_REGIONS_MAX 16
 static MemoryRegion g_sys_mregs[SYS_MEMORY_REGIONS_MAX];
