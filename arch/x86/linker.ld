@@ -1,5 +1,5 @@
 /**
- * Copyright 2022 Alexandru Olaru.
+ * Copyright 2023 Alexandru Olaru.
  * Distributed under the MIT license.
 */
 
@@ -19,23 +19,23 @@ SECTIONS
 
     .bootloader ALIGN(4K) : AT(ADDR(.bootloader) - _kernel_map_offset)
     {
-        _bootloader_sect_start = .;
+        _bootloader_start = .;
         KEEP(*(.bootloader))
-        _bootloader_sect_end = .;
+        _bootloader_end = .;
     }
 
     .text ALIGN(4K) : AT (ADDR(.text) - _kernel_map_offset)
     {
-        _text_sect_start = .;
+        _text_start = .;
         *(.text)
-        _text_sect_end = .;
+        _text_end = .;
     }
 
     .modules ALIGN(4K) : AT(ADDR(.modules) - _kernel_map_offset)
     {
-        _modules_sect_start = .;
+        _modules_start = .;
         *(.modules)
-        _modules_sect_end = .;
+        _modules_end = .;
     }
 
     .kinit_stage3_text ALIGN(4K) : AT (ADDR(.kinit_stage3_text) - _kernel_map_offset)
@@ -47,45 +47,45 @@ SECTIONS
 
     .init ALIGN(4K) : AT (ADDR(.init) - _kernel_map_offset)
     {
-        _init_sect_start = .;
+        _init_start = .;
         *(.init*)        
-        _init_sect_end = .;
+        _init_end = .;
     }
 
     .data ALIGN(4K) : AT (ADDR(.data) - _kernel_map_offset)
     {
-        _data_sect_start = .;
+        _data_start = .;
         *(.data)
-        _data_sect_end = .;
+        _data_end = .;
     }
 
     .ro_post_init ALIGN(4K) : AT (ADDR(.ro_post_init) - _kernel_map_offset)
     {
-        _ro_post_init_sect_start = .;
+        _ro_post_init_start = .;
         *(.ro_post_init)
-        _ro_post_init_sect_end = .;
+        _ro_post_init_end = .;
     }
 
     .rodata ALIGN(4K) : AT (ADDR(.rodata) - _kernel_map_offset)
     {
-        _rodata_sect_start = .;
+        _rodata_start = .;
         *(.rodata*)
-        _rodata_sect_end = .;
+        _rodata_end = .;
     }
 
     .bss ALIGN(4K) : AT (ADDR(.bss) - _kernel_map_offset)
     {
-        _bss_sect_start = .;
+        _bss_start = .;
         *(COMMON)
         *(.bss)
-        _bss_sect_end = .;
+        _bss_end = .;
     }
 
     .ksyms ALIGN(4K) : AT(ADDR(.ksyms) - _kernel_map_offset)
     {
-        _ksyms_sect_start = .;
+        _ksyms_start = .;
         *(.ksyms)
-        _ksyms_sect_end = .;
+        _ksyms_end = .;
     }
 
     /DISCARD/ :

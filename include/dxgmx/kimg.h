@@ -1,5 +1,5 @@
 /**
- * Copyright 2022 Alexandru Olaru.
+ * Copyright 2023 Alexandru Olaru.
  * Distributed under the MIT license.
  */
 
@@ -36,6 +36,12 @@ ptr kimg_init_end();
 
 ptr kimg_kinit_stage3_text_start();
 ptr kimg_kinit_stage3_text_end();
+
+ptr kimg_module_start();
+ptr kimg_module_end();
+
+ptr kimg_ksyms_start();
+ptr kimg_ksyms_end();
 
 /* The higher half map offset. */
 size_t kimg_map_offset();

@@ -1,26 +1,23 @@
 /**
- * Copyright 2022 Alexandru Olaru.
+ * Copyright 2023 Alexandru Olaru.
  * Distributed under the MIT license.
  */
 
+#include <dxgmx/kimg.h>
 #include <dxgmx/klog.h>
 #include <dxgmx/module.h>
 #include <dxgmx/types.h>
 
 #define KLOGF_PREFIX "module: "
 
-extern u8 _modules_sect_start[];
-extern u8 _modules_sect_end[];
-
 static Module* g_modules = NULL;
 static size_t g_modules_count = 0;
 
 int module_init_builtins()
 {
-    g_modules = (Module*)_modules_sect_start;
+    g_modules = (Module*)kimg_module_start();
     g_modules_count =
-        ((size_t)_modules_sect_end - (size_t)_modules_sect_start) /
-        sizeof(Module);
+        (kimg_module_end() - kimg_module_start()) / sizeof(Module);
 
     FOR_EACH_ELEM_IN_DARR (g_modules, g_modules_count, mod)
     {
