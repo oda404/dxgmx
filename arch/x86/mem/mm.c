@@ -28,10 +28,6 @@
 
 #define KLOGF_PREFIX "mm: "
 
-#define RET_IF_NOT(x, ret)                                                     \
-    if (!(x))                                                                  \
-        return ret;
-
 static PageDirectoryPointerTable* g_pdpt;
 
 #define FOR_EACH_PTE_IN_RANGE(s, e, pt, pte)                                   \
@@ -126,7 +122,8 @@ map_page(ptr frame_base, ptr vaddr, PageDirectoryPointerTable* pdpt)
     if (!pd_base)
     {
         pd = kmalloc_aligned(sizeof(PageDirectory), PAGESIZE);
-        RET_IF_NOT(pd, NULL);
+        if (!pd)
+            return NULL;
 
         pagedir_init(pd);
         pdpte_set_pagedir_base(mm_vaddr2paddr((ptr)pd, g_pdpt), pdpte);
@@ -143,7 +140,8 @@ map_page(ptr frame_base, ptr vaddr, PageDirectoryPointerTable* pdpt)
     if (!pt_base)
     {
         pt = kmalloc_aligned(sizeof(PageTable), PAGESIZE);
-        RET_IF_NOT(pt, NULL);
+        if (!pt)
+            return NULL;
 
         pagetable_init(pt);
         pde_set_table_base(mm_vaddr2paddr((ptr)pt, g_pdpt), pde);
