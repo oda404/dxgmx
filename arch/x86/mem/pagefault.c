@@ -7,7 +7,6 @@
 #include <dxgmx/cpu.h>
 #include <dxgmx/kimg.h>
 #include <dxgmx/klog.h>
-#include <dxgmx/kmalloc.h>
 #include <dxgmx/mem/falloc.h>
 #include <dxgmx/mem/mm.h>
 #include <dxgmx/mem/pagesize.h>
@@ -29,33 +28,54 @@
 
 /* Handler for a page protection violation fault. */
 static void
-handle_page_prot_violation_fault(ptr faultaddr, const InterruptFrame* frame)
+pagefault_handle_prot_viol(ptr faultaddr, const InterruptFrame* frame)
 {
     const u8 cpl = frame->cs & 3;
     ASSERT(cpl == 0 || cpl == 3);
 
     if (cpl == 0)
     {
-        const char* msg = NULL;
+        const char* action_msg = NULL;
         if (PAGEFAULT_IS_EXEC(frame->code))
-            msg = "exec from";
+            action_msg = "exec";
         else if (PAGEFAULT_IS_WRITE(frame->code))
-            msg = "write to";
+            action_msg = "write";
         else
-            msg = "read from";
+            action_msg = "read";
 
         panic(
-            "Page protection violation: tried to %s 0x%p in ring 0.",
-            msg,
-            (void*)faultaddr);
+            "Kernel page protection violation at: 0x%p (%s), ip: 0x%p",
+            (void*)faultaddr,
+            action_msg,
+            (void*)frame->eip);
     }
     else
     {
-        TODO_FATAL();
+        // FIXME: implement actual process protection violation
+        const char* action_msg = NULL;
+        if (PAGEFAULT_IS_EXEC(frame->code))
+            action_msg = "exec";
+        else if (PAGEFAULT_IS_WRITE(frame->code))
+            action_msg = "write";
+        else
+            action_msg = "read";
+
+        panic(
+            "User page protection violation at: 0x%p (%s), ip: 0x%p",
+            (void*)faultaddr,
+            action_msg,
+            (void*)frame->eip);
     }
 }
 
-static void handle_absent_kernel_heap_page(ptr faultaddr)
+static void handle_absent_user(ptr faultaddr, InterruptFrame* frame)
+{
+    (void)faultaddr;
+    (void)frame;
+    panic("Page fault in ring 3 :(");
+}
+
+static void pagefault_handle_absent_kernel_heap(ptr faultaddr)
 {
     const ptr aligned_faultaddr = bytes_align_down64(faultaddr, PAGESIZE);
     ptr frame = aligned_faultaddr - kimg_map_offset();
@@ -89,15 +109,21 @@ static void handle_absent_kernel_heap_page(ptr faultaddr)
     memset((void*)aligned_faultaddr, 0, PAGESIZE);
 }
 
-static void handle_absent_cpl3(ptr faultaddr, InterruptFrame* frame)
+static void pagefault_handle_absent_kernel_bogus(ptr faultaddr)
 {
-    (void)faultaddr;
-    (void)frame;
-    panic("Page fault in ring 3 :(");
+    /* We know that the kernel image is mapped, the kernel heap
+     * comes after the kernel image and any other faults should have
+     * cpl == 3, so this is the kernel doing something  it's not supposed to do.
+     * But we can still get some insight into what it's trying to do. */
+
+    if (faultaddr < PAGESIZE)
+        panic("Possible NULL dereference in ring 0 :(");
+
+    panic("Kernel tried mapping a weird page: 0x%p", (void*)faultaddr);
 }
 
 /* Handler for an absent page fault. */
-static void handle_absent_pagefault(ptr faultaddr, InterruptFrame* frame)
+static void pagefault_handle_absent(ptr faultaddr, InterruptFrame* frame)
 {
     const u8 cpl = frame->cs & 3;
     ASSERT(cpl == 0 || cpl == 3);
@@ -105,21 +131,13 @@ static void handle_absent_pagefault(ptr faultaddr, InterruptFrame* frame)
     if (cpl == 0)
     {
         if (faultaddr >= kimg_vaddr() + kimg_size())
-        {
-            handle_absent_kernel_heap_page(faultaddr);
-        }
+            pagefault_handle_absent_kernel_heap(faultaddr);
         else
-        {
-            /* We know that the kernel image is mapped, the kernel heap
-             * comes after the kernel image and any other faults should have
-             * cpl == 3, so this is the kernel doing something
-             * it's not supposed to do. */
-            panic("Kernel tried mapping a weird page: 0x%p", (void*)faultaddr);
-        }
+            pagefault_handle_absent_kernel_bogus(faultaddr);
     }
     else
     {
-        handle_absent_cpl3(faultaddr, frame);
+        handle_absent_user(faultaddr, frame);
     }
 }
 
@@ -153,13 +171,10 @@ static void pagefault_isr(InterruptFrame* frame)
         (void*)frame->eip);
 #endif // PAGEFAULT_VERBOSE == 1
 
-    if ((frame->cs & 3) == 0 && faultaddr < PAGESIZE)
-        panic("Possible NULL dereference in ring 0 :(");
-
     if (PAGEFAULT_IS_PROT_VIOL(frame->code))
-        handle_page_prot_violation_fault(faultaddr, frame);
+        pagefault_handle_prot_viol(faultaddr, frame);
     else
-        handle_absent_pagefault(faultaddr, frame);
+        pagefault_handle_absent(faultaddr, frame);
 }
 
 void pagefault_setup_isr()
