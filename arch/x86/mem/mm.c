@@ -28,6 +28,9 @@
 
 #define KLOGF_PREFIX "mm: "
 
+/* mm exposes this for cases where something platform agnostic needs the kernel
+ * paging struct. g_kernel_paging_struct.data == g_pdpt */
+static PagingStruct g_kernel_paging_struct;
 static PageDirectoryPointerTable* g_pdpt;
 
 #define FOR_EACH_PTE_IN_RANGE(s, e, pt, pte)                                   \
@@ -193,7 +196,8 @@ _INIT static int setup_definitive_paging()
     /* Enable NXE bit. */
     cpu_write_msr(cpu_read_msr(MSR_EFER) | EFER_NXE, MSR_EFER);
 
-    g_pdpt = (PageDirectoryPointerTable*)mm_kpaddr2vaddr(cpu_read_cr3());
+    g_pdpt = mm_kpaddr2vaddr(cpu_read_cr3());
+    g_kernel_paging_struct.data = g_pdpt;
 
     return 0;
 }
@@ -535,4 +539,9 @@ int mm_load_kernel_paging_struct()
 const MemoryRegionMap* mm_get_sys_mregmap()
 {
     return &g_sys_mregmap;
+}
+
+PagingStruct* mm_get_kernel_paging_struct()
+{
+    return &g_kernel_paging_struct;
 }
