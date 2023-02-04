@@ -14,6 +14,7 @@
 #include <dxgmx/types.h>
 
 #define BW_MASK(x, bit) (x & bit)
+#define BW_BIT(x) (1 << x)
 
 void bw_clear(u64* n, u8 bit);
 void bw_set(u64* n, u8 bit);
