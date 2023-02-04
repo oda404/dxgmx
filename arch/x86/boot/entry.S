@@ -14,7 +14,7 @@
 
 #define OFFSET 0xC0000000
 
-.section .init.data
+.section .data
 
 kernel_too_large_string:
   .asciz "Kernel has grown too big. Not proceeding."
@@ -22,6 +22,7 @@ kernel_too_large_string:
 no_pae_string:
   .asciz "CPU doesn't support PAE. Not proceeding."
 
+.section .bss
 # The PDPT for the mandatory PAE paging.
 .align 4096
 boot_pdpt:
@@ -40,8 +41,6 @@ boot_pgtable0:
 # Very small, early stack made for saving critical registers 
 # while still in the 'lower half'. It will be replaced once 
 # the jump to the 'higher half' is made.
-.section .init.bss, "aw", @nobits
-
 .local _early_stack_top
 .local _early_stack_bot
 _early_stack_bot:
