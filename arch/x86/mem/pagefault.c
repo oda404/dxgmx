@@ -1,5 +1,5 @@
 /**
- * Copyright 2022 Alexandru Olaru.
+ * Copyright 2023 Alexandru Olaru.
  * Distributed under the MIT license.
  */
 
@@ -57,57 +57,36 @@ handle_page_prot_violation_fault(ptr faultaddr, const InterruptFrame* frame)
 
 static void handle_absent_kernel_heap_page(ptr faultaddr)
 {
-    ptr required_frame =
-        bytes_align_down64(faultaddr, PAGESIZE) - kimg_map_offset();
+    const ptr aligned_faultaddr = bytes_align_down64(faultaddr, PAGESIZE);
+    ptr frame = aligned_faultaddr - kimg_map_offset();
 
-    int st = falloc_one_at(required_frame);
+    int st = falloc_one_at(frame);
 
     /* We may have other available page frames, other than the one we requested,
-     * but using those will break the promise that the kernel heap is "higher
-     * half mapped". */
+     * but using those will break the promise that the kernel heap is contiguous
+     * in both virtual & physical memory. */
     if (st < 0)
         panic("Kernel out of memory!");
 
-    pdpt_t* kpdpt = mm_kernel_pdpt();
+    /** mm_new_page may call kmalloc which is very risky, as we are already in a
+     * spot where we don't have *some* memory mapped. Ideally we could keep
+     * track of how many recursive page faults happen and maybe have some sort
+     * of backup cache of PageTables as a last case scenario. This works right
+     * now, as the allocator implementation puts the biggest chunks of
+     * memory (the chunks used for allocating stuff >= 128bytes) at the
+     * start of the heap, which is most likely mapped. */
 
-    PageTable* pt = pt_from_vaddr_abs(faultaddr, kpdpt);
-    if (!pt)
-    {
-        PageDirectoryEntry* pde = pde_from_vaddr_abs(faultaddr, kpdpt);
-        ASSERT(pde);
-
-        /* Calling kmalloc here is very risky, as we are already in a spot where
-         * we don't have *some* memory mapped. Ideally we could keep track of
-         * how many recursive page faults happen and maybe have some sort of
-         * backup cache of PageTables as a last case scenario. This works right
-         * now, as the allocator implementation puts the biggest chunks of
-         * memory (the chunks used for allocating stuff >= 128bytes) at the
-         * start of the heap, which is most likely mapped. */
-
-        /* !!! NOTE FOR WHEN THIS BITES ME IN THE ASS LATER: If this kmalloc
-         * call fails the kernel will panic with a "Kernel out of memory" :) */
-
-        pt = kmalloc_aligned(sizeof(PageTable), PAGESIZE);
-        pagetable_init(pt);
-
-        pde_set_table_base(mm_kvaddr2paddr((ptr)pt), pde);
-        pde->present = true;
-        pde->writable = true;
-        pde->exec_disable = true;
-    }
-
-    PageTableEntry* pte = pte_from_vaddr(faultaddr, pt);
-    ASSERT(pte);
-
-    pte_set_frame_base(required_frame, pte);
-    pte->exec_disable = true;
-    pte->present = true;
-    pte->writable = true;
+    /* !!! NOTE FOR WHEN THIS BITES ME IN THE ASS LATER: If this fails
+     * the kernel will panic with a "Kernel out of memory" :)
+     */
+    st = mm_new_page(
+        aligned_faultaddr,
+        frame,
+        PAGE_R | PAGE_W,
+        mm_get_kernel_paging_struct());
 
     // Kernel heap pages are zereod out
-    memset((void*)bytes_align_down64(faultaddr, PAGESIZE), 0, PAGESIZE);
-
-    mm_tlb_flush_single(faultaddr);
+    memset((void*)aligned_faultaddr, 0, PAGESIZE);
 }
 
 static void handle_absent_cpl3(ptr faultaddr, InterruptFrame* frame)
