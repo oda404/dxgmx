@@ -53,7 +53,7 @@ void mm_tlb_flush_whole()
 
 void mm_tlb_flush_single(ptr vaddr)
 {
-    __asm__ volatile("invlpg (%0)" : : "a"(&vaddr) : "memory");
+    __asm__ volatile("invlpg (%0)" : : "r"(vaddr) : "memory");
 }
 
 /* Returns the vaddr of any paddr that is part of the kernel. Since the kernel
