@@ -71,13 +71,13 @@ static int procm_load_ctx(Process* proc)
 }
 
 /* Create a new kernel stack for a process used for context switches */
-static ptr procm_create_proc_kstack(Process* targetproc)
+static int procm_create_proc_kstack(Process* targetproc)
 {
     /* FIXME: I don't think this is a good ideea for many reasons, but it will
      * do for now. */
     ptr stack_top = (ptr)kmalloc_aligned(PROC_KSTACK_SIZE, sizeof(ptr));
     if (!stack_top)
-        return ENOMEM;
+        return -ENOMEM;
 
     /* The stack grows down, so we shift it's starting point. */
     stack_top += PROC_KSTACK_SIZE;
@@ -105,7 +105,7 @@ static int procm_create_proc_stack(Process* targetproc)
         int st = mm_new_user_page(
             vaddr, PAGE_R | PAGE_W, &targetproc->paging_struct);
 
-        if (st)
+        if (st < 0)
             return st;
     }
 
@@ -149,8 +149,7 @@ static void procm_free_proc(Process* proc)
     kfree(proc);
 }
 
-/* Copy the process from disk in memory. The new process' paging structure
- * should already be loaded before calling this function. */
+/* Copy the process from disk in memory. */
 static int procm_load_proc(
     const char* _USERPTR path, Process* actingproc, Process* targetproc)
 {
