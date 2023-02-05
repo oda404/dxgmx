@@ -317,7 +317,10 @@ static _INIT bool mm_setup_sys_mregmap()
  * instead of using the whole address space, is that translations to physical
  * addresses are trivial (vaddr - _kernel_map_offset) and allocating phsyical &
  * virtual contiguous pages is also easy. Basically everything that is part of
- * the kernel is contiguous in physical & virtual memory. */
+ * the kernel is contiguous in physical & virtual memory. There is a nice
+ * diagram of the system address space when it comes to page frames in falloc.c
+ * :)
+ */
 static _INIT int mm_setup_kernel_heap()
 {
     /* Since the PageTable that holds the kernel image (and the 1st MIB of
@@ -347,9 +350,21 @@ static _INIT int mm_setup_kernel_heap()
     if (st < 0)
         return st;
 
-    /* FIXME: Any kernel heap pages that fall inside the initial kernel
-     * pagetable, should really be marked in the memory region map, just to make
-     * sure falloc doesn't do anything stupid. */
+    /* Make sure the kernel heap is zeroed out. We always start mapping
+    memory from 0 to where ever the kernel end is, in 2 MiB increments (whole
+    Page tables). Let's say the kernel starts at 1 MiB and is around ~324 KiB
+    the rest of ~700 KiB are considered kernel heap, and are still mapped. Note
+    that new kernel heap pages allocated when a pagefault happens are
+    automatically zeroed out. */
+    size_t sz = bytes_align_up64(kheap.vaddr, 0x200'000) - kheap.vaddr;
+    memset((void*)kheap.vaddr, 0, sz);
+
+    /* Mark these pages in falloc */
+    for (size_t i = 0; i < sz / PAGESIZE; ++i)
+    {
+        ptr paddr = mm_kvaddr2paddr(kheap.vaddr + i * PAGESIZE);
+        falloc_one_at(paddr);
+    }
 
     return 0;
 }
