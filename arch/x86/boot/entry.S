@@ -119,7 +119,7 @@ _start:
   movl $boot_pgtable0 - OFFSET + 3, (boot_pgdir - OFFSET)
 
   movl $boot_pgtable0 - OFFSET, %eax
-  movl $511, %ecx      # loop 512 times.
+  movl $512, %ecx      # loop 512 times.
 
   movl $3, %edx        # Start from base 0 + 3 (present and r/w bits set)
 
