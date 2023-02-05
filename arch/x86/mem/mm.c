@@ -21,24 +21,26 @@
 #include <dxgmx/utils/bytes.h>
 #include <dxgmx/x86/acpi.h>
 #include <dxgmx/x86/multiboot.h>
-#include <dxgmx/x86/pagedir.h>
-#include <dxgmx/x86/pagedir_ptrtable.h>
 #include <dxgmx/x86/pagefault.h>
-#include <dxgmx/x86/pagetable.h>
+#include <dxgmx/x86/pd.h>
+#include <dxgmx/x86/pdpt.h>
+#include <dxgmx/x86/pt.h>
 
 #define KLOGF_PREFIX "mm: "
+
+#define KHEAP_SIZE (1 * MIB)
 
 /* mm exposes this for cases where something platform agnostic needs the kernel
  * paging struct. g_kernel_paging_struct.data == g_pdpt */
 static PagingStruct g_kernel_paging_struct;
-static PageDirectoryPointerTable* g_pdpt;
+static pdpt_t* g_pdpt;
 
 #define FOR_EACH_PTE_IN_RANGE(s, e, pt, pte)                                   \
-    for (PageTableEntry* pte = pte_from_vaddr(s, pt); pte; pte = NULL)         \
+    for (pte_t* pte = pte_from_vaddr(s, pt); pte; pte = NULL)                  \
         for (ptr _i = s; _i < e; _i += PAGESIZE, pte = pte_from_vaddr(_i, pt))
 
 #define FOR_EACH_KPTE_IN_RANGE(s, e, pte)                                      \
-    for (PageTableEntry* pte = pte_from_vaddr_abs(s, g_pdpt); pte; pte = NULL) \
+    for (pte_t* pte = pte_from_vaddr_abs(s, g_pdpt); pte; pte = NULL)          \
         for (ptr _i = s; _i < e;                                               \
              _i += PAGESIZE, pte = pte_from_vaddr_abs(_i, g_pdpt))
 
@@ -49,12 +51,12 @@ static MemoryRegionMap g_sys_mregmap = {
     .regions_size = 0,
     .regions_capacity = SYS_MEMORY_REGIONS_MAX};
 
-void mm_tlb_flush_whole()
+static void mm_tlb_flush_whole()
 {
     cpu_write_cr3(cpu_read_cr3());
 }
 
-void mm_tlb_flush_single(ptr vaddr)
+static void mm_tlb_flush_single(ptr vaddr)
 {
     __asm__ volatile("invlpg (%0)" : : "r"(vaddr) : "memory");
 }
@@ -62,54 +64,42 @@ void mm_tlb_flush_single(ptr vaddr)
 /* Returns the vaddr of any paddr that is part of the kernel. Since the kernel
  * image is mapped 1:1 to wherever it's loaded, this is as simple
  * as adding the kernel's map offset to the paging struct paddr. */
-static void* mm_kpaddr2vaddr(ptr paddr)
+
+static pd_t* pd_from_vaddr_abs(ptr vaddr, const pdpt_t* pdpt)
 {
-    return (void*)(paddr + kimg_map_offset());
+    ptr pd_base = pdpte_pd_paddr(&pdpt->entries[vaddr / GIB]);
+    return pd_base ? (void*)mm_kpaddr2vaddr(pd_base) : NULL;
 }
 
-PageDirectory*
-pd_from_vaddr_abs(ptr vaddr, const PageDirectoryPointerTable* pdpt)
+static pde_t* pde_from_vaddr_abs(ptr vaddr, const pdpt_t* pdpt)
 {
-    ptr pd_base = pdpte_pagedir_base(&pdpt->entries[vaddr / GIB]);
-    return pd_base ? mm_kpaddr2vaddr(pd_base) : NULL;
-}
-
-PageDirectoryEntry*
-pde_from_vaddr_abs(ptr vaddr, const PageDirectoryPointerTable* pdpt)
-{
-    PageDirectory* pd = pd_from_vaddr_abs(vaddr, pdpt);
+    pd_t* pd = pd_from_vaddr_abs(vaddr, pdpt);
     return pd ? pde_from_vaddr(vaddr, pd) : NULL;
 }
 
-PageTable* pt_from_vaddr_abs(ptr vaddr, const PageDirectoryPointerTable* pdpt)
+static pt_t* pt_from_vaddr_abs(ptr vaddr, const pdpt_t* pdpt)
 {
     pde_t* pde = pde_from_vaddr_abs(vaddr, pdpt);
     if (!pde)
         return NULL;
 
-    ptr pt_base = pde_table_base(pde);
-    return pt_base ? mm_kpaddr2vaddr(pt_base) : NULL;
+    ptr pt_base = pde_pt_paddr(pde);
+    return pt_base ? (void*)mm_kpaddr2vaddr(pt_base) : NULL;
 }
 
-PageTableEntry*
-pte_from_vaddr_abs(ptr vaddr, const PageDirectoryPointerTable* pdpt)
+static pte_t* pte_from_vaddr_abs(ptr vaddr, const pdpt_t* pdpt)
 {
-    PageTable* pt = pt_from_vaddr_abs(vaddr, pdpt);
+    pt_t* pt = pt_from_vaddr_abs(vaddr, pdpt);
     return pt ? pte_from_vaddr(vaddr, pt) : NULL;
 }
 
-ptr mm_vaddr2paddr(ptr vaddr, const PageDirectoryPointerTable* pdpt)
+static ptr mm_vaddr2paddr_arch(ptr vaddr, const pdpt_t* pdpt)
 {
-    PageTableEntry* pte = pte_from_vaddr_abs(vaddr, pdpt);
-    return pte ? (ptr)pte_frame_base(pte) + vaddr % PAGESIZE : (ptr)NULL;
+    pte_t* pte = pte_from_vaddr_abs(vaddr, pdpt);
+    return pte ? (ptr)pte_frame_paddr(pte) + vaddr % PAGESIZE : (ptr)NULL;
 }
 
-ptr mm_kvaddr2paddr(ptr vaddr)
-{
-    return mm_vaddr2paddr(vaddr, g_pdpt);
-}
-
-static void mm_set_page_flags_internal(pte_t* pte, pde_t* pde, u16 flags)
+static void mm_set_page_flags_arch(pte_t* pte, pde_t* pde, u16 flags)
 {
     /* If a pde has higher privileges, we don't demote them, because some other
      * page tables might make use of those. */
@@ -132,78 +122,87 @@ static void mm_set_page_flags_internal(pte_t* pte, pde_t* pde, u16 flags)
 }
 
 /**
- * Maps a single 4KiB page from virtual vaddr to physical frame_base.
+ * Map a PAGESIZEd page.
+ *
+ * 'vaddr' PAGESIZE aligned virtual address of the page to be mapped.
+ * 'padd' PAGESIZE aligned physical address of the page frame to be used for
+ * this mapping.
+ * 'flags' Access and control flags.
+ * 'ps' Target paging structure.
+ *
+ * Returns:
+ * 0 on sucess
+ * -EINVAL on invalid arguments.
+ * -ENOMEM on out of memory.
  */
-static PageTableEntry*
-map_page(ptr frame_base, ptr vaddr, u16 flags, PageDirectoryPointerTable* pdpt)
+static int mm_map_page_arch(ptr vaddr, ptr paddr, u16 flags, PagingStruct* ps)
 {
-    if (frame_base % PAGESIZE || vaddr % PAGESIZE)
-        return NULL;
+    pdpt_t* pdpt = ps->data;
+    if (!pdpt)
+        return -EINVAL;
 
-    PageDirectoryPointerTableEntry* pdpte = pdpte_from_vaddr(vaddr, pdpt);
+    /* Get the page directory pointer table entry. */
+    pdpte_t* pdpte = pdpte_from_vaddr(vaddr, pdpt);
 
-    PageDirectory* pd = NULL;
-    ptr pd_base = pdpte_pagedir_base(pdpte);
-    if (!pd_base)
+    /* Get the page directory */
+    pd_t* pd = pdpte_pd_vaddr(pdpte);
+    if (!pd)
     {
+        /* There is no pagedir so we allocate it */
         pd = kmalloc_aligned(sizeof(PageDirectory), PAGESIZE);
         if (!pd)
-            return NULL;
+            return -ENOMEM;
 
-        pagedir_init(pd);
-        pdpte_set_pagedir_base(mm_vaddr2paddr((ptr)pd, g_pdpt), pdpte);
-    }
-    else
-    {
-        pd = mm_kpaddr2vaddr(pd_base);
+        pd_init(pd);
+        pdpte_set_pd_vaddr((ptr)pd, pdpte);
     }
 
-    PageDirectoryEntry* pde = pde_from_vaddr(vaddr, pd);
+    /* Get the page directory entry */
+    pde_t* pde = pde_from_vaddr(vaddr, pd);
 
-    pt_t* pt = NULL;
-    ptr pt_base = pde_table_base(pde);
-    if (!pt_base)
+    /* Get the page table */
+    pt_t* pt = pde_pt_vaddr(pde);
+    if (!pt)
     {
+        /* There is no page table, allocate it */
         pt = kmalloc_aligned(sizeof(PageTable), PAGESIZE);
         if (!pt)
-            return NULL;
+            return -ENOMEM;
 
-        pagetable_init(pt);
-        pde_set_table_base(mm_vaddr2paddr((ptr)pt, g_pdpt), pde);
-    }
-    else
-    {
-        pt = mm_kpaddr2vaddr(pt_base);
+        pt_init(pt);
+        pde_set_pt_vaddr((ptr)pt, pde);
     }
 
-    PageTableEntry* pte = pte_from_vaddr(vaddr, pt);
-    pte_set_frame_base(frame_base, pte);
+    /* Get the page table entry. */
+    pte_t* pte = pte_from_vaddr(vaddr, pt);
+    pte_set_frame_paddr(paddr, pte);
 
     /* Everything is present */
     pdpte->present = true;
     pde->present = true;
     pte->present = true;
 
-    mm_set_page_flags_internal(pte, pde, flags);
+    /* Set flags */
+    mm_set_page_flags_arch(pte, pde, flags);
 
     mm_tlb_flush_single(vaddr);
 
-    return pte;
+    return 0;
 }
 
-_INIT static int setup_definitive_paging()
+static _INIT int mm_setup_definitive_paging()
 {
     /* Enable NXE bit. */
     cpu_write_msr(cpu_read_msr(MSR_EFER) | EFER_NXE, MSR_EFER);
 
-    g_pdpt = mm_kpaddr2vaddr(cpu_read_cr3());
+    g_pdpt = (void*)mm_kpaddr2vaddr(cpu_read_cr3());
     g_kernel_paging_struct.data = g_pdpt;
 
     return 0;
 }
 
 /* Enforce all sections permissions. */
-_INIT static void enforce_ksections_perms()
+_INIT static void mm_enforce_ksections_perms()
 {
     /* Unmap the bootloader section. */
     FOR_EACH_KPTE_IN_RANGE (kimg_bootloader_start(), kimg_bootloader_end(), pte)
@@ -313,10 +312,12 @@ static _INIT bool mm_setup_sys_mregmap()
     return true;
 }
 
-/* The kernel heap is the memory starting right after the kernel image and
- * stopping at ???. The reason for doing this instead of
- * using the whole address space, is that translations to physical addresses are
- * trivial (vaddr - _kernel_map_offset). */
+/* The kernel heap is the memory starting right after the kernel image, both in
+ * physical & virtual space, and stopping at ???. The reason for doing this
+ * instead of using the whole address space, is that translations to physical
+ * addresses are trivial (vaddr - _kernel_map_offset) and allocating phsyical &
+ * virtual contiguous pages is also easy. Basically everything that is part of
+ * the kernel is contiguous in physical & virtual memory. */
 static _INIT int mm_setup_kernel_heap()
 {
     /* Since the PageTable that holds the kernel image (and the 1st MIB of
@@ -328,13 +329,10 @@ static _INIT int mm_setup_kernel_heap()
      the kernel
      :(. See arch/x86/mem/pagefault.c for more info. */
 
-#define KHEAP_SIZE (1 * MIB)
-
     ptr kernel_vend = kimg_vaddr() + kimg_size();
-    size_t heap_size = KHEAP_SIZE;
-
-    Heap kheap = {.vaddr = kernel_vend, .pagespan = heap_size / PAGESIZE};
     ASSERT(kernel_vend % PAGESIZE == 0);
+
+    Heap kheap = {.vaddr = kernel_vend, .pagespan = KHEAP_SIZE / PAGESIZE};
 
     char unit[4];
     u32 heapsize = bytes_to_human_readable(kheap.pagespan * PAGESIZE, unit);
@@ -358,18 +356,22 @@ static _INIT int mm_setup_kernel_heap()
 
 _INIT int mm_init()
 {
+    /* Sets up any stuff that wasn't done in entry.S */
+    mm_setup_definitive_paging();
+
+    /* Start getting pagefault. */
     pagefault_setup_isr();
 
-    setup_definitive_paging();
-    enforce_ksections_perms();
+    /* Enforce permissions for all kernel sections. */
+    mm_enforce_ksections_perms();
 
-    /* First we setup the system memory regions map to know what
-    we're working with. */
+    /* Setup the system memory map */
     mm_setup_sys_mregmap();
 
-    /* Now that we have a memory map, we can start allocating page frames. */
+    /* Initialize the frame allocator, depends on the system memory map. */
     falloc_init();
 
+    /* Give kmalloc some memory to work with */
     mm_setup_kernel_heap();
 
     /* We won't panic the kernel in case kmalloc can't be initialized, just for
@@ -377,32 +379,6 @@ _INIT int mm_init()
      * without being able to allocate memory. */
     if (kmalloc_init() != 0)
         KLOGF(WARN, "Failed to initialize kmalloc!");
-
-    /* FIXME: Really not the mm's job */
-    acpi_reserve_tables();
-
-    return 0;
-}
-
-PageDirectoryPointerTable* mm_kernel_pdpt()
-{
-    return g_pdpt;
-}
-
-_INIT int mm_reserve_acpi_range(ptr base, size_t size)
-{
-    ptr aligned_base = base - base % PAGESIZE;
-    size_t aligned_size = size;
-    aligned_size = (aligned_size + PAGESIZE - 1) & ~(PAGESIZE - 1);
-
-    /* FIXME: a new page gets allocated everytime, discarding the previous valid
-     * one! */
-    PageTableEntry* pte =
-        map_page(aligned_base, aligned_base, PAGE_R | PAGE_W, g_pdpt);
-    if (!pte)
-        return -ENOMEM;
-
-    mregmap_rm_reg(base, size, &g_sys_mregmap);
 
     return 0;
 }
@@ -441,23 +417,29 @@ int mm_set_page_flags(ptr vaddr, u16 flags, PagingStruct* ps)
 {
     ASSERT(vaddr % PAGESIZE == 0);
 
-    PageDirectoryPointerTable* pdpt = ps->data;
+    pdpt_t* pdpt = ps->data;
     if (!pdpt)
         return -EINVAL;
 
-    PageDirectoryEntry* pde = pde_from_vaddr_abs(vaddr, pdpt);
-    if (!pde)
+    pdpte_t* pdpte = pdpte_from_vaddr(vaddr, pdpt);
+
+    pd_t* pd = pdpte_pd_vaddr(pdpte);
+    if (!pd)
         return -EINVAL;
 
-    ptr table_base = pde_table_base(pde);
-    if (!table_base)
+    pde_t* pde = pde_from_vaddr(vaddr, pd);
+
+    pt_t* pt = pde_pt_vaddr(pde);
+    if (!pt)
         return -EINVAL;
 
-    PageTableEntry* pte = pte_from_vaddr(vaddr, mm_kpaddr2vaddr(table_base));
-    if (!pte)
+    pte_t* pte = pte_from_vaddr(vaddr, pt);
+
+    ptr frame = pte_frame_paddr(pte);
+    if (!frame)
         return -EINVAL;
 
-    mm_set_page_flags_internal(pte, pde, flags);
+    mm_set_page_flags_arch(pte, pde, flags);
 
     mm_tlb_flush_single(vaddr);
 
@@ -469,15 +451,7 @@ int mm_new_page(ptr vaddr, ptr paddr, u16 flags, PagingStruct* ps)
     ASSERT(vaddr % PAGESIZE == 0);
     ASSERT(paddr % PAGESIZE == 0);
 
-    PageDirectoryPointerTable* pdpt = ps->data;
-    if (!pdpt)
-        return -EINVAL;
-
-    PageTableEntry* pte = map_page(paddr, vaddr, flags, pdpt);
-    if (!pte)
-        return -ENOMEM;
-
-    return 0;
+    return mm_map_page_arch(vaddr, paddr, flags, ps);
 }
 
 int mm_new_user_page(ptr vaddr, u16 flags, PagingStruct* ps)
@@ -505,15 +479,13 @@ int mm_map_kernel_into_paging_struct(PagingStruct* ps)
      * pointer table. Note that right now, doing this means we also map the 1st
      * MiB of memory into this PagingStruct, which I don't think matters that
      * much as it is cpl 0 memory... */
-    PageDirectoryPointerTable* pdpt = (PageDirectoryPointerTable*)ps->data;
+    pdpt_t* pdpt = (pdpt_t*)ps->data;
     if (!pdpt)
         return -EINVAL;
 
-    PageDirectoryPointerTableEntry* kpdpte =
-        pdpte_from_vaddr(kimg_vaddr(), g_pdpt);
+    pdpte_t* kpdpte = pdpte_from_vaddr(kimg_vaddr(), g_pdpt);
 
-    PageDirectoryPointerTableEntry* pdpte =
-        pdpte_from_vaddr(kimg_vaddr(), pdpt);
+    pdpte_t* pdpte = pdpte_from_vaddr(kimg_vaddr(), pdpt);
 
     *pdpte = *kpdpte;
 
@@ -526,13 +498,13 @@ int mm_load_paging_struct(PagingStruct* ps)
         return -EINVAL;
 
     /* The kernel better be mapped into this :) */
-    cpu_write_cr3(mm_vaddr2paddr((ptr)ps->data, g_pdpt));
+    cpu_write_cr3(mm_vaddr2paddr_arch((ptr)ps->data, g_pdpt));
     return 0;
 }
 
 int mm_load_kernel_paging_struct()
 {
-    cpu_write_cr3(mm_vaddr2paddr((ptr)g_pdpt, g_pdpt));
+    cpu_write_cr3(mm_vaddr2paddr_arch((ptr)g_pdpt, g_pdpt));
     return 0;
 }
 
@@ -544,4 +516,19 @@ const MemoryRegionMap* mm_get_sys_mregmap()
 PagingStruct* mm_get_kernel_paging_struct()
 {
     return &g_kernel_paging_struct;
+}
+
+ptr mm_kpaddr2vaddr(ptr paddr)
+{
+    return paddr + kimg_map_offset();
+}
+
+ptr mm_vaddr2paddr(ptr vaddr, const PagingStruct* ps)
+{
+    return mm_vaddr2paddr_arch(vaddr, ps->data);
+}
+
+ptr mm_kvaddr2paddr(ptr vaddr)
+{
+    return vaddr - kimg_map_offset();
 }

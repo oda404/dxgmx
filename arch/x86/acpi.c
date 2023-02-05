@@ -7,8 +7,8 @@
 #include <dxgmx/klog.h>
 #include <dxgmx/panic.h>
 #include <dxgmx/string.h>
+#include <dxgmx/todo.h>
 #include <dxgmx/x86/acpi.h>
-#include <dxgmx/x86/mm.h>
 
 #define KLOGF_PREFIX "acpi: "
 
@@ -72,24 +72,30 @@ static _INIT bool acpi_is_sdt_header_valid(const AcpiSdTableHeader* header)
 static int
 acpi_reserve_table(const char* name, size_t size, AcpiSdTableHeader* hdr)
 {
-    const int st = mm_reserve_acpi_range((ptr)hdr, size);
+    (void)name;
+    (void)size;
+    (void)hdr;
+    TODO_FATAL();
 
-    if (!st)
-        KLOGF(INFO, "Reserved %s table at 0x%p.", name, (void*)hdr);
-    else
-        KLOGF(
-            ERR,
-            "Failed to reserve %s table at 0x%p, error: %d.",
-            name,
-            (void*)hdr,
-            st);
+    // const int st = mm_reserve_acpi_range((ptr)hdr, size);
 
-    return st;
+    // if (!st)
+    //     KLOGF(INFO, "Reserved %s table at 0x%p.", name, (void*)hdr);
+    // else
+    //     KLOGF(
+    //         ERR,
+    //         "Failed to reserve %s table at 0x%p, error: %d.",
+    //         name,
+    //         (void*)hdr,
+    //         st);
+
+    // return st;
 }
 
 _INIT bool acpi_reserve_tables()
 {
     AcpiRsdPointer* rsdp = acpi_find_rsdp();
+    KLOGF(INFO, "rsdp at 0x%p", rsdp);
 
     if (!acpi_is_rsdp_valid(rsdp))
     {

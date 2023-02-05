@@ -37,9 +37,9 @@ _INIT bool kinit_stage1()
     /* Set CPU features as they may be needed for initializing system timers. */
     cpu_identify();
 
-    timekeep_init();
-
     mm_init();
+
+    timekeep_init();
 
     ksyms_load();
 

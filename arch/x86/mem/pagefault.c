@@ -15,7 +15,6 @@
 #include <dxgmx/todo.h>
 #include <dxgmx/utils/bytes.h>
 #include <dxgmx/x86/idt.h>
-#include <dxgmx/x86/mm.h>
 #include <dxgmx/x86/pagefault.h>
 
 #define KLOGF_PREFIX "pagefault: "

@@ -83,9 +83,6 @@ int mm_new_page(ptr vaddr, ptr paddr, u16 flags, PagingStruct* ps);
  */
 int mm_new_user_page(ptr vaddr, u16 flags, PagingStruct*);
 
-/* Translate a kernel virtual address into a physical address. */
-ptr mm_kvaddr2paddr(ptr vaddr);
-
 /**
  * Get the kernel's paging structure.
  *
@@ -93,5 +90,40 @@ ptr mm_kvaddr2paddr(ptr vaddr);
  * A non-null pointer to the kernel's paging structure.
  */
 PagingStruct* mm_get_kernel_paging_struct();
+
+/**
+ * Convert a virtual address to a physical adress.
+ *
+ * No null pointers should be passed to this function.
+ *
+ * 'vaddr' The virtual adsress.
+ * 'ps' The paging struct used for the translation.
+ *
+ *
+ * Returns:
+ * The physical adress coresponding to 'vaddr'.
+ * NULL if vaddr is not mapped.
+ */
+ptr mm_vaddr2paddr(ptr vaddr, const PagingStruct* ps);
+
+/**
+ * Convert a kenel virtual address to a physical address.
+ *
+ * 'vaddr' The virtual address.
+ *
+ * Returns:
+ * The physical address coresponding to 'vaddr'
+ */
+ptr mm_kvaddr2paddr(ptr vaddr);
+
+/**
+ * Convert a kenel physical address to a virtual address.
+ *
+ * 'paddr' The physical address.
+ *
+ * Returns:
+ * The virtual address coresponding to 'paddr'
+ */
+ptr mm_kpaddr2vaddr(ptr paddr);
 
 #endif //!_DXGMX_MEM_MM_H

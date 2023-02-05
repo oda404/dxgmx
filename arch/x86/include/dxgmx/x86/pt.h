@@ -1,10 +1,10 @@
 /**
- * Copyright 2022 Alexandru Olaru.
+ * Copyright 2023 Alexandru Olaru.
  * Distributed under the MIT license.
  */
 
-#ifndef _DXGMX_X86_PAGETABLE_H
-#define _DXGMX_X86_PAGETABLE_H
+#ifndef _DXGMX_X86_PT_H
+#define _DXGMX_X86_PT_H
 
 #include <dxgmx/compiler_attrs.h>
 #include <dxgmx/types.h>
@@ -50,13 +50,37 @@ typedef struct S_PageTable
 typedef PageTable pt_t;
 typedef PageTableEntry pte_t;
 
-void pagetable_init(PageTable* pt);
-/* This function does not take in a void* as 'base' to avoid confusion with a
- * virtual address, since it excepts a physical address. */
-void pte_set_frame_base(ptr base, PageTableEntry* pte);
-/* This function does not return a void*, to avoid "blind" dereferencing since
- * the return value is a physical address, and needs to be translated. */
-ptr pte_frame_base(PageTableEntry* pte);
-PageTableEntry* pte_from_vaddr(ptr vaddr, PageTable* pt);
+/**
+ * Initialize a page table.
+ *
+ * 'pt' The target pt.
+ */
+void pt_init(pt_t* pt);
 
-#endif //!_DXGMX_X86_PAGETABLE_H
+/**
+ * Set the address of a page frame in the pte.
+ *
+ * 'paddr' The physical address.
+ * 'pte' The target pte.
+ */
+void pte_set_frame_paddr(ptr paddr, pte_t* pte);
+
+/**
+ * Get a page frame's address.
+ *
+ * 'pte' The target pte.
+ *
+ * Returns:
+ * The physical address of the page frame.
+ */
+ptr pte_frame_paddr(pte_t* pte);
+
+/**
+ * Get the pte in which 'vaddr' falls.
+ *
+ * 'vaddr' The virtual address.
+ * 'pt' The target pt.
+ */
+pte_t* pte_from_vaddr(ptr vaddr, pt_t* pt);
+
+#endif //!_DXGMX_X86_PT_H
