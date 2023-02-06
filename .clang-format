@@ -170,6 +170,7 @@ ForEachMacros:
   - 'FOR_EACH_PTE_IN_RANGE'
   - 'FOR_EACH_KPTE_IN_RANGE'
   - 'FOR_EACH_ELEM_IN_DARR'
+  - 'FOR_EACH_ENTRY_IN_LL'
 
 TabWidth:        4
 UseCRLF:         false
