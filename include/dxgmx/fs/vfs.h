@@ -76,8 +76,9 @@ int vfs_mount(
  */
 int vfs_unmount(const char* src_or_dest);
 
-int vfs_register_fs_driver(FileSystemDriver);
-int vfs_unregister_fs_driver(const char* name);
+int vfs_register_fs_driver(const FileSystemDriver* driver);
+
+int vfs_unregister_fs_driver(const FileSystemDriver* driver);
 
 /* File operations */
 

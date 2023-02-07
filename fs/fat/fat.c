@@ -359,17 +359,19 @@ static int fat_enumerate_dir(const VirtualNode* dir_vnode, FileSystem* fs)
                 continue;
         }
 
-        VirtualNode* tmp = fs_new_vnode(fs, vnode.n, dir_vnode);
-        if (!tmp)
+        VirtualNode* cached_vnode = fs_new_vnode_cache(fs);
+        if (!cached_vnode)
             return -ENOMEM;
 
-        tmp->mode = vnode.mode;
-        tmp->name = vnode.name;
-        tmp->size = vnode.size;
-        tmp->state = vnode.state;
+        cached_vnode->n = vnode.n;
+        cached_vnode->parent = dir_vnode;
+        cached_vnode->mode = vnode.mode;
+        cached_vnode->name = vnode.name;
+        cached_vnode->size = vnode.size;
+        cached_vnode->state = vnode.state;
 
-        if (tmp->mode & S_IFDIR)
-            fat_enumerate_dir(tmp, fs);
+        if (cached_vnode->mode & S_IFDIR)
+            fat_enumerate_dir(cached_vnode, fs);
     }
 
     return 0;
@@ -505,12 +507,12 @@ static void fat_destroy(FileSystem* fs)
         fs->driver_ctx = NULL;
     }
 
-    if (fs->vnodes)
-    {
-        kfree(fs->vnodes);
-        fs->vnodes = NULL;
-        fs->vnode_count = 0;
-    }
+    // if (fs->vnodes)
+    // {
+    //     kfree(fs->vnodes);
+    //     fs->vnodes = NULL;
+    //     fs->vnode_count = 0;
+    // }
 }
 
 static int
@@ -531,6 +533,10 @@ fat_init(const char* src, const char* type, const char* args, FileSystem* fs)
     const BlockDevice* blkdev = blkdevm_find_blkdev_by_id(src);
     if (!blkdev)
         return -ENOTBLK;
+
+    bool valid = fat_valid(blkdev);
+    if (!valid)
+        return -ENODEV;
 
     /* Allocate the Fat filesystem meta. */
     FatFs* fatfs = kmalloc(sizeof(FatFs));
@@ -557,13 +563,14 @@ fat_init(const char* src, const char* type, const char* args, FileSystem* fs)
         }
     }
 
-    VirtualNode* rootvnode = fs_new_vnode(fs, fatfs->root_dir_cluster, NULL);
+    VirtualNode* rootvnode = fs_new_vnode_cache(fs);
     if (!rootvnode)
     {
         fat_destroy(fs);
         return -ENOMEM;
     }
 
+    rootvnode->n = fatfs->root_dir_cluster;
     rootvnode->mode = FAT_DIR_MODE;
     rootvnode->size = 0;
     rootvnode->name = "/";
@@ -573,18 +580,18 @@ fat_init(const char* src, const char* type, const char* args, FileSystem* fs)
     return 0;
 }
 
-static ssize_t fat_read(
-    FileSystem* fs, const VirtualNode* vnode, void* buf, size_t n, loff_t off)
+static ssize_t
+fat_read(const VirtualNode* vnode, void* buf, size_t n, loff_t off)
 {
     if (n == 0)
         return 0; // as per spec
 
-    if (!(fs && vnode && buf) || off >= vnode->size)
+    if (!(vnode && buf) || off >= vnode->size)
         return -EINVAL;
 
     /* If the vnode is not part of this filesystem we fucked up. */
-    if (vnode->owner != fs)
-        return -EINVAL;
+
+    FileSystem* fs = vnode->owner;
 
     const FatFs* fatfs = fs->driver_ctx;
     ASSERT(fatfs);
@@ -624,10 +631,9 @@ static ssize_t fat_read(
     return n;
 }
 
-static ssize_t fat_write(
-    FileSystem* fs, VirtualNode* vnode, const void* buf, size_t n, loff_t off)
+static ssize_t
+fat_write(VirtualNode* vnode, const void* buf, size_t n, loff_t off)
 {
-    (void)fs;
     (void)vnode;
     (void)buf;
     (void)n;
@@ -635,7 +641,7 @@ static ssize_t fat_write(
     TODO_FATAL();
 }
 
-static int fat_mkfile(FileSystem* fs, const char* path, mode_t mode)
+static int fat_mkfile(const char* path, mode_t mode, FileSystem* fs)
 {
     (void)fs;
     (void)path;
@@ -643,29 +649,40 @@ static int fat_mkfile(FileSystem* fs, const char* path, mode_t mode)
     TODO_FATAL();
 }
 
-static int fat_mkdir(FileSystem*, const char*, mode_t)
+static int fat_mkdir(const char*, mode_t, FileSystem*)
 {
     TODO_FATAL();
 }
 
+static VirtualNode* fat_vnode_lookup(const char* path, FileSystem* fs)
+{
+    (void)path;
+    (void)fs;
+    TODO();
+    return NULL;
+}
+
+static const VirtualNodeOperations g_fatfs_vnode_ops = {
+    .mkdir = fat_mkdir,
+    .mkfile = fat_mkfile,
+    .read = fat_read,
+    .write = fat_write};
+
+static const FileSystemDriver g_fatfs_driver = {
+    .name = MODULE_NAME,
+    .init = fat_init,
+    .destroy = fat_destroy,
+    .vnode_lookup = fat_vnode_lookup,
+    .vnode_ops = &g_fatfs_vnode_ops};
+
 static int fatfs_main()
 {
-    const FileSystemDriver fs_driver = {
-        .name = MODULE_NAME,
-        .valid = fat_valid,
-        .init = fat_init,
-        .destroy = fat_destroy,
-        .read = fat_read,
-        .write = fat_write,
-        .mkfile = fat_mkfile,
-        .mkdir = fat_mkdir};
-
-    return vfs_register_fs_driver(fs_driver);
+    return vfs_register_fs_driver(&g_fatfs_driver);
 }
 
 static int fatfs_exit()
 {
-    return vfs_unregister_fs_driver(MODULE_NAME);
+    return vfs_unregister_fs_driver(&g_fatfs_driver);
 }
 
 static MODULE const Module g_fat_module = {

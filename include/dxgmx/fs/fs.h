@@ -1,5 +1,5 @@
 /**
- * Copyright 2022 Alexandru Olaru.
+ * Copyright 2023 Alexandru Olaru.
  * Distributed under the MIT license.
  */
 
@@ -9,28 +9,32 @@
 #include <dxgmx/fs/vnode.h>
 #include <dxgmx/storage/blkdev.h>
 #include <dxgmx/types.h>
+#include <dxgmx/utils/linkedlist.h>
 #include <posix/sys/types.h>
 
 struct S_FileSystemDriver;
 
-/* Represents a mounted/mountable filesystem. It's imeplementation resides
-in 'operations'. */
+/* A mounted filesystem. */
 typedef struct S_FileSystem
 {
     /* The name of the mount. */
     char* mntsrc;
+
     /* Where this mountpoint resides */
     char* mntpoint;
+
     /* Mount flags */
     u32 flags;
+
     /* The filesystem driver. */
-    struct S_FileSystemDriver* driver;
+    const struct S_FileSystemDriver* driver;
+
     /* This is free for use by the filesystem driver to store whatever. Like the
      * block device (if the filesystem is backed by a block device) */
     void* driver_ctx;
-    /* Vnodes cache for this filesystem. */
-    VirtualNode* vnodes;
-    size_t vnode_count;
+
+    /* Vnode cache for this filesystem. */
+    LinkedList vnode_ll;
 } FileSystem;
 
 /**
@@ -41,62 +45,93 @@ typedef struct S_FileSystem
  */
 typedef struct S_FileSystemDriver
 {
+    /* Driver name */
     char* name;
 
-    /* Checks whether the given BlockDevice holds a valid filesystem. Chould be
-     * left NULL, if the filesystem is backed by ram. */
-    int (*valid)(const BlockDevice*);
-
-    /** Prepare 'fs' for mounting.
-     * 'src' is the mount source
+    /**
+     * Check if the filesystem on 'src' is valid. If the filesystem is valid it
+     * is initialized.
      *
-     * 'type' is the driver name the filesystem is expecting. If the type does
-     * not match the driver's name, the driver should instantly return with a
-     * -EINVAL.
+     * 'src' Non-NULL string describing the source of the filesystem. May or may
+     * not mean anything to the driver.
+     * 'type' Filesystem type. If NULL the driver should validate this
+     * filesystem. If 'type' holds a string, the driver will only try to
+     * validate the filesystem, if strcmp(type, driver_name) == 0
+     * 'args' String containing arguments for the filesystem.
+     * 'fs' Non-NULL target filesystem.
      *
-     * 'args' string with driver specific arguments.
-     *
-     * 'fs' is the target filesystem. The filesystem will already have
-     * 'mountpoint' and 'flags' set. Also 'driver' will be set to this driver.
-     * The driver should not touch the before-mentioned fields. Guaranteed to be
-     * non-null.
-     *
-     * This function is not explicitly passed the mount point, as the driver
-     * should be agnostic to that.
+     * Returns:
+     * 0 on sucess
+     * negative errnos, indicating errors on failure.
      */
     int (*init)(
         const char* src, const char* type, const char* args, FileSystem* fs);
 
-    /* Destroys the fs. */
+    /**
+     * Destroy a filesystem. Right before the filesystem is unmounted by the
+     * vfs, this function is called, to clean up anything the driver allocated.
+     *
+     * 'fs' Non-NULL target filesystem.
+     */
     void (*destroy)(FileSystem*);
 
-    ssize_t (*read)(
-        FileSystem* fs,
-        const struct S_VirtualNode* vnode,
-        void* buf,
-        size_t n,
-        loff_t off);
+    /**
+     * Query the driver for a path's vnode. Called if a vnode isn't found in the
+     * filesystem's cache.
+     *
+     * 'path' Non-NULL relative to the filesystem path.
+     *
+     * Returns:
+     * A VirtualNode* on success.
+     * NULL if no vnode has been found, i.e. path doesn't exist.
+     */
+    VirtualNode* (*vnode_lookup)(const char* path, FileSystem* fs);
 
-    ssize_t (*write)(
-        FileSystem* fs,
-        struct S_VirtualNode* vnode,
-        const void* buf,
-        size_t n,
-        loff_t off);
-
-    /* Create a new empty file on the filesystem. */
-    int (*mkfile)(FileSystem* fs, const char* path, mode_t mode);
-    int (*mkdir)(FileSystem* fs, const char* path, mode_t mode);
+    /* Default operations that performed on this filesystem's vnodes. */
+    const VirtualNodeOperations* vnode_ops;
 
 } FileSystemDriver;
 
-struct S_VirtualNode*
-fs_new_vnode(FileSystem* fs, ino_t n, const VirtualNode* parent);
-int fs_rm_vnode(FileSystem* fs, struct S_VirtualNode* vnode);
-/* Takes in a given path and makes sure it is relative to the given filesystem.
+/**
+ * Create a new vnode cache for 'fs'. The returned vnode has vnode->owner set to
+ * 'fs', vnode->ops set to fs->vnode_ops, and the rest of the fields zeroed out.
+ *
+ * 'fs' Non null pointer to the target filesystem for which to create the vnode.
+ *
+ * Returns:
+ * A VirtualNode* on sucess.
+ * NULL on out of memory.
  */
-int fs_make_path_relative(const FileSystem* fs, char* path);
-int fs_make_path_canonical(char* path);
-VirtualNode* fs_vnode_for_path(FileSystem* fs, const char* path);
+VirtualNode* fs_new_vnode_cache(FileSystem* fs);
+
+/**
+ * Remove a vnode from the vnode cache of 'fs'.
+ *
+ * No null pointers should be passed to this function.
+ *
+ * 'vnode' VirtualNode to be removed.
+ * 'fs' The target filesyste.
+ *
+ * Returns:
+ * 0 on sucess.
+ * -ENOENT if 'vnode' is not in the vnode cache of 'fs'.
+ */
+int fs_rm_cached_vnode(VirtualNode* vnode, FileSystem* fs);
+
+/**
+ * Lookup the vnode for 'path' that is residing on 'fs'. This function first
+ * tries calling fs_lookup_vnode_cached_relative. If that fails it invokes the
+ * filesystem driver to do a lookup internally.
+ *
+ * No null pointers should be passed to this function.
+ *
+ * 'path' An absolute path.
+ * 'fs' The filesystem to scan.
+ *
+ * Returns:
+ * A VirtualNode* on success.
+ * NULL if no vnode has been found.
+ */
+VirtualNode* fs_lookup_vnode(const char* path, FileSystem* fs);
 
 #endif // !_DXGMX_FS_FS_H

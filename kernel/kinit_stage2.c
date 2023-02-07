@@ -5,12 +5,14 @@
 
 #include <dxgmx/attrs.h>
 #include <dxgmx/fs/vfs.h>
+#include <dxgmx/klog.h>
 #include <dxgmx/module.h>
 #include <dxgmx/panic.h>
 #include <dxgmx/proc/procm.h>
 #include <dxgmx/sched/sched.h>
 #include <dxgmx/syscalls.h>
 #include <dxgmx/types.h>
+#include <dxgmx/utils/linkedlist.h>
 
 _ATTR_NORETURN bool kinit_stage2()
 {

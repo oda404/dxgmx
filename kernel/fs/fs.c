@@ -5,6 +5,7 @@
 
 #include <dxgmx/errno.h>
 #include <dxgmx/fs/fs.h>
+#include <dxgmx/fs/path.h>
 #include <dxgmx/fs/vnode.h>
 #include <dxgmx/klog.h>
 #include <dxgmx/kmalloc.h>
@@ -12,161 +13,58 @@
 #include <dxgmx/string.h>
 #include <dxgmx/todo.h>
 
-VirtualNode* fs_new_vnode(FileSystem* fs, ino_t n, const VirtualNode* parent)
+/**
+ * Lookup cached vnode for 'path' that is residing on 'fs'. If this function
+ * returns NULL it means there is no *cached* vnode for this path. The
+ * filesystem might have this vnode, but has not yet cached it. For situations
+ * like these try fs_lookup_vnode, which first tries fs_lookup_vnode_cached.
+ *
+ * No null pointers should be passed to this function.
+ *
+ * 'path' A relative to the filesystem path.
+ * 'fs' The filesystem to scan.
+ *
+ * Returns:
+ * A VirtualNode* on success.
+ * NULL if no cached vnode has been found.
+ */
+static VirtualNode*
+fs_lookup_vnode_cached_relative(const char* path, FileSystem* fs)
 {
-    // FIXME: remove this
-    if (!fs || !n || (parent && !parent->n))
-        return NULL;
-
-    // FIXME: also remove tgis
-    if (fs->vnodes)
-    {
-        FOR_EACH_ELEM_IN_DARR (fs->vnodes, fs->vnode_count, tmpvnode)
-        {
-            if (tmpvnode->n == n)
-            {
-                return NULL;
-            }
-        }
-    }
-
-    VirtualNode* tmp =
-        krealloc(fs->vnodes, (fs->vnode_count + 1) * sizeof(VirtualNode));
-
-    if (!tmp)
-        return NULL;
-
-    fs->vnodes = tmp;
-    ++fs->vnode_count;
-
-    VirtualNode* vnode = &fs->vnodes[fs->vnode_count - 1];
-    memset(vnode, 0, sizeof(VirtualNode));
-
-    vnode->owner = fs;
-    vnode->n = n;
-    vnode->parent_n = parent ? parent->n : 0;
-    return vnode;
-}
-
-int fs_rm_vnode(FileSystem* fs, struct S_VirtualNode* vnode)
-{
-    if (!fs || !vnode || !fs->vnodes)
-        return -EINVAL;
-
-    bool hit = false;
-    FOR_EACH_ELEM_IN_DARR (fs->vnodes, fs->vnode_count, v)
-    {
-        if (v == vnode)
-        {
-            hit = true;
-            break;
-        }
-    }
-
-    if (!hit)
-        return -ENOENT;
-
-    if (vnode->name)
-        kfree(vnode->name);
-
-    for (VirtualNode* v = vnode; v < fs->vnodes + fs->vnode_count - 1; ++v)
-        *v = *(v + 1);
-
-    --fs->vnode_count;
-
-    return 0;
-}
-
-int fs_make_path_relative(const FileSystem* fs, char* path)
-{
-    if (!path || !fs || !fs->mntpoint)
-        return -EINVAL;
-
-    size_t pathlen = strlen(path);
-    size_t prefixlen = strlen(fs->mntpoint);
-
-    if (prefixlen > pathlen)
-        return -EINVAL;
-
-    if (prefixlen == 1 && fs->mntpoint[0] == '/')
-        return 0; /* That's it :) */
-
-    size_t matching = 0;
-    for (size_t i = 0; i < prefixlen; ++i)
-        matching += (path[i] == fs->mntpoint[i]);
-
-    if (matching != prefixlen)
-        return -ENAMETOOLONG;
-
-    for (size_t i = 0; i < prefixlen; ++i)
-    {
-        for (size_t k = 0; k < pathlen; ++k)
-            path[k] = path[k + 1];
-    }
-
-    return 0;
-}
-
-int fs_make_path_canonical(char* path)
-{
-    (void)path;
-    TODO_FATAL();
-}
-
-VirtualNode* fs_vnode_for_path(FileSystem* fs, const char* path)
-{
-    // FIXME: remove this
-    if (!fs || !path)
-        return NULL;
-
-    char working_path[PATH_MAX];
-    strncpy(working_path, path, PATH_MAX);
-
-    fs_make_path_relative(fs, working_path);
-
-    /* There are definitely better ways to do this, but for now this works
-     * :)
-     */
     VirtualNode* vnode_hit = NULL;
-    FOR_EACH_ELEM_IN_DARR (fs->vnodes, fs->vnode_count, vnode)
+    FOR_EACH_ENTRY_IN_LL (fs->vnode_ll, VirtualNode*, vnode)
     {
-        VirtualNode* workingnode = vnode;
-        char tmp[PATH_MAX] = {0};
+        char tmp_path[PATH_MAX] = {0};
+
         size_t running_len = 0;
         bool addslash = false;
 
-        while (workingnode)
+        const VirtualNode* working_vnode = vnode;
+        while (working_vnode)
         {
-            const size_t cur_len = strlen(workingnode->name) + addslash;
+            const size_t cur_len = strlen(working_vnode->name) + addslash;
             if (running_len + cur_len >= PATH_MAX)
-                break; // FIXME: errno ENAMETOOLONG
+                break;
 
             for (size_t i = running_len + cur_len - 1; i >= cur_len; --i)
-                tmp[i] = tmp[i - cur_len];
+                tmp_path[i] = tmp_path[i - cur_len];
 
-            memcpy(tmp, workingnode->name, cur_len - addslash);
+            memcpy(tmp_path, working_vnode->name, cur_len - addslash);
             if (addslash)
-                memcpy(tmp + cur_len - 1, "/", 1);
+                memcpy(tmp_path + cur_len - 1, "/", 1);
 
             running_len += cur_len;
 
-            bool hit = false;
-            FOR_EACH_ELEM_IN_DARR (fs->vnodes, fs->vnode_count, v)
-            {
-                if (v->n == workingnode->parent_n)
-                {
-                    workingnode = v;
-                    hit = true;
-                }
-            }
-
-            if (!hit)
+            /* We hit the root dir */
+            if (!working_vnode->parent)
                 break;
 
-            addslash = workingnode->parent_n != 0;
+            working_vnode = working_vnode->parent;
+
+            addslash = working_vnode->parent != 0;
         }
 
-        if (strcmp(tmp, working_path) == 0)
+        if (strcmp(tmp_path, path) == 0)
         {
             vnode_hit = vnode;
             break;
@@ -174,4 +72,49 @@ VirtualNode* fs_vnode_for_path(FileSystem* fs, const char* path)
     }
 
     return vnode_hit;
+}
+
+VirtualNode* fs_new_vnode_cache(FileSystem* fs)
+{
+    VirtualNode* new_vnode = kcalloc(sizeof(VirtualNode));
+    if (!new_vnode)
+        return NULL;
+
+    new_vnode->owner = fs;
+    new_vnode->ops = fs->driver->vnode_ops;
+
+    if (linkedlist_add(new_vnode, &fs->vnode_ll) < 0)
+    {
+        kfree(new_vnode);
+        return NULL;
+    }
+
+    return new_vnode;
+}
+
+int fs_rm_cached_vnode(VirtualNode* vnode, FileSystem* fs)
+{
+    int st = linkedlist_remove_by_data(vnode, &fs->vnode_ll);
+    if (st == 0)
+        kfree(vnode);
+
+    return st;
+}
+
+VirtualNode* fs_lookup_vnode(const char* path, FileSystem* fs)
+{
+    char working_path[PATH_MAX];
+    strncpy(working_path, path, PATH_MAX);
+
+    path_make_relative(fs, working_path);
+
+    /* Look for any cached vnodes */
+    VirtualNode* vnode = fs_lookup_vnode_cached_relative(working_path, fs);
+    if (!vnode)
+    {
+        /* That failed, so we query the driver */
+        vnode = fs->driver->vnode_lookup(working_path, fs);
+    }
+
+    return vnode;
 }

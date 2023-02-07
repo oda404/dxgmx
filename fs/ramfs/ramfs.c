@@ -23,45 +23,45 @@ static void ramfs_destroy(FileSystem* fs)
     if (!fs)
         return;
 
-    if (fs->vnodes)
-    {
-        FOR_EACH_ELEM_IN_DARR (fs->vnodes, fs->vnode_count, vnode)
-        {
-            if (vnode->name)
-                kfree(vnode->name);
-        }
+    // if (fs->vnodes)
+    // {
+    //     FOR_EACH_ELEM_IN_DARR (fs->vnodes, fs->vnode_count, vnode)
+    //     {
+    //         if (vnode->name)
+    //             kfree(vnode->name);
+    //     }
 
-        kfree(fs->vnodes);
-        fs->vnodes = NULL;
-        fs->vnode_count = 0;
-    }
+    //     kfree(fs->vnodes);
+    //     fs->vnodes = NULL;
+    //     fs->vnode_count = 0;
+    // }
 
-    if (fs->mntsrc)
-    {
-        kfree(fs->mntsrc);
-        fs->mntsrc = NULL;
-    }
+    // if (fs->mntsrc)
+    // {
+    //     kfree(fs->mntsrc);
+    //     fs->mntsrc = NULL;
+    // }
 
-    RamFsMetadata* meta = fs->driver_ctx;
+    // RamFsMetadata* meta = fs->driver_ctx;
 
-    if (meta)
-    {
-        if (meta->files)
-        {
-            FOR_EACH_ELEM_IN_DARR (meta->files, meta->files_count, file)
-            {
-                if (file->data)
-                    kfree(file->data);
-            }
+    // if (meta)
+    // {
+    //     if (meta->files)
+    //     {
+    //         FOR_EACH_ELEM_IN_DARR (meta->files, meta->files_count, file)
+    //         {
+    //             if (file->data)
+    //                 kfree(file->data);
+    //         }
 
-            kfree(meta->files);
-            meta->files = NULL;
-            meta->files_count = 0;
-        }
+    //         kfree(meta->files);
+    //         meta->files = NULL;
+    //         meta->files_count = 0;
+    //     }
 
-        kfree(meta);
-        fs->driver_ctx = NULL;
-    }
+    //     kfree(meta);
+    //     fs->driver_ctx = NULL;
+    // }
 }
 
 static int
@@ -102,7 +102,7 @@ ramfs_init(const char* src, const char* type, const char* args, FileSystem* fs)
     return 0;
 }
 
-static int ramfs_mkfile(FileSystem* fs, const char* path, mode_t mode)
+static int ramfs_mkfile(const char* path, mode_t mode, FileSystem* fs)
 {
     if (!fs || !path)
         return -EINVAL;
@@ -167,9 +167,7 @@ static int ramfs_mkfile(FileSystem* fs, const char* path, mode_t mode)
 
     ASSERT(free_file);
 
-    VirtualNode* tmpvnode =
-        fs_new_vnode(fs, free_file_vnode.n, NULL /* FIXME */);
-
+    VirtualNode* tmpvnode = fs_new_vnode_cache(fs);
     if (!tmpvnode)
     {
         kfree(free_file_vnode.name);
@@ -177,6 +175,7 @@ static int ramfs_mkfile(FileSystem* fs, const char* path, mode_t mode)
         return -ENOMEM;
     }
 
+    tmpvnode->n = free_file_vnode.n;
     tmpvnode->mode = free_file_vnode.mode;
     tmpvnode->name = free_file_vnode.name;
     tmpvnode->size = free_file_vnode.size;
@@ -185,14 +184,16 @@ static int ramfs_mkfile(FileSystem* fs, const char* path, mode_t mode)
     return 0;
 }
 
-static ssize_t ramfs_read(
-    FileSystem* fs, const VirtualNode* vnode, void* buf, size_t n, loff_t off)
+static ssize_t
+ramfs_read(const VirtualNode* vnode, void* buf, size_t n, loff_t off)
 {
-    if (!fs || !vnode || !buf || vnode->owner != fs)
+    if (!vnode || !buf)
         return -EINVAL;
 
     if (!n || off >= vnode->size)
         return 0;
+
+    FileSystem* fs = vnode->owner;
 
     RamFsMetadata* meta = fs->driver_ctx;
     if (!meta || !meta->files)
@@ -207,14 +208,16 @@ static ssize_t ramfs_read(
     return n;
 }
 
-static ssize_t ramfs_write(
-    FileSystem* fs, VirtualNode* vnode, const void* buf, size_t n, loff_t off)
+static ssize_t
+ramfs_write(VirtualNode* vnode, const void* buf, size_t n, loff_t off)
 {
-    if (!fs || !vnode || !buf || vnode->owner != fs)
+    if (!vnode || !buf)
         return -EINVAL;
 
     if (!n)
         return 0;
+
+    FileSystem* fs = vnode->owner;
 
     RamFsMetadata* meta = fs->driver_ctx;
     if (!meta || !meta->files)
@@ -245,30 +248,42 @@ static ssize_t ramfs_write(
     return n;
 }
 
-static int ramfs_mkdir(FileSystem*, const char*, mode_t)
+static int ramfs_mkdir(const char*, mode_t, FileSystem*)
 {
     TODO_FATAL();
 }
 
+static VirtualNode* ramfs_vnode_lookup(const char* path, FileSystem* fs)
+{
+    /* Ramfs caches all it's vnodes */
+    (void)path;
+    (void)fs;
+    return NULL;
+}
+
 #define MODULE_NAME "ramfs"
+
+static const VirtualNodeOperations g_ramfs_vnode_ops = {
+    .read = ramfs_read,
+    .write = ramfs_write,
+    .mkfile = ramfs_mkfile,
+    .mkdir = ramfs_mkdir};
+
+static const FileSystemDriver g_ramfs_driver = {
+    .name = MODULE_NAME,
+    .init = ramfs_init,
+    .destroy = ramfs_destroy,
+    .vnode_lookup = ramfs_vnode_lookup,
+    .vnode_ops = &g_ramfs_vnode_ops};
 
 static int ramfs_main()
 {
-    const FileSystemDriver ramfs_driver = {
-        .name = MODULE_NAME,
-        .init = ramfs_init,
-        .destroy = ramfs_destroy,
-        .read = ramfs_read,
-        .write = ramfs_write,
-        .mkfile = ramfs_mkfile,
-        .mkdir = ramfs_mkdir};
-
-    return vfs_register_fs_driver(ramfs_driver);
+    return vfs_register_fs_driver(&g_ramfs_driver);
 }
 
 static int ramfs_exit()
 {
-    return vfs_unregister_fs_driver(MODULE_NAME);
+    return vfs_unregister_fs_driver(&g_ramfs_driver);
 }
 
 static MODULE const Module g_ramfs_module = {

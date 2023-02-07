@@ -1,10 +1,10 @@
 /**
- * Copyright 2022 Alexandru Olaru.
+ * Copyright 2023 Alexandru Olaru.
  * Distributed under the MIT license.
  */
 
-#ifndef _DXGMX_FS_OPENFD_H
-#define _DXGMX_FS_OPENFD_H
+#ifndef _DXGMX_FS_FD_H
+#define _DXGMX_FS_FD_H
 
 #include <dxgmx/fs/vnode.h>
 #include <posix/sys/types.h>
@@ -13,17 +13,15 @@
  * to find the global file descriptor I.E. this */
 typedef struct S_FileDescriptor
 {
-    /* The file descriptor number. */
+    /* The process file descriptor number. */
     int fd;
 
-    /* The PID of the process that opened the file. */
+    /* The PID of the process that opened the file. This combined with 'fd'
+     * makes this FileDescriptor unique. */
     pid_t pid;
 
     /* open() flags. */
     int flags;
-
-    /* Access mode. */
-    mode_t mode;
 
     /* Read/write offset into the file */
     loff_t off;
@@ -32,4 +30,4 @@ typedef struct S_FileDescriptor
     VirtualNode* vnode;
 } FileDescriptor;
 
-#endif // !_DXGMX_FS_OPENFD_H
+#endif // !_DXGMX_FS_FD_H
