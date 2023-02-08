@@ -83,4 +83,6 @@
 /* Function/syscall not implemented. */
 #define ENOSYS 38
 
+#define EOVERFLOW 39
+
 #endif // _DXGMX_ERRNO_H
