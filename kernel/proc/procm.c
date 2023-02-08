@@ -17,7 +17,7 @@
 #include <dxgmx/sched/sched.h>
 #include <dxgmx/string.h>
 #include <dxgmx/todo.h>
-#include <dxgmx/userspace.h>
+#include <dxgmx/user.h>
 #include <dxgmx/utils/bytes.h>
 
 #define KLOGF_PREFIX "procmanager: "
@@ -385,7 +385,7 @@ void procm_switch_ctx(Process* proc)
 
     procm_load_ctx(proc);
 
-    userspace_jump2user(proc->inst_ptr, proc->stack_ptr);
+    user_jump2user(proc->inst_ptr, proc->stack_ptr);
 }
 
 size_t procm_proc_count()

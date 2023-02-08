@@ -12,7 +12,7 @@ $(ARCH_SRCDIR)/serial.c \
 $(ARCH_SRCDIR)/panic.c \
 $(ARCH_SRCDIR)/syscalls.c \
 $(ARCH_SRCDIR)/procm.c \
-$(ARCH_SRCDIR)/userspace.S \
+$(ARCH_SRCDIR)/user.S \
 
 MACROS += -D_X86_
 ifeq ($(ARCH),x86_64)

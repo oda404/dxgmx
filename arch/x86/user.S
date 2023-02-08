@@ -1,14 +1,14 @@
 /**
- * Copyright 2022 Alexandru Olaru.
+ * Copyright 2023 Alexandru Olaru.
  * Distributed under the MIT license.
  */
 
 #define _ASM
 #include <dxgmx/x86/gdt.h>
 
-.global userspace_arch_jump2user
-.type userspace_arch_jump2user, @function
-userspace_arch_jump2user:
+.global user_jump2user_arch
+.type user_jump2user_arch, @function
+user_jump2user_arch:
 
 #if defined(_X86_)
     movl 0x4(%esp), %ebx  # The instruction pointer
@@ -24,7 +24,7 @@ userspace_arch_jump2user:
     mov %ax, %gs
 
     # Set up iret stackframe. ring 3 data (ss) -> esp -> flags -> ring3 code -> eip
-    pushl $GDT_USER_DS | 3
+    pushl %eax
     pushl %ecx
     pushf
     pushl $GDT_USER_CS | 3
