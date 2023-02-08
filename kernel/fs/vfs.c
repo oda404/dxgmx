@@ -379,7 +379,7 @@ int vfs_unregister_fs_driver(const FileSystemDriver* driver)
 int vfs_open(const char* _USERPTR path, int flags, mode_t mode, Process* proc)
 {
     /* We only allow absolute paths */
-    if (!path || !proc || path[0] != '/')
+    if (!path || path[0] != '/')
         return -EINVAL;
 
     FileSystem* fs = vfs_topmost_fs_for_path(path);
@@ -433,79 +433,99 @@ int vfs_open(const char* _USERPTR path, int flags, mode_t mode, Process* proc)
 
 ssize_t vfs_read(fd_t fd, void* _USERPTR buf, size_t n, Process* proc)
 {
-    if (!buf || !n || !proc)
-        return -EINVAL;
+    if (!buf)
+        return -EFAULT;
 
     FileDescriptor* sysfd = vfs_get_sysfd(fd, proc);
     if (!sysfd)
-        return -ENOENT;
+        return -EBADF;
+
+    if (sysfd->vnode->mode & S_IFDIR)
+        return -EISDIR;
 
     if (!BW_MASK(sysfd->flags, O_RDONLY))
-        return -EPERM;
+        return -EBADF;
 
-    ssize_t read = sysfd->vnode->ops->read(sysfd->vnode, buf, n, sysfd->off);
-    if (read < 0)
-        return read;
+    if (!n)
+        return 0;
 
-    sysfd->off += read;
-    return read;
+    ssize_t rd = sysfd->vnode->ops->read(sysfd->vnode, buf, n, sysfd->off);
+    if (rd < 0)
+        return rd;
+
+    sysfd->off += rd;
+    return rd;
 }
 
 ssize_t vfs_write(fd_t fd, const void* _USERPTR buf, size_t n, Process* proc)
 {
-    if (!buf || !n || !proc)
-        return -EINVAL;
+    if (!buf)
+        return -EFAULT;
 
     FileDescriptor* sysfd = vfs_get_sysfd(fd, proc);
     if (!sysfd)
-        return -ENOENT;
+        return -EBADF;
+
+    if (sysfd->vnode->mode & S_IFDIR)
+        return -EISDIR;
 
     if (!BW_MASK(sysfd->flags, O_WRONLY))
-        return -EPERM;
-
-    FileSystem* fs = sysfd->vnode->owner;
-    if (!fs)
-        return -EINVAL;
+        return -EBADF;
 
     /* Set offset to the end of the file if appending */
     if (sysfd->flags & O_APPEND)
         sysfd->off = sysfd->vnode->size;
 
-    ssize_t written =
-        sysfd->vnode->ops->write(sysfd->vnode, buf, n, sysfd->off);
-    if (written < 0)
-        return -1; /* FIXME: error is in errno */
+    if (!n)
+        return 0;
 
-    sysfd->off += written;
-    return written;
+    ssize_t wr = sysfd->vnode->ops->write(sysfd->vnode, buf, n, sysfd->off);
+    if (wr < 0)
+        return wr;
+
+    sysfd->off += wr;
+    return wr;
 }
 
 off_t vfs_lseek(fd_t fd, off_t off, int whence, Process* proc)
 {
-    if (!proc)
-        return -EINVAL;
-
     FileDescriptor* sysfd = vfs_get_sysfd(fd, proc);
     if (!sysfd)
-        return -ENOENT;
+        return -EBADF;
 
     if (whence == SEEK_SET)
+    {
+        if (off < 0)
+            return -EINVAL;
+
         sysfd->off = off;
+    }
     else if (whence == SEEK_CUR)
-        sysfd->off += off;
+    {
+        off_t res = sysfd->off + off;
+        if (res < 0)
+            return off < 0 ? -EINVAL : -EOVERFLOW;
+
+        sysfd->off = res;
+    }
     else if (whence == SEEK_END)
-        sysfd->off = sysfd->vnode->size + off;
+    {
+        off_t res = sysfd->vnode->size + off;
+        if (res < 0)
+            return off < 0 ? -EINVAL : -EOVERFLOW;
+
+        sysfd->off = res;
+    }
     else
+    {
         return -EINVAL;
+    }
 
     return sysfd->off;
 }
 
 int vfs_close(fd_t fd, Process* proc)
 {
-    if (!proc)
-        return -EINVAL;
-
     size_t idx = proc_free_fd(fd, proc);
     if (idx == PLATFORM_MAX_UNSIGNED)
         return -EINVAL;
