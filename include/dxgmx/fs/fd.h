@@ -24,7 +24,7 @@ typedef struct S_FileDescriptor
     int flags;
 
     /* Read/write offset into the file */
-    loff_t off;
+    off_t off;
 
     /* Pointer to the underlying vnode. */
     VirtualNode* vnode;
