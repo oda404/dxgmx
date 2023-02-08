@@ -9,6 +9,21 @@
 #include <dxgmx/proc/proc.h>
 #include <posix/sys/types.h>
 
+/* The bottom of the address space for a process. */
+#define PROC_VIRTUAL_START_OFFSET (128UL * MIB)
+
+/* The top of the address space for a process, beyond here (3-4GIB) lays
+ * the kernel mapping, which is not directly accessible to a user process. */
+#define PROC_VIRTUAL_HIGH_ADDRESS (3UL * GIB)
+
+/* Size of a process' kernel stack. */
+#define PROC_KSTACK_SIZE (PAGESIZE)
+
+/* Size of a process' stack. */
+#define PROC_STACK_SIZE (8 * KIB)
+
+#define PROC_STACK_PAGESPAN (PROC_STACK_SIZE / PAGESIZE)
+
 /* Load the 'first' PID 1 into memory and have it on standby, waiting for the
  * scheduler to start running. This is only a stub for the actual PID 1. This is
  * because the only way for us to read files from disk is through syscalls,

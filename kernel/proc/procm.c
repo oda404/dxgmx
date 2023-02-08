@@ -22,21 +22,6 @@
 
 #define KLOGF_PREFIX "procmanager: "
 
-/* This is the bottom of the address space for a process. */
-#define PROC_VIRTUAL_START_OFFSET (128UL * MIB)
-
-/* This is the top of the address space for a process, beyond here (3-4GIB) lays
- * the kernel mapping, which is not directly accessible to a user process. */
-#define PROC_VIRTUAL_HIGH_ADDRESS (3UL * GIB)
-
-/* Size of a process' kernel stack. */
-#define PROC_KSTACK_SIZE (PAGESIZE)
-
-/* Size of a process' stack. */
-#define PROC_STACK_SIZE (8 * KIB)
-
-#define PROC_STACK_PAGESPAN (PROC_STACK_SIZE / PAGESIZE)
-
 static Process* g_procs = NULL;
 static size_t g_proc_count = 0;
 static size_t g_next_queued_proc_idx = 0;
