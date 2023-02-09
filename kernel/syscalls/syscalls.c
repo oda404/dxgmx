@@ -7,10 +7,12 @@
 #include <dxgmx/klog.h>
 #include <dxgmx/syscall_numbers.h>
 #include <dxgmx/syscalls.h>
+#include <posix/sys/types.h>
 #include <stdarg.h>
 
 /* Actual system calls. */
 extern void syscall_exit(int status);
+extern int syscall_open(const char* path, int flags, mode_t mode);
 extern ssize_t syscall_read(int fd, void* buf, size_t n);
 extern int
 syscall_execve(const char* path, const char* argv[], const char* envv[]);
@@ -34,6 +36,11 @@ static syscall_ret_t syscalls_do_handle(syscall_t n, ...)
     {
     case SYSCALL_EXIT:
         syscall_exit(va_arg(list, int));
+        break;
+
+    case SYSCALL_OPEN:
+        ret = syscall_open(
+            va_arg(list, const char*), va_arg(list, int), va_arg(list, mode_t));
         break;
 
     case SYSCALL_READ:
