@@ -95,31 +95,54 @@ static int vfs_free_file_descriptor(FileDescriptor* fd)
 
 /**
  * Create a new fileystem
- * 'mntpoint' is the mount destination.
+ * 'mntsrc' Non-NULL mount source.
+ * 'mntpoint' Non-NULL mount destination.
+ * 'args' Arguments for the filesystem driver. May be null.
  *
- * Returns a FilesSystem with 'mntpoint' set on sucess, NULL on out of memory.
+ * Returns:
+ * A FileSystem* with mntsrc, mntpoint and args set on success.
+ * NULL on out of memory.
  */
-static FileSystem* vfs_new_fs(const char* mntpoint)
+static FileSystem*
+vfs_new_fs(const char* mntsrc, const char* mntpoint, const char* args)
 {
-    FileSystem* new_fs = kcalloc(sizeof(FileSystem));
-    if (!new_fs)
+    FileSystem* newfs = kcalloc(sizeof(FileSystem));
+    if (!newfs)
         return NULL;
 
-    new_fs->mntpoint = strdup(mntpoint);
-    if (!new_fs->mntpoint)
+    newfs->mntsrc = strdup(mntsrc);
+    if (!newfs->mntsrc)
+        goto out_err;
+
+    newfs->mntpoint = strdup(mntpoint);
+    if (!newfs->mntpoint)
+        goto out_err;
+
+    if (args)
     {
-        kfree(new_fs);
-        return NULL;
+        newfs->args = strdup(args);
+        if (!newfs->args)
+            goto out_err;
     }
 
-    if (linkedlist_add(new_fs, &g_filesystems_ll) < 0)
-    {
-        kfree(new_fs->mntpoint);
-        kfree(new_fs);
-        return NULL;
-    }
+    if (linkedlist_add(newfs, &g_filesystems_ll) < 0)
+        goto out_err;
 
-    return new_fs;
+    return newfs;
+
+out_err:
+    if (newfs->mntsrc)
+        kfree((void*)newfs->mntsrc);
+
+    if (newfs->mntpoint)
+        kfree((void*)newfs->mntpoint);
+
+    if (newfs->args)
+        kfree((void*)newfs->args);
+
+    kfree(newfs);
+
+    return NULL;
 }
 
 static int vfs_free_fs(FileSystem* fs)
@@ -128,7 +151,7 @@ static int vfs_free_fs(FileSystem* fs)
 
     if (st == 0)
     {
-        kfree(fs->mntpoint);
+        kfree((void*)fs->mntpoint);
         kfree(fs);
     }
 
@@ -255,44 +278,52 @@ _INIT int vfs_init()
 }
 
 int vfs_mount(
-    const char* src,
-    const char* dest,
-    const char* type,
-    const char* args,
+    const char* _SAFE_USERPTR src,
+    const char* _SAFE_USERPTR dest,
+    const char* _SAFE_USERPTR type,
+    const char* _SAFE_USERPTR args,
     u32 flags)
 {
-    if (!dest)
-        return -EINVAL;
-
-    /* Create new filesystem structure */
-    FileSystem* fs = vfs_new_fs(dest);
+    /* Create new filesystem */
+    FileSystem* fs = vfs_new_fs(src, dest, args);
     if (!fs)
         return -ENOMEM;
 
-    /* The vfs only sets fs->mntpoint, fs->flags, and fs->driver. The rest is up
-     * to the driver */
     fs->flags = flags;
 
-    int st;
+    int st = -ENOENT;
     FOR_EACH_ELEM_IN_DARR (g_fs_drivers, g_fs_driver_count, driver)
     {
-        /* Set the driver to the one we are probing. */
+        /* Set the driver to the one we are (possibly) probing. */
         fs->driver = *driver;
 
-        /* If the driver succeeded in initializing the filesystem, we know it's
-         * valid and also up :) */
-        st = (*driver)->init(src, type, args, fs);
-        if (st == 0)
+        /* Look for and probe the corresponding driver if type is not NULL. */
+        if (type)
+        {
+            if (strcmp((*driver)->name, type) == 0)
+            {
+                st = (*driver)->init(fs);
+                goto out;
+            }
+        }
+        else
+        {
+            st = (*driver)->init(fs);
+        }
+
+        /* If a generic probe returns 0 it means we succeeded. Drivers return
+         * -ENOENT if the driver doesn't understant that filesystem. Which means
+         * that if our error is != -ENOENT the driver understood the filesystem
+         * but failed to initialize it. */
+        if (st == 0 || st != -ENOENT)
             break;
     }
 
+out:
     if (st < 0)
-    {
         vfs_free_fs(fs);
-        return st;
-    }
 
-    return 0;
+    return st;
 }
 
 int vfs_unmount(const char* src_or_dest)

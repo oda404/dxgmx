@@ -18,10 +18,12 @@ struct S_FileSystemDriver;
 typedef struct S_FileSystem
 {
     /* The name of the mount. */
-    char* mntsrc;
+    const char* mntsrc;
 
     /* Where this mountpoint resides */
-    char* mntpoint;
+    const char* mntpoint;
+
+    const char* args;
 
     /* Mount flags */
     u32 flags;
@@ -64,8 +66,7 @@ typedef struct S_FileSystemDriver
      * 0 on sucess
      * negative errnos, indicating errors on failure.
      */
-    int (*init)(
-        const char* src, const char* type, const char* args, FileSystem* fs);
+    int (*init)(FileSystem* fs);
 
     /**
      * Destroy a filesystem. Right before the filesystem is unmounted by the
