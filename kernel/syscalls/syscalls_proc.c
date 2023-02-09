@@ -1,13 +1,8 @@
-/**
- * Copyright 2023 Alexandru Olaru.
- * Distributed under the MIT license.
- */
 
-#include <dxgmx/klog.h>
+
 #include <dxgmx/proc/procm.h>
 #include <dxgmx/sched/sched.h>
 #include <dxgmx/syscalls.h>
-#include <dxgmx/todo.h>
 
 void syscall_exit(int status)
 {
@@ -18,4 +13,9 @@ void syscall_exit(int status)
     procm_mark_dead(status, sched_current_proc());
 
     sched_yield();
+}
+
+int syscall_execve(const char* path, const char* argv[], const char* envp[])
+{
+    return procm_replace_proc(path, argv, envp, sched_current_proc());
 }
