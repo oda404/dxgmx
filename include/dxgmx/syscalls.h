@@ -9,12 +9,6 @@
 #include <dxgmx/attrs.h>
 #include <dxgmx/types.h>
 
-#define SYSCALL_EXIT 1
-#define SYSCALL_READ 2
-#define SYSCALL_EXECVE 3
-
-#define SYSCALL_DXGMX_LOG 0xb008
-
 typedef u32 syscall_t;
 
 #if defined(_X86_) // FIXME: should really be something like DXGMX_32BITS bits

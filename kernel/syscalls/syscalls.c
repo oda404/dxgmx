@@ -5,6 +5,7 @@
 
 #include <dxgmx/errno.h>
 #include <dxgmx/klog.h>
+#include <dxgmx/syscall_numbers.h>
 #include <dxgmx/syscalls.h>
 #include <stdarg.h>
 

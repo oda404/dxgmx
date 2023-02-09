@@ -6,6 +6,7 @@
 #ifndef _LIBC_SYSCALLS_H
 #define _LIBC_SYSCALLS_H
 
+#include <dxgmx/syscall_numbers.h>
 #include <stdint.h>
 
 typedef uint32_t syscall_arg_t;
