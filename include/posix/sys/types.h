@@ -8,7 +8,7 @@
 
 #include <stdint.h>
 
-typedef uint16_t mode_t;
+typedef unsigned int mode_t;
 
 typedef uint32_t dev_t;
 typedef uint64_t ino_t;
