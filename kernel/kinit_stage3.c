@@ -4,6 +4,7 @@
  */
 
 #include <dxgmx/compiler_attrs.h>
+#include <dxgmx/syscall_numbers.h>
 #include <dxgmx/syscalls.h>
 
 /**
