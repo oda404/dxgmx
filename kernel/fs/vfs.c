@@ -151,7 +151,12 @@ static int vfs_free_fs(FileSystem* fs)
 
     if (st == 0)
     {
+        kfree((void*)fs->mntsrc);
         kfree((void*)fs->mntpoint);
+
+        if (fs->args)
+            kfree((void*)fs->args);
+
         kfree(fs);
     }
 
