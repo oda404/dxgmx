@@ -25,3 +25,13 @@ int isxdigit(int c)
 
     return 0;
 }
+
+int isupper(int c)
+{
+    return c >= 'A' && c <= 'Z';
+}
+
+int tolower(int c)
+{
+    return c + 32;
+}

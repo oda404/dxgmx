@@ -14,4 +14,8 @@ int isspace(int c) _ATTR_CONST;
 
 int isxdigit(int c) _ATTR_CONST;
 
+int isupper(int c) _ATTR_CONST;
+
+int tolower(int c) _ATTR_CONST;
+
 #endif // _DXGMX_CTYPE_H
