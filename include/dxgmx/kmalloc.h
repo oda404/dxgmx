@@ -10,6 +10,19 @@
 #include <dxgmx/mem/heap.h>
 #include <dxgmx/types.h>
 
+typedef struct S_KMallocStatistics
+{
+    /* Nuumber of allocations made since kmalloc came online. */
+    size_t total_allocations;
+    /* Number of frees since kmalloc came online. */
+    size_t total_frees;
+    /* How much memory kmalloc has allocated since it came online. */
+    size_t total_allocated;
+    /* How much memory kmalloc has freed since it came online. */
+    size_t total_freed;
+
+} KMallocStatistics;
+
 /**
  * Kmalloc implementation details.
  * All allocations made by a driver shall be inside the heap they are passed.
@@ -136,5 +149,7 @@ void* krealloc(void* addr, size_t size);
 
 /* Kernel version of free. */
 void kfree(void* addr);
+
+void kmalloc_dump_statistics();
 
 #endif //!_DXGMX_KMALLOC_H

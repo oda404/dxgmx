@@ -20,12 +20,17 @@
 #define KLOGF_PREFIX "kmalloc: "
 /* KLOG informations about each kmalloc/free call. Very verbose! */
 #define KMALLOC_VERBOSE 0
+#define KMALLOC_RECORD_STATISTICS 1
 
 static bool g_kmalloc_up;
 /* The kmalloc driver. */
 static KMallocDriver g_driver;
 /* The kernel heap. */
 static Heap g_kheap;
+
+#if KMALLOC_RECORD_STATISTICS == 1
+static KMallocStatistics g_statistics;
+#endif
 
 static int kmalloc_check_driver(const KMallocDriver* drv)
 {
@@ -48,6 +53,11 @@ static void*
 kmalloc_aligned_with_heap(size_t size, size_t alignment, Heap* heap)
 {
     void* addr = g_driver.alloc_aligned(size, alignment, heap);
+
+#if KMALLOC_RECORD_STATISTICS == 1
+    ++g_statistics.total_allocations;
+    g_statistics.total_allocated += size;
+#endif
 
 #if KMALLOC_VERBOSE == 1
     if (addr)
@@ -75,6 +85,12 @@ kmalloc_aligned_with_heap(size_t size, size_t alignment, Heap* heap)
 /* kfree() that specifically takes in a heap. */
 static void kfree_with_heap(void* addr, Heap* heap)
 {
+#if KMALLOC_RECORD_STATISTICS == 1
+    ssize_t size = g_driver.allocation_size(addr, heap);
+    ++g_statistics.total_frees;
+    g_statistics.total_freed += size;
+#endif
+
     g_driver.free(addr, heap);
 
 #if KMALLOC_VERBOSE == 1
@@ -256,4 +272,32 @@ void* krealloc(void* addr, size_t size)
 
     /* addr is null, so we treat this lile a simple kmalloc() call. */
     return kmalloc_aligned_with_heap(size, g_driver.default_alignment, heap);
+}
+
+void kmalloc_dump_statistics()
+{
+#if KMALLOC_RECORD_STATISTICS == 1
+    KLOGF(INFO, "Statistics:");
+
+    KLOGF(
+        INFO, "-- Total allocations made: %d", g_statistics.total_allocations);
+
+    char hr_unit[4];
+    size_t hr_total =
+        bytes_to_human_readable(g_statistics.total_allocated, hr_unit);
+
+    KLOGF(INFO, "-- Total allocated memory: %d %s", hr_total, hr_unit);
+
+    size_t current_allocations =
+        g_statistics.total_allocations - g_statistics.total_frees;
+    size_t current_allocated =
+        g_statistics.total_allocated - g_statistics.total_freed;
+
+    KLOGF(INFO, "-- Current allocations: %d", current_allocations);
+
+    hr_total = bytes_to_human_readable(current_allocated, hr_unit);
+    KLOGF(INFO, "-- Currently allocated memory: %d %s", hr_total, hr_unit);
+#else
+    KLOGF(WARN, "Statistics are not enabled!");
+#endif
 }
