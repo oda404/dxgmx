@@ -31,6 +31,11 @@
 static VirtualNode*
 fs_lookup_vnode_cached_relative(const char* path, FileSystem* fs)
 {
+    // FIXME: somewhere in here this code crashes if we have some driver expose
+    // a vnode with it's name as an empty string. A driver shouldn't do this is
+    // in the first place, but I feel like the problem runs a bit deeper with
+    // this code.
+
     VirtualNode* vnode_hit = NULL;
     FOR_EACH_ENTRY_IN_LL (fs->vnode_ll, VirtualNode*, vnode)
     {
@@ -92,13 +97,30 @@ VirtualNode* fs_new_vnode_cache(FileSystem* fs)
     return new_vnode;
 }
 
-int fs_rm_cached_vnode(VirtualNode* vnode, FileSystem* fs)
+int fs_free_cached_vnode(VirtualNode* vnode, FileSystem* fs)
 {
     int st = linkedlist_remove_by_data(vnode, &fs->vnode_ll);
     if (st == 0)
         kfree(vnode);
 
     return st;
+}
+
+int fs_free_all_cached_vnodes(FileSystem* fs)
+{
+    // FIXME: maybe improve the linkedlist API to return the data it just freed.
+    do
+    {
+        LinkedListNode* n = fs->vnode_ll.root;
+        if (n)
+        {
+            VirtualNode* vnode = n->data;
+            kfree(vnode);
+            n->data = NULL;
+        }
+    } while (linkedlist_remove_by_position(0, &fs->vnode_ll) == 0);
+
+    return 0;
 }
 
 VirtualNode* fs_lookup_vnode(const char* path, FileSystem* fs)

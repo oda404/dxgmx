@@ -117,7 +117,19 @@ VirtualNode* fs_new_vnode_cache(FileSystem* fs);
  * 0 on sucess.
  * -ENOENT if 'vnode' is not in the vnode cache of 'fs'.
  */
-int fs_rm_cached_vnode(VirtualNode* vnode, FileSystem* fs);
+int fs_free_cached_vnode(VirtualNode* vnode, FileSystem* fs);
+
+/**
+ * Free all cached vnodes of a filesystem.
+ *
+ * No null pointers should be passed to this function.
+ *
+ * 'fs' The target filesyste.
+ *
+ * Returns:
+ * 0 on sucess.
+ */
+int fs_free_all_cached_vnodes(FileSystem* fs);
 
 /**
  * Lookup the vnode for 'path' that is residing on 'fs'. This function first
