@@ -1,11 +1,16 @@
 /**
- * Copyright 2022 Alexandru Olaru.
+ * Copyright 2023 Alexandru Olaru.
  * Distributed under the MIT license.
  */
+
+#include <stddef.h>
+#include <stdlib.h>
 
 extern int main(int argc, const char** argv);
 
 int _start()
 {
-    return main(0, (void*)0);
+    int st = main(0, NULL);
+
+    exit(st);
 }
