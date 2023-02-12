@@ -64,27 +64,13 @@ static void ramfs_destroy(FileSystem* fs)
     // }
 }
 
-static int
-ramfs_init(const char* src, const char* type, const char* args, FileSystem* fs)
+static int ramfs_init(FileSystem* fs)
 {
-    (void)type;
-    (void)args;
-
-    if (!type || strcmp(type, "ramfs") != 0)
-        return -EINVAL;
-
     RamFsMetadata* meta = kmalloc(sizeof(RamFsMetadata));
     if (!meta)
         return -ENOMEM;
 
     fs->driver_ctx = meta;
-    fs->mntsrc = strdup(src == NULL ? "ramfs" : src);
-
-    if (!fs->mntsrc)
-    {
-        ramfs_destroy(fs);
-        return -ENOMEM;
-    }
 
 #define STARTING_FILES_COUNT 8
 
