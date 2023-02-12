@@ -426,7 +426,16 @@ int fat_cache_root_vnode(FileSystem* fs)
     vnode->parent = NULL;
     vnode->mode = FAT_DIR_MODE;
     vnode->size = 0;
-    vnode->name = "/";
+
+    vnode->name = kmalloc(2);
+    if (!vnode->name)
+    {
+        fs_free_cached_vnode(vnode, fs);
+        return -ENOMEM;
+    }
+    vnode->name[0] = '/';
+    vnode->name[1] = '\0';
+
     vnode->state = 0;
 
     return 0;
