@@ -407,6 +407,8 @@ int mm_init_paging_struct(PagingStruct* ps)
     if (!ps->data)
         return -ENOMEM;
 
+    memset(ps->data, 0, sizeof(PageDirectoryPointerTable));
+
     return 0;
 }
 
