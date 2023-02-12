@@ -41,15 +41,15 @@ static i64 fat_entry_for_clus(u32 clus, u8* buf, const FAT32Ctx* ctx)
     ASSERT(part);
 
     const u32 fat_offset = ctx->type == FAT32 ? clus * 4 : clus * 2;
-    FATEntryLoc loc = {
-        .cluster = ctx->reserved_sector_count + (fat_offset / ctx->sectorsize),
-        .offset = fat_offset % ctx->sectorsize};
 
-    int st = part->read(part, loc.cluster, 1, buf);
+    const u32 sec = ctx->reserved_sector_count + (fat_offset / ctx->sectorsize);
+    const u32 off = fat_offset % ctx->sectorsize;
+
+    int st = part->read(part, sec, 1, buf);
     if (st < 0)
         return st;
 
-    return *((u32*)(buf + loc.offset));
+    return *((u32*)(buf + off));
 }
 
 static int fat_parse_metadata(FileSystem* fs)
