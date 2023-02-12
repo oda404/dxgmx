@@ -149,11 +149,15 @@ int elfloader_load_from_file(fd_t fd, Process* actingproc, Process* targetproc)
 
     if (ehdr.ident[EI_CLASS] == ELFCLASS32)
     {
-        return elfloader_load_from_file32(fd, actingproc, targetproc);
+        st = elfloader_load_from_file32(fd, actingproc, targetproc);
     }
     else if (ehdr.ident[EI_CLASS] == ELFCLASS64)
     {
         TODO_FATAL();
+    }
+    else
+    {
+        st = -EINVAL;
     }
 
     /* Go back to the acting process' paging struct.
@@ -161,5 +165,5 @@ int elfloader_load_from_file(fd_t fd, Process* actingproc, Process* targetproc)
     acting process. FIXME: seems hackish*/
     mm_load_paging_struct(&actingproc->paging_struct);
 
-    return -EINVAL;
+    return st;
 }
