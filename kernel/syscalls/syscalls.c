@@ -56,7 +56,7 @@ static syscall_ret_t syscalls_do_handle(syscall_t n, ...)
         break;
 
     case SYSCALL_DXGMX_LOG:
-        syscall_dxgmx_log(va_arg(list, const char*), list);
+        syscall_dxgmx_log(va_arg(list, const char*), va_arg(list, va_list));
         break;
 
     default:
