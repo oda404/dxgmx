@@ -1,11 +1,11 @@
 /**
- * Copyright 2022 Alexandru Olaru.
+ * Copyright 2023 Alexandru Olaru.
  * Distributed under the MIT license.
  */
 
-#ifndef _LIBC_STDLIB_H
-#define _LIBC_STDLIB_H
+#ifndef _STDLIB_H
+#define _STDLIB_H
 
 [[noreturn]] void exit(int status);
 
-#endif // !_LIBC_STDLIB_H
+#endif // !_STDLIB_H
