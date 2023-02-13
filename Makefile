@@ -222,4 +222,12 @@ PHONY += unmount-root
 unmount-root:
 	sudo $(SCRIPTSDIR)/unmount-root.sh --cachefile $(BUILDDIR)/root-loopdev
 
+PHONY += syncroot
+syncroot:
+	sudo $(SCRIPTSDIR)/syncroot.sh \
+	--sysroot $(DXGMX_SYSROOT) \
+	--image-path build/image.img \
+	--mountpoint $(SYSROOT_DISK_MNTPOINT) \
+	--cachefile $(BUILDDIR)/root-loopdev
+
 .PHONY: $(PHONY)
