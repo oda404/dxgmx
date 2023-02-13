@@ -12,8 +12,6 @@ ifeq ($(DXGMX_ARCH),)
     $(error DXGMX_ARCH is undefined!)
 endif
 
-DXGMX_TOOLCHAIN_ROOT ?= /
-
 ### MISC DIRECTORIES ###
 BUILDDIR          := build/
 DXGMX_SYSROOT     ?= $(PWD)/sysroot/
@@ -96,7 +94,7 @@ include $(FS_SRCDIR)/Makefile
 
 BASE_CFLAGS       += $(INCLUDEDIRS) $(WARNINGS) $(MACROS)
 CFLAGS            += $(BASE_CFLAGS) $(EXTRA_CFLAGS) $(EXTRA_WARNINGS) $(EXTRA_MACROS)
-LDFLAGS           += $(EXTRA_LDFLAGS) $(LIBS) $(EXTRA_LIBS)
+LDFLAGS           += $(EXTRA_LDFLAGS)
 
 ifeq ($(MAKECMDGOALS),)
     $(info CC: $(CC))
@@ -105,7 +103,6 @@ ifeq ($(MAKECMDGOALS),)
     $(info Build target name: $(shell [ $(shell expr length "$(TARGET_NAME)") -gt 0 ] && echo $(TARGET_NAME) || echo No target ))
     $(info Target architecture: $(DXGMX_ARCH))
     $(info Target triplet: $(DXGMX_TARGET_TRIP))
-    $(info Toolchain root: $(DXGMX_TOOLCHAIN_ROOT))
     $(info System root: $(DXGMX_SYSROOT))
     $(info CFLAGS: $(CFLAGS))
     $(info LDFLAGS: $(LDFLAGS))
