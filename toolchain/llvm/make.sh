@@ -59,13 +59,6 @@ install() {
     pushd $REPO_ROOT
         make -C build-llvm install
     popd
-
-    CLANG=${PREFIX}/bin/clang
-    CLANG_VERSION=$(${CLANG} --version | awk 'NR==1 { print $3 }')
-    CLANG_LIB_DIR=${PREFIX}/lib/clang/${CLANG_VERSION}/lib
-
-    mkdir ${CLANG_LIB_DIR}/dxgmx 2> /dev/null || true
-    cp ${CLANG_LIB_DIR}/i386-unknown-dxgmx/libclang_rt.builtins.a ${CLANG_LIB_DIR}/dxgmx/libclang_rt.builtins-i386.a
 }
 
 clean() {
