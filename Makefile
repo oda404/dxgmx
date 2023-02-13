@@ -113,22 +113,22 @@ ALL_SRC := $(ARCH_SRC) $(INIT_SRC) $(KERNEL_SRC) $(FS_SRC)
 
 # Filter out and add TARGET_NAME to each object.
 COBJS             := $(filter %.c, $(ALL_SRC))
-COBJS             := $(COBJS:%.c=%_$(BUILDTARGET_NAME).c.o)
+COBJS             := $(COBJS:%.c=%_$(TARGET_NAME).c.o)
 COBJS             := $(addprefix $(BUILDDIR)/, $(COBJS))
 CDEPS             := $(COBJS:%.o=%.d)
 
 ASMOBJS           := $(filter %.S, $(ALL_SRC))
-ASMOBJS           := $(ASMOBJS:%.S=%_$(BUILDTARGET_NAME).S.o)
+ASMOBJS           := $(ASMOBJS:%.S=%_$(TARGET_NAME).S.o)
 ASMOBJS           := $(addprefix $(BUILDDIR)/, $(ASMOBJS))
 ASMDEPS           := $(ASMOBJS:%.o=%.d)
 
 MODOBJS           := $(filter %.c, $(MODULES_SRC))
-MODOBJS           := $(MODOBJS:%.c=%_mod_$(BUILDTARGET_NAME).c.o)
+MODOBJS           := $(MODOBJS:%.c=%_mod_$(TARGET_NAME).c.o)
 MODOBJS           := $(addprefix $(BUILDDIR)/, $(MODOBJS))
 MODDEPS           := $(MODOBJS:%.o=%.d)
 
 KINIT_STAGE3_OBJ := $(filter %.c, $(KINIT_STAGE3_SRC))
-KINIT_STAGE3_OBJ := $(KINIT_STAGE3_OBJ:%.c=%_kinit3_$(BUILDTARGET_NAME).c.o)
+KINIT_STAGE3_OBJ := $(KINIT_STAGE3_OBJ:%.c=%_kinit3_$(TARGET_NAME).c.o)
 KINIT_STAGE3_OBJ := $(addprefix $(BUILDDIR)/, $(KINIT_STAGE3_OBJ))
 KINIT_STAGE3_DEP := $(KINIT_STAGE3_OBJ:%.o=%.d)
 
@@ -152,25 +152,25 @@ $(KERNEL_BIN_PATH): $(DXGMX_DEPS) $(DXGMX_COMMON_DEPS)
 	@cp $(KERNEL_BIN_PATH) $(DXGMX_SYSROOT)/boot/
 
 -include $(CDEPS)
-$(BUILDDIR)/%_$(BUILDTARGET_NAME).c.o: %.c $(DXGMX_COMMON_DEPS)
+$(BUILDDIR)/%_$(TARGET_NAME).c.o: %.c $(DXGMX_COMMON_DEPS)
 	@mkdir -p $(dir $@)
 	@$(PRETTY_PRINT) CC $<
 	@$(CC) -c $< $(CFLAGS) -o $@
 
 -include $(KINIT_STAGE3_DEP)
-$(BUILDDIR)/%_kinit3_$(BUILDTARGET_NAME).c.o: %.c $(DXGMX_COMMON_DEPS)
+$(BUILDDIR)/%_kinit3_$(TARGET_NAME).c.o: %.c $(DXGMX_COMMON_DEPS)
 	@mkdir -p $(dir $@)
 	@$(PRETTY_PRINT) CC $<
 	@$(CC) -c $< $(BASE_CFLAGS) -o $@
 
 -include $(MODDEPS)
-$(BUILDDIR)/%_mod_$(BUILDTARGET_NAME).c.o: %.c $(DXGMX_COMMON_DEPS)
+$(BUILDDIR)/%_mod_$(TARGET_NAME).c.o: %.c $(DXGMX_COMMON_DEPS)
 	@mkdir -p $(dir $@)
 	@$(PRETTY_PRINT) "CC MOD" $<
 	@$(CC) -c $< $(CFLAGS) -o $@
 
 -include $(ASMDEPS)
-$(BUILDDIR)/%_$(BUILDTARGET_NAME).S.o: %.S $(DXGMX_COMMON_DEPS)
+$(BUILDDIR)/%_$(TARGET_NAME).S.o: %.S $(DXGMX_COMMON_DEPS)
 	@mkdir -p $(dir $@)
 	@$(PRETTY_PRINT) AS $<
 	@$(AS) -c $< $(CFLAGS) -o $@
