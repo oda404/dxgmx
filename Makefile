@@ -36,14 +36,14 @@ BASE_CFLAGS            := \
 -MD -MP -isystem=/usr/include -std=c2x \
 -fno-omit-frame-pointer -ffreestanding \
 -fno-builtin -march=$(DXGMX_ARCH) \
--fno-pie -fno-pic
+-fno-pie -fno-pic --target=$(DXGMX_ARCH)-unknown-dxgmx
 
 INCLUDEDIRS := -I$(INCLUDE_SRCDIR) 
 
 LLVM=$(shell $(SCRIPTSDIR)/is-llvm.sh)
 
-ifeq ($(LLVM),1)
-    BASE_CFLAGS += --target=$(DXGMX_ARCH)-unknown-dxgmx
+ifneq ($(LLVM),1)
+    $(error You need an LLVM toolchain to build dxgmx.)
 endif
 
 LDFLAGS           := -nostdlib
