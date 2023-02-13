@@ -39,10 +39,10 @@ LOOPDEV=$(cat $CACHEFILE)
 
 MNTPOINT=$(findmnt -o TARGET -n ${LOOPDEV}p1)
 
-sudo umount ${LOOPDEV}p1
-sudo losetup --detach $LOOPDEV
+umount ${LOOPDEV}p1
+losetup --detach $LOOPDEV
 
-sudo rmdir $MNTPOINT
+rmdir $MNTPOINT
 rm $CACHEFILE
 
 echo Unmounted and detached $LOOPDEV

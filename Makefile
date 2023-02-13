@@ -12,6 +12,8 @@ ifeq ($(DXGMX_ARCH),)
     $(error DXGMX_ARCH is undefined!)
 endif
 
+SYSROOT_DISK_MNTPOINT  ?= /mnt/dxgmx-sysroot
+
 ### MISC DIRECTORIES ###
 BUILDDIR          := build/
 DXGMX_SYSROOT     ?= $(PWD)/sysroot/
@@ -211,13 +213,13 @@ mrclean:
 
 PHONY += mount-root
 mount-root: build/image.img
-	$(SCRIPTSDIR)/mount-root.sh \
+	sudo $(SCRIPTSDIR)/mount-root.sh \
 	--image-path build/image.img \
-	--mountpoint /mnt/dxgmx-root \
+	--mountpoint $(SYSROOT_DISK_MNTPOINT) \
 	--cachefile $(BUILDDIR)/root-loopdev
 
 PHONY += unmount-root
 unmount-root:
-	$(SCRIPTSDIR)/unmount-root.sh --cachefile $(BUILDDIR)/root-loopdev
+	sudo $(SCRIPTSDIR)/unmount-root.sh --cachefile $(BUILDDIR)/root-loopdev
 
 .PHONY: $(PHONY)

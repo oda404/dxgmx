@@ -45,9 +45,9 @@ if [ -z "$IMG_PATH" ] || [ -z "$MOUNTPOINT" ] || [ -z "$CACHEFILE" ]; then
 	exit 1
 fi
 
-LOOPDEV=$(sudo losetup --find --show --partscan $IMG_PATH)
-sudo mkdir -p $MOUNTPOINT
-sudo mount ${LOOPDEV}p1 $MOUNTPOINT
+LOOPDEV=$(losetup --find --show --partscan $IMG_PATH)
+mkdir -p $MOUNTPOINT || $(losetup --detach $LOOPDEV && exit 1)
+mount ${LOOPDEV}p1 $MOUNTPOINT || $(losetup --detach $LOOPDEV && exit 1)
 
 echo "${LOOPDEV}" > $CACHEFILE
 
