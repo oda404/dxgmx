@@ -5,6 +5,7 @@
 
 #include <dxgmx/assert.h>
 #include <dxgmx/attrs.h>
+#include <dxgmx/cpu.h>
 #include <dxgmx/elf/elf.h>
 #include <dxgmx/elf/elfloader.h>
 #include <dxgmx/errno.h>
@@ -122,8 +123,6 @@ static void procm_free_proc_data(Process* proc)
     if (proc->path)
         kfree(proc->path);
 
-    procm_destroy_proc_kstack(proc);
-
     mm_destroy_paging_struct(&proc->paging_struct);
 }
 
@@ -131,6 +130,7 @@ static void procm_free_proc(Process* proc)
 {
     // FIXME: shrink array
     procm_free_proc_data(proc);
+    procm_destroy_proc_kstack(proc);
     kfree(proc);
 }
 
@@ -180,10 +180,6 @@ static int procm_setup_proc_memory(
     if (st < 0)
         goto err;
 
-    st = procm_create_proc_kstack(targetproc);
-    if (st < 0)
-        goto err;
-
     return 0;
 
 err:
@@ -200,8 +196,10 @@ int procm_replace_proc(
     if (!path)
         return -EINVAL;
 
-    /* Make a copy of the old process. procm_setup_proc_memory will make the
-     * needed changes. */
+    /* When we replace a process, we keep everything from the old process except
+     * it's path, and paging structure. Critically it's kernel stack is kept the
+     * same. */
+
     Process newproc = {0};
 
     int st = procm_setup_proc_memory(path, actingproc, &newproc);
@@ -219,14 +217,23 @@ int procm_replace_proc(
     newproc.pid = actingproc->pid;
     newproc.fds = actingproc->fds;
     newproc.fd_count = actingproc->fd_count;
+    newproc.kstack_top = actingproc->kstack_top;
+
+    /* If we just free the paging structure (that being the paging structure we
+     * are using) here and an interrupt comes, kmalloc might end up being
+     * called, as a result of that interrupt, and may fuck up our paging struct.
+     * That's why we need to be extra careful, or just turn off hardware
+     * interrupts.
+     */
+    cpu_disable_irqs();
 
     procm_free_proc_data(actingproc);
-
     *actingproc = newproc;
 
+    cpu_enable_irqs();
+
     /* At this point the old process is gone, and the new one is waiting to
-     * run
-     */
+     * run */
     sched_yield();
 }
 
@@ -245,11 +252,19 @@ pid_t procm_spawn_proc(
     if (st < 0)
         return st;
 
+    st = procm_create_proc_kstack(&newproc);
+    if (st < 0)
+    {
+        procm_free_proc_data(&newproc);
+        return -ENOMEM;
+    }
+
     /* Change path */
     newproc.path = strdup(path);
     if (!newproc.path)
     {
         procm_free_proc_data(&newproc);
+        procm_destroy_proc_kstack(&newproc);
         return -ENOMEM;
     }
 
@@ -257,6 +272,8 @@ pid_t procm_spawn_proc(
     if (newproc.pid <= 0)
     {
         procm_free_proc_data(&newproc);
+        procm_destroy_proc_kstack(&newproc);
+
         return -ENOSPC;
     }
 
@@ -264,6 +281,7 @@ pid_t procm_spawn_proc(
     if (st < 0)
     {
         procm_free_proc_data(&newproc);
+        procm_destroy_proc_kstack(&newproc);
         return st;
     }
 
