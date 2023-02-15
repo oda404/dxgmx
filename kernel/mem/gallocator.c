@@ -560,7 +560,9 @@ void gallocator_free(void* addr, const Heap* heap)
 
     GAllocationMeta* allocmeta = addr - sizeof(GAllocationMeta);
     if (allocmeta->signature != ALLOCATION_SIGNATURE)
-        return;
+        panic(
+            "gallocator: Tried to kfree an invalid address (maybe free twice) 0x%p",
+            addr);
 
     AllocationCtx alloc;
     alloc.chunksize = allocmeta->chunksize;
@@ -597,4 +599,9 @@ void gallocator_free(void* addr, const Heap* heap)
     addr_to_allocationctx_offset((ptr)addr, &alloc);
 
     ASSERT(gallocator_bitmap_clear_bits(alloc, chunks) == 0);
+
+    memset(
+        addr - sizeof(GAllocationMeta),
+        0,
+        allocmeta->size + sizeof(GAllocationMeta));
 }
