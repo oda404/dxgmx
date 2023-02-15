@@ -1,5 +1,5 @@
 /**
- * Copyright 2022 Alexandru Olaru.
+ * Copyright 2023 Alexandru Olaru.
  * Distributed under the MIT license.
  */
 
@@ -246,4 +246,14 @@ void cpu_hang()
 
         cpu_suspend();
     }
+}
+
+void cpu_enable_irqs()
+{
+    __asm__ volatile("cli");
+}
+
+void cpu_disable_irqs()
+{
+    __asm__ volatile("sti");
 }
