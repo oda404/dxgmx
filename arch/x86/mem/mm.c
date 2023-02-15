@@ -403,9 +403,16 @@ int mm_init_paging_struct(PagingStruct* ps)
     if (!ps)
         return -EINVAL;
 
+    int st = pagingstruct_init(ps);
+    if (st < 0)
+        return st;
+
     ps->data = kmalloc_aligned(sizeof(PageDirectoryPointerTable), PAGESIZE);
     if (!ps->data)
+    {
+        pagingstruct_destroy(ps);
         return -ENOMEM;
+    }
 
     memset(ps->data, 0, sizeof(PageDirectoryPointerTable));
 
@@ -414,18 +421,43 @@ int mm_init_paging_struct(PagingStruct* ps)
 
 int mm_destroy_paging_struct(PagingStruct* ps)
 {
-    if (!ps)
-        return -EINVAL;
+    /* This is done in a really stupid way, but it works :) */
 
-    /* Here we should free all memory owned by this PagingStruct. Freeing this
-     * exact struct is easy, but freeing any other memory used by this struct
-     * (any kmalloced Page(Directories/Tables) and any pageframes used) is the
-     * *hard* part, just because right now I have no good ideea of how to do so.
-     * A bad? ideea tho, would be storing the lower & upper addresses used by
-     * this paging struct, and walking the PageDirectory(ies) corresponding to
-     * that memory range, freeing everything on the way. Or maybe I'm just
-     * looking at this the wrong way... */
-    TODO();
+    FOR_EACH_ELEM_IN_DARR (ps->allocated_pages, ps->allocated_pages_size, page)
+    {
+        pte_t* pte = pte_from_vaddr_abs(page->vaddr, ps->data);
+        pte_set_frame_paddr(0, pte);
+        pte->present = false;
+
+        ffree_one(pte_frame_paddr(pte));
+    }
+
+    pt_t* pt = NULL;
+    FOR_EACH_ELEM_IN_DARR (ps->allocated_pages, ps->allocated_pages_size, page)
+    {
+        pt_t* pttmp = pt_from_vaddr_abs(page->vaddr, ps->data);
+        if (pt == pttmp)
+            continue;
+
+        pt = pttmp;
+        kfree(pt);
+    }
+
+    pd_t* pd = NULL;
+    FOR_EACH_ELEM_IN_DARR (ps->allocated_pages, ps->allocated_pages_size, page)
+    {
+        pd_t* pdtmp = pd_from_vaddr_abs(page->vaddr, ps->data);
+        if (pd == pdtmp)
+            continue;
+
+        pd = pdtmp;
+        kfree(pd);
+    }
+
+    kfree(ps->data);
+    ps->data = NULL;
+
+    pagingstruct_destroy(ps);
 
     return 0;
 }
@@ -482,6 +514,11 @@ int mm_new_user_page(ptr vaddr, u16 flags, PagingStruct* ps)
     int st = mm_new_page(vaddr, paddr, flags | PAGE_USER, ps);
     if (st < 0)
         ffree_one(paddr);
+
+    Page page = {.vaddr = vaddr};
+    st = pagingstruct_track_page(&page, ps);
+    if (st < 0)
+        ASSERT_NOT_HIT(); // FIXME: can't be fucked.
 
     return st;
 }
