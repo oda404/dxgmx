@@ -15,7 +15,7 @@
 #include <dxgmx/kmalloc.h>
 #include <dxgmx/math.h>
 #include <dxgmx/module.h>
-#include <dxgmx/storage/blkdevmanager.h>
+#include <dxgmx/storage/blkdevm.h>
 #include <dxgmx/string.h>
 #include <dxgmx/todo.h>
 #include <posix/sys/stat.h>
@@ -189,7 +189,7 @@ static void fat_destroy(FileSystem* fs)
 static int fat_init(FileSystem* fs)
 {
     /* Find the block device. */
-    const BlockDevice* blkdev = blkdevm_find_blkdev_by_id(fs->mntsrc);
+    const BlockDevice* blkdev = blkdevm_find_blkdev(fs->mntsrc);
     if (!blkdev)
         return -ENOTBLK;
 

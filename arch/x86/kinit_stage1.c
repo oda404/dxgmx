@@ -1,5 +1,5 @@
 /**
- * Copyright 2022 Alexandru Olaru.
+ * Copyright 2023 Alexandru Olaru.
  * Distributed under the MIT license.
  */
 
@@ -11,7 +11,6 @@
 #include <dxgmx/ksyms.h>
 #include <dxgmx/mem/mm.h>
 #include <dxgmx/panic.h>
-#include <dxgmx/storage/blkdevmanager.h>
 #include <dxgmx/timekeep.h>
 #include <dxgmx/x86/ata.h>
 #include <dxgmx/x86/gdt.h>

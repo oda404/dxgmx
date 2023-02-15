@@ -1,12 +1,12 @@
 /**
- * Copyright 2022 Alexandru Olaru.
+ * Copyright 2023 Alexandru Olaru.
  * Distributed under the MIT license.
  */
 
 #include <dxgmx/attrs.h>
 #include <dxgmx/klog.h>
 #include <dxgmx/kmalloc.h>
-#include <dxgmx/storage/blkdevmanager.h>
+#include <dxgmx/storage/blkdevm.h>
 #include <dxgmx/string.h>
 #include <dxgmx/todo.h>
 #include <dxgmx/utils/bytes.h>
@@ -15,9 +15,6 @@
 #include <dxgmx/x86/portio.h>
 
 #define KLOGF_PREFIX "ata: "
-
-static BlockDevice* g_ata_devices = NULL;
-static size_t g_ata_devices_count = 0;
 
 static void ata_dump_device_info(const BlockDevice* dev)
 {
@@ -60,10 +57,19 @@ static void ata_dump_device_info(const BlockDevice* dev)
 
 static bool ata_generate_drive_name(BlockDevice* dev)
 {
-    if (!dev)
-        return false;
+    BlockDeviceList* blkdevices = blkdevm_get_blkdevs();
 
-    if (g_ata_devices_count > 26)
+    char suffix = 'a';
+    FOR_EACH_BLKDEV((*blkdevices), blkdev)
+    {
+        if (!blkdev->type || !blkdev->name)
+            continue;
+
+        if (strcmp(blkdev->type, "pata") == 0 && blkdev->name[2] >= suffix)
+            suffix = blkdev->name[2] + 1;
+    }
+
+    if (suffix > 'z')
         return false; // for now
 
     dev->name = kmalloc(4);
@@ -71,37 +77,34 @@ static bool ata_generate_drive_name(BlockDevice* dev)
         return false;
 
     strcpy(dev->name, "hda");
-    dev->name[2] += g_ata_devices_count - 1;
+    dev->name[2] = suffix;
 
     return true;
 }
 
-static BlockDevice* ata_new_device()
+static BlockDevice* ata_new_blkdev()
 {
-    BlockDevice dev;
-    memset(&dev, 0, sizeof(dev));
-    /* Allocate the AtaStorageDevice struct */
-    if (!(dev.extra = kmalloc(sizeof(AtaStorageDevice))))
+    BlockDevice* blkdev = blkdevm_new_blkdev();
+    if (!blkdev)
         return NULL;
 
-    /* Try to enlarge the devices table */
-    BlockDevice* tmp = krealloc(
-        g_ata_devices, (g_ata_devices_count + 1) * sizeof(BlockDevice));
-
-    if (!tmp)
+    blkdev->extra = kcalloc(sizeof(AtaStorageDevice));
+    if (!blkdev->extra)
     {
-        kfree(dev.extra);
+        blkdevm_free_blkdev(blkdev);
         return NULL;
     }
 
-    /* If we got here everything is fine. */
-    memset(dev.extra, 0, sizeof(AtaStorageDevice));
-    ++g_ata_devices_count;
-    g_ata_devices = tmp;
+    return blkdev;
+}
 
-    tmp = &g_ata_devices[g_ata_devices_count - 1];
-    *tmp = dev;
-    return tmp;
+static int ata_free_device(BlockDevice* blkdev)
+{
+    kfree(blkdev->extra);
+    if (blkdev->name)
+        kfree(blkdev->name);
+    blkdevm_free_blkdev(blkdev);
+    return 0;
 }
 
 static bool ata_identify_drive(atabus_t bus_io, atabus_t bus_ctrl, bool master)
@@ -149,7 +152,7 @@ static bool ata_identify_drive(atabus_t bus_io, atabus_t bus_ctrl, bool master)
             break;
     }
 
-    BlockDevice* dev = ata_new_device();
+    BlockDevice* dev = ata_new_blkdev();
     if (!dev)
     {
         for (size_t i = 0; i < 256; ++i)
@@ -158,17 +161,10 @@ static bool ata_identify_drive(atabus_t bus_io, atabus_t bus_ctrl, bool master)
         KLOGF(ERR, "Failed to allocate a new device!");
         return false;
     }
-    AtaStorageDevice* atadev = dev->extra;
-
-    dev->type = "pata";
-    dev->physical_sectorsize = 512;
-    atadev->master = master;
-    atadev->bus_io = bus_io;
-    atadev->bus_ctrl = bus_ctrl;
-    atadev->type = ATA_TYPE_UNKNOWN;
 
     if (!ata_generate_drive_name(dev))
     {
+        ata_free_device(dev);
         // FIXME: we should delete the allocated 'dev'.
         for (size_t i = 0; i < 256; ++i)
             port_inw(ATA_DATA_REG(bus_io));
@@ -176,6 +172,14 @@ static bool ata_identify_drive(atabus_t bus_io, atabus_t bus_ctrl, bool master)
         KLOGF(ERR, "Failed to generate drive name!");
         return false;
     }
+
+    AtaStorageDevice* atadev = dev->extra;
+    dev->type = "pata";
+    dev->physical_sectorsize = 512;
+    atadev->master = master;
+    atadev->bus_io = bus_io;
+    atadev->bus_ctrl = bus_ctrl;
+    atadev->type = ATA_TYPE_UNKNOWN;
 
     /* Read a whole sector containing information about the drive. */
     for (u16 i = 0; i < 256; ++i)
@@ -240,6 +244,9 @@ static bool ata_identify_drive(atabus_t bus_io, atabus_t bus_ctrl, bool master)
         dev->write = atapio_write;
     }
 
+    ata_dump_device_info(dev);
+    blkdevm_enumerate_partitions(dev);
+
     return true;
 }
 
@@ -278,12 +285,6 @@ _INIT int ata_init()
     ata_identify_bus(0x1F0, 0x3F6);
 
     ata_identify_bus(0x170, 0x376);
-
-    for (size_t i = 0; i < g_ata_devices_count; ++i)
-        ata_dump_device_info(&g_ata_devices[i]);
-
-    for (size_t i = 0; i < g_ata_devices_count; ++i)
-        blkdevmanager_register_dev(&g_ata_devices[i]);
 
     return 0;
 }

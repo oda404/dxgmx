@@ -1,5 +1,5 @@
 /**
- * Copyright 2022 Alexandru Olaru.
+ * Copyright 2023 Alexandru Olaru.
  * Distributed under the MIT license.
  */
 
@@ -10,7 +10,7 @@
 #include <dxgmx/storage/blkdev.h>
 #include <dxgmx/types.h>
 
-typedef struct _ATTR_PACKED S_MbrPartition
+typedef struct _ATTR_PACKED S_MBRPartition
 {
     u8 drive_attrs;
     u8 chs_head_start;
@@ -22,19 +22,33 @@ typedef struct _ATTR_PACKED S_MbrPartition
     u16 chs_ending_cylinder : 10;
     u32 lba_start;
     u32 sector_count;
-} MbrPartition;
+} MBRPartition;
 
-typedef struct _ATTR_PACKED S_Mbr
+typedef struct _ATTR_PACKED S_MBR
 {
     u8 bootstrap[440];
     u32 uid;
     u16 reserved;
-    MbrPartition partitions[4];
+    MBRPartition partitions[4];
     u16 signature;
-} Mbr;
+} MBR;
 
-int mbr_read(BlockDevice* dev, Mbr* mbr_out);
-int mbr_uuid_for_disk(const Mbr* mbr, char* dest);
-int mbr_uuid_for_part(const Mbr* mbr, size_t part_idx, char* dest);
+/**
+ * Read the MBR of a disk.
+ *
+ * 'dev' The block device to read from.
+ * 'mbr' Destination mbr.
+ *
+ * Returns:
+ * 0 on success.
+ * -ENOMEM on out of memory.
+ * other errno numbers come from the block device.
+ */
+int mbr_read(const BlockDevice* dev, MBR* mbr);
+
+int mbr_validate(MBR* mbr);
+
+int mbr_uuid_for_disk(const MBR* mbr, char* dest);
+int mbr_uuid_for_part(const MBR* mbr, size_t part_idx, char* dest);
 
 #endif // !_DXGMX_STORAGE_MBR_H
