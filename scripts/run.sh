@@ -71,12 +71,12 @@ case "$EMU" in
 		-cpu host,migratable=off \
 		-display none \
 		-serial stdio \
-		-drive file=$DXGMX_DISK,format=raw,index=0,media=disk "
+		-drive file=$DXGMX_DISK,format=raw,index=0,media=disk,id=disk "
 
 		if [ -n "$KERNEL" ]; then
 			EMULATOR_OPTS+="-kernel $KERNEL"
 		else
-			EMULATOR_OPTS+="-cdrom $ISO"
+			EMULATOR_OPTS+=" -cdrom $ISO -boot d "
 		fi
 	;;
 	*)
