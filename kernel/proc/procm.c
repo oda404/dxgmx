@@ -82,7 +82,7 @@ static void procm_destroy_proc_kstack(Process* targetproc)
 /* Create and map the stack for targetproc */
 static int procm_create_proc_stack(Process* targetproc)
 {
-    ptr stage3_stack_top = PROC_VIRTUAL_HIGH_ADDRESS - PAGESIZE;
+    ptr stage3_stack_top = PROC_HIGH_ADDRESS - PAGESIZE;
 
     // FIXME: don't explictly map all stack pages here.
     for (size_t i = 0; i < PROC_STACK_PAGESPAN; ++i)
@@ -316,7 +316,7 @@ pid_t procm_spawn_init()
      * process' text. */
     for (size_t page = 0; page < stage3_text_size_aligned; page += PAGESIZE)
     {
-        ptr vaddr = PROC_VIRTUAL_START_OFFSET + (page * PAGESIZE);
+        ptr vaddr = PROC_LOW_ADDRESS + (page * PAGESIZE);
 
         /* I'm not event going to bother clearing PAGE_W as we spend so little
          * time in kinit_stage3 and it's a *known* environment */
@@ -344,7 +344,7 @@ pid_t procm_spawn_init()
 
     /* Copy entire text section, meaning one function */
     memcpy(
-        (void*)PROC_VIRTUAL_START_OFFSET,
+        (void*)PROC_LOW_ADDRESS,
         (void*)kimg_kinit_stage3_text_start(),
         stage3_text_size);
 
@@ -353,7 +353,7 @@ pid_t procm_spawn_init()
 
     /* Since the kinit_stage3 sections contains one thing (a function), we can
      * just point it to the beginning of where that section was coppied. */
-    proc.inst_ptr = PROC_VIRTUAL_START_OFFSET;
+    proc.inst_ptr = PROC_LOW_ADDRESS;
 
     st = procm_add_proc_to_pool(&proc);
     if (st < 0)
