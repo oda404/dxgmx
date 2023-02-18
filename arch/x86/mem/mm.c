@@ -11,6 +11,7 @@
 #include <dxgmx/klog.h>
 #include <dxgmx/kmalloc.h>
 #include <dxgmx/math.h>
+#include <dxgmx/mem/dma.h>
 #include <dxgmx/mem/falloc.h>
 #include <dxgmx/mem/heap.h>
 #include <dxgmx/mem/mm.h>
@@ -394,6 +395,8 @@ _INIT int mm_init()
      * without being able to allocate memory. */
     if (kmalloc_init() != 0)
         KLOGF(WARN, "Failed to initialize kmalloc!");
+
+    dma_init();
 
     return 0;
 }
