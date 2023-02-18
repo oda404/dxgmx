@@ -1,5 +1,5 @@
 /**
- * Copyright 2022 Alexandru Olaru.
+ * Copyright 2023 Alexandru Olaru.
  * Distributed under the MIT license.
  */
 
@@ -44,5 +44,28 @@ typedef i64 ssize_t;
 /* For each loop to simplify looping over a dynamic array. */
 #define FOR_EACH_ELEM_IN_DARR(arr, count, elem)                                \
     for (__typeof__(arr) elem = arr; elem < arr + count; ++elem)
+
+#define DEFINE_ERR_OR(_type)                                                   \
+    struct _S_ErrorOr_##_type                                                  \
+    {                                                                          \
+        int error;                                                             \
+        _type value;                                                           \
+    };
+
+#define ERR_OR(_type) struct _S_ErrorOr_##_type
+
+#define ERR(_type, _err)                                                       \
+    (struct _S_ErrorOr_##_type)                                                \
+    {                                                                          \
+        .error = _err                                                          \
+    }
+
+#define VALUE(_type, _val)                                                     \
+    (struct _S_ErrorOr_ptr)                                                    \
+    {                                                                          \
+        .value = _val                                                          \
+    }
+
+DEFINE_ERR_OR(ptr);
 
 #endif //!_DXGMX_TYPES_H
