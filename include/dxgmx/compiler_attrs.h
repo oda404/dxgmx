@@ -72,6 +72,8 @@
  */
 #define _ATTR_NEVER_INLINE __attribute__((noinline))
 
+#define _WEAK __attribute__((weak))
+
 #endif // __GNUC__
 
 #endif //!_DXGMX_COMPILER_ATTRS_H
