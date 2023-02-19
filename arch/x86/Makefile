@@ -7,7 +7,6 @@ $(ARCH_SRCDIR)/cmos.c \
 $(ARCH_SRCDIR)/acpi.c \
 $(ARCH_SRCDIR)/gdt.c \
 $(ARCH_SRCDIR)/pci.c \
-$(ARCH_SRCDIR)/kstdio.c \
 $(ARCH_SRCDIR)/serial.c \
 $(ARCH_SRCDIR)/panic.c \
 $(ARCH_SRCDIR)/syscalls.c \

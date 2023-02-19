@@ -9,6 +9,7 @@ $(KERNEL_SRCDIR)/kimg.c \
 $(KERNEL_SRCDIR)/module.c \
 $(KERNEL_SRCDIR)/panic.c \
 $(KERNEL_SRCDIR)/user.c \
+$(KERNEL_SRCDIR)/kstdio.c \
 
 KINIT_STAGE3_SRC := $(KERNEL_SRCDIR)/kinit_stage3.c
 

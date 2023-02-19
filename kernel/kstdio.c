@@ -1,7 +1,10 @@
 /**
- * Copyright 2022 Alexandru Olaru.
+ * Copyright 2023 Alexandru Olaru.
  * Distributed under the MIT license.
  */
+
+/* FIXME: this file should be architecture agnostic, but it includes
+ * architecture specifc stuff. We should separate this stuff into drivers. */
 
 #include <dxgmx/attrs.h>
 #include <dxgmx/kstdio.h>
@@ -12,7 +15,7 @@
 static VGATextRenderingContext g_vgatext_ctx;
 static bool g_serial_debug = false;
 
-static _INIT void kstdio_print_serial_debug(const char* buf, size_t n)
+static void kstdio_print_serial_debug(const char* buf, size_t n)
 {
     for (size_t i = 0; i < n; ++i)
         serial_write(buf[i], 0x3F8);
@@ -39,7 +42,9 @@ size_t kstdio_write(const char* buf, size_t n)
 
         case '\t':
             for (size_t k = 0; k < 4; ++k)
+            {
                 vgatext_print_char(' ', &g_vgatext_ctx);
+            }
             break;
 
         case '\r':
