@@ -16,10 +16,10 @@
 #define LOAD_END_ADDR 0
 #define BSS_END_ADDR 0
 #define ENTRY_ADDR 0
-#define VIDEO_MODE_TYPE 1
-#define VIDEO_WIDTH 0
-#define VIDEO_HEIGHT 0
-#define VIDEO_DEPTH 0
+#define VIDEO_MODE_TYPE 0
+#define VIDEO_WIDTH 800
+#define VIDEO_HEIGHT 600
+#define VIDEO_DEPTH 32
 
 _ATTR_SECTION(".bootloader")
 long mbootconfig[] = {
