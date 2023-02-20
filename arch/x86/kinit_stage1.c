@@ -6,18 +6,23 @@
 #include <dxgmx/attrs.h>
 #include <dxgmx/cpu.h>
 #include <dxgmx/kconfig.h>
+#include <dxgmx/kimg.h>
 #include <dxgmx/klog.h>
-#include <dxgmx/kstdio.h>
+#include <dxgmx/kstdio/kstdio.h>
 #include <dxgmx/ksyms.h>
 #include <dxgmx/mem/mm.h>
 #include <dxgmx/panic.h>
 #include <dxgmx/timekeep.h>
+#include <dxgmx/video/fb.h>
+#include <dxgmx/video/psf.h>
 #include <dxgmx/x86/ata.h>
 #include <dxgmx/x86/gdt.h>
 #include <dxgmx/x86/idt.h>
 #include <dxgmx/x86/interrupts.h>
 #include <dxgmx/x86/multiboot.h>
 #include <dxgmx/x86/pci.h>
+
+#define KLOGF_PREFIX "kinit_stage1: "
 
 _INIT bool kinit_stage1()
 {
@@ -37,6 +42,34 @@ _INIT bool kinit_stage1()
     cpu_identify();
 
     mm_init();
+
+    MultibootMBI* mbi =
+        (MultibootMBI*)(_multiboot_info_struct_base + kimg_map_offset());
+
+    if (mbi->fb.type == 1)
+    {
+        ptr paddr = mbi->fb.base;
+        size_t width = mbi->fb.width;
+        size_t height = mbi->fb.height;
+        size_t bpp = mbi->fb.bpp;
+
+        int st = fb_init(paddr, width, height, bpp);
+        if (st < 0)
+        {
+            KLOGF(
+                ERR,
+                "Failed to initialize framebuffer at 0x%p (%dx%d:%d), st: %d.",
+                (void*)paddr,
+                width,
+                height,
+                bpp,
+                st);
+        }
+        else
+        {
+            kstdio_init_fb();
+        }
+    }
 
     timekeep_init();
 

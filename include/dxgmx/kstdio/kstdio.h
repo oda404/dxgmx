@@ -9,6 +9,10 @@
 #include <dxgmx/types.h>
 
 bool kstdio_init();
+
+/* Temporary function until we implement kernel stdout drivers */
+int kstdio_init_fb();
+
 size_t kstdio_write(const char* buf, size_t n);
 void kstdio_set_serial_debug(bool enabled);
 

@@ -4,7 +4,7 @@
  */
 
 #include <dxgmx/kprintf.h>
-#include <dxgmx/kstdio.h>
+#include <dxgmx/kstdio/kstdio.h>
 #include <dxgmx/stdio.h>
 #include <dxgmx/string.h>
 

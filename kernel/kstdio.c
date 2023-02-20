@@ -7,13 +7,20 @@
  * architecture specifc stuff. We should separate this stuff into drivers. */
 
 #include <dxgmx/attrs.h>
-#include <dxgmx/kstdio.h>
+#include <dxgmx/errno.h>
+#include <dxgmx/kmalloc.h>
+#include <dxgmx/kstdio/kstdio.h>
+#include <dxgmx/kstdio/sink.h>
 #include <dxgmx/todo.h>
+#include <dxgmx/video/fb.h>
 #include <dxgmx/x86/serial.h>
 #include <dxgmx/x86/vga_text.h>
 
 static VGATextRenderingContext g_vgatext_ctx;
 static bool g_serial_debug = false;
+
+extern KOutputSink g_fb_koutput_sink;
+static bool g_fb_up = false;
 
 static void kstdio_print_serial_debug(const char* buf, size_t n)
 {
@@ -30,6 +37,17 @@ _INIT bool kstdio_init()
     return true;
 }
 
+int kstdio_init_fb()
+{
+    int st = g_fb_koutput_sink.init(&g_fb_koutput_sink);
+    if (st < 0)
+        return st;
+
+    g_fb_up = true;
+
+    return 0;
+}
+
 size_t kstdio_write(const char* buf, size_t n)
 {
     for (size_t i = 0; i < n; ++i)
@@ -38,12 +56,16 @@ size_t kstdio_write(const char* buf, size_t n)
         {
         case '\n':
             vgatext_newline(&g_vgatext_ctx);
+            if (g_fb_up)
+                g_fb_koutput_sink.newline(&g_fb_koutput_sink);
             break;
 
         case '\t':
             for (size_t k = 0; k < 4; ++k)
             {
                 vgatext_print_char(' ', &g_vgatext_ctx);
+                if (g_fb_up)
+                    g_fb_koutput_sink.output_char(' ', &g_fb_koutput_sink);
             }
             break;
 
@@ -53,6 +75,8 @@ size_t kstdio_write(const char* buf, size_t n)
 
         default:
             vgatext_print_char(buf[i], &g_vgatext_ctx);
+            if (g_fb_up)
+                g_fb_koutput_sink.output_char(buf[i], &g_fb_koutput_sink);
             break;
         }
     }
