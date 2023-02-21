@@ -61,7 +61,7 @@ typedef i64 ssize_t;
     }
 
 #define VALUE(_type, _val)                                                     \
-    (struct _S_ErrorOr_ptr)                                                    \
+    (struct _S_ErrorOr_##_type)                                                \
     {                                                                          \
         .value = _val                                                          \
     }
