@@ -3,14 +3,15 @@
  * Distributed under the MIT license.
  */
 
+#include "ata.h"
 #include <dxgmx/attrs.h>
 #include <dxgmx/klog.h>
 #include <dxgmx/kmalloc.h>
+#include <dxgmx/module.h>
 #include <dxgmx/storage/blkdevm.h>
 #include <dxgmx/string.h>
 #include <dxgmx/todo.h>
 #include <dxgmx/utils/bytes.h>
-#include <dxgmx/x86/ata.h>
 #include <dxgmx/x86/idt.h>
 #include <dxgmx/x86/portio.h>
 
@@ -20,8 +21,8 @@ static void ata_dump_device_info(const BlockDevice* dev)
 {
     char unit[4] = {0};
     const char* mode;
-    size_t size = bytes_to_human_readable(
-        dev->sector_count * dev->physical_sectorsize, unit);
+    size_t size =
+        bytes_to_human_readable(dev->sector_count * dev->sectorsize, unit);
 
     AtaStorageDevice* atadev = dev->extra;
     if (!atadev)
@@ -55,12 +56,10 @@ static void ata_dump_device_info(const BlockDevice* dev)
         mode);
 }
 
-static bool ata_generate_drive_name(BlockDevice* dev)
+static bool ata_generate_drive_name(BlockDevice* dev, BlockDeviceDriver* drv)
 {
-    BlockDeviceList* blkdevices = blkdevm_get_blkdevs();
-
     char suffix = 'a';
-    FOR_EACH_BLKDEV((*blkdevices), blkdev)
+    FOR_EACH_DRIVER_BLKDEV (drv, blkdev)
     {
         if (!blkdev->type || !blkdev->name)
             continue;
@@ -82,32 +81,34 @@ static bool ata_generate_drive_name(BlockDevice* dev)
     return true;
 }
 
-static BlockDevice* ata_new_blkdev()
+static BlockDevice* ata_new_blkdev(BlockDeviceDriver* drv)
 {
-    BlockDevice* blkdev = blkdevm_new_blkdev();
+    BlockDevice* blkdev = blkdevdrv_new_blkdev(drv);
     if (!blkdev)
         return NULL;
 
     blkdev->extra = kcalloc(sizeof(AtaStorageDevice));
     if (!blkdev->extra)
     {
-        blkdevm_free_blkdev(blkdev);
+        blkdevdrv_free_blkdev(blkdev, drv);
         return NULL;
     }
 
     return blkdev;
 }
 
-static int ata_free_device(BlockDevice* blkdev)
+static int ata_free_device(BlockDevice* blkdev, BlockDeviceDriver* drv)
 {
     kfree(blkdev->extra);
     if (blkdev->name)
         kfree(blkdev->name);
-    blkdevm_free_blkdev(blkdev);
+
+    blkdevdrv_free_blkdev(blkdev, drv);
     return 0;
 }
 
-static bool ata_identify_drive(atabus_t bus_io, atabus_t bus_ctrl, bool master)
+static bool ata_identify_drive(
+    atabus_t bus_io, atabus_t bus_ctrl, bool master, BlockDeviceDriver* drv)
 {
     /* We only care about PATA devices, other types will be ignored. */
 
@@ -152,7 +153,7 @@ static bool ata_identify_drive(atabus_t bus_io, atabus_t bus_ctrl, bool master)
             break;
     }
 
-    BlockDevice* dev = ata_new_blkdev();
+    BlockDevice* dev = ata_new_blkdev(drv);
     if (!dev)
     {
         for (size_t i = 0; i < 256; ++i)
@@ -162,9 +163,9 @@ static bool ata_identify_drive(atabus_t bus_io, atabus_t bus_ctrl, bool master)
         return false;
     }
 
-    if (!ata_generate_drive_name(dev))
+    if (!ata_generate_drive_name(dev, drv))
     {
-        ata_free_device(dev);
+        ata_free_device(dev, drv);
         // FIXME: we should delete the allocated 'dev'.
         for (size_t i = 0; i < 256; ++i)
             port_inw(ATA_DATA_REG(bus_io));
@@ -175,7 +176,7 @@ static bool ata_identify_drive(atabus_t bus_io, atabus_t bus_ctrl, bool master)
 
     AtaStorageDevice* atadev = dev->extra;
     dev->type = "pata";
-    dev->physical_sectorsize = 512;
+    dev->sectorsize = 512;
     atadev->master = master;
     atadev->bus_io = bus_io;
     atadev->bus_ctrl = bus_ctrl;
@@ -250,7 +251,8 @@ static bool ata_identify_drive(atabus_t bus_io, atabus_t bus_ctrl, bool master)
     return true;
 }
 
-static u8 ata_identify_bus(atabus_t bus_io, atabus_t bus_ctrl)
+static u8
+ata_identify_bus(atabus_t bus_io, atabus_t bus_ctrl, BlockDeviceDriver* drv)
 {
     port_outb(0, ATA_DEV_CTRL_REG(bus_ctrl));
 
@@ -258,11 +260,11 @@ static u8 ata_identify_bus(atabus_t bus_io, atabus_t bus_ctrl)
 
     /* try master drive. */
     port_outb(0xA0, ATA_DRIVE_SEL_REG(bus_io));
-    ret += ata_identify_drive(bus_io, bus_ctrl, true);
+    ret += ata_identify_drive(bus_io, bus_ctrl, true, drv);
 
     /* try slave drive. */
     port_outb(0xB0, ATA_DRIVE_SEL_REG(bus_io));
-    ret += ata_identify_drive(bus_io, bus_ctrl, false);
+    ret += ata_identify_drive(bus_io, bus_ctrl, false, drv);
 
     return ret;
 }
@@ -277,14 +279,39 @@ static void ata_secondary_isr(InterruptFrame* frame)
     (void)frame;
 }
 
-_INIT int ata_init()
+static int ata_init(BlockDeviceDriver* drv)
 {
     idt_register_isr(IRQ14, ata_primary_isr);
     idt_register_isr(IRQ15, ata_secondary_isr);
 
-    ata_identify_bus(0x1F0, 0x3F6);
+    ata_identify_bus(0x1F0, 0x3F6, drv);
 
-    ata_identify_bus(0x170, 0x376);
+    ata_identify_bus(0x170, 0x376, drv);
 
     return 0;
 }
+
+static int ata_destroy(BlockDeviceDriver* drv)
+{
+    (void)drv;
+    return 0;
+}
+
+static BlockDeviceDriver g_ata_driver = {
+    .init = ata_init, .destroy = ata_destroy};
+
+static int ata_main()
+{
+    blkdevm_register_blkdev_driver(&g_ata_driver);
+    return 0;
+}
+
+static int ata_exit()
+{
+    blkdevm_unregister_blkdev_driver(&g_ata_driver);
+
+    return 0;
+}
+
+MODULE g_ata_module = {
+    .name = "ata", .main = ata_main, .exit = ata_exit, .stage = MODULE_STAGE3};

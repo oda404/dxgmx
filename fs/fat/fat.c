@@ -37,7 +37,7 @@
  */
 static i64 fat_entry_for_clus(u32 clus, u8* buf, const FAT32Ctx* ctx)
 {
-    const BlockDevice* part = ctx->blkdev;
+    const MountableBlockDevice* part = ctx->blkdev;
     ASSERT(part);
 
     const u32 fat_offset = ctx->type == FAT32 ? clus * 4 : clus * 2;
@@ -56,10 +56,10 @@ static int fat_parse_metadata(FileSystem* fs)
 {
     FAT32Ctx* ctx = FAT32_CTX(fs);
 
-    const BlockDevice* part = ctx->blkdev;
+    const MountableBlockDevice* part = ctx->blkdev;
     ASSERT(part);
 
-    u8* buf = kmalloc(part->physical_sectorsize);
+    u8* buf = kmalloc(part->sectorsize);
     if (!buf)
         return -ENOMEM;
 
@@ -130,9 +130,9 @@ static int fat_parse_metadata(FileSystem* fs)
     return true;
 }
 
-static int fat_validate(const BlockDevice* blkdev)
+static int fat_validate(const MountableBlockDevice* blkdev)
 {
-    u8* buf = kmalloc(blkdev->physical_sectorsize);
+    u8* buf = kmalloc(blkdev->sectorsize);
     if (!buf)
         return -ENOMEM;
 
@@ -148,7 +148,7 @@ static int fat_validate(const BlockDevice* blkdev)
         (const Fat32BootRecord*)((ptr)bpb + sizeof(FatBootRecord));
 
     /* Something is very wrong. */
-    if (bpb->sectorsize != blkdev->physical_sectorsize)
+    if (bpb->sectorsize != blkdev->sectorsize)
     {
         kfree(buf);
         return -EINVAL;
@@ -189,7 +189,8 @@ static void fat_destroy(FileSystem* fs)
 static int fat_init(FileSystem* fs)
 {
     /* Find the block device. */
-    const BlockDevice* blkdev = blkdevm_find_blkdev(fs->mntsrc);
+    const MountableBlockDevice* blkdev =
+        blkdevm_find_mountable_blkdev(fs->mntsrc);
     if (!blkdev)
         return -ENOTBLK;
 
@@ -327,7 +328,7 @@ int fat_cluster_type(u32 cluster, u8* buf, const FAT32Ctx* ctx)
 
 int fat_read_one_cluster(u8* buf, u32 clus, const FAT32Ctx* ctx)
 {
-    const BlockDevice* part = ctx->blkdev;
+    const MountableBlockDevice* part = ctx->blkdev;
     ASSERT(part);
 
     /* Try to read the first cluster sector */

@@ -213,7 +213,7 @@ typedef struct S_FAT32Ctx
     /* Maximum number of entries in a single directory cluster. */
     size_t entries_per_clusterdir;
     /* The blkdevice backing this filesystem. */
-    const BlockDevice* blkdev;
+    const MountableBlockDevice* blkdev;
 } FAT32Ctx;
 
 /* Struct that represents a position when reading an entry. */

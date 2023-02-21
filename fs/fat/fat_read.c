@@ -18,7 +18,7 @@ ssize_t fat_read(const VirtualNode* vnode, void* buf, size_t n, off_t off)
 
     const FAT32Ctx* ctx = FAT32_CTX(fs);
 
-    const BlockDevice* part = ctx->blkdev;
+    const MountableBlockDevice* part = ctx->blkdev;
     ASSERT(part);
 
     /* Cap n to the vnode size, taking into account the offset. */

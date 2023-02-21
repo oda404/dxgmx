@@ -12,9 +12,9 @@ int mbr_read(const BlockDevice* dev, MBR* mbr)
 {
     /* An MBR is 512 bytes, if we have a sector size of 512, we can skip
      * allocating a bigger buffer. */
-    if (dev->physical_sectorsize > 512)
+    if (dev->sectorsize > 512)
     {
-        u8* buf = kmalloc(dev->physical_sectorsize);
+        u8* buf = kmalloc(dev->sectorsize);
         if (!buf)
             return -ENOMEM;
 

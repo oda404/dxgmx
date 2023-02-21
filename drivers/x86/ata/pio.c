@@ -3,6 +3,7 @@
  * Distributed under the MIT license.
  */
 
+#include "ata.h"
 #include <dxgmx/klog.h>
 #include <dxgmx/kmalloc.h>
 #include <dxgmx/math.h>
@@ -10,7 +11,6 @@
 #include <dxgmx/timer.h>
 #include <dxgmx/todo.h>
 #include <dxgmx/types.h>
-#include <dxgmx/x86/ata.h>
 #include <dxgmx/x86/portio.h>
 
 #define KLOGF_PREFIX "pio: "

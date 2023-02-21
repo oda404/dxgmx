@@ -260,7 +260,7 @@ static int fat_dir_entry_to_vnode(FATEntryLoc* loc, VirtualNode* vnode)
 {
     const FAT32Ctx* ctx = FAT32_CTX(vnode->owner);
 
-    u8* fatbuf = kmalloc(ctx->blkdev->physical_sectorsize);
+    u8* fatbuf = kmalloc(ctx->blkdev->sectorsize);
     if (!fatbuf)
         return -ENOMEM;
 

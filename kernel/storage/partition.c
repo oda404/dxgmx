@@ -122,15 +122,18 @@ partitiontable_try_create_mbr(const BlockDevice* dev, PartitionTable* pt)
 }
 
 ssize_t partition_generic_read(
-    const BlockDevice* blkdev, lba_t lba, sectorcnt_t n, void* dest)
+    const MountableBlockDevice* blkdev, lba_t lba, sectorcnt_t n, void* dest)
 {
-    return blkdev->parent->read(blkdev, blkdev->offset + lba, n, dest);
+    return blkdev->parent->read(blkdev->parent, blkdev->offset + lba, n, dest);
 }
 
 ssize_t partition_generic_write(
-    const BlockDevice* blkdev, lba_t lba, sectorcnt_t n, const void* src)
+    const MountableBlockDevice* blkdev,
+    lba_t lba,
+    sectorcnt_t n,
+    const void* src)
 {
-    return blkdev->parent->write(blkdev, blkdev->offset + lba, n, src);
+    return blkdev->parent->write(blkdev->parent, blkdev->offset + lba, n, src);
 }
 
 int partitiontable_create(const BlockDevice* blkdev, PartitionTable* pt)

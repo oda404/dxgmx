@@ -9,10 +9,13 @@
 #include <dxgmx/storage/blkdev.h>
 
 ssize_t partition_generic_read(
-    const BlockDevice* blkdev, lba_t lba, sectorcnt_t n, void* dest);
+    const MountableBlockDevice* blkdev, lba_t lba, sectorcnt_t n, void* dest);
 
 ssize_t partition_generic_write(
-    const BlockDevice* blkdev, lba_t lba, sectorcnt_t n, const void* src);
+    const MountableBlockDevice* blkdev,
+    lba_t lba,
+    sectorcnt_t n,
+    const void* src);
 
 /* Generic partition struct. */
 typedef struct S_Partition

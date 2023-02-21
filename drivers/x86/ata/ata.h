@@ -1,5 +1,5 @@
 /**
- * Copyright 2022 Alexandru Olaru.
+ * Copyright 2023 Alexandru Olaru.
  * Distributed under the MIT license.
  */
 
@@ -56,7 +56,7 @@ typedef struct S_AtaStorageDevice
     u8 dma : 3;
 } AtaStorageDevice;
 
-int ata_init();
+// int ata_init();
 
 ssize_t
 atapio_read(const BlockDevice* dev, lba_t lba, sectorcnt_t sectors, void* dest);

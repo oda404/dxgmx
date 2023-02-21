@@ -18,32 +18,64 @@
 
 #define KLOGF_PREFIX "blkdevm: "
 
-static BlockDeviceList g_blkdevs;
+static LinkedList g_blkdev_drivers;
+static LinkedList g_mountable_blkdevs;
+
+static MountableBlockDevice* blkdevm_new_mountable_blkdev()
+{
+    MountableBlockDevice* mblkdev = kcalloc(sizeof(MountableBlockDevice));
+    if (!mblkdev)
+        return NULL;
+
+    if (linkedlist_add(mblkdev, &g_mountable_blkdevs) < 0)
+    {
+        kfree(mblkdev);
+        return NULL;
+    }
+
+    return mblkdev;
+}
+
+static void blkdevm_free_mountable_blkdev(MountableBlockDevice* mblkdev)
+{
+    linkedlist_remove_by_data(mblkdev, &g_mountable_blkdevs);
+    kfree(mblkdev);
+}
 
 /**
  * Free all children of 'blkdev'.
- *
- * Returns:
- * 0 on success.
  */
-static int blkdevm_free_blkdev_children(BlockDevice* blkdev)
+static void blkdevm_free_blkdev_children(BlockDevice* blkdev)
 {
-    FOR_EACH_ENTRY_IN_LL (g_blkdevs, BlockDevice*, child)
+    FOR_EACH_ENTRY_IN_LL (g_mountable_blkdevs, MountableBlockDevice*, mblkdev)
     {
         /* FIXME: There is a subtle use after kfree type meme here, when calling
-         * linkedlist_remove_by_data, and looping in the for loop but it's fine
+         * linkedlist_remove_by_data and looping in the for loop but it's fine
          * for now, since we are single-threaded non preemptible */
-        if (child->parent == blkdev)
+        if (mblkdev->parent == blkdev)
         {
-            /* This was allocated by us. */
-            kfree(child->name);
-
-            linkedlist_remove_by_data(child, &g_blkdevs);
-            kfree(child);
+            kfree(mblkdev->suffix);
+            blkdevm_free_mountable_blkdev(mblkdev);
         }
     }
+}
 
-    return 0;
+int blkdevm_register_blkdev_driver(BlockDeviceDriver* drv)
+{
+    int st = linkedlist_add(drv, &g_blkdev_drivers);
+    if (st < 0)
+        return st;
+
+    return drv->init(drv);
+}
+
+int blkdevm_unregister_blkdev_driver(BlockDeviceDriver* drv)
+{
+    int st = linkedlist_remove_by_data(drv, &g_blkdev_drivers);
+    if (st < 0)
+        return st;
+
+    return drv->destroy(drv);
 }
 
 /**
@@ -62,36 +94,30 @@ int blkdevm_enumerate_partitions(BlockDevice* dev)
     for (size_t i = 0; i < pt.partition_count; ++i)
     {
         Partition* part = &pt.partitions[i];
-        BlockDevice partblkdev = *dev;
+        MountableBlockDevice mblkdev = {
+            .offset = part->lba,
+            .sector_count = part->sector_count,
+            .sectorsize = dev->sectorsize,
+            .read = partition_generic_read,
+            .write = partition_generic_write,
+            .parent = dev};
 
-        /* Glue together the base device name and partition suffix */
-        size_t partname_len = strlen(dev->name) + strlen(part->suffix);
-        partblkdev.name = kmalloc(partname_len + 1);
-        if (!partblkdev.name)
+        mblkdev.suffix = strdup(part->suffix);
+        if (!mblkdev.suffix)
         {
             partitiontable_destroy(&pt);
             return -ENOMEM;
         }
 
-        strcpy(partblkdev.name, dev->name);
-        strcat(partblkdev.name, part->suffix);
-
-        /* Set the other stuff */
-        partblkdev.offset = part->lba;
-        partblkdev.sector_count = part->sector_count;
-        partblkdev.read = partition_generic_read;
-        partblkdev.write = partition_generic_write;
-        partblkdev.parent = dev;
-
-        BlockDevice* newdev = blkdevm_new_blkdev();
-        if (!newdev)
+        MountableBlockDevice* new_mblkdev = blkdevm_new_mountable_blkdev();
+        if (!new_mblkdev)
         {
-            kfree(partblkdev.name);
+            kfree(mblkdev.suffix);
             partitiontable_destroy(&pt);
             return -ENOMEM;
         }
 
-        *newdev = partblkdev;
+        *new_mblkdev = mblkdev;
     }
 
     /* If the above loop fails allocating something and one or more partitions
@@ -101,77 +127,89 @@ int blkdevm_enumerate_partitions(BlockDevice* dev)
     return 0;
 }
 
-BlockDevice* blkdevm_new_blkdev()
+const BlockDevice* blkdevm_find_raw_blkdev(const char* id)
 {
-    BlockDevice* blkdev = kcalloc(sizeof(BlockDevice));
-    if (!blkdev)
-        return NULL;
-
-    if (linkedlist_add(blkdev, &g_blkdevs) < 0)
-        return NULL;
-
-    return blkdev;
-}
-
-int blkdevm_free_blkdev(BlockDevice* blkdev)
-{
-    /* blkdevm doesn't allocate anything in the blkdev itself, only stuff to
-     * hold the block device. */
-
-    /* FIXME: we should check with the vfs, or at least let it know some block
-     * device was removed. */
-
-    /* We don't leave children without a parent. */
-    blkdevm_free_blkdev_children(blkdev);
-    kfree(blkdev);
-    linkedlist_remove_by_data(blkdev, &g_blkdevs);
-    return 0;
-}
-
-BlockDeviceList* blkdevm_get_blkdevs()
-{
-    return &g_blkdevs;
-}
-
-const BlockDevice* blkdevm_find_blkdev(const char* id)
-{
-    if (!id)
-        return NULL;
-
     if (strstr(id, "UUID=") == id)
     {
         const char* rawuuid = id + sizeof("UUID=");
-        return blkdevm_find_blkdev_by_uuid(rawuuid);
+        return blkdevm_find_raw_blkdev_by_uuid(rawuuid);
     }
     else
     {
-        return blkdevm_find_blkdev_by_name(id);
+        return blkdevm_find_raw_blkdev_by_name(id);
     }
 }
 
-const BlockDevice* blkdevm_find_blkdev_by_name(const char* name)
+const BlockDevice* blkdevm_find_raw_blkdev_by_name(const char* name)
 {
-    if (!name)
-        return NULL;
-
-    FOR_EACH_ENTRY_IN_LL (g_blkdevs, BlockDevice*, blkdev)
+    FOR_EACH_ENTRY_IN_LL (g_blkdev_drivers, BlockDeviceDriver*, drv)
     {
-        if (blkdev->name && strcmp(blkdev->name, name) == 0)
-            return blkdev;
+        FOR_EACH_DRIVER_BLKDEV (drv, blkdev)
+        {
+            if (blkdev->name && strcmp(blkdev->name, name) == 0)
+                return blkdev;
+        }
     }
 
     return NULL;
 }
 
-const BlockDevice* blkdevm_find_blkdev_by_uuid(const char* uuid)
+const BlockDevice* blkdevm_find_raw_blkdev_by_uuid(const char* uuid)
 {
-    if (!uuid)
-        return NULL;
-
-    FOR_EACH_ENTRY_IN_LL (g_blkdevs, BlockDevice*, blkdev)
+    FOR_EACH_ENTRY_IN_LL (g_blkdev_drivers, BlockDeviceDriver*, drv)
     {
-        if (blkdev->uuid && strcmp(blkdev->uuid, uuid) == 0)
-            return blkdev;
+        FOR_EACH_DRIVER_BLKDEV (drv, blkdev)
+        {
+            if (blkdev->uuid && strcmp(blkdev->uuid, uuid) == 0)
+                return blkdev;
+        }
+    }
+
+    return NULL;
+}
+
+const MountableBlockDevice* blkdevm_find_mountable_blkdev(const char* id)
+{
+    if (strstr(id, "UUID=") == id)
+    {
+        const char* rawuuid = id + sizeof("UUID=");
+        return blkdevm_find_mountable_blkdev_by_uuid(rawuuid);
+    }
+    else
+    {
+        return blkdevm_find_mountable_blkdev_by_name(id);
+    }
+}
+
+const MountableBlockDevice*
+blkdevm_find_mountable_blkdev_by_uuid(const char* uuid)
+{
+    FOR_EACH_ENTRY_IN_LL (g_mountable_blkdevs, MountableBlockDevice*, mblkdev)
+    {
+        if (strcmp(mblkdev->uuid, uuid) == 0)
+            return mblkdev;
+    }
+
+    return NULL;
+}
+
+const MountableBlockDevice*
+blkdevm_find_mountable_blkdev_by_name(const char* name)
+{
+#define MAX_BLKDEV_NAME_LEN 128
+
+    char buf[MAX_BLKDEV_NAME_LEN + 1];
+    FOR_EACH_ENTRY_IN_LL (g_mountable_blkdevs, MountableBlockDevice*, mblkdev)
+    {
+        size_t size = strlen(mblkdev->parent->name);
+        if (size > MAX_BLKDEV_NAME_LEN)
+            continue;
+
+        strncpy(buf, mblkdev->parent->name, MAX_BLKDEV_NAME_LEN);
+        strncat(buf, mblkdev->suffix, MAX_BLKDEV_NAME_LEN - size);
+
+        if (strcmp(buf, name) == 0)
+            return mblkdev;
     }
 
     return NULL;

@@ -29,4 +29,3 @@ include $(ARCH_SRCDIR)/boot/Makefile
 include $(ARCH_SRCDIR)/int/Makefile
 include $(ARCH_SRCDIR)/mem/Makefile
 include $(ARCH_SRCDIR)/time/Makefile
-include $(ARCH_SRCDIR)/ata/Makefile

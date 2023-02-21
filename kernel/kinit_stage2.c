@@ -84,10 +84,6 @@ _ATTR_NORETURN void kinit_stage2()
 
     modules_init_stage3();
 
-    // pci_enumerate_devices();
-
-    // ata_init();
-
     modules_dump_builtins();
 
     if (syscalls_init() < 0)
