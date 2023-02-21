@@ -1,5 +1,5 @@
 /**
- * Copyright 2021 Alexandru Olaru.
+ * Copyright 2023 Alexandru Olaru.
  * Distributed under the MIT license.
 */
 
@@ -84,6 +84,10 @@ loop1:
 .global _start
 .type _start, @function
 _start:
+  # Clear the interrupt and direction flags
+  cli
+  cld
+
   # Setup the early stack for saving any inmportant registers.
   movl $_early_stack_top - OFFSET, %esp 
 
