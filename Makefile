@@ -189,14 +189,12 @@ $(KERNEL_ISO_PATH): $(KERNEL_BIN_PATH)
 PHONY += iso-run 
 iso-run:
 	$(MAKE) iso
-	DXGMX_DISK=build/image.img DXGMX_MEM=128M \
-		$(SCRIPTSDIR)/run.sh -i $(KERNEL_ISO_PATH) -a $(DXGMX_ARCH)
+	$(SCRIPTSDIR)/run-qemu.sh -i $(KERNEL_ISO_PATH) -a $(DXGMX_ARCH)
 
 PHONY += run 
 run:
 	$(MAKE)
-	DXGMX_DISK=build/image.img DXGMX_MEM=128M \
-		$(SCRIPTSDIR)/run.sh -k $(KERNEL_BIN_PATH) -a $(DXGMX_ARCH)
+	$(SCRIPTSDIR)/run-qemu.sh -k $(KERNEL_BIN_PATH) -a $(DXGMX_ARCH)
 
 PHONY += clean 
 clean:

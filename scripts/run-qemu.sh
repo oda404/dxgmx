@@ -1,16 +1,15 @@
 #!/bin/bash
 
 usage() {
-	echo "run.sh [options]"
+	echo "run-qemu.sh [options]"
 	echo
-	echo "Run the kernel in an emulated environment."
+	echo "Run the kernel using QEMU."
 	echo 
 	echo "options:"
 	echo "  -h,--help            Print this message and exit."
 	echo "  -e,--emulator <emu>  The emulator to be used. By default qemu."
 	echo "  -k,--kernel <path>   Specify the kernel binary path."
 	echo "  -i,--iso <path>      Specify the ISO path."
-	echo "  -a,--arch <arch>     Specify the architecture"
 	echo
 	echo "Only one of the -i or -k options should be specified at once."
 }
@@ -19,8 +18,6 @@ if [[ $# -eq 0 ]]; then
 	usage
 	exit
 fi
-
-EMU=qemu
 
 while [[ $# -gt 0 ]]
 do
@@ -42,47 +39,54 @@ do
 			ISO="$2"
 			shift 2
 		;;
-		"-a"|"--arch")
-			ARCH="$2"
-			shift 2
-		;;
 		*)
 			shift
 		;;
 	esac
 done
 
-if [ -z "$KERNEL" ] && [ -z "$ISO" ] || [ -z "$ARCH" ]; then
+if [ -z "$KERNEL" ] && [ -z "$ISO" ]; then
     usage
     exit 1
 fi
 
+
 if [ -n "$KERNEL" ] && [ -n "$ISO" ]; then
 	echo "-k and -i can't both be specified at the same time."
-	exit
+	exit 1
 fi
 
-case "$EMU" in
-	"qemu")
-		EMULATOR=qemu-system-x86_64
-		EMULATOR_OPTS=" \
-		--enable-kvm \
-		-m $DXGMX_MEM \
-		-cpu host,migratable=off \
-		-display none \
-		-serial stdio \
-		-drive file=$DXGMX_DISK,format=raw,index=0,media=disk,id=disk "
+QEMU=qemu-system-x86_64
 
-		if [ -n "$KERNEL" ]; then
-			EMULATOR_OPTS+="-kernel $KERNEL"
-		else
-			EMULATOR_OPTS+=" -cdrom $ISO -boot d "
-		fi
-	;;
-	*)
-		echo "Invalid emelator $EMU"
-		exit
-	;;
-esac
+QEMU_ARGS=" \
+--enable-kvm  \
+-cpu host,migratable=off \
+-serial stdio \
+"
 
-$EMULATOR $EMULATOR_OPTS
+# Display
+if [ -n "$DXGMX_QEMU_DISPLAY" ]; then
+	QEMU_ARGS+=" -display $DXGMX_QEMU_DISPLAY"
+else
+	QEMU_ARGS+=" -display none"
+fi
+
+# Sysroot disk
+if [ -n "$DXGMX_QEMU_SYSROOT_DISK" ]; then
+	QEMU_ARGS+=" -drive file=$DXGMX_QEMU_SYSROOT_DISK,format=raw,index=0,media=disk,id=disk"
+fi
+
+# Memory
+if [ -z $DXGMX_QEMU_MEM ]; then
+	DXGMX_QEMU_MEM=128M
+fi
+QEMU_ARGS+=" -m $DXGMX_QEMU_MEM"
+
+# ISO/kernel
+if [ -n "$KERNEL" ]; then
+	QEMU_ARGS+=" -kernel $KERNEL"
+else
+	QEMU_ARGS+=" -cdrom $ISO -boot d "
+fi
+
+$QEMU $QEMU_ARGS
