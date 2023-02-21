@@ -171,6 +171,7 @@ ForEachMacros:
   - 'FOR_EACH_KPTE_IN_RANGE'
   - 'FOR_EACH_ELEM_IN_DARR'
   - 'FOR_EACH_ENTRY_IN_LL'
+  - 'FOR_EACH_SINK_OF_TYPE'
 
 TabWidth:        4
 UseCRLF:         false

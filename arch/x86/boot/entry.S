@@ -9,8 +9,8 @@
 .global _multiboot_info_struct_base
 .type _multiboot_info_struct_base, @object
 
-.global kmain
-.type kmain, @function
+.global kinit_stage2
+.type kinit_stage2, @function
 
 #define OFFSET 0xC0000000
 
@@ -172,6 +172,6 @@ higher_half:
   movl %ebx, _multiboot_info_struct_base
   movl %eax, _multiboot_magic
 
-  call kmain           # less go
+  call kinit_stage2           # less go
 
 .size _start, . - _start

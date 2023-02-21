@@ -28,10 +28,10 @@ DXGMX_TARGET_TRIP := $(DXGMX_ARCH)-unknown-dxgmx
 
 ### SRC DIRECTORIES ###
 ARCH_SRCDIR       := arch/$(SRCARCH)/
-INIT_SRCDIR       := init/
 KERNEL_SRCDIR     := kernel/
 FS_SRCDIR         := fs/
 INCLUDE_SRCDIR    := include/
+DRIVERS_SRCDIR    := drivers/
 
 ### BASE FLAGS ###
 BASE_CFLAGS            := \
@@ -73,7 +73,6 @@ export PRETTY_PRINT
 
 ### SRC FILES ###
 ARCH_SRC          :=
-INIT_SRC          :=
 KERNEL_SRC        :=
 FS_SRC            :=
 LDSCRIPT          :=
@@ -90,7 +89,6 @@ endif
 # The above variables will be populated recursively by
 # these included makefiles.
 include $(ARCH_SRCDIR)/Makefile
-include $(INIT_SRCDIR)/Makefile
 include $(KERNEL_SRCDIR)/Makefile
 include $(FS_SRCDIR)/Makefile
 
@@ -111,7 +109,7 @@ ifeq ($(MAKECMDGOALS),)
     $(info )
 endif
 
-ALL_SRC := $(ARCH_SRC) $(INIT_SRC) $(KERNEL_SRC) $(FS_SRC)
+ALL_SRC := $(ARCH_SRC) $(KERNEL_SRC) $(FS_SRC)
 
 # Filter out and add TARGET_NAME to each object.
 COBJS             := $(filter %.c, $(ALL_SRC))

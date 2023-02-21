@@ -36,16 +36,6 @@ typedef struct S_KOutputSink
     u8 type;
 
     /**
-     * Initialize the sink.
-     *
-     * 'sink' Non NULL sink to be initialized.
-     *
-     * Should return:
-     * 0 on success.
-     */
-    int (*init)(struct S_KOutputSink* sink);
-
-    /**
      * Implementation for outputing a character.
      *
      * 'c' Character to output.

@@ -272,7 +272,10 @@ static int ramfs_exit()
     return vfs_unregister_fs_driver(&g_ramfs_driver);
 }
 
-static MODULE const Module g_ramfs_module = {
-    .name = MODULE_NAME, .main = ramfs_main, .exit = ramfs_exit};
+MODULE g_ramfs_module = {
+    .name = MODULE_NAME,
+    .main = ramfs_main,
+    .stage = MODULE_STAGE3,
+    .exit = ramfs_exit};
 
 #undef MODULE_NAME

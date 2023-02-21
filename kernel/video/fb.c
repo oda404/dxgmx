@@ -3,6 +3,7 @@
  * Distributed under the MIT license.
  */
 
+#include <dxgmx/kboot.h>
 #include <dxgmx/klog.h>
 #include <dxgmx/mem/dma.h>
 #include <dxgmx/mem/falloc.h>
@@ -10,7 +11,6 @@
 #include <dxgmx/sched/sched.h>
 #include <dxgmx/string.h>
 #include <dxgmx/video/fb.h>
-#include <dxgmx/video/psf.h>
 
 #define KLOGF_PREFIX "fb: "
 
@@ -22,8 +22,16 @@ static ERR_OR(ptr) fb_map_to_virtual_space(ptr paddr, size_t n)
     return dma_map_range(paddr, n, PAGE_R | PAGE_W);
 }
 
-int fb_init(ptr paddr, size_t width, size_t height, size_t bpp)
+int fb_init()
 {
+    ptr paddr = _kboot_framebuffer_paddr;
+    size_t width = _kboot_framebuffer_width;
+    size_t height = _kboot_framebuffer_height;
+    size_t bpp = _kboot_framebuffer_bpp;
+
+    if (paddr == 0)
+        return -1;
+
     const size_t fb_size = width * height * (bpp / 8);
 
     ERR_OR(ptr) res = fb_map_to_virtual_space(paddr, fb_size);

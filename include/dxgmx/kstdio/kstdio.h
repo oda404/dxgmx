@@ -1,19 +1,16 @@
 /**
- * Copyright 2022 Alexandru Olaru.
+ * Copyright 2023 Alexandru Olaru.
  * Distributed under the MIT license.
  */
 
 #ifndef _DXGMX_KSTDIO_H
 #define _DXGMX_KSTDIO_H
 
+#include <dxgmx/kstdio/sink.h>
 #include <dxgmx/types.h>
 
-bool kstdio_init();
-
-/* Temporary function until we implement kernel stdout drivers */
-int kstdio_init_fb();
+int kstdio_register_sink(KOutputSink* sink);
 
 size_t kstdio_write(const char* buf, size_t n);
-void kstdio_set_serial_debug(bool enabled);
 
 #endif // !_DXGMX_KSTDIO_H

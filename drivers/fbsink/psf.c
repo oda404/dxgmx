@@ -3,14 +3,10 @@
  * Distributed under the MIT license.
  */
 
+#include "psf.h"
 #include <dxgmx/compiler_attrs.h>
 #include <dxgmx/errno.h>
-#include <dxgmx/klog.h>
 #include <dxgmx/string.h>
-#include <dxgmx/video/fb.h>
-#include <dxgmx/video/psf.h>
-
-#define KLOGF_PREFIX "psf: "
 
 /* You can link a PSF(U) file into the kernel if you want to display text on a
  * framebuffer. The following symbols need to point to the start/end of the PSF

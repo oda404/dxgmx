@@ -11,3 +11,6 @@ include fs/fat/module.mk
 include fs/ramfs/module.mk
 include arch/x86/multiboot/module.mk
 include kernel/builtins/module.mk
+include drivers/x86/vgasink/module.mk
+include drivers/x86/serialsink/module.mk
+include drivers/fbsink/module.mk

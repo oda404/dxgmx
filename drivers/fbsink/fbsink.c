@@ -3,15 +3,17 @@
  * Distributed under the MIT license.
  */
 
+#include "psf.h"
 #include <dxgmx/errno.h>
 #include <dxgmx/klog.h>
+#include <dxgmx/kstdio/kstdio.h>
 #include <dxgmx/kstdio/sink.h>
+#include <dxgmx/module.h>
 #include <dxgmx/sched/sched.h>
 #include <dxgmx/string.h>
 #include <dxgmx/video/fb.h>
-#include <dxgmx/video/psf.h>
 
-#define KLOGF_PREFIX "fbtext: "
+#define KLOGF_PREFIX "fbsink: "
 
 typedef struct S_FrameBufferTextRenderingContext
 {
@@ -24,7 +26,7 @@ typedef struct S_FrameBufferTextRenderingContext
     size_t glyphs_per_col;
 } FrameBufferTextRenderingContext;
 
-static u32 fbtext_koutput_color2pixel(KOutputColor color)
+static u32 fbsink_koutput_color2pixel(KOutputColor color)
 {
     switch (color)
     {
@@ -49,7 +51,7 @@ static u32 fbtext_koutput_color2pixel(KOutputColor color)
     }
 }
 
-static int fbtext_scroll(FrameBufferTextRenderingContext* ctx)
+static int fbsink_scroll(FrameBufferTextRenderingContext* ctx)
 {
     FrameBuffer* fb = ctx->fb;
 
@@ -70,7 +72,7 @@ static int fbtext_scroll(FrameBufferTextRenderingContext* ctx)
     return 0;
 }
 
-static int fbtext_init(KOutputSink* sink)
+static int fbsink_init(KOutputSink* sink)
 {
     FrameBuffer* fb = fb_get_main();
     if (!fb)
@@ -97,7 +99,7 @@ static int fbtext_init(KOutputSink* sink)
     return 0;
 }
 
-static int fbtext_newline(KOutputSink* sink)
+static int fbsink_newline(KOutputSink* sink)
 {
     /* Horrible hack, since dma pages are not mapped into user processes. I
      * don't know if, and *how* exactly we should do that... */
@@ -110,7 +112,7 @@ static int fbtext_newline(KOutputSink* sink)
     ctx->cx = 0;
 
     if (ctx->cy + 1 >= ctx->glyphs_per_col)
-        fbtext_scroll(ctx);
+        fbsink_scroll(ctx);
     else
         ++ctx->cy;
 
@@ -120,7 +122,7 @@ static int fbtext_newline(KOutputSink* sink)
     return 0;
 }
 
-static int fbtext_print_char(char c, KOutputSink* sink)
+static int fbsink_print_char(char c, KOutputSink* sink)
 {
     /* Horrible hack, since dma pages are not mapped into user processes. I
      * don't know if, and *how* exactly we should do that... */
@@ -138,7 +140,7 @@ static int fbtext_print_char(char c, KOutputSink* sink)
     size_t xoffset = ctx->cx * psfhdr->glyph_width;
     size_t yoffset = ctx->cy * psfhdr->glyph_height;
 
-    u32 pixel = fbtext_koutput_color2pixel(sink->fgcolor);
+    u32 pixel = fbsink_koutput_color2pixel(sink->fgcolor);
 
     for (size_t i = 0; i < psfhdr->glyph_height; ++i)
     {
@@ -152,7 +154,7 @@ static int fbtext_print_char(char c, KOutputSink* sink)
     }
 
     if (ctx->cx + 1 >= ctx->glyphs_per_row)
-        fbtext_newline(sink);
+        fbsink_newline(sink);
     else
         ++ctx->cx;
 
@@ -164,10 +166,36 @@ static int fbtext_print_char(char c, KOutputSink* sink)
 
 static FrameBufferTextRenderingContext g_fb_ctx;
 
-KOutputSink g_fb_koutput_sink = {
+static KOutputSink g_fbsink = {
     .name = "framebuffer",
     .type = KOUTPUT_TERMINAL,
-    .init = fbtext_init,
-    .output_char = fbtext_print_char,
-    .newline = fbtext_newline,
+    .output_char = fbsink_print_char,
+    .newline = fbsink_newline,
     .ctx = &g_fb_ctx};
+
+static int fbsink_main()
+{
+    int st = fbsink_init(&g_fbsink);
+    if (st < 0)
+        return st;
+
+    st = kstdio_register_sink(&g_fbsink);
+    if (st < 0)
+    {
+
+        // FIXME: destroy fbsink
+    }
+
+    return st;
+}
+
+static int fbsink_exit()
+{
+    return 0;
+}
+
+MODULE g_fbsink_module = {
+    .name = "fbsink",
+    .main = fbsink_main,
+    .exit = fbsink_exit,
+    .stage = MODULE_STAGE2};

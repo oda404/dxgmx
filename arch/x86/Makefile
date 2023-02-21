@@ -1,6 +1,6 @@
 
 ARCH_SRC += \
-$(ARCH_SRCDIR)/kinit_stage1.c \
+$(ARCH_SRCDIR)/kinit_arch.c \
 $(ARCH_SRCDIR)/cpu.c \
 $(ARCH_SRCDIR)/cpuid.c \
 $(ARCH_SRCDIR)/cmos.c \
@@ -26,7 +26,6 @@ $(ARCH_SRCDIR)/linker.ld
 INCLUDEDIRS += -I$(ARCH_SRCDIR)/include
 
 include $(ARCH_SRCDIR)/boot/Makefile
-include $(ARCH_SRCDIR)/video/Makefile
 include $(ARCH_SRCDIR)/int/Makefile
 include $(ARCH_SRCDIR)/mem/Makefile
 include $(ARCH_SRCDIR)/time/Makefile

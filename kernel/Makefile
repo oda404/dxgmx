@@ -10,6 +10,7 @@ $(KERNEL_SRCDIR)/module.c \
 $(KERNEL_SRCDIR)/panic.c \
 $(KERNEL_SRCDIR)/user.c \
 $(KERNEL_SRCDIR)/kstdio.c \
+$(KERNEL_SRCDIR)/kboot.c \
 
 KINIT_STAGE3_SRC := $(KERNEL_SRCDIR)/kinit_stage3.c
 
