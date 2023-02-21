@@ -149,8 +149,6 @@ $(KERNEL_BIN_PATH): $(DXGMX_DEPS) $(DXGMX_COMMON_DEPS)
 	@[ -f build/image.img ] || $(SCRIPTSDIR)/create-disk.sh -p build/image.img
 	@NM=$(NM) OBJCOPY=$(OBJCOPY) $(SCRIPTSDIR)/bake_symbols.sh $(KERNEL_BIN_PATH) 
 
-	@cp $(KERNEL_BIN_PATH) $(DXGMX_SYSROOT)/boot/
-
 -include $(CDEPS)
 $(BUILDDIR)/%_$(TARGET_NAME).c.o: %.c $(DXGMX_COMMON_DEPS)
 	@mkdir -p $(dir $@)
@@ -179,12 +177,10 @@ PHONY += iso
 iso: $(KERNEL_ISO_PATH)
 $(KERNEL_ISO_PATH): $(KERNEL_BIN_PATH)
 	$(MAKE)
-	@mkdir -p $(DXGMX_SYSROOT)/boot/grub
-	@echo "timeout=0"                      >> $(DXGMX_SYSROOT)/boot/grub/grub.cfg
-	@echo "menuentry \"$(KERNEL_BIN_NAME)\" {"    >> $(DXGMX_SYSROOT)/boot/grub/grub.cfg
-	@echo "	multiboot /boot/$(KERNEL_BIN_NAME)"   >> $(DXGMX_SYSROOT)/boot/grub/grub.cfg
-	@echo "}"                              >> $(DXGMX_SYSROOT)/boot/grub/grub.cfg
-	@grub-mkrescue -o $(KERNEL_ISO_PATH) $(DXGMX_SYSROOT)
+	$(SCRIPTSDIR)/create-iso.sh \
+	--sysroot $(DXGMX_SYSROOT) \
+	--kernel $(KERNEL_BIN_NAME) \
+	--out $(KERNEL_ISO_PATH)
 
 PHONY += iso-run 
 iso-run:
