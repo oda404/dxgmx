@@ -71,7 +71,8 @@ int linkedlist_remove_by_position(size_t pos, LinkedList* ll);
 
 /* Convenience macro for walking a linked list. */
 #define FOR_EACH_ENTRY_IN_LL(_ll, _type, _name)                                \
-    for (LinkedListNode* _node = _ll.root; _node; _node = _node->next)         \
-        for (_type _name = _node->data; _name; _name = NULL)
+    for (LinkedListNode* _node_##_name = _ll.root; _node_##_name;              \
+         _node_##_name = _node_##_name->next)                                  \
+        for (_type _name = _node_##_name->data; _name; _name = NULL)
 
 #endif // !_DXGMX_UTILS_LINKEDLIST_H
