@@ -1,4 +1,4 @@
-# Copyright 2021-2022 Alexandru Olaru.
+# Copyright 2023 Alexandru Olaru.
 # Distributed under the MIT license.
 
 KERNEL_NAME       := dxgmx
@@ -29,7 +29,6 @@ DXGMX_TARGET_TRIP := $(DXGMX_ARCH)-unknown-dxgmx
 ### SRC DIRECTORIES ###
 ARCH_SRCDIR       := arch/$(SRCARCH)/
 KERNEL_SRCDIR     := kernel/
-FS_SRCDIR         := fs/
 INCLUDE_SRCDIR    := include/
 DRIVERS_SRCDIR    := drivers/
 
@@ -74,7 +73,6 @@ export PRETTY_PRINT
 ### SRC FILES ###
 ARCH_SRC          :=
 KERNEL_SRC        :=
-FS_SRC            :=
 LDSCRIPT          :=
 HEADERS           :=
 MODULES_SRC       :=
@@ -90,7 +88,6 @@ endif
 # these included makefiles.
 include $(ARCH_SRCDIR)/Makefile
 include $(KERNEL_SRCDIR)/Makefile
-include $(FS_SRCDIR)/Makefile
 
 BASE_CFLAGS       += $(INCLUDEDIRS) $(WARNINGS) $(MACROS)
 CFLAGS            += $(BASE_CFLAGS) $(EXTRA_CFLAGS) $(EXTRA_WARNINGS) $(EXTRA_MACROS)
@@ -109,7 +106,7 @@ ifeq ($(MAKECMDGOALS),)
     $(info )
 endif
 
-ALL_SRC := $(ARCH_SRC) $(KERNEL_SRC) $(FS_SRC)
+ALL_SRC := $(ARCH_SRC) $(KERNEL_SRC)
 
 # Filter out and add TARGET_NAME to each object.
 COBJS             := $(filter %.c, $(ALL_SRC))
