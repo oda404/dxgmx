@@ -49,7 +49,7 @@ int kstdio_register_sink(KOutputSink* sink)
     if (kstdio_validate_sink(sink) < 0)
         return -EINVAL;
 
-    if (g_sink_count > SINKS_CAPACITY)
+    if (g_sink_count >= SINKS_CAPACITY)
         return -ENOMEM;
 
     int st = sink->init(sink);
