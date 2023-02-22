@@ -27,7 +27,7 @@ static void kinit_print_banner()
     klogln(INFO, "     _");
     klogln(INFO, "  __| |_  ____ _ _ __ ___ __  __");
     klogln(INFO, " / _` \\ \\/ / _` | '_ ` _ \\\\ \\/ /");
-    klogln(INFO, "| (_| |>  < (_| | | | | | |>  <");
+    klogln(INFO, "| (_| ||  | (_| | | | | | ||  |");
     klogln(
         INFO,
         " \\__,_/_/\\_\\__, |_| |_| |_/_/\\_\\ %s - %d.%d.%d",
@@ -36,19 +36,6 @@ static void kinit_print_banner()
         DXGMX_VER_MIN,
         DXGMX_PATCH_N);
     klogln(INFO, "           |___/");
-
-    {
-        struct tm date = timkeep_date();
-        klogln(
-            INFO,
-            "Current date: %02d:%02d:%02d %02d/%02d/%d.",
-            date.tm_hour,
-            date.tm_min,
-            date.tm_sec,
-            date.tm_mday,
-            date.tm_mon + 1,
-            1900 + date.tm_year);
-    }
 }
 
 _ATTR_NORETURN void kinit_stage2()
