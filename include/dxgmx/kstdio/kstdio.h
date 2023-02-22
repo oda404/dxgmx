@@ -10,6 +10,7 @@
 #include <dxgmx/types.h>
 
 int kstdio_register_sink(KOutputSink* sink);
+int kstdio_unregister_sink(KOutputSink* sink);
 
 size_t kstdio_write(const char* buf, size_t n);
 

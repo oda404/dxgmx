@@ -89,13 +89,18 @@ static int fbsink_init(KOutputSink* sink)
     sink->bgcolor = KOUTPUT_BLACK;
 
     FrameBufferTextRenderingContext* ctx = sink->ctx;
-
     ctx->cx = 0;
     ctx->cy = 0;
     ctx->fb = fb;
     ctx->glyphs_per_col = fb->height / 16;
     ctx->glyphs_per_row = fb->width / 8;
 
+    return 0;
+}
+
+static int fbsink_destroy(KOutputSink*)
+{
+    /* There's nothing to free. Only fb allocates stuff. */
     return 0;
 }
 
@@ -169,29 +174,20 @@ static FrameBufferTextRenderingContext g_fb_ctx;
 static KOutputSink g_fbsink = {
     .name = "framebuffer",
     .type = KOUTPUT_TERMINAL,
+    .init = fbsink_init,
+    .destroy = fbsink_destroy,
     .output_char = fbsink_print_char,
     .newline = fbsink_newline,
     .ctx = &g_fb_ctx};
 
 static int fbsink_main()
 {
-    int st = fbsink_init(&g_fbsink);
-    if (st < 0)
-        return st;
-
-    st = kstdio_register_sink(&g_fbsink);
-    if (st < 0)
-    {
-
-        // FIXME: destroy fbsink
-    }
-
-    return st;
+    return kstdio_register_sink(&g_fbsink);
 }
 
 static int fbsink_exit()
 {
-    return 0;
+    return kstdio_unregister_sink(&g_fbsink);
 }
 
 MODULE g_fbsink_module = {

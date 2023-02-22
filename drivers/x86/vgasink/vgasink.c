@@ -103,6 +103,11 @@ static int vgasink_init(KOutputSink* sink)
     return 0;
 }
 
+static int vgasink_destroy(KOutputSink*)
+{
+    return 0;
+}
+
 static void vgasink_scroll(size_t lines, const VGATextRenderingContext* ctx)
 {
     while (lines--)
@@ -154,29 +159,20 @@ static VGATextRenderingContext g_vga_ctx;
 static KOutputSink g_vgasink = {
     .name = "vga",
     .type = KOUTPUT_TERMINAL,
+    .init = vgasink_init,
+    .destroy = vgasink_destroy,
     .output_char = vgasink_print_char,
     .newline = vgasink_newline,
     .ctx = &g_vga_ctx};
 
 static int vgasink_main()
 {
-    int st = vgasink_init(&g_vgasink);
-    if (st < 0)
-        return st;
-
-    st = kstdio_register_sink(&g_vgasink);
-    if (st < 0)
-    {
-
-        // FIXME: destroy vgasink
-    }
-
-    return st;
+    return kstdio_register_sink(&g_vgasink);
 }
 
 static int vgasink_exit()
 {
-    return 0;
+    return kstdio_unregister_sink(&g_vgasink);
 }
 
 MODULE g_vgasink_module = {

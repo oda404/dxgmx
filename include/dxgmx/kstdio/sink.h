@@ -35,6 +35,9 @@ typedef struct S_KOutputSink
      */
     u8 type;
 
+    int (*init)(struct S_KOutputSink* sink);
+    int (*destroy)(struct S_KOutputSink* sink);
+
     /**
      * Implementation for outputing a character.
      *

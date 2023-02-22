@@ -5,7 +5,7 @@
 #include <dxgmx/module.h>
 #include <dxgmx/x86/serial.h>
 
-static int serialsink_init()
+static int serialsink_init(KOutputSink*)
 {
     SerialPort serial_port = {
         .port = 0x3F8,
@@ -20,6 +20,11 @@ static int serialsink_init()
     return 0;
 }
 
+static int serialsink_destroy(KOutputSink*)
+{
+    return 0;
+}
+
 static int serialsink_output_char(char c, KOutputSink*)
 {
     serial_write(c, 0x3F8);
@@ -29,20 +34,18 @@ static int serialsink_output_char(char c, KOutputSink*)
 static KOutputSink g_serialsink = {
     .name = "x86-serial",
     .type = KOUTPUT_RAW,
+    .init = serialsink_init,
+    .destroy = serialsink_destroy,
     .output_char = serialsink_output_char};
 
 static int serialsink_main()
 {
-    int st = serialsink_init();
-    if (st < 0)
-        return st;
-
     return kstdio_register_sink(&g_serialsink);
 }
 
 static int serialsink_exit()
 {
-    return 0;
+    return kstdio_unregister_sink(&g_serialsink);
 }
 
 MODULE g_serialsink_module = {
