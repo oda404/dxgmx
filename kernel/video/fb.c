@@ -52,8 +52,8 @@ int fb_init()
 
 int fb_write_pixel(size_t x, size_t y, u32 pixel)
 {
-    size_t off = y * g_fb.width + x;
-    ((u32*)g_fb.vaddr)[off] = pixel;
+    size_t off = y * g_fb.width * g_fb.bytespp + x * g_fb.bytespp;
+    memcpy((void*)(g_fb.vaddr + off), &pixel, g_fb.bytespp);
     return 0;
 }
 
