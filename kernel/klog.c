@@ -1,20 +1,18 @@
 /**
- * Copyright 2021 Alexandru Olaru.
+ * Copyright 2023 Alexandru Olaru.
  * Distributed under the MIT license.
  */
 
 #include <dxgmx/attrs.h>
 #include <dxgmx/klog.h>
 #include <dxgmx/kprintf.h>
-#include <dxgmx/timer.h>
+#include <dxgmx/timekeep.h>
 
-static Timer g_timer;
 static KLogLevel g_loglvl;
 
 _INIT int klog_init(KLogLevel lvl)
 {
     klog_set_max_level(lvl);
-    timer_start(&g_timer);
 
     return 0;
 }
@@ -33,12 +31,8 @@ size_t kvlog(KLogLevel lvl, const char* fmt, va_list list)
     if (lvl > g_loglvl)
         return 0;
 
-    double time = timer_ellapsed_sec(&g_timer);
-    if (UNLIKELY(time < 0))
-    {
-        time = 0;
-        timer_start(&g_timer);
-    }
+    struct timespec ts = timekeep_uptime();
+    double time = ts.tv_sec + ts.tv_nsec / 1000000000.0;
 
     size_t written = kprintf("[%11.6f] ", time) + kvprintf(fmt, list);
 

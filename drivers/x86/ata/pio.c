@@ -187,7 +187,7 @@ static bool atapio_flush_sectors(time_t timeout_ms, const BlockDevice* dev)
     timer_start(&t);
     while (port_inb(ATA_STATUS_REG(atadev->bus_io)) & ATAPIO_STATUS_BSY)
     {
-        if (timer_ellapsed_ms(&t) > timeout_ms)
+        if (timer_elapsed_ms(&t) > timeout_ms)
         {
             KLOGF(
                 ERR,
@@ -208,7 +208,7 @@ static bool atapio_wait_for_ready(time_t timeout_ms, const BlockDevice* dev)
     timer_start(&t);
     while (true)
     {
-        if (timer_ellapsed_ms(&t) > timeout_ms)
+        if (timer_elapsed_ms(&t) > timeout_ms)
         {
             KLOGF(
                 ERR, "[%s] Timed out waiting for drive get ready!", dev->name);

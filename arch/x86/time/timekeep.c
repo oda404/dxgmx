@@ -1,52 +1,88 @@
 /**
- * Copyright 2022 Alexandru Olaru.
+ * Copyright 2023 Alexandru Olaru.
  * Distributed under the MIT license.
  */
 
 #include <dxgmx/attrs.h>
 #include <dxgmx/klog.h>
+#include <dxgmx/kmalloc.h>
 #include <dxgmx/timekeep.h>
 #include <dxgmx/timer.h>
 #include <dxgmx/todo.h>
-#include <dxgmx/x86/pit.h>
-#include <dxgmx/x86/rtc.h>
+#include <dxgmx/utils/linkedlist.h>
 
 #define KLOGF_PREFIX "timekeep: "
 
-Timer g_uptime_timer;
+static Timer g_uptime_timer;
+static LinkedList g_timesources;
+static TimeSource* g_best_timesource;
+
+int timekeep_register_timesource(TimeSource* ts)
+{
+    int st = linkedlist_add(ts, &g_timesources);
+    if (st < 0)
+        return st;
+
+    st = ts->init(ts);
+    if (st < 0)
+    {
+        linkedlist_remove_by_data(ts, &g_timesources);
+        return st;
+    }
+
+    return 0;
+}
+
+int timekeep_unregister_timesource(TimeSource* ts)
+{
+    ts->destroy(ts);
+    return linkedlist_remove_by_data(ts, &g_timesources);
+}
+
+_INIT void timekeep_early_init()
+{
+    /* Here we do some early initilizations for the timekeep. This is needed
+     * because TimeSources usually don't come online until much later after
+     * calling this function, but timekeep is used regardless by stuff like
+     * klog. This way klog will just get 0 until the actual TimeSources kick in.
+     */
+    timer_start_stub(&g_uptime_timer);
+}
 
 _INIT int timekeep_init()
 {
-    /* The PIT should be used as the main system clock until further notice. */
-    pit_init();
-    pit_enable_periodic_int();
+    size_t timesource_count = 0;
+    FOR_EACH_ENTRY_IN_LL (g_timesources, TimeSource*, ts)
+    {
+        if (!g_best_timesource || ts->priority > g_best_timesource->priority)
+            g_best_timesource = ts;
 
-    /* Initialize the RTC for the date/time. */
-    rtc_init();
-    rtc_enable_periodic_int();
+        ++timesource_count;
+    }
 
-    if (!timer_find_sources())
-        KLOGF(
-            ERR, "No system timers were found even though they should be up!");
+    if (!timesource_count)
+        panic("timekeep: No (valid) timesources were registered!");
 
+    KLOGF(
+        INFO,
+        "Using timesource '%s' with priority %d.",
+        g_best_timesource->name,
+        g_best_timesource->priority);
+
+    /* Start the uptime timer for real. */
     timer_start(&g_uptime_timer);
 
     return 0;
 }
 
-struct tm timkeep_date()
-{
-    return rtc_date();
-}
-
 struct timespec timekeep_uptime()
 {
     struct timespec ret;
-    timer_ellapsed(&ret, &g_uptime_timer);
+    timer_elapsed(&ret, &g_uptime_timer);
     return ret;
 }
 
-struct timespec timekeep_unixts()
+TimeSource* timekeep_get_best_timesource()
 {
-    TODO_FATAL();
+    return g_best_timesource;
 }

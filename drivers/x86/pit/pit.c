@@ -1,5 +1,5 @@
 /**
- * Copyright 2022 Alexandru Olaru.
+ * Copyright 2023 Alexandru Olaru.
  * Distributed under the MIT license.
  */
 
@@ -7,10 +7,11 @@
 #include <dxgmx/attrs.h>
 #include <dxgmx/compiler_attrs.h>
 #include <dxgmx/klog.h>
+#include <dxgmx/module.h>
 #include <dxgmx/string.h>
+#include <dxgmx/timekeep.h>
 #include <dxgmx/x86/idt.h>
 #include <dxgmx/x86/interrupts.h>
-#include <dxgmx/x86/pit.h>
 #include <dxgmx/x86/portio.h>
 
 #define KLOGF_PREFIX "pit: "
@@ -43,7 +44,6 @@
 #define PIT_MODE_BCD 1
 
 static volatile struct timespec g_periodic_int_timespec;
-static bool g_periodic_ints_enabled = false;
 static size_t g_freq = 0;
 
 static void pit_isr(InterruptFrame _ATTR_UNUSED* frame)
@@ -56,12 +56,7 @@ static void pit_isr(InterruptFrame _ATTR_UNUSED* frame)
     }
 }
 
-_INIT int pit_init()
-{
-    return 0;
-}
-
-void pit_enable_periodic_int()
+static void pit_enable_periodic_int()
 {
     g_freq = 4096;
     const u16 freqdiv = PIT_BASE_FREQ_HZ / g_freq;
@@ -79,21 +74,40 @@ void pit_enable_periodic_int()
     port_outb(freqdiv >> 8, PIT_CHANNEL0_PORT);
 
     interrupts_enable();
-
-    g_periodic_ints_enabled = true;
 }
 
-void pit_disable_periodic_int()
+int pit_init(TimeSource*)
 {
-    g_periodic_ints_enabled = false;
+    pit_enable_periodic_int();
+    return 0;
 }
 
-bool pit_periodic_ints_enabled()
+static int pit_destroy(TimeSource*)
 {
-    return g_periodic_ints_enabled;
+    return 0;
 }
 
 struct timespec pit_now()
 {
     return g_periodic_int_timespec;
 }
+
+static TimeSource g_pit_timesource = {
+    .name = "pit",
+    .init = pit_init,
+    .destroy = pit_destroy,
+    .priority = 100,
+    .now = pit_now};
+
+static int pit_main()
+{
+    return timekeep_register_timesource(&g_pit_timesource);
+}
+
+static int pit_exit()
+{
+    return timekeep_unregister_timesource(&g_pit_timesource);
+}
+
+MODULE g_pit_module = {
+    .name = "pit", .main = pit_main, .exit = pit_exit, .stage = MODULE_STAGE2};

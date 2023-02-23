@@ -10,6 +10,7 @@
 #include <dxgmx/module.h>
 #include <dxgmx/storage/blkdevm.h>
 #include <dxgmx/string.h>
+#include <dxgmx/timer.h>
 #include <dxgmx/todo.h>
 #include <dxgmx/utils/bytes.h>
 #include <dxgmx/x86/idt.h>
@@ -124,9 +125,18 @@ static bool ata_identify_drive(
     if (!status)
         return false; /* doesn't exist */
 
+    Timer timer;
+    timer_start(&timer);
+
     /* wait until BSY bit clears. */
     while (port_inb(ATA_STATUS_REG(bus_io)) & ATAPIO_STATUS_BSY)
-        ;
+    {
+        if (timer_elapsed_ms(&timer) > 200)
+        {
+            KLOGF(WARN, "Timed out waiting for BSY bit to clear.");
+            return false;
+        }
+    }
 
     u8 lbamid = port_inb(ATA_LBA_MID_REG(bus_io));
     u8 lbahi = port_inb(ATA_LBA_HI_REG(bus_io));
@@ -134,9 +144,16 @@ static bool ata_identify_drive(
     if (lbamid || lbahi)
         return false; /* Not ATAPIO device. */
 
+    timer_start(&timer);
     /* Wait until either ERR or DRQ set. */
     while (true)
     {
+        if (timer_elapsed_ms(&timer) > 200)
+        {
+            KLOGF(WARN, "Timed out waiting to ERR/DRQ bits.");
+            return false;
+        }
+
         status = port_inb(ATA_STATUS_REG(bus_io));
         if (status & ATAPIO_STATUS_ERR)
         {

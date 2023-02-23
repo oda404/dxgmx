@@ -9,7 +9,6 @@
 #include <dxgmx/x86/cmos.h>
 #include <dxgmx/x86/cpuid.h>
 #include <dxgmx/x86/pic.h>
-#include <dxgmx/x86/rtc.h>
 #include <dxgmx/x86/tsc.h>
 
 static u64 g_tsc_freq = 0;

@@ -12,7 +12,6 @@
 #include <dxgmx/x86/cmos.h>
 #include <dxgmx/x86/idt.h>
 #include <dxgmx/x86/interrupts.h>
-#include <dxgmx/x86/rtc.h>
 
 #define RTC_REG_A 0xA
 #define RTC_REG_B 0xB

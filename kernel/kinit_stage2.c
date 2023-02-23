@@ -43,6 +43,9 @@ _ATTR_NORETURN void kinit_stage2()
     /* Initialize early architecture stuff. */
     kinit_arch();
 
+    /* Bring early timers in a known, but "dormant" state. */
+    timekeep_early_init();
+
     /* Load the first stage of builtin modules. */
     modules_init_stage1();
 

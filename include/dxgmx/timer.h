@@ -1,5 +1,5 @@
 /**
- * Copyright 2022 Alexandru Olaru.
+ * Copyright 2023 Alexandru Olaru.
  * Distributed under the MIT license.
  */
 
@@ -8,57 +8,78 @@
 
 #include <dxgmx/time.h>
 
-typedef struct timespec (*timersource_now)();
-
 typedef struct S_Timer
 {
     /* Starting timespec struct. */
-    struct timespec _start_ts;
+    struct timespec starting_ts;
     /* Internal getter for timespec structs. */
-    timersource_now _now;
-    bool _ready;
-    size_t _internal_id;
+    struct timespec (*now)();
 } Timer;
 
 /**
- * Tries to find the most suitable source to be used as a timer.
- * @return != 0 if an error occured and no source was found.
+ * Start a timer as a stub. This timer will just return 0 everytime it's
+ * accessed.
+ *
+ * 't' the timer;
+ *
+ * Returns:
+ * 0 on success.
  */
-size_t timer_find_sources();
-/** Starts the timer.
- * @return See TIMER_START_*.
- */
-bool timer_start(Timer* t);
+int timer_start_stub(Timer* t);
+
 /**
- * @return true if the timer is valid, and can be used. This status is
- * guaranteed until timer_start() is called again.
+ * Start a timer. Once a timer has been started you can get how much time has
+ * elapsed since starting it, using the timer_elapsed* functions.
+ *
+ * 't' The timer.
+ *
+ * Returns:
+ * 0 on success.
  */
-bool timer_is_ready(const Timer* t);
-/** Puts the ellapsed time since the last timer_start() call
- in 'ts'. If the returned value != TIMER_ELLAPSED_OK, the value
- of 'ts' is not touched.
- @return See TIMER_ELLAPSED_*.
-*/
-bool timer_ellapsed(struct timespec* ts, const Timer* t);
+int timer_start(Timer* t);
+
 /**
- * @return < 0 if 't' is not ready. Else the number of seconds since
- * timer_start() was last called.
+ * Get elapsed time since a timer has been started.
+ *
+ * No NULL pointers should be passed to this function. Additionally the timer
+ * must be started before being passed to this function.
+ *
+ * 'ts' The destination struct timespec.
+ * 't' The Timer.
+ *
+ * Returns:
+ * 0 on success.
  */
-double timer_ellapsed_sec(const Timer* t);
+int timer_elapsed(struct timespec* ts, const Timer* t);
+
 /**
- * @return < 0 if 't' is not ready. Else the number of milliseconds since
- * timer_start() was last called.
+ * Get elapsed time since a timer has been started in seconds.
+ *
+ * No NULL pointers should be passed to this function. Additionally the timer
+ * must be started before being passed to this function.
+ *
+ * 'ts' The destination struct timespec.
+ * 't' The Timer.
+ *
+ * Returns:
+ * The number of seconds since the timer has been started as a floating point
+ * type.
  */
-double timer_ellapsed_ms(const Timer* t);
+double timer_elapsed_sec(const Timer* t);
+
 /**
- * @return < 0 if 't' is not ready. Else the number of microseconds since
- * timer_start() was last called.
+ * Get elapsed time since a timer has been started in milliseconds.
+ *
+ * No NULL pointers should be passed to this function. Additionally the timer
+ * must be started before being passed to this function.
+ *
+ * 'ts' The destination struct timespec.
+ * 't' The Timer.
+ *
+ * Returns:
+ * The number of milliseconds since the timer has been started as a floating
+ * point type.
  */
-double timer_ellapsed_us(const Timer* t);
-/**
- * @return < 0 if 't' is not ready. Else the number of nanoseconds since
- * timer_start() was last called.
- */
-double timer_ellapsed_ns(const Timer* t);
+double timer_elapsed_ms(const Timer* t);
 
 #endif //!_DXGMX_TIMER_H_

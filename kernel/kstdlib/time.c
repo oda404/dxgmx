@@ -82,7 +82,7 @@ int nanosleep(const struct timespec* rqtp, struct timespec* rmtp)
     Timer t;
     timer_start(&t);
 
-    while (timer_ellapsed_sec(&t) < secs)
+    while (timer_elapsed_sec(&t) < secs)
         ;
 
     if (rmtp)

@@ -10,6 +10,7 @@ include arch/x86/multiboot/module.mk
 include drivers/x86/serialsink/module.mk
 include drivers/x86/vgasink/module.mk
 include drivers/x86/ata/module.mk
+include drivers/x86/pit/module.mk
 
 include drivers/builtins/module.mk
 include drivers/stackprot/module.mk
