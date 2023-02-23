@@ -73,6 +73,15 @@ SECTIONS
         _rodata_end = .;
     }
 
+    /* The stack is placed here, so if it grows too large it will hit rodata, 
+    and we'll catch that */
+    .kstack ALIGN(4K) : AT (ADDR(.kstack) - _kernel_map_offset)
+    {
+        _kstack_start = .;
+        *(.kstack)
+        _kstack_end = .;
+    }
+
     .bss ALIGN(4K) : AT (ADDR(.bss) - _kernel_map_offset)
     {
         _bss_start = .;

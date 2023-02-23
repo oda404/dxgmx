@@ -14,7 +14,7 @@
 
 #define OFFSET 0xC0000000
 
-.section .data
+.section .rodata
 
 kernel_too_large_string:
   .asciz "Kernel has grown too big. Not proceeding."
@@ -38,14 +38,14 @@ boot_pgdir:
 boot_pgtable0:
   .fill 512, 8, 0
 
-# Very small, early stack made for saving critical registers 
-# while still in the 'lower half'. It will be replaced once 
-# the jump to the 'higher half' is made.
-.local _early_stack_top
-.local _early_stack_bot
-_early_stack_bot:
-  .skip 32
-_early_stack_top:
+# The kernel stack
+.section .kstack, "aw"
+.align 16
+.global _kernel_stack_bot
+.global _kernel_stack_top
+_kernel_stack_bot:
+  .skip 4096
+_kernel_stack_top:
 
 .section .init.text, "a"
 
@@ -88,8 +88,8 @@ _start:
   cli
   cld
 
-  # Setup the early stack for saving any inmportant registers.
-  movl $_early_stack_top - OFFSET, %esp 
+  # Setup stack
+  movl $_kernel_stack_top - OFFSET, %esp
 
   # Save eax and ebx, since they hold multiboot stuff.
   pushl %eax
@@ -158,12 +158,11 @@ higher_half_map_end:
   jmp *%ecx
 
 higher_half:
-  movl _kernel_stack_top, %esp # setup the actual stack.
-  movl $0, %ebp                # NULL ebp marks the end of a stack backtrace
+  # Add the kernel map offset to the stack pointer, now that we're in the higher half
+  add $OFFSET, %esp
 
-  # clear eflags
-  pushl $0
-  popf
+  # NULL ebp marks the end of a stack backtrace
+  movl $0, %ebp
 
   # Zero out the first pdpt entry, unmapping the 0-1GiB range,
   # leaving only the higher half map. 
@@ -173,9 +172,18 @@ higher_half:
   movl %cr3, %ecx
   movl %ecx, %cr3
 
+  # Store multiboot stuff
   movl %ebx, _multiboot_info_struct_base
   movl %eax, _multiboot_magic
+  
+  # clear eflags
+  pushl $0
+  popf
 
-  call kinit_stage2           # less go
+  # One more time just for good measure
+  cld
+
+  # less go
+  call kinit_stage2
 
 .size _start, . - _start

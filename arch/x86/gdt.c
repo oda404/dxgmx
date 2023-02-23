@@ -5,7 +5,6 @@
 
 #include <dxgmx/assert.h>
 #include <dxgmx/attrs.h>
-#include <dxgmx/kstack.h>
 #include <dxgmx/string.h>
 #include <dxgmx/types.h>
 #include <dxgmx/x86/gdt.h>

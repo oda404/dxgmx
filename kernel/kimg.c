@@ -4,8 +4,9 @@
  */
 
 #include <dxgmx/kimg.h>
-#include <dxgmx/kstack.h>
 
+extern u8 _kernel_stack_top[];
+extern u8 _kernel_stack_bot[];
 extern u8 _kernel_pbase[];
 extern u8 _kernel_vbase[];
 extern u8 _text_start[];
