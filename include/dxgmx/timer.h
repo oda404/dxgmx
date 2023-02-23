@@ -3,8 +3,8 @@
  * Distributed under the MIT license.
  */
 
-#ifndef _DXGMX_TIMER_H_
-#define _DXGMX_TIMER_H_
+#ifndef _DXGMX_TIMER_H
+#define _DXGMX_TIMER_H
 
 #include <dxgmx/time.h>
 
@@ -82,4 +82,4 @@ double timer_elapsed_sec(const Timer* t);
  */
 double timer_elapsed_ms(const Timer* t);
 
-#endif //!_DXGMX_TIMER_H_
+#endif //!_DXGMX_TIMER_H

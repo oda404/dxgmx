@@ -38,4 +38,4 @@
 #define STATIC_ASSERT(x, msg) ASSERT_MSG(x, msg)
 #endif
 
-#endif //_DXGMX_ASSERT_H_
+#endif //_DXGMX_ASSERT_H
