@@ -152,11 +152,6 @@ higher_half_map:
   addl $4096, %edx     # next page frame base.
 
   loop higher_half_map # loop until %ecx is 0
-higher_half_map_end:
-
-  # Restore eax and ebx
-  popl %ebx
-  popl %eax
 
   # Set the PAE bit of CR4.
   movl %cr4, %ecx
@@ -172,7 +167,8 @@ higher_half_map_end:
   orl $0x80010000, %ecx
   movl %ecx, %cr0
 
-  # Jump to the higher half.
+  # Right now we are executing code in the initial kernel mapping (somewhere ~1MiB)
+  # We need to jump to a higher half mapped function (~3GiB)
   lea higher_half, %ecx
   jmp *%ecx
 
@@ -190,6 +186,10 @@ higher_half:
   # Flush the PDPT.
   movl %cr3, %ecx
   movl %ecx, %cr3
+
+  # Restore eax and ebx
+  popl %ebx
+  popl %eax
 
   # Store multiboot stuff
   movl %ebx, _multiboot_info_struct_base
