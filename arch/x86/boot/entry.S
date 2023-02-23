@@ -81,6 +81,22 @@ loop1:
 
 .size _early_die, . - _early_die
 
+zero_out_bss:
+  # The bootloader that got us here has probably done this for us already,
+  # but I'm not taking any chances.
+
+  # Pretty dumb implementation zeroing 1 byte at a time, but oh well.
+  movl $_bss_start - OFFSET, %eax
+  movl $_bss_end - OFFSET, %ecx
+  sub %eax, %ecx
+
+1:
+  movb $0, (%eax)
+  addl $1, %eax
+  loop 1b
+
+  ret
+
 .global _start
 .type _start, @function
 _start:
@@ -90,6 +106,9 @@ _start:
 
   # Setup stack
   movl $_kernel_stack_top - OFFSET, %esp
+
+  # Make sure .bss is zeroed out
+  call zero_out_bss
 
   # Save eax and ebx, since they hold multiboot stuff.
   pushl %eax
