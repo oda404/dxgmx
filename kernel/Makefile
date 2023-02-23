@@ -25,3 +25,4 @@ include $(KERNEL_SRCDIR)/proc/Makefile
 include $(KERNEL_SRCDIR)/syscalls/Makefile
 include $(KERNEL_SRCDIR)/sched/Makefile
 include $(KERNEL_SRCDIR)/video/Makefile
+include $(KERNEL_SRCDIR)/time/Makefile

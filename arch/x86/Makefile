@@ -28,4 +28,3 @@ INCLUDEDIRS += -I$(ARCH_SRCDIR)/include
 include $(ARCH_SRCDIR)/boot/Makefile
 include $(ARCH_SRCDIR)/int/Makefile
 include $(ARCH_SRCDIR)/mem/Makefile
-include $(ARCH_SRCDIR)/time/Makefile
