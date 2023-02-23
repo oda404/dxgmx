@@ -144,7 +144,7 @@ $(KERNEL_BIN_PATH): $(DXGMX_DEPS) $(DXGMX_COMMON_DEPS)
 	@$(LD) -T $(LDSCRIPT) $(COBJS) $(KINIT_STAGE3_OBJ) $(ASMOBJS) $(MODOBJS) $(LDFLAGS) -o $(KERNEL_BIN_PATH)
 
 	@[ -f build/image.img ] || $(SCRIPTSDIR)/create-disk.sh -p build/image.img
-	@NM=$(NM) OBJCOPY=$(OBJCOPY) $(SCRIPTSDIR)/bake_symbols.sh $(KERNEL_BIN_PATH) 
+	@$(SCRIPTSDIR)/bake_symbols.sh $(KERNEL_BIN_PATH)
 
 -include $(CDEPS)
 $(BUILDDIR)/%_$(TARGET_NAME).c.o: %.c $(DXGMX_COMMON_DEPS)
