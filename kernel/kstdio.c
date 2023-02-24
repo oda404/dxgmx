@@ -88,13 +88,18 @@ int kstdio_unregister_sink(KOutputSink* sink)
     return 0;
 }
 
-size_t kstdio_write(const char* buf, size_t n)
+size_t kstdio_write_raw(const char* buf, size_t n)
 {
     for (size_t i = 0; i < n; ++i)
     {
         FOR_EACH_SINK_OF_TYPE (KOUTPUT_RAW, sink)
             (*sink)->output_char(buf[i], *sink);
     }
+}
+
+size_t kstdio_write(const char* buf, size_t n)
+{
+    kstdio_write_raw(buf, n);
 
     for (size_t i = 0; i < n; ++i)
     {
