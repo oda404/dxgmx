@@ -540,11 +540,19 @@ int mm_map_kernel_into_paging_struct(PagingStruct* ps)
     if (!pdpt)
         return -EINVAL;
 
+    /* Map the 3-4 GIB region used by the kernel. */
     pdpte_t* kpdpte = pdpte_from_vaddr(kimg_vaddr(), g_pdpt);
-
     pdpte_t* pdpte = pdpte_from_vaddr(kimg_vaddr(), pdpt);
-
     *pdpte = *kpdpte;
+
+    mm_tlb_flush_single(kimg_vaddr());
+
+    /* Map the 0-1 GIB region used by DMA. */
+    kpdpte = pdpte_from_vaddr(DMA_POOL_START, g_pdpt);
+    pdpte = pdpte_from_vaddr(DMA_POOL_START, pdpt);
+    *pdpte = *kpdpte;
+
+    mm_tlb_flush_single(DMA_POOL_START);
 
     return 0;
 }

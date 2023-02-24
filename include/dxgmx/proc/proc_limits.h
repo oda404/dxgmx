@@ -10,7 +10,7 @@
 #include <dxgmx/types.h>
 
 /* The smallest userspace address. */
-#define PROC_LOW_ADDRESS (128UL * MIB)
+#define PROC_LOW_ADDRESS (1UL * GIB)
 
 /* The biggest userspace address.*/
 #define PROC_HIGH_ADDRESS (3UL * GIB)

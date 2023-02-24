@@ -106,12 +106,6 @@ static int fbsink_destroy(KOutputSink*)
 
 static int fbsink_newline(KOutputSink* sink)
 {
-    /* Horrible hack, since dma pages are not mapped into user processes. I
-     * don't know if, and *how* exactly we should do that... */
-    Process* proc = sched_current_proc();
-    if (proc)
-        mm_load_kernel_paging_struct();
-
     FrameBufferTextRenderingContext* ctx = sink->ctx;
 
     ctx->cx = 0;
@@ -121,20 +115,11 @@ static int fbsink_newline(KOutputSink* sink)
     else
         ++ctx->cy;
 
-    if (proc)
-        mm_load_paging_struct(&proc->paging_struct);
-
     return 0;
 }
 
 static int fbsink_print_char(char c, KOutputSink* sink)
 {
-    /* Horrible hack, since dma pages are not mapped into user processes. I
-     * don't know if, and *how* exactly we should do that... */
-    Process* proc = sched_current_proc();
-    if (proc)
-        mm_load_kernel_paging_struct();
-
     FrameBufferTextRenderingContext* ctx = sink->ctx;
 
     const PSF2Header* psfhdr = psf_get_builtin_header();
@@ -162,9 +147,6 @@ static int fbsink_print_char(char c, KOutputSink* sink)
         fbsink_newline(sink);
     else
         ++ctx->cx;
-
-    if (proc)
-        mm_load_paging_struct(&proc->paging_struct);
 
     return 0;
 }
