@@ -95,6 +95,8 @@ size_t kstdio_write_raw(const char* buf, size_t n)
         FOR_EACH_SINK_OF_TYPE (KOUTPUT_RAW, sink)
             (*sink)->output_char(buf[i], *sink);
     }
+
+    return n;
 }
 
 size_t kstdio_write(const char* buf, size_t n)
