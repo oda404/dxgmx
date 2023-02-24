@@ -237,13 +237,7 @@ void cpu_hang()
 {
     while (1)
     {
-        /**
-         * CPU should remain suspended after the first iteration...
-         * but I'm paranoid.
-         */
-        cmos_disable_nmi();
         interrupts_disable();
-
         cpu_suspend();
     }
 }
