@@ -17,9 +17,6 @@
 _WEAK u8 _builtin_psfu_start[32];
 _WEAK u8 _builtin_psfu_end[1];
 
-extern u8 _builtin_psfu_start[];
-extern u8 _builtin_psfu_end[];
-
 int psf_validate_builtin()
 {
     PSF2Header* hdr = (PSF2Header*)_builtin_psfu_start;
