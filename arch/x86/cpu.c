@@ -244,10 +244,10 @@ void cpu_hang()
 
 void cpu_enable_irqs()
 {
-    __asm__ volatile("cli");
+    __asm__ volatile("sti");
 }
 
 void cpu_disable_irqs()
 {
-    __asm__ volatile("sti");
+    __asm__ volatile("cli");
 }
