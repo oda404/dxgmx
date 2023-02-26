@@ -1,5 +1,5 @@
 /**
- * Copyright 2022 Alexandru Olaru.
+ * Copyright 2023 Alexandru Olaru.
  * Distributed under the MIT license.
  */
 
@@ -13,8 +13,8 @@
 
 #define KLOGF_PREFIX "pci: "
 
-#define ACPI_CONFIG_ADDRESS_PORT 0xCF8
-#define ACPI_CONFIG_DATA_PORT 0xCFC
+#define PCI_CONFIG_ADDRESS 0xCF8
+#define PCI_CONFIG_DATA 0xCFC
 
 static PCIDevice* g_pci_devices = NULL;
 static size_t g_pci_devices_count = 0;
@@ -40,48 +40,348 @@ static const char* pci_class_to_string(u8 class, u8 subclass)
     case PCI_MASS_STORAGE_CONTROLLER:
         switch (subclass)
         {
+        case 0:
+            return "SCSI Bus controller";
         case 1:
-            return "IDE Controller";
+            return "IDE controller";
+        case 2:
+            return "Floppy Disk controller";
+        case 3:
+            return "IPI Bus controller";
+        case 4:
+            return "RAID controller";
+        case 5:
+            return "ATA controller";
         case 6:
-            return "SATA Controller";
+            return "SATA controller";
+        case 7:
+            return "Serial Attached SCSI controller";
+        case 8:
+            return "NVM controller";
+        case 0x80:
+            return "Generic mass storage controller";
         default:
-            break;
+            return "Unknown mass storage controller";
         }
-        break;
 
     case PCI_NETWORK_CONTROLLER:
         switch (subclass)
         {
         case 0:
-            return "Ethernet Controller";
+            return "Ethernet controller";
+        case 1:
+            return "Token Ring controller";
+        case 2:
+            return "FDDI controller";
+        case 3:
+            return "ATM controller";
+        case 4:
+            return "ISDN controller";
+        case 5:
+            return "WorldFip controller";
+        case 6:
+            return "PICMG controller";
+        case 7:
+            return "Infiniband controller";
+        case 8:
+            return "Fabric controller";
+        case 0x80:
+            return "Generic network controller";
         default:
-            break;
+            return "Unknown network controller";
         }
-        break;
 
     case PCI_DISPLAY_CONTROLLER:
         switch (subclass)
         {
         case 0:
-            return "VGA Compatible Controller";
+            return "VGA Compatible controller";
+        case 1:
+            return "XGA Compatible controller";
+        case 2:
+            return "3D controller";
+        case 0x80:
+            return "Generic display controller";
         default:
-            break;
+            return "Unknown display controller";
         }
-        break;
+
+    case PCI_MULTIMEDIA_CONTROLLER:
+        switch (subclass)
+        {
+        case 0:
+            return "Multimedia video controller";
+        case 1:
+            return "Multimedia audio controller";
+        case 2:
+            return "Computer telephony controller";
+        case 3:
+            return "Audio device";
+        case 0x80:
+            return "Generic multimedia controller";
+        default:
+            return "Unknown multimedia controller";
+        }
+
+    case PCI_MEMORY_CONTROLLER:
+        switch (subclass)
+        {
+        case 0:
+            return "RAM memory";
+        case 1:
+            return "FLASH memory";
+        case 2:
+            return "CXL memory controller";
+        case 0x80:
+            return "Generic memory controller";
+        default:
+            return "Unknown memory controller";
+        }
 
     case PCI_BRIDGE:
         switch (subclass)
         {
         case 0:
-            return "Host Bridge";
+            return "Host bridge";
         case 1:
-            return "ISA Bridge";
+            return "ISA bridge";
+        case 2:
+            return "EISA bridge";
+        case 3:
+            return "MicroChanngel bridge";
+        case 4:
+            return "PCI bridge";
+        case 5:
+            return "PCMCIA bridge";
+        case 6:
+            return "NuBus bridge";
+        case 7:
+            return "CardBus bridge";
+        case 8:
+            return "RACEway bridge";
+        case 9:
+            return "Semi transparent PCI-to-PCI bridge";
+        case 0xA:
+            return "Infiniband to PCI host bridge";
         case 0x80:
-            return "Unknown Bridge";
+            return "Generic bridge";
         default:
-            break;
+            return "Unknown bridge";
         }
-        break;
+
+    case PCI_COMMUNICATION_CONTROLLER:
+        switch (subclass)
+        {
+        case 0:
+            return "Serial controller";
+        case 1:
+            return "Parallel controller";
+        case 2:
+            return "Multiport serial controller";
+        case 3:
+            return "Modem";
+        case 4:
+            return "GPIB controller";
+        case 5:
+            return "Smart Card controller";
+        case 0x80:
+            return "Generic communication device";
+        default:
+            return "Unknown communication device";
+        }
+
+    case PCI_GENERIC_SYSTEM_PERIPHERAL:
+        switch (subclass)
+        {
+        case 0:
+            return "PIC";
+        case 1:
+            return "DMA controller";
+        case 2:
+            return "Timer";
+        case 3:
+            return "RTC";
+        case 4:
+            return "PCI hot-plug controller";
+        case 5:
+            return "SD host controller";
+        case 6:
+            return "IOMMU";
+        case 0x80:
+            return "Generic system peripheral";
+        case 0x90:
+            return "Timing card";
+        default:
+            return "Unknown system peripheral";
+        }
+
+    case PCI_INPUT_DEVICE_CONTROLLER:
+        switch (subclass)
+        {
+        case 0:
+            return "Keyboard controller";
+        case 1:
+            return "Digitizer pen";
+        case 2:
+            return "Mouse controller";
+        case 3:
+            return "Scanner controller";
+        case 4:
+            return "Gameport controller";
+        case 0x80:
+            return "Generic input device controller";
+        default:
+            return "Unknown input device controller";
+        }
+
+    case PCI_DOCKING_STATION:
+        switch (subclass)
+        {
+        case 0:
+        case 0x80:
+            return "Generic docking station";
+        default:
+            return "Unknown docking station";
+        }
+
+    case PCI_PROCESSOR:
+        switch (subclass)
+        {
+        case 0:
+            return "i386";
+        case 1:
+            return "i486";
+        case 2:
+            return "Pentium";
+        case 0x10:
+            return "Alpha";
+        case 0x20:
+            return "PPC";
+        case 0x30:
+            return "MIPS";
+        case 0x40:
+            return "Co-processor";
+        default:
+            return "Unknown processor";
+        }
+
+    case PCI_SERIAL_BUS_CONTROLLER:
+        switch (subclass)
+        {
+        case 0:
+            return "FireWire";
+        case 1:
+            return "ACCESS bus";
+        case 2:
+            return "SSA";
+        case 3:
+            return "USB controller";
+        case 4:
+            return "Fibre channel";
+        case 5:
+            return "SMBus";
+        case 6:
+            return "InfiniBand";
+        case 7:
+            return "IPMI interface";
+        case 8:
+            return "SERCOS interface";
+        case 9:
+            return "CANBUS";
+        case 0x80:
+            return "Generic serial bus controller";
+        default:
+            return "Unknown serial bus controller";
+        }
+
+    case PCI_WIRELESS_CONTROLLER:
+        switch (subclass)
+        {
+        case 0:
+            return "IRDA controller";
+        case 1:
+            return "Consumer IR controller";
+        case 0x10:
+            return "RF controller";
+        case 0x11:
+            return "Bluetooth controller";
+        case 0x12:
+            return "Broadband controller";
+        case 0x20:
+            return "802.1a controller";
+        case 0x21:
+            return "802.1b controller";
+        case 0x80:
+            return "Generic wireless controller";
+        default:
+            return "Unknown wireless controller";
+        }
+
+    case PCI_INTELLIGENT_CONTROLLER:
+        switch (subclass)
+        {
+        case 0:
+            return "I2O";
+        default:
+            return "Unknown intelligent controller";
+        }
+
+    case PCI_SATELLITE_COMMUNICATION_CONTROLLER:
+        switch (subclass)
+        {
+        case 1:
+            return "Satellite TV controller";
+        case 2:
+            return "Satellite audio controller";
+        case 3:
+            return "Satellite voice controller";
+        case 4:
+            return "Satellite data controller";
+        default:
+            return "Unknown satellite controller";
+        }
+
+    case PCI_ENCRYPTION_CONTROLLER:
+        switch (subclass)
+        {
+        case 0:
+            return "Network & computing encryption device";
+        case 1:
+            return "Entertainment encryption device";
+        case 0x80:
+            return "Generic encryption controller";
+        default:
+            return "Unknown encryption controller";
+        }
+
+    case PCI_SIGNAL_PROCESSING_CONTROLLER:
+        switch (subclass)
+        {
+        case 0:
+            return "DPIO module";
+        case 1:
+            return "Performance counters";
+        case 0x10:
+            return "Communication synchronizer";
+        case 0x20:
+            return "Signal processing management";
+        case 0x80:
+            return "Generic signal processing controller";
+        default:
+            return "Unknown signal processing controller";
+        }
+
+    case PCI_PROCESSING_ACCELERATOR:
+        return "Generic processing accelerator";
+
+    case PCI_NON_ESSENTIAL_INSTRUMENTATION:
+        return "Generic non-essential instrumentation";
+
+    case PCI_COPROCESSOR:
+        return "Generic coprocessor";
+
+    case PCI_VENDOR_SPECIFIC:
+        return "Vendor specific";
 
     default:
         break;
@@ -102,8 +402,8 @@ static u32 pci_read_4bytes(u8 bus, u8 dev, u8 func, u8 offset)
         .bus = bus,
         .enabled = 1};
 
-    port_outl(reg.whole, ACPI_CONFIG_ADDRESS_PORT);
-    return port_inl(ACPI_CONFIG_DATA_PORT);
+    port_outl(reg.whole, PCI_CONFIG_ADDRESS);
+    return port_inl(PCI_CONFIG_DATA);
 }
 
 static int pci_register_device(u8 bus, u8 dev, u8 func)
