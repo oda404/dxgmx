@@ -9,18 +9,6 @@
 #include <dxgmx/mem/mregmap.h>
 #include <dxgmx/mem/paging.h>
 #include <dxgmx/types.h>
-#include <dxgmx/utils/bitwise.h>
-
-/* Execute permissions */
-#define PAGE_X BW_BIT(0)
-/* Write permissions */
-#define PAGE_W BW_BIT(1)
-/* Read permissions */
-#define PAGE_R BW_BIT(2)
-/* R/W/X permissions mask.  */
-#define PAGE_ACCESS_MODE (PAGE_X | PAGE_W | PAGE_R)
-/* Page can be accesed by userspace */
-#define PAGE_USER BW_BIT(3)
 
 int mm_init();
 /* Get the system memory region map. This map only includes

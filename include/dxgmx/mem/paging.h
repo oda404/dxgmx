@@ -8,6 +8,20 @@
 
 #include <dxgmx/mem/pagesize.h>
 #include <dxgmx/types.h>
+#include <dxgmx/utils/bitwise.h>
+
+/* Execute permissions */
+#define PAGE_X BW_BIT(0)
+/* Write permissions */
+#define PAGE_W BW_BIT(1)
+/* Read permissions */
+#define PAGE_R BW_BIT(2)
+/* R/W/X permissions mask.  */
+#define PAGE_ACCESS_MODE (PAGE_X | PAGE_W | PAGE_R)
+/* Page can be accesed by userspace */
+#define PAGE_USER BW_BIT(3)
+
+#define PAGE_RW (PAGE_R | PAGE_W)
 
 typedef struct S_Page
 {
