@@ -178,5 +178,5 @@ static void pagefault_isr(InterruptFrame* frame)
 
 void pagefault_setup_isr()
 {
-    idt_register_isr(TRAP14, pagefault_isr);
+    idt_register_trap_isr(TRAP_PAGEFAULT, 0, pagefault_isr);
 }

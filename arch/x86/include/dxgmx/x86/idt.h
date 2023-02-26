@@ -1,5 +1,5 @@
 /**
- * Copyright 2021 Alexandru Olaru.
+ * Copyright 2023 Alexandru Olaru.
  * Distributed under the MIT license.
  */
 
@@ -7,58 +7,62 @@
 #define _DXGMX_X86_IDT_H
 
 #include <dxgmx/compiler_attrs.h>
+#include <dxgmx/interrupts.h>
 #include <dxgmx/types.h>
 #include <dxgmx/x86/interrupt_frame.h>
 
-#define TRAP0 0x0
-#define TRAP1 0x1
-#define TRAP2 0x2
-#define TRAP3 0x3
-#define TRAP4 0x4
-#define TRAP5 0x5
-#define TRAP6 0x6
-#define TRAP7 0x7
-#define TRAP8 0x8
-#define TRAP9 0x9
-#define TRAP10 0xA
-#define TRAP11 0xB
-#define TRAP12 0xC
-#define TRAP13 0xD
-#define TRAP14 0xE
-#define TRAP15 0xF
-#define TRAP16 0x10
-#define TRAP17 0x11
-#define TRAP18 0x12
-#define TRAP19 0x13
-#define TRAP20 0x14
-#define TRAP21 0x15
-#define TRAP22 0x16
-#define TRAP23 0x17
-#define TRAP24 0x18
-#define TRAP25 0x19
-#define TRAP26 0x1A
-#define TRAP27 0x1B
-#define TRAP28 0x1C
-#define TRAP29 0x1D
-#define TRAP30 0x1E
-#define TRAP31 0x1F
+#define TRAP_DIV_ERR 0x0
+#define TRAP_DEBUG 0x1
+#define TRAP_NMI 0x2
+#define TRAP_BREAKPOINT 0x3
+#define TRAP_OVERFLOW 0x4
+#define TRAP_BOUND_EXCEEDED 0x5
+#define TRAP_INVALID_OPCODE 0x6
+#define TRAP_FPU_NOT_AVAIL 0x7
+#define TRAP_DOUBLEFAULT 0x8
+#define TRAP_INVALID_TSS 0xA
+#define TRAP_ABSENT_SEGMENT 0xB
+#define TRAP_SSFAULT 0xC
+#define TRAP_GPF 0xD
+#define TRAP_PAGEFAULT 0xE
+// #define TRAP_RESERVED 0xF
+#define TRAP_X87_FP_EXCEPTION 0x10
+#define TRAP_ALIGNMENT_CHECK 0x11
+#define TRAP_MACHINE_CHECK 0x12
+#define TRAP_SIMD_FP_EXCEPTION 0x13
+#define TRAP_VIRT_EXCEPTION 0x14
+/* "A control protection exception is triggered when a control flow transfer
+attempt violated shadow stack or indirect branch tracking constraints.
+For example, the return address for a RET instruction differs from the
+safe copy on the shadow stack; or a JMP instruction arrives at a non-
+ENDBR instruction." - from a linux patch. */
+#define TRAP_CONTROL_PROTECTION_EXCEPTION 0x15
+// #define TRAP_RESERVED 0x16
+// #define TRAP_RESERVED 0x17
+// #define TRAP_RESERVED 0x18
+// #define TRAP_RESERVED 0x19
+// #define TRAP_RESERVED 0x1A
+// #define TRAP_RESERVED 0x1B
+#define TRAP_HYPERVISOR_EXCEPTION 0x1C
+#define TRAP_VMM_COMM_EXCEPTION 0x1D
+#define TRAP_SECURITY_EXCEPTION 0x1E
+// #define TRAP_RESERVED 0x1F
 
-#define IRQ0 0x20
-#define IRQ1 0x21
-#define IRQ2 0x22
-#define IRQ3 0x23
-#define IRQ4 0x24
-#define IRQ5 0x25
-#define IRQ6 0x26
-#define IRQ7 0x27
-#define IRQ8 0x28
-#define IRQ9 0x29
-#define IRQ10 0x2A
-#define IRQ11 0x2B
-#define IRQ12 0x2C
-#define IRQ13 0x2D
-#define IRQ14 0x2E
-#define IRQ15 0x2F
+#define IRQ_PIT 0x20
+#define IRQ_PS2KBD 0x21
+#define IRQ_COM2 0x23
+#define IRQ_COM1 0x24
+#define IRQ_LPT 0x25
+#define IRQ_FLOPPY 0x26
+#define IRQ_LPT1 0x27
+#define IRQ_RTC 0x28
+#define IRQ_ISA9 0x29
+#define IRQ_ISA10 0x2A
+#define IRQ_ISA11 0x2B
+#define IRQ_PS2MOUSE 0x2C
+#define IRQ_FPU 0x2D
+#define IRQ_ATA1 0x2E
+#define IRQ_ATA2 0x2F
 
 #ifdef _X86_
 
@@ -90,13 +94,34 @@ typedef struct _ATTR_PACKED S_IDTR
 
 #endif // _X86_
 
-typedef void (*isr_t)(InterruptFrame* frame);
-/* The ISR trashcan is an uint32 value that gets incremented every time an
-interrupt without a set ISR gets fired. Why does it exist ? idk. */
-u32 idt_get_isr_trashcan();
+typedef void (*x86isr_t)(InterruptFrame* frame);
+
 void idt_init();
 
-/* Registers 'callback' as the ISR to be used for the interrupt at 'irqn' */
-bool idt_register_isr(u8 irqn, isr_t callback);
+/**
+ *  Register an x86 ISR for a trap.
+ *
+ * 'n' The interrupt number.
+ * 'ring' The minimum ring that can call this interrupt. 0 or 3.
+ * 'cb' The ISR.
+ *
+ * Returns:
+ * 0 on success.
+ * -1 on invalid ring.
+ */
+int idt_register_trap_isr(intn_t n, u8 ring, x86isr_t cb);
+
+/**
+ * Register an x86 ISR for an IRQ. Note that you can also register a platform
+ * agnostic ISR for an IRQ using interrupts_register_irq_isr, which will not
+ * have the InterruptFrame* as a parameter.
+ *
+ * 'n' The interrupt number.
+ * 'cb' The ISR.
+ *
+ * Returns:
+ * 0 on success.
+ */
+int idt_register_irq_isr(intn_t n, x86isr_t cb);
 
 #endif // _DXGMX_X86_IDT_H

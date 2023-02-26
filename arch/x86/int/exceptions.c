@@ -24,6 +24,11 @@ static void debug_isr(InterruptFrame* frame)
     TODO();
 }
 
+static void breakpoint_isr(InterruptFrame* frame)
+{
+    klogln(WARN, "Breakpoint in ring 0, ip: 0x%X", frame->eip);
+}
+
 static void overflow_isr(InterruptFrame* frame)
 {
 
@@ -105,6 +110,11 @@ static void general_prot_fault_isr(InterruptFrame* frame)
     TODO_FATAL();
 }
 
+static void pagefault_isr(InterruptFrame*)
+{
+    panic("Page fault before the actual pagefault handler was installed!");
+}
+
 static void x87floating_point_err_isr(InterruptFrame* frame)
 {
     (void)frame;
@@ -142,6 +152,21 @@ static void virt_err_isr(InterruptFrame* frame)
     TODO_FATAL();
 }
 
+static void control_prot_isr(InterruptFrame* frame)
+{
+    klogln(WARN, "Control protection exception, ring: %d", frame->cs & 3);
+}
+
+static void hypervisor_injection_exception_isr(InterruptFrame* frame)
+{
+    klogln(WARN, "Hypervisor injection exception, ring: %d", frame->cs & 3);
+}
+
+static void vmm_comm_exception_isr(InterruptFrame* frame)
+{
+    klogln(WARN, "VMM communication exception, ring: %d", frame->cs & 3);
+}
+
 static void security_err_isr(InterruptFrame* frame)
 {
     (void)frame;
@@ -151,21 +176,29 @@ static void security_err_isr(InterruptFrame* frame)
 
 _INIT void exceptions_set_up_common_handlers()
 {
-    idt_register_isr(TRAP0, divbyzero_isr);
-    idt_register_isr(TRAP1, debug_isr);
-    idt_register_isr(TRAP4, overflow_isr);
-    idt_register_isr(TRAP5, boundrange_exceeded_isr);
-    idt_register_isr(TRAP6, invalid_opcode_isr);
-    idt_register_isr(TRAP7, fpu_not_available_isr);
-    idt_register_isr(TRAP8, double_fault_isr);
-    idt_register_isr(TRAP10, invalid_tss_isr);
-    idt_register_isr(TRAP11, segment_absent_isr);
-    idt_register_isr(TRAP12, stack_seg_fault);
-    idt_register_isr(TRAP13, general_prot_fault_isr);
-    idt_register_isr(TRAP16, x87floating_point_err_isr);
-    idt_register_isr(TRAP17, alignment_check_isr);
-    idt_register_isr(TRAP18, machine_check_isr);
-    idt_register_isr(TRAP19, simdfloating_point_err_isr);
-    idt_register_isr(TRAP20, virt_err_isr);
-    idt_register_isr(TRAP30, security_err_isr);
+    idt_register_trap_isr(TRAP_DIV_ERR, 0, divbyzero_isr);
+    idt_register_trap_isr(TRAP_DEBUG, 0, debug_isr);
+    idt_register_trap_isr(TRAP_BREAKPOINT, 0, breakpoint_isr);
+    idt_register_trap_isr(TRAP_OVERFLOW, 0, overflow_isr);
+    idt_register_trap_isr(TRAP_BOUND_EXCEEDED, 0, boundrange_exceeded_isr);
+    idt_register_trap_isr(TRAP_INVALID_OPCODE, 0, invalid_opcode_isr);
+    idt_register_trap_isr(TRAP_FPU_NOT_AVAIL, 0, fpu_not_available_isr);
+    idt_register_trap_isr(TRAP_DOUBLEFAULT, 0, double_fault_isr);
+    idt_register_trap_isr(TRAP_INVALID_TSS, 0, invalid_tss_isr);
+    idt_register_trap_isr(TRAP_ABSENT_SEGMENT, 0, segment_absent_isr);
+    idt_register_trap_isr(TRAP_SSFAULT, 0, stack_seg_fault);
+    idt_register_trap_isr(TRAP_GPF, 0, general_prot_fault_isr);
+    idt_register_trap_isr(TRAP_PAGEFAULT, 0, pagefault_isr);
+    idt_register_trap_isr(TRAP_X87_FP_EXCEPTION, 0, x87floating_point_err_isr);
+    idt_register_trap_isr(TRAP_ALIGNMENT_CHECK, 0, alignment_check_isr);
+    idt_register_trap_isr(TRAP_MACHINE_CHECK, 0, machine_check_isr);
+    idt_register_trap_isr(
+        TRAP_SIMD_FP_EXCEPTION, 0, simdfloating_point_err_isr);
+    idt_register_trap_isr(TRAP_VIRT_EXCEPTION, 0, virt_err_isr);
+    idt_register_trap_isr(
+        TRAP_CONTROL_PROTECTION_EXCEPTION, 0, control_prot_isr);
+    idt_register_trap_isr(
+        TRAP_HYPERVISOR_EXCEPTION, 0, hypervisor_injection_exception_isr);
+    idt_register_trap_isr(TRAP_VMM_COMM_EXCEPTION, 0, vmm_comm_exception_isr);
+    idt_register_trap_isr(TRAP_SECURITY_EXCEPTION, 0, security_err_isr);
 }

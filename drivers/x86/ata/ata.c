@@ -5,6 +5,7 @@
 
 #include "ata.h"
 #include <dxgmx/attrs.h>
+#include <dxgmx/interrupts.h>
 #include <dxgmx/klog.h>
 #include <dxgmx/kmalloc.h>
 #include <dxgmx/module.h>
@@ -286,20 +287,20 @@ ata_identify_bus(atabus_t bus_io, atabus_t bus_ctrl, BlockDeviceDriver* drv)
     return ret;
 }
 
-static void ata_primary_isr(InterruptFrame* frame)
+static void ata_primary_isr()
 {
-    (void)frame;
+    interrupts_irq_done();
 }
 
-static void ata_secondary_isr(InterruptFrame* frame)
+static void ata_secondary_isr()
 {
-    (void)frame;
+    interrupts_irq_done();
 }
 
 static int ata_init(BlockDeviceDriver* drv)
 {
-    idt_register_isr(IRQ14, ata_primary_isr);
-    idt_register_isr(IRQ15, ata_secondary_isr);
+    interrupts_reqister_irq_isr(IRQ_ATA1, ata_primary_isr);
+    interrupts_reqister_irq_isr(IRQ_ATA2, ata_secondary_isr);
 
     ata_identify_bus(0x1F0, 0x3F6, drv);
 

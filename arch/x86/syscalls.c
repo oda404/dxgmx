@@ -20,6 +20,6 @@ static void x86syscall_isr(InterruptFrame* frame)
 int syscalls_arch_init(syscall_handler_t handler)
 {
     g_global_syscall_handler = handler;
-    idt_register_isr(0x80, x86syscall_isr);
+    idt_register_trap_isr(0x80, 3, x86syscall_isr);
     return 0;
 }

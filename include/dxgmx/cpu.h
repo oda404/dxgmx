@@ -33,14 +33,4 @@ const CPUInfo* cpu_get_info();
 
 bool cpu_has_feature(CPUFeatureFlag flag);
 
-/**
- * Stop receiving hardware interrupt requests.
- */
-void cpu_enable_irqs();
-
-/**
- * Start receiving hardware interrupt requests.
- */
-void cpu_disable_irqs();
-
 #endif // _DXGMX_CPU_H

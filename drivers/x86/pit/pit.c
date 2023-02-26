@@ -6,12 +6,13 @@
 #include <dxgmx/assert.h>
 #include <dxgmx/attrs.h>
 #include <dxgmx/compiler_attrs.h>
+#include <dxgmx/interrupts.h>
 #include <dxgmx/klog.h>
 #include <dxgmx/module.h>
 #include <dxgmx/string.h>
 #include <dxgmx/timekeep.h>
 #include <dxgmx/x86/idt.h>
-#include <dxgmx/x86/interrupts.h>
+#include <dxgmx/x86/pic.h>
 #include <dxgmx/x86/portio.h>
 
 #define KLOGF_PREFIX "pit: "
@@ -46,7 +47,7 @@
 static volatile struct timespec g_periodic_int_timespec;
 static size_t g_freq = 0;
 
-static void pit_isr(InterruptFrame _ATTR_UNUSED* frame)
+static void pit_isr()
 {
     g_periodic_int_timespec.tv_nsec += 1.f / g_freq * 1000000000;
     while (g_periodic_int_timespec.tv_nsec >= 1000000000)
@@ -54,6 +55,8 @@ static void pit_isr(InterruptFrame _ATTR_UNUSED* frame)
         ++g_periodic_int_timespec.tv_sec;
         g_periodic_int_timespec.tv_nsec -= 1000000000;
     }
+
+    interrupts_irq_done();
 }
 
 static void pit_enable_periodic_int()
@@ -61,8 +64,8 @@ static void pit_enable_periodic_int()
     g_freq = 4096;
     const u16 freqdiv = PIT_BASE_FREQ_HZ / g_freq;
 
-    interrupts_disable();
-    idt_register_isr(IRQ0, pit_isr);
+    interrupts_disable_irqs();
+    interrupts_reqister_irq_isr(IRQ_PIT, pit_isr);
 
     port_outb(
         (PIT_MODE_BIN | PIT_OPMODE_SQUARE_WAVE_GEN | PIT_ACCESS_LOHI |
@@ -73,7 +76,7 @@ static void pit_enable_periodic_int()
     /* hi */
     port_outb(freqdiv >> 8, PIT_CHANNEL0_PORT);
 
-    interrupts_enable();
+    interrupts_enable_irqs();
 }
 
 int pit_init(TimeSource*)

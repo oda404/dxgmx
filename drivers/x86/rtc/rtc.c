@@ -4,6 +4,7 @@
  */
 
 #include <dxgmx/attrs.h>
+#include <dxgmx/interrupts.h>
 #include <dxgmx/klog.h>
 #include <dxgmx/string.h>
 #include <dxgmx/time.h>
@@ -11,7 +12,6 @@
 #include <dxgmx/types.h>
 #include <dxgmx/x86/cmos.h>
 #include <dxgmx/x86/idt.h>
-#include <dxgmx/x86/interrupts.h>
 
 #define RTC_REG_A 0xA
 #define RTC_REG_B 0xB
@@ -81,8 +81,6 @@ static bool g_periodic_int_enabled = false;
 
 static void rtc_set_date()
 {
-    /* Hang interrupts so we make sure the date is read correctly. */
-    interrupts_disable();
     g_periodic_int_date.tm_sec = cmos_port_inb(RTC_REG_SECONDS, NMIKEEP);
     g_periodic_int_date.tm_min = cmos_port_inb(RTC_REG_MINUTES, NMIKEEP);
     g_periodic_int_date.tm_hour = cmos_port_inb(RTC_REG_HOURS, NMIKEEP);
@@ -123,7 +121,6 @@ static void rtc_set_date()
             TODO();
         }
     }
-    interrupts_enable();
 }
 
 static void rtc_isr(InterruptFrame _ATTR_MAYBE_UNUSED* frame)
@@ -132,6 +129,8 @@ static void rtc_isr(InterruptFrame _ATTR_MAYBE_UNUSED* frame)
 
     if (c & RTC_REG_C_DATE_UPDATE_DONE)
         rtc_set_date();
+
+    interrupts_irq_done();
 }
 
 _INIT int rtc_init()

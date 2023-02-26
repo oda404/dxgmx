@@ -5,13 +5,13 @@
 
 #include <dxgmx/attrs.h>
 #include <dxgmx/cpu.h>
+#include <dxgmx/interrupts.h>
 #include <dxgmx/klog.h>
 #include <dxgmx/panic.h>
 #include <dxgmx/string.h>
 #include <dxgmx/todo.h>
 #include <dxgmx/x86/cmos.h>
 #include <dxgmx/x86/cpuid.h>
-#include <dxgmx/x86/interrupts.h>
 
 static CPUFeatures g_cpufeatures;
 static CPUInfo g_cpuinfo;
@@ -237,17 +237,7 @@ void cpu_hang()
 {
     while (1)
     {
-        interrupts_disable();
+        interrupts_disable_irqs();
         cpu_suspend();
     }
-}
-
-void cpu_enable_irqs()
-{
-    __asm__ volatile("sti");
-}
-
-void cpu_disable_irqs()
-{
-    __asm__ volatile("cli");
 }

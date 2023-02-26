@@ -5,11 +5,11 @@
 
 #include <dxgmx/assert.h>
 #include <dxgmx/attrs.h>
-#include <dxgmx/cpu.h>
 #include <dxgmx/elf/elf.h>
 #include <dxgmx/elf/elfloader.h>
 #include <dxgmx/errno.h>
 #include <dxgmx/fs/vfs.h>
+#include <dxgmx/interrupts.h>
 #include <dxgmx/kimg.h>
 #include <dxgmx/klog.h>
 #include <dxgmx/kmalloc.h>
@@ -225,12 +225,12 @@ int procm_replace_proc(
      * That's why we need to be extra careful, or just turn off hardware
      * interrupts.
      */
-    cpu_disable_irqs();
+    interrupts_disable_irqs();
 
     procm_free_proc_data(actingproc);
     *actingproc = newproc;
 
-    cpu_enable_irqs();
+    interrupts_enable_irqs();
 
     /* At this point the old process is gone, and the new one is waiting to
      * run */
