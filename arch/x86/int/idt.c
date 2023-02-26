@@ -714,10 +714,3 @@ int idt_register_irq_isr(intn_t n, x86isr_t cb)
     idt_encode_flags(GDT_KERNEL_CS, flags, &g_idt[n]);
     return 0;
 }
-
-int interrupts_reqister_irq_isr(intn_t n, isr_t isr)
-{
-    /* The only difference between x86isr_t and an isr_t is that x86isr_t has
-     * an InterruptFrame* as a parameter, which is x86 specific */
-    return idt_register_irq_isr(n, (x86isr_t)isr);
-}
