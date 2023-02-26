@@ -4,7 +4,7 @@
 KERNEL_NAME       := dxgmx
 
 VER_MAJ           := 0
-VER_MIN           := 18
+VER_MIN           := 19
 PATCH_N           := 0
 CODENAME          := angel_attack
 
