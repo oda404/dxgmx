@@ -515,6 +515,18 @@ int pci_register_device_driver(const PCIDeviceDriver* driver)
     return 0;
 }
 
+int pci_unregister_device_driver(const PCIDeviceDriver* driver)
+{
+    FOR_EACH_ENTRY_IN_LL (g_pci_devs, PCIDevice*, dev)
+    {
+        if (dev->driver == driver)
+            dev->driver = NULL;
+    }
+
+    return linkedlist_remove_by_data(
+        (PCIDeviceDriver*)driver, &g_pci_dev_drivers);
+}
+
 u32 pci_read_bar4(const PCIDevice* dev)
 {
     if (dev->header_type != 0)

@@ -75,6 +75,7 @@ typedef struct S_PCIDeviceDriver
 u32 pci_read_4bytes(u8 bus, u8 dev, u8 func, u8 offset);
 
 int pci_register_device_driver(const PCIDeviceDriver* driver);
+int pci_unregister_device_driver(const PCIDeviceDriver* driver);
 
 u32 pci_read_bar4(const PCIDevice* dev);
 
