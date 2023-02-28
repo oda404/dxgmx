@@ -40,6 +40,7 @@ BASE_CFLAGS            := \
 -fno-pie -fno-pic --target=$(DXGMX_ARCH)-unknown-dxgmx
 
 INCLUDEDIRS := -I$(INCLUDE_SRCDIR) 
+MODULES_INCLUDEDIRS := 
 
 LLVM=$(shell $(SCRIPTSDIR)/is-llvm.sh)
 
@@ -88,6 +89,8 @@ endif
 # these included makefiles.
 include $(ARCH_SRCDIR)/Makefile
 include $(KERNEL_SRCDIR)/Makefile
+
+INCLUDEDIRS += $(patsubst %, -I%, $(MODULES_INCLUDEDIRS))
 
 BASE_CFLAGS       += $(INCLUDEDIRS) $(WARNINGS) $(MACROS)
 CFLAGS            += $(BASE_CFLAGS) $(EXTRA_CFLAGS) $(EXTRA_WARNINGS) $(EXTRA_MACROS)
