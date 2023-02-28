@@ -7,31 +7,15 @@
 #include <dxgmx/errno.h>
 #include <dxgmx/klog.h>
 #include <dxgmx/kmalloc.h>
+#include <dxgmx/module.h>
 #include <dxgmx/panic.h>
-#include <dxgmx/x86/pci.h>
-#include <dxgmx/x86/portio.h>
+#include <dxgmx/pci.h>
+#include <dxgmx/utils/linkedlist.h>
 
 #define KLOGF_PREFIX "pci: "
 
-#define PCI_CONFIG_ADDRESS 0xCF8
-#define PCI_CONFIG_DATA 0xCFC
-
-static PCIDevice* g_pci_devices = NULL;
-static size_t g_pci_devices_count = 0;
-
-typedef union U_PCIDeviceRegister
-{
-    u32 whole;
-    _ATTR_PACKED struct
-    {
-        u8 register_offset;
-        u8 func : 3;
-        u8 dev : 5;
-        u8 bus;
-        u8 reserved : 7;
-        u8 enabled : 1;
-    };
-} PCIDeviceRegister;
+static LinkedList g_pci_devs;
+static LinkedList g_pci_dev_drivers;
 
 static const char* pci_class_to_string(u8 class, u8 subclass)
 {
@@ -390,100 +374,164 @@ static const char* pci_class_to_string(u8 class, u8 subclass)
     return "???";
 }
 
-static u32 pci_read_4bytes(u8 bus, u8 dev, u8 func, u8 offset)
+static u16 pci_read_vendor_id(u8 bus, u8 dev, u8 func)
 {
-    if (offset & 0b11)
-        return 0;
+    return pci_read_4bytes(bus, dev, func, 0) & 0xFFFF;
+}
 
-    PCIDeviceRegister reg = {
-        .register_offset = offset,
-        .func = func,
-        .dev = dev,
-        .bus = bus,
-        .enabled = 1};
+static u8 pci_read_header_type(u8 bus, u8 dev, u8 func)
+{
+    return (pci_read_4bytes(bus, dev, func, 0xC) >> 16) & 0xFF;
+}
 
-    port_outl(reg.whole, PCI_CONFIG_ADDRESS);
-    return port_inl(PCI_CONFIG_DATA);
+static bool pci_device_is_multifunction(u8 bus, u8 dev)
+{
+    return pci_read_header_type(bus, dev, 0) & (1 << 7);
+}
+
+static bool pci_device_is_host_bridge(u8 bus, u8 dev, u8 func)
+{
+    u32 tmp = pci_read_4bytes(bus, dev, func, 0x8);
+    u8 class = (tmp >> 24) & 0xFF;
+    u8 subclass = (tmp >> 16) & 0xFF;
+    return class == PCI_BRIDGE && subclass == 0;
 }
 
 static int pci_register_device(u8 bus, u8 dev, u8 func)
 {
-    u32 tmp = pci_read_4bytes(bus, dev, func, 0);
-    if ((tmp & 0xFFFF) == 0xFFFF)
-        return -ENODEV;
-
-    PCIDevice* tmpalloc =
-        krealloc(g_pci_devices, (g_pci_devices_count + 1) * sizeof(PCIDevice));
-    if (!tmpalloc)
+    PCIDevice* device = kmalloc(sizeof(PCIDevice));
+    if (!device)
         return -ENOMEM;
 
-    g_pci_devices = tmpalloc;
-    ++g_pci_devices_count;
+    if (linkedlist_add(device, &g_pci_devs) < 0)
+    {
+        kfree(device);
+        return -ENOMEM;
+    }
 
-    PCIDevice* device = &g_pci_devices[g_pci_devices_count - 1];
     device->bus = bus;
     device->dev = dev;
     device->func = func;
 
+    u32 tmp = pci_read_4bytes(bus, dev, func, 0);
     device->vendor_id = tmp & 0xFFFF;
     device->device_id = (tmp >> 16) & 0xFFFF;
 
     tmp = pci_read_4bytes(bus, dev, func, 0x8);
     device->class = (tmp >> 24) & 0xFF;
     device->subclass = (tmp >> 16) & 0xFF;
+    device->progif = (tmp >> 8) & 0xFF;
+    device->revision_id = tmp & 0xFF;
+
+    tmp = pci_read_4bytes(bus, dev, func, 0xC);
+    device->header_type = (tmp >> 16) & 0xFF;
 
     KLOGF(
         INFO,
-        "(%02X:%02X.%X) %s [%02X:%02X]",
+        "(%02X:%02X.%X) %s",
         bus,
         dev,
         func,
-        pci_class_to_string(device->class, device->subclass),
-        device->class,
-        device->subclass);
+        pci_class_to_string(device->class, device->subclass));
 
     return 0;
 }
 
-void pci_enumerate_bus(u8 bus)
+static void pci_enumerate_bus(u8 bus)
 {
     for (u8 dev = 0; dev < 32; ++dev)
     {
-        for (size_t i = 0; i < 8; ++i)
+        if (pci_read_vendor_id(bus, dev, 0) == 0xFFFF)
+            continue;
+
+        int st = pci_register_device(bus, dev, 0);
+        if (st)
         {
-            int st = pci_register_device(bus, dev, i);
-            if (st && st != -ENODEV)
+            KLOGF(
+                ERR, "Failed to register (%02X:%02X.%X), %d.", bus, dev, 0, st);
+            return;
+        }
+
+        /* Only keep going if the device has multiple functions. */
+        if (!pci_device_is_multifunction(bus, dev))
+            continue;
+
+        for (size_t func = 1; func < 8; ++func)
+        {
+            if (pci_read_vendor_id(bus, dev, func) == 0xFFFF)
+                continue;
+
+            st = pci_register_device(bus, dev, func);
+            if (st)
             {
                 KLOGF(
                     ERR,
-                    "Failed to register device (%02X:%02X.%X), error: %d.",
+                    "Failed to register (%02X:%02X.%X), %d.",
                     bus,
                     dev,
-                    i,
+                    func,
                     st);
             }
+
+            if (pci_device_is_host_bridge(bus, dev, func))
+                pci_enumerate_bus(func);
         }
     }
 }
 
-void pci_enumerate_devices()
+static int pci_enumerate_devices()
 {
-    /* Check root bus to see if it's multi-function. */
-    u32 tmp = pci_read_4bytes(0, 0, 0, 0);
-
-    if ((tmp & 0xFFFF) == 0xFFFF)
-        panic("Couldn't find root PCI bus."); // how doe?
+    /* Read the vendor ID of the root bus (00:00.0) */
+    u16 root_vendor_id = pci_read_vendor_id(0, 0, 0);
+    if (root_vendor_id == 0xFFFF)
+    {
+        KLOGF(WARN, "No PCI root bus!");
+        return -ENODEV;
+    }
 
     pci_enumerate_bus(0);
 
-    tmp = pci_read_4bytes(0, 0, 0, 0xC);
-    if ((tmp >> 16) & 0x80)
+    return 0;
+}
+
+int pci_register_device_driver(const PCIDeviceDriver* driver)
+{
+    if (linkedlist_add((PCIDeviceDriver*)driver, &g_pci_dev_drivers) < 0)
+        return -ENOMEM;
+
+    FOR_EACH_ENTRY_IN_LL (g_pci_devs, PCIDevice*, dev)
     {
-        for (u8 func = 1; func < 8; ++func)
+        if (dev->class == driver->class && dev->subclass == driver->subclass &&
+            !dev->driver)
         {
-            if ((pci_read_4bytes(0, 0, func, 0) & 0xFFFF) == 0xFFFF)
-                break; /* that's all. */
-            pci_enumerate_bus(func);
+            if (driver->probe(dev) == 0)
+            {
+                dev->driver = driver;
+                break;
+            }
         }
     }
+
+    return 0;
 }
+
+u32 pci_read_bar4(const PCIDevice* dev)
+{
+    if (dev->header_type != 0)
+        return -EINVAL;
+
+    return pci_read_4bytes(dev->bus, dev->dev, dev->func, 0x20);
+}
+
+static int pci_main()
+{
+    return pci_enumerate_devices();
+}
+
+static int pci_exit()
+{
+    return 0;
+}
+
+MODULE g_pci_module = {
+    .name = "pci", .main = pci_main, .exit = pci_exit, .stage = MODULE_STAGE2};

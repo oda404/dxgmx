@@ -1,10 +1,10 @@
 /**
- * Copyright 2022 Alexandru Olaru.
+ * Copyright 2023 Alexandru Olaru.
  * Distributed under the MIT license.
  */
 
-#ifndef _DXGMX_X86_PCI_H
-#define _DXGMX_X86_PCI_H
+#ifndef _DXGMX_PCI_PCI_H
+#define _DXGMX_PCI_PCI_H
 
 #include <dxgmx/compiler_attrs.h>
 #include <dxgmx/types.h>
@@ -37,19 +37,45 @@ typedef enum E_PCIClassCode
     PCI_VENDOR_SPECIFIC = 0xFF
 } PCIClassCode;
 
+struct S_PCIDeviceDriver;
+
 typedef struct S_PCIDevice
 {
+    /* The bus number where this device resides */
     u8 bus;
+    /* The device number on the bus */
     u8 dev;
+    /* The function. */
     u8 func;
 
     u16 vendor_id;
     u16 device_id;
+
     u8 class;
     u8 subclass;
+    u8 revision_id;
+    u8 progif;
+
+    u8 header_type;
+
+    const struct S_PCIDeviceDriver* driver;
 } PCIDevice;
 
-void pci_enumerate_bus(u8 bus);
-void pci_enumerate_devices();
+typedef struct S_PCIDeviceDriver
+{
+    const char* name;
 
-#endif // !_DXGMX_X86_PCI_H
+    u8 class;
+    u8 subclass;
+
+    int (*probe)(PCIDevice* dev);
+} PCIDeviceDriver;
+
+/* Platform specific */
+u32 pci_read_4bytes(u8 bus, u8 dev, u8 func, u8 offset);
+
+int pci_register_device_driver(const PCIDeviceDriver* driver);
+
+u32 pci_read_bar4(const PCIDevice* dev);
+
+#endif // !_DXGMX_PCI_PCI_H

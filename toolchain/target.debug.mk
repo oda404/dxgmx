@@ -17,3 +17,4 @@ include drivers/stackprot/module.mk
 include drivers/fat/module.mk
 include drivers/ramfs/module.mk
 include drivers/fbsink/module.mk
+include drivers/pci/module.mk

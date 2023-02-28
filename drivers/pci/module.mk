@@ -1,0 +1,7 @@
+
+MODULES_SRC += \
+$(DRIVERS_SRCDIR)/pci/pci_x86.c \
+$(DRIVERS_SRCDIR)/pci/pci.c
+
+MODULES_INCLUDEDIRS += \
+$(DRIVERS_SRCDIR)/pci/include
