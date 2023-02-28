@@ -63,10 +63,11 @@ static int fat_parse_metadata(FileSystem* fs)
     if (!buf)
         return -ENOMEM;
 
-    if (!part->read(part, 0, 1, buf))
+    int st = part->read(part, 0, 1, buf);
+    if (st < 0)
     {
         kfree(buf);
-        return -EIO;
+        return st;
     }
 
     const FatBootRecord* bpb = (FatBootRecord*)buf;
@@ -353,7 +354,9 @@ void fat_advance_loc(const FAT32Ctx* ctx, FATEntryLoc* loc)
 
 int fat_advance_loc_clus(FATEntryLoc* loc, u8* buf, const FAT32Ctx* ctx)
 {
-    u32 next_cluster = fat_entry_for_clus(loc->cluster, buf, ctx);
+    i64 next_cluster = fat_entry_for_clus(loc->cluster, buf, ctx);
+    if (next_cluster < 0)
+        return next_cluster;
 
     /* If the fat entry (next cluster) is out of this range, it could either be
      * an EOF, reserved, corrupted or free. We only care that those can't be
