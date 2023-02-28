@@ -6,7 +6,7 @@
 #ifndef _DXGMX_MEM_DMA_H
 #define _DXGMX_MEM_DMA_H
 
-#include <dxgmx/mem/pagesize.h>
+#include <dxgmx/mem/paging.h>
 #include <dxgmx/proc/proc_limits.h>
 #include <dxgmx/types.h>
 
