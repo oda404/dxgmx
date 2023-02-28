@@ -73,7 +73,10 @@ fi
 
 # Sysroot disk
 if [ -n "$DXGMX_QEMU_SYSROOT_DISK" ]; then
-	QEMU_ARGS+=" -drive file=$DXGMX_QEMU_SYSROOT_DISK,format=raw,index=0,media=disk,id=disk"
+	if [ "$DXGMX_QEMU_USE_IDE" == "y" ]; then
+		QEMU_ARGS+=" -drive file=$DXGMX_QEMU_SYSROOT_DISK,if=none,format=raw,id=disk"
+		QEMU_ARGS+=" -device ide-hd,drive=disk,bus=ide.0"
+	fi
 fi
 
 # Memory
