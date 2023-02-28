@@ -85,4 +85,6 @@
 
 #define EOVERFLOW 39
 
+#define ETIMEDOUT 40
+
 #endif // _DXGMX_ERRNO_H
