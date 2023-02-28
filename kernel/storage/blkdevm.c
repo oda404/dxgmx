@@ -66,7 +66,17 @@ int blkdevm_register_blkdev_driver(BlockDeviceDriver* drv)
     if (st < 0)
         return st;
 
-    return drv->init(drv);
+    if (drv->init)
+    {
+        st = drv->init(drv);
+        if (st < 0)
+        {
+            linkedlist_remove_by_data(drv, &g_blkdev_drivers);
+            return st;
+        }
+    }
+
+    return 0;
 }
 
 int blkdevm_unregister_blkdev_driver(BlockDeviceDriver* drv)
@@ -75,7 +85,10 @@ int blkdevm_unregister_blkdev_driver(BlockDeviceDriver* drv)
     if (st < 0)
         return st;
 
-    return drv->destroy(drv);
+    if (drv->destroy)
+        return drv->destroy(drv);
+
+    return 0;
 }
 
 /**
