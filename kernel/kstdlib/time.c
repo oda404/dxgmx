@@ -93,3 +93,11 @@ int nanosleep(const struct timespec* rqtp, struct timespec* rmtp)
 
     return 0;
 }
+
+void sleep_ms(size_t ms)
+{
+    struct timespec ts;
+    ts.tv_sec = ms / 1000;
+    ts.tv_nsec = ms * 1000000 - ts.tv_sec * 1000000000;
+    nanosleep(&ts, NULL);
+}

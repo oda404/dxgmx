@@ -56,4 +56,6 @@ time_t time(time_t* timer);
 
 int nanosleep(const struct timespec* rqtp, struct timespec* rmtp);
 
+void sleep_ms(size_t ms);
+
 #endif //_DXGMX_TIME_H
