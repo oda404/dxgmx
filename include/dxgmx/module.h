@@ -46,6 +46,9 @@ typedef struct S_Module
 {
     const char* const name;
 
+    /* Comma separated string of module dependencies. */
+    const char* const dependencies;
+
     /* Load stage for built in module. */
     ModuleStage stage;
 

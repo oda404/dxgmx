@@ -214,7 +214,11 @@ _INIT static void mm_enforce_ksections_perms()
 
     /* Can't write to modules */
     FOR_EACH_KPTE_IN_RANGE (kimg_module_start(), kimg_module_end(), pte)
-        pte->writable = false;
+    {
+        /* We leave modules as writable, because they get altered after
+         * initialization. */
+        pte->exec_disable = true;
+    }
 
     /* Can't write to kinit_stage3 */
     FOR_EACH_KPTE_IN_RANGE (
