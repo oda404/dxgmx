@@ -20,7 +20,6 @@
 #include <dxgmx/todo.h>
 #include <dxgmx/types.h>
 #include <dxgmx/utils/bytes.h>
-#include <dxgmx/x86/acpi.h>
 #include <dxgmx/x86/multiboot.h>
 #include <dxgmx/x86/pagefault.h>
 #include <dxgmx/x86/pd.h>
