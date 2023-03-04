@@ -18,3 +18,4 @@ include drivers/fat/module.mk
 include drivers/ramfs/module.mk
 include drivers/fbsink/module.mk
 include drivers/pci/module.mk
+include drivers/acpi/module.mk
