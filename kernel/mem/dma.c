@@ -58,6 +58,9 @@ ERR_OR(ptr) dma_map_range(ptr paddr, size_t n, u16 flags)
 {
     const size_t pages = bytes_align_up64(n, PAGESIZE) / PAGESIZE;
 
+    const ptr aligned_paddr = bytes_align_down64(paddr, PAGESIZE);
+    const size_t off = paddr - aligned_paddr;
+
     ERR_OR(ptr) res = dma_find_start(pages);
     if (res.error)
         return ERR(ptr, res.error);
@@ -66,7 +69,7 @@ ERR_OR(ptr) dma_map_range(ptr paddr, size_t n, u16 flags)
 
     for (size_t i = 0; i < pages; ++i)
     {
-        ptr frame = paddr + i * PAGESIZE;
+        ptr frame = aligned_paddr + i * PAGESIZE;
         ptr vaddr = start + i * PAGESIZE;
 
         /* FIXME: maybe we should somehow validate that the physical address
@@ -85,5 +88,5 @@ ERR_OR(ptr) dma_map_range(ptr paddr, size_t n, u16 flags)
             return ERR(ptr, st);
     }
 
-    return VALUE(ptr, start);
+    return VALUE(ptr, start + off);
 }
