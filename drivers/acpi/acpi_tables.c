@@ -208,7 +208,7 @@ volatile ACPIHPETTable* acpi_get_hpet_table()
     FOR_EACH_ELEM_IN_DARR (g_acpi_tables, g_acpi_table_count, table)
     {
         if (table->type == ACPI_TABLE_HPET)
-            return (ACPIHPETTable*)table;
+            return (ACPIHPETTable*)table->vaddr;
     }
 
     return NULL;
