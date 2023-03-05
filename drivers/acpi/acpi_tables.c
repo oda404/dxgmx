@@ -203,7 +203,7 @@ static int acpi_init_rsdt()
     return 0;
 }
 
-volatile ACPIHPETTable* acpi_get_hpet_table()
+ACPIHPETTable* acpi_get_hpet_table()
 {
     FOR_EACH_ELEM_IN_DARR (g_acpi_tables, g_acpi_table_count, table)
     {

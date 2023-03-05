@@ -11,8 +11,8 @@
 
 typedef struct _ATTR_PACKED S_ACPIGenericAddress
 {
-#define ACPI_GAS_ADDR_SPACE_ID_MEM 0
-#define ACPI_GAS_ADDR_SPACE_ID_IO 1
+#define ACPI_GAS_MEM 0
+#define ACPI_GAS_IO 1
     u8 address_space_id;
     u8 register_bit_width;
     u8 register_bit_offset;
@@ -87,6 +87,6 @@ typedef enum E_ACPITableType
     ACPI_TABLE_WAET
 } ACPITableType;
 
-volatile ACPIHPETTable* acpi_get_hpet_table();
+ACPIHPETTable* acpi_get_hpet_table();
 
 #endif // !_DXGMX_ACPI_TABLES_H
