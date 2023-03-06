@@ -61,7 +61,7 @@ Run:
 ```console
 $ make iso
 ```
-which will create an ISO in the source of the root tree with the name of **dxgmx-\<ver\>.iso**.
+which will create an ISO in the root of the source tree with the name of **dxgmx-\<ver\>.iso**.
 
 You can then dd said ISO to a storage medium:
 ```console
