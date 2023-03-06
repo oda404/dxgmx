@@ -57,7 +57,19 @@ $ make unmount-root
 ```
 
 ## Bare-metal
-Never tried, as it stands it won't boot on anything newer than ~2007.
+Run:
+```console
+$ make iso
+```
+which will create an ISO in the source of the root tree with the name of **dxgmx-\<ver\>.iso**.
+
+You can then dd said ISO to a storage medium:
+```console
+# dd if=path/to/iso of=/dev/sdX status=progress
+```
+and try to boot it.
+
+The kernel boots and works (does what it's supposed to do) on my 2019 Lenovo IdeaPad 330S-15ARR.
 
 # Documentation
 A growing set of documentation can be found in docs/.
