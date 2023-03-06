@@ -219,18 +219,11 @@ int procm_replace_proc(
     newproc.fd_count = actingproc->fd_count;
     newproc.kstack_top = actingproc->kstack_top;
 
-    /* If we just free the paging structure (that being the paging structure we
-     * are using) here and an interrupt comes, kmalloc might end up being
-     * called, as a result of that interrupt, and may fuck up our paging struct.
-     * That's why we need to be extra careful, or just turn off hardware
-     * interrupts.
-     */
-    interrupts_disable_irqs();
-
+    /* Load the context of the new process, so the old can be freed without any
+     * worries. */
+    procm_load_ctx(&newproc);
     procm_free_proc_data(actingproc);
     *actingproc = newproc;
-
-    interrupts_enable_irqs();
 
     /* At this point the old process is gone, and the new one is waiting to
      * run */
