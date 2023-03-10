@@ -1,7 +1,7 @@
 #!/bin/bash
 
 FIRST_LENGTH=${#1}
-TOTAL_LENGTH=7
+TOTAL_LENGTH=8
 
 FIRST_TOKEN=$1
 # Strip unneeded '/'
