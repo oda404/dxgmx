@@ -127,13 +127,15 @@ MODOBJS           := $(MODOBJS:%.c=%_mod_$(TARGET_NAME).c.o)
 MODOBJS           := $(addprefix $(BUILDDIR)/, $(MODOBJS))
 MODDEPS           := $(MODOBJS:%.o=%.d)
 
+MISCOBJS           := $(addprefix $(BUILDDIR)/, $(MISCOBJS))
+
 KINIT_STAGE3_OBJ := $(filter %.c, $(KINIT_STAGE3_SRC))
 KINIT_STAGE3_OBJ := $(KINIT_STAGE3_OBJ:%.c=%_kinit3_$(TARGET_NAME).c.o)
 KINIT_STAGE3_OBJ := $(addprefix $(BUILDDIR)/, $(KINIT_STAGE3_OBJ))
 KINIT_STAGE3_DEP := $(KINIT_STAGE3_OBJ:%.o=%.d)
 
 DXGMX_DEPS        := \
-$(COBJS) $(KINIT_STAGE3_OBJ) $(ASMOBJS) $(LDSCRIPT) $(MODOBJS)
+$(COBJS) $(KINIT_STAGE3_OBJ) $(ASMOBJS) $(LDSCRIPT) $(MODOBJS) $(MISCOBJS)
 
 DXGMX_COMMON_DEPS := Makefile $(BUILDCONFIG) $(BUILDTARGET)
 
@@ -144,7 +146,7 @@ all: $(KERNEL_BIN_PATH)
 
 $(KERNEL_BIN_PATH): $(DXGMX_DEPS) $(DXGMX_COMMON_DEPS)
 	@$(PRETTY_PRINT) LD $(notdir $(KERNEL_BIN_NAME))
-	@$(LD) -T $(LDSCRIPT) $(COBJS) $(KINIT_STAGE3_OBJ) $(ASMOBJS) $(MODOBJS) $(LDFLAGS) -o $(KERNEL_BIN_PATH)
+	@$(LD) -T $(LDSCRIPT) $(COBJS) $(KINIT_STAGE3_OBJ) $(ASMOBJS) $(MODOBJS) $(MISCOBJS) $(LDFLAGS) -o $(KERNEL_BIN_PATH)
 
 	@[ -f build/image.img ] || $(SCRIPTSDIR)/create-disk.sh -p build/image.img
 	@$(SCRIPTSDIR)/bake_symbols.sh $(KERNEL_BIN_PATH)
@@ -194,7 +196,7 @@ run:
 
 PHONY += clean 
 clean:
-	@rm -f $(COBJS) $(ASMOBJS) $(MODOBJS) $(KINIT_STAGE3_OBJ)
+	@rm -f $(COBJS) $(ASMOBJS) $(MODOBJS) $(KINIT_STAGE3_OBJ) $(MISCOBJS)
 	@rm -f $(CDEPS) $(ASMDEPS) $(MODDEPS) $(KINIT_STAGE3_DEP)
 
 PHONY += mrclean 
