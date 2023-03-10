@@ -214,6 +214,17 @@ ACPIHPETTable* acpi_get_hpet_table()
     return NULL;
 }
 
+ACPIMADTable* acpi_get_mad_table()
+{
+    FOR_EACH_ELEM_IN_DARR (g_acpi_tables, g_acpi_table_count, table)
+    {
+        if (table->type == ACPI_TABLE_APIC)
+            return (ACPIMADTable*)table->vaddr;
+    }
+
+    return NULL;
+}
+
 static int acpi_main()
 {
     acpi_init_rsdt();

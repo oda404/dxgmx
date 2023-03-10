@@ -71,6 +71,13 @@ typedef struct _ATTR_PACKED S_ACPIHPETTable
     u8 page_prot;
 } ACPIHPETTable;
 
+typedef struct _ATTR_PACKED S_ACPIMADTable
+{
+    ACPISDTHeader header;
+    u32 lapic_address;
+    u32 flags;
+} ACPIMADTable;
+
 /* System descriptor table */
 typedef struct _ATTR_PACKED S_ACPIRSDTable
 {
@@ -88,5 +95,6 @@ typedef enum E_ACPITableType
 } ACPITableType;
 
 ACPIHPETTable* acpi_get_hpet_table();
+ACPIMADTable* acpi_get_mad_table();
 
 #endif // !_DXGMX_ACPI_TABLES_H
