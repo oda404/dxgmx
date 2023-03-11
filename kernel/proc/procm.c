@@ -359,6 +359,13 @@ err:
     return st;
 }
 
+pid_t procm_spawn_kernel_proc()
+{
+    Process proc = {0};
+    procm_add_proc_to_pool(&proc);
+    return 0;
+}
+
 int procm_kill(Process* proc)
 {
     if (!proc)

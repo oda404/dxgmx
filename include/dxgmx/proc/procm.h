@@ -19,6 +19,21 @@
 pid_t procm_spawn_init();
 
 /**
+ * Spawn the kernel process. The kernel process is a temporary dummy process
+ * with PID 0 that is spawned before the PID 1. We do this mainly because we
+ * need to somehow access the vfs before we spawn a process. When trying to
+ * spawn PID 1 or even mount the initrd, we need to go through the vfs, which
+ * expects us to pass a Process* for opening file descriptors. This process
+ * is replaced by PID 1 when the time comes. Anyone who wants to access this
+ * process before PID 1 is spawned can do so with procm_next_queued_proc() since
+ * it's the only process.
+ *
+ * Returns:
+ * 0 on success.
+ */
+pid_t procm_spawn_kernel_proc();
+
+/**
  * Spawn a new process
  *
  * 'path' path of the new process. Should not be NULL.
