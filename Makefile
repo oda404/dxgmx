@@ -43,7 +43,7 @@ INCLUDE_SRCDIR    := include
 DRIVERS_SRCDIR    := drivers
 
 ### BASE FLAGS ###
-BASE_CFLAGS            := \
+CFLAGS            := \
 -MD -MP -isystem=/usr/include -std=c2x \
 -fno-omit-frame-pointer -ffreestanding \
 -fno-builtin -march=$(DXGMX_ARCH) \
@@ -75,7 +75,6 @@ KERNELOBJS         :=
 LDSCRIPT           :=
 MODULEOBJS         :=
 MODULE_INCLUDEDIRS := 
-KINIT_STAGE3_OBJ   :=
 
 ifdef TARGET_FILE
     include $(TARGET_FILE)
@@ -90,8 +89,7 @@ include $(KERNEL_SRCDIR)/Makefile
 # Add module include directories to INCLUDEDIRS
 INCLUDEDIRS += $(patsubst %, -I%, $(MODULE_INCLUDEDIRS))
 
-BASE_CFLAGS        += $(INCLUDEDIRS) $(WARNINGS) $(DEFINES)
-CFLAGS             += $(BASE_CFLAGS) $(EXTRA_CFLAGS) $(EXTRA_WARNINGS) $(EXTRA_MACROS)
+CFLAGS             += $(INCLUDEDIRS) $(WARNINGS) $(DEFINES) $(EXTRA_CFLAGS) $(EXTRA_WARNINGS) $(EXTRA_MACROS)
 LDFLAGS            += $(EXTRA_LDFLAGS)
 
 CORE_OBJS          := $(ARCHOBJS) $(KERNELOBJS)
@@ -117,10 +115,7 @@ SMODDEPS           := $(SMODOBJS:%.o=%.d)
 
 MISCOBJS           := $(addprefix $(BUILDDIR)/, $(MISCOBJS))
 
-KINIT_STAGE3_OBJ   := $(addprefix $(BUILDDIR)/, $(KINIT_STAGE3_OBJ))
-KINIT_STAGE3_DEP   := $(KINIT_STAGE3_OBJ:%.o=%.d)
-
-ALL_OBJS           := $(COBJS) $(KINIT_STAGE3_OBJ) $(ASMOBJS) $(CMODOBJS) $(SMODOBJS) $(MISCOBJS)
+ALL_OBJS           := $(COBJS) $(ASMOBJS) $(CMODOBJS) $(SMODOBJS) $(MISCOBJS)
 
 DXGMX_COMMON_DEPS  := Makefile $(TARGET_FILE)
 
@@ -147,12 +142,6 @@ $(BUILDDIR)/%.S.o: %.S $(DXGMX_COMMON_DEPS)
 	@mkdir -p $(dir $@)
 	@$(PRETTY_PRINT) AS $<
 	@$(AS) -c $< $(CFLAGS) -o $@
-
--include $(KINIT_STAGE3_DEP)
-$(BUILDDIR)/%_kinit3.c.o: %.c $(DXGMX_COMMON_DEPS)
-	@mkdir -p $(dir $@)
-	@$(PRETTY_PRINT) CC $<
-	@$(CC) -c $< $(BASE_CFLAGS) -o $@
 
 -include $(CMODDEPS)
 $(BUILDDIR)/%_mod.c.o: %.c $(DXGMX_COMMON_DEPS)
@@ -184,8 +173,8 @@ run: $(KERNEL_BIN)
 
 PHONY += clean 
 clean:
-	@rm -f $(COBJS) $(ASMOBJS) $(CMODOBJS) $(KINIT_STAGE3_OBJ) $(MISCOBJS)
-	@rm -f $(CDEPS) $(ASMDEPS) $(MODDEPS) $(KINIT_STAGE3_DEP)
+	@rm -f $(COBJS) $(ASMOBJS) $(CMODOBJS) $(SMODOBJS) $(MISCOBJS)
+	@rm -f $(CDEPS) $(ASMDEPS) $(CMODDEPS) $(SMODDEPS)
 
 PHONY += mrclean 
 mrclean:
