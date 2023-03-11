@@ -1,5 +1,5 @@
 
-MODULES_SRC += \
-$(DRIVERS_SRCDIR)/fat/fat.c \
-$(DRIVERS_SRCDIR)/fat/fat_dir.c \
-$(DRIVERS_SRCDIR)/fat/fat_read.c \
+MODULEOBJS += \
+$(DRIVERS_SRCDIR)/fat/fat.c.o \
+$(DRIVERS_SRCDIR)/fat/fat_dir.c.o \
+$(DRIVERS_SRCDIR)/fat/fat_read.c.o \

@@ -1,7 +1,7 @@
 
-MODULES_SRC += \
-$(DRIVERS_SRCDIR)/pci/pci_x86.c \
-$(DRIVERS_SRCDIR)/pci/pci.c
+MODULEOBJS += \
+$(DRIVERS_SRCDIR)/pci/pci_x86.c.o \
+$(DRIVERS_SRCDIR)/pci/pci.c.o
 
-MODULES_INCLUDEDIRS += \
+MODULE_INCLUDEDIRS += \
 $(DRIVERS_SRCDIR)/pci/include

@@ -1,19 +1,19 @@
 
-ARCH_SRC += \
-$(ARCH_SRCDIR)/kinit_arch.c \
-$(ARCH_SRCDIR)/cpu.c \
-$(ARCH_SRCDIR)/cpuid.c \
-$(ARCH_SRCDIR)/cmos.c \
-$(ARCH_SRCDIR)/gdt.c \
-$(ARCH_SRCDIR)/serial.c \
-$(ARCH_SRCDIR)/panic.c \
-$(ARCH_SRCDIR)/syscalls.c \
-$(ARCH_SRCDIR)/procm.c \
-$(ARCH_SRCDIR)/user.S \
+ARCHOBJS += \
+$(ARCH_SRCDIR)/kinit_arch.c.o \
+$(ARCH_SRCDIR)/cpu.c.o \
+$(ARCH_SRCDIR)/cpuid.c.o \
+$(ARCH_SRCDIR)/cmos.c.o \
+$(ARCH_SRCDIR)/gdt.c.o \
+$(ARCH_SRCDIR)/serial.c.o \
+$(ARCH_SRCDIR)/panic.c.o \
+$(ARCH_SRCDIR)/syscalls.c.o \
+$(ARCH_SRCDIR)/procm.c.o \
+$(ARCH_SRCDIR)/user.S.o \
 
-MACROS += -D_X86_
+DEFINES += -D_X86_
 ifeq ($(ARCH),x86_64)
-    MACROS += -D_X86_64_
+    DEFINES += -D_X86_64_
 else
     CFLAGS += -m32
 endif

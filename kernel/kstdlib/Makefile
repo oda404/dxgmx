@@ -1,8 +1,8 @@
 
-KERNEL_SRC += \
-$(KERNEL_SRCDIR)/kstdlib/ctype.c \
-$(KERNEL_SRCDIR)/kstdlib/math.c \
-$(KERNEL_SRCDIR)/kstdlib/stdio.c \
-$(KERNEL_SRCDIR)/kstdlib/stdlib.c \
-$(KERNEL_SRCDIR)/kstdlib/string.c \
-$(KERNEL_SRCDIR)/kstdlib/time.c \
+KERNELOBJS += \
+$(KERNEL_SRCDIR)/kstdlib/ctype.c.o \
+$(KERNEL_SRCDIR)/kstdlib/math.c.o \
+$(KERNEL_SRCDIR)/kstdlib/stdio.c.o \
+$(KERNEL_SRCDIR)/kstdlib/stdlib.c.o \
+$(KERNEL_SRCDIR)/kstdlib/string.c.o \
+$(KERNEL_SRCDIR)/kstdlib/time.c.o \

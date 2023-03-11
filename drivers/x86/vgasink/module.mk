@@ -1,2 +1,2 @@
 
-MODULES_SRC += $(DRIVERS_SRCDIR)/x86/vgasink/vgasink.c
+MODULEOBJS += $(DRIVERS_SRCDIR)/x86/vgasink/vgasink.c.o

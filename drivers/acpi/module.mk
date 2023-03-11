@@ -1,6 +1,6 @@
 
-MODULES_SRC += \
-$(DRIVERS_SRCDIR)/acpi/acpi_tables.c
+MODULEOBJS += \
+$(DRIVERS_SRCDIR)/acpi/acpi_tables.c.o
 
-MODULES_INCLUDEDIRS += \
+MODULE_INCLUDEDIRS += \
 $(DRIVERS_SRCDIR)/acpi/include

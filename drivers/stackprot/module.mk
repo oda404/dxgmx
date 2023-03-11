@@ -1,2 +1,2 @@
 
-MODULES_SRC += $(DRIVERS_SRCDIR)/stackprot/stack_chk.c
+MODULEOBJS += $(DRIVERS_SRCDIR)/stackprot/stack_chk.c.o

@@ -1,3 +1,3 @@
 
-MODULES_SRC += $(DRIVERS_SRCDIR)/x86/rtc/rtc.c
+MODULEOBJS += $(DRIVERS_SRCDIR)/x86/rtc/rtc.c.o
 

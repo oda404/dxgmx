@@ -1,7 +1,7 @@
 
-KERNEL_SRC += \
-$(KERNEL_SRCDIR)/utils/bytes.c \
-$(KERNEL_SRCDIR)/utils/hashtable.c \
-$(KERNEL_SRCDIR)/utils/bitwise.c \
-$(KERNEL_SRCDIR)/utils/uuid.c \
-$(KERNEL_SRCDIR)/utils/linkedlist.c \
+KERNELOBJS += \
+$(KERNEL_SRCDIR)/utils/bytes.c.o \
+$(KERNEL_SRCDIR)/utils/hashtable.c.o \
+$(KERNEL_SRCDIR)/utils/bitwise.c.o \
+$(KERNEL_SRCDIR)/utils/uuid.c.o \
+$(KERNEL_SRCDIR)/utils/linkedlist.c.o \

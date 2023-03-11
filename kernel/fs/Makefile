@@ -1,5 +1,5 @@
 
-KERNEL_SRC += \
-$(KERNEL_SRCDIR)/fs/vfs.c \
-$(KERNEL_SRCDIR)/fs/fs.c \
-$(KERNEL_SRCDIR)/fs/path.c \
+KERNELOBJS += \
+$(KERNEL_SRCDIR)/fs/vfs.c.o \
+$(KERNEL_SRCDIR)/fs/fs.c.o \
+$(KERNEL_SRCDIR)/fs/path.c.o \

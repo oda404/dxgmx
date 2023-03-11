@@ -1,18 +1,18 @@
 
-KERNEL_SRC += \
-$(KERNEL_SRCDIR)/kprintf.c \
-$(KERNEL_SRCDIR)/kabort.c \
-$(KERNEL_SRCDIR)/klog.c \
-$(KERNEL_SRCDIR)/kinit_stage2.c \
-$(KERNEL_SRCDIR)/ksyms.c \
-$(KERNEL_SRCDIR)/kimg.c \
-$(KERNEL_SRCDIR)/module.c \
-$(KERNEL_SRCDIR)/panic.c \
-$(KERNEL_SRCDIR)/user.c \
-$(KERNEL_SRCDIR)/kstdio.c \
-$(KERNEL_SRCDIR)/kboot.c \
+KERNELOBJS += \
+$(KERNEL_SRCDIR)/kprintf.c.o \
+$(KERNEL_SRCDIR)/kabort.c.o \
+$(KERNEL_SRCDIR)/klog.c.o \
+$(KERNEL_SRCDIR)/kinit_stage2.c.o \
+$(KERNEL_SRCDIR)/ksyms.c.o \
+$(KERNEL_SRCDIR)/kimg.c.o \
+$(KERNEL_SRCDIR)/module.c.o \
+$(KERNEL_SRCDIR)/panic.c.o \
+$(KERNEL_SRCDIR)/user.c.o \
+$(KERNEL_SRCDIR)/kstdio.c.o \
+$(KERNEL_SRCDIR)/kboot.c.o \
 
-KINIT_STAGE3_SRC := $(KERNEL_SRCDIR)/kinit_stage3.c
+KINIT_STAGE3_OBJ := $(KERNEL_SRCDIR)/kinit_stage3.c.o
 
 include $(KERNEL_SRCDIR)/mem/Makefile
 include $(KERNEL_SRCDIR)/utils/Makefile

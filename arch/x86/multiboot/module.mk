@@ -1,2 +1,2 @@
 
-MODULES_SRC += $(ARCH_SRCDIR)/multiboot/multiboot.c
+MODULEOBJS += $(ARCH_SRCDIR)/multiboot/multiboot.c.o
