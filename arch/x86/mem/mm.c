@@ -513,7 +513,7 @@ int mm_new_user_page(ptr vaddr, u16 flags, PagingStruct* ps)
 {
     ASSERT(vaddr % PAGESIZE == 0);
 
-    ptr paddr = falloc_one_user();
+    ptr paddr = falloc_one();
     if (!paddr)
         return -ENOMEM;
 

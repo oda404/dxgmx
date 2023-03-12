@@ -24,7 +24,8 @@ int falloc_init();
  * request frames that we can map in a higher half function overselvers.
  * Returns the page frame physical address on success, 0 on failure.
  */
-ptr falloc_one_user();
+
+ptr falloc_one();
 
 /* Returns true if the pageframe at starting at 'base' is not
  * allocated.
