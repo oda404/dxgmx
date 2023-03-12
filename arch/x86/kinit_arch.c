@@ -26,5 +26,14 @@ int kinit_arch()
         _kboot_framebuffer_bpp = mbi->fb.bpp;
     }
 
+    if ((mbi->flags & (1 << 3)) && mbi->mods_count > 0)
+    {
+        const MultibootModule* hdr =
+            (const MultibootModule*)(mbi->mods_base + kimg_map_offset());
+        _kboot_initrd_paddr = hdr->start;
+        _kboot_initrd_size = hdr->end - hdr->start;
+        _kboot_has_initrd = true;
+    }
+
     return 0;
 }

@@ -9,6 +9,7 @@ help() {
 	echo "  -h, --help         Print this message and exit."
 	echo "  --sysroot          Path to the sysroot."
 	echo "  --kernel           Path to kernel binary."
+	echo "  --initrd           Path to initrd image"
 	echo "  --out              Destination output path."
 }
 
@@ -22,6 +23,10 @@ do
 		;;
 		"--kernel")
 			KERNEL="$2"
+			shift 2
+		;;
+		"--initrd")
+			INITRD="$2"
 			shift 2
 		;;
 		"--out")
@@ -47,10 +52,12 @@ fi
 mkdir -p $SYSROOT/boot/grub
 
 cp $KERNEL $SYSROOT/boot/
+cp $INITRD $SYSROOT/boot/
 
 echo "timeout=0"                           > $SYSROOT/boot/grub/grub.cfg
 echo "menuentry \"$KERNEL\" {"            >> $SYSROOT/boot/grub/grub.cfg
 echo "	insmod all_video"                 >> $SYSROOT/boot/grub/grub.cfg
 echo "	multiboot /boot/$KERNEL"          >> $SYSROOT/boot/grub/grub.cfg
+echo "	module /boot/initrd.img"          >> $SYSROOT/boot/grub/grub.cfg
 echo "}"                                  >> $SYSROOT/boot/grub/grub.cfg
 grub-mkrescue -o $OUT $SYSROOT

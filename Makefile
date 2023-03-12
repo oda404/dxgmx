@@ -21,6 +21,7 @@ SCRIPTSDIR        := scripts
 ### BINARY/ISO PATHS ###
 KERNEL_BIN   := $(KERNEL_NAME)-$(VER_MAJ).$(VER_MIN).$(PATCH_N)
 KERNEL_ISO   ?= $(KERNEL_BIN).iso
+INITRD       ?= $(BUILDDIR)/initrd.img
 
 # Die if we are not using a LLVM toolchain
 LLVM=$(shell $(SCRIPTSDIR)/is-llvm.sh)
@@ -157,10 +158,11 @@ $(BUILDDIR)/%_mod.S.o: %.S $(DXGMX_COMMON_DEPS)
 
 PHONY += iso 
 iso: $(KERNEL_ISO)
-$(KERNEL_ISO): $(KERNEL_BIN)
+$(KERNEL_ISO): $(KERNEL_BIN) $(INITRD)
 	$(SCRIPTSDIR)/create-iso.sh \
 	--sysroot $(DXGMX_SYSROOT) \
 	--kernel $(KERNEL_BIN) \
+	--initrd $(INITRD) \
 	--out $(KERNEL_ISO)
 
 PHONY += iso-run 
@@ -212,5 +214,12 @@ buildinfo:
 	@echo System root: $(DXGMX_SYSROOT)
 	@echo CFLAGS: $(CFLAGS)
 	@echo LDFLAGS: $(LDFLAGS)
+
+PHONY += initrd
+initrd: $(INITRD)
+$(INITRD):
+	cmake -S initrd/src -B initrd/src/build
+	$(MAKE) -C initrd/src/build
+	$(SCRIPTSDIR)/create-initrd.sh
 
 .PHONY: $(PHONY)

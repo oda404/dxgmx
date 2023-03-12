@@ -101,6 +101,14 @@ typedef struct _ATTR_PACKED S_MultibootMMAP
     u32 type;
 } MultibootMMAP;
 
+typedef struct _ATTR_PACKED S_MultibootModule
+{
+    u32 start;
+    u32 end;
+    u32 string;
+    u32 reserved;
+} MultibootModule;
+
 extern const u32 _multiboot_magic;
 extern const ptr _multiboot_info_struct_base;
 
