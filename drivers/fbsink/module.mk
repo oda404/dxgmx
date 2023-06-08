@@ -1,4 +1,6 @@
 
+include drivers/fb/module.mk
+
 MODULEOBJS += \
 $(DRIVERS_SRCDIR)/fbsink/fbsink.c.o \
 $(DRIVERS_SRCDIR)/fbsink/psf.c.o \

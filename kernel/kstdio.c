@@ -9,7 +9,6 @@
 #include <dxgmx/kstdio/kstdio.h>
 #include <dxgmx/kstdio/sink.h>
 #include <dxgmx/todo.h>
-#include <dxgmx/video/fb.h>
 
 /* Can't dinamically allocate these, since we kmalloc isn't up when most sinks
  * get registered. */

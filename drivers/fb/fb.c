@@ -3,6 +3,7 @@
  * Distributed under the MIT license.
  */
 
+#include <dxgmx/fb.h>
 #include <dxgmx/kboot.h>
 #include <dxgmx/klog.h>
 #include <dxgmx/mem/dma.h>
@@ -10,7 +11,6 @@
 #include <dxgmx/mem/mm.h>
 #include <dxgmx/sched/sched.h>
 #include <dxgmx/string.h>
-#include <dxgmx/video/fb.h>
 
 #define KLOGF_PREFIX "fb: "
 
@@ -20,6 +20,14 @@ static bool g_fb_up;
 static ERR_OR(ptr) fb_map_to_virtual_space(ptr paddr, size_t n)
 {
     return dma_map_range(paddr, n, PAGE_R | PAGE_W);
+}
+
+int fb_ensure_init()
+{
+    if (!g_fb_up)
+        return fb_init();
+
+    return 0;
 }
 
 int fb_init()

@@ -5,6 +5,7 @@
 
 #include "psf.h"
 #include <dxgmx/errno.h>
+#include <dxgmx/fb.h>
 #include <dxgmx/klog.h>
 #include <dxgmx/kmalloc.h>
 #include <dxgmx/kstdio/kstdio.h>
@@ -12,7 +13,6 @@
 #include <dxgmx/module.h>
 #include <dxgmx/sched/sched.h>
 #include <dxgmx/string.h>
-#include <dxgmx/video/fb.h>
 
 #define KLOGF_PREFIX "fbsink: "
 
@@ -80,6 +80,9 @@ static int fbsink_scroll(FrameBufferTextRenderingContext* ctx)
 
 static int fbsink_init(KOutputSink* sink)
 {
+    if (fb_ensure_init() < 0)
+        return -ENODEV;
+
     FrameBuffer* fb = fb_get_main();
     if (!fb)
         return -ENODEV;

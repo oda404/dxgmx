@@ -18,7 +18,6 @@
 #include <dxgmx/timekeep.h>
 #include <dxgmx/types.h>
 #include <dxgmx/utils/linkedlist.h>
-#include <dxgmx/video/fb.h>
 
 extern int kinit_arch();
 
@@ -57,9 +56,6 @@ _ATTR_NORETURN void kinit_stage2()
     /* Bring the memory manager online, meaning kmalloc, falloc, page
      * allocation, page faults, dma, etc.. */
     mm_init();
-
-    /* Try to initialize the framebuffer. I think this should be a module. */
-    fb_init();
 
     /* Load kernel sysmbols, now that we have kmalloc */
     ksyms_load();
