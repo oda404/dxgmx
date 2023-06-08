@@ -45,7 +45,7 @@ int dma_init()
     size_t hr = bytes_to_human_readable(dmapool_size, unit);
     KLOGF(
         INFO,
-        "Pool [mem 0x%p-0x%p] (%u %s)",
+        "Pool [vmem 0x%p-0x%p] (%u %s)",
         (void*)DMA_POOL_START,
         (void*)DMA_POOL_END,
         hr,

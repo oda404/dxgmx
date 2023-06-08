@@ -100,17 +100,7 @@ static void kfree_with_heap(void* addr, Heap* heap)
 
 int kmalloc_register_kernel_heap(Heap heap)
 {
-    /* We can only register one kernel heap. NOTE: should we really have this
-     * restriction ? */
-    if (g_kheap.vaddr || g_kheap.pagespan)
-        return -EEXIST;
-
-    /* The kernel heap should start after the kernel image. */
-    if (heap.vaddr < kimg_vaddr() + kimg_size() || heap.pagespan == 0)
-        return -EINVAL;
-
     g_kheap = heap;
-
     return 0;
 }
 

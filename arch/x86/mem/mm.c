@@ -28,8 +28,6 @@
 
 #define KLOGF_PREFIX "mm: "
 
-#define KHEAP_SIZE (1 * MIB)
-
 /* mm exposes this for cases where something platform agnostic needs the kernel
  * paging struct. g_kernel_paging_struct.data == g_pdpt */
 static PagingStruct g_kernel_paging_struct;
@@ -325,7 +323,7 @@ static _INIT bool mm_setup_sys_mregmap()
  * diagram of the system address space when it comes to page frames in falloc.c
  * :)
  */
-static _INIT int mm_setup_kernel_heap()
+static _INIT int mm_setup_kmalloc()
 {
     /* Since the PageTable that holds the kernel image (and the 1st MIB of
      memory, total of 2 MIB) is completely mapped to physical memory
@@ -336,10 +334,11 @@ static _INIT int mm_setup_kernel_heap()
      the kernel
      :(. See arch/x86/mem/pagefault.c for more info. */
 
+    const size_t kheap_init_size = (1 * MIB);
     ptr kernel_vend = kimg_vaddr() + kimg_size();
     ASSERT(kernel_vend % PAGESIZE == 0);
 
-    Heap kheap = {.vaddr = kernel_vend, .pagespan = KHEAP_SIZE / PAGESIZE};
+    Heap kheap = {.vaddr = kernel_vend, .pagespan = kheap_init_size / PAGESIZE};
 
     char unit[4];
     u32 heapsize = bytes_to_human_readable(kheap.pagespan * PAGESIZE, unit);
@@ -370,6 +369,12 @@ static _INIT int mm_setup_kernel_heap()
         falloc_one_at(paddr);
     }
 
+    /* We won't panic the kernel in case kmalloc can't be initialized, just for
+     * debugging. But otherwise the kernel is pretty useless
+     * without being able to allocate memory. */
+    if (kmalloc_init() < 0)
+        KLOGF(WARN, "Failed to initialize kmalloc!");
+
     return 0;
 }
 
@@ -378,7 +383,7 @@ _INIT int mm_init()
     /* Sets up any stuff that wasn't done in entry.S */
     mm_setup_definitive_paging();
 
-    /* Start getting pagefault. */
+    /* Start getting pagefaults. */
     pagefault_setup_isr();
 
     /* Enforce permissions for all kernel sections. */
@@ -390,15 +395,10 @@ _INIT int mm_init()
     /* Initialize the frame allocator, depends on the system memory map. */
     falloc_init();
 
-    /* Give kmalloc some memory to work with */
-    mm_setup_kernel_heap();
+    /* Setup kmalloc */
+    mm_setup_kmalloc();
 
-    /* We won't panic the kernel in case kmalloc can't be initialized, just for
-     * debugging. But otherwise the kernel is pretty useless
-     * without being able to allocate memory. */
-    if (kmalloc_init() != 0)
-        KLOGF(WARN, "Failed to initialize kmalloc!");
-
+    /* Initialize DMA subsystem */
     dma_init();
 
     return 0;
