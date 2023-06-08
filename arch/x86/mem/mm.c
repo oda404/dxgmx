@@ -7,7 +7,6 @@
 #include <dxgmx/attrs.h>
 #include <dxgmx/cpu.h>
 #include <dxgmx/errno.h>
-#include <dxgmx/kboot.h>
 #include <dxgmx/kimg.h>
 #include <dxgmx/klog.h>
 #include <dxgmx/kmalloc.h>
@@ -199,29 +198,6 @@ static _INIT int mm_setup_definitive_paging()
     g_pdpt = (void*)mm_kpaddr2vaddr(cpu_read_cr3());
     g_kernel_paging_struct.data = g_pdpt;
 
-    /* If we have an initrd it's very likely right after the kernel, which
-     * might be mapped. We unmap it before any harm is done to it. It will later
-     * be mapped as DMA memory if needed. */
-    if (_kboot_has_initrd)
-    {
-        const ptr initrd_vaddr = _kboot_initrd_paddr + kimg_map_offset();
-        const size_t initrd_end = initrd_vaddr + _kboot_initrd_size;
-
-        size_t i = 0;
-        FOR_EACH_KPTE_IN_RANGE (initrd_vaddr, initrd_end, pte)
-        {
-            size_t off = i * PAGESIZE;
-            if (pte->present &&
-                pte_frame_paddr(pte) == _kboot_initrd_paddr + off)
-            {
-                memset(pte, 0, sizeof(PageTableEntry));
-                mm_tlb_flush_single(initrd_vaddr + off);
-            }
-
-            ++i;
-        }
-    }
-
     return 0;
 }
 
@@ -335,26 +311,18 @@ static _INIT bool mm_setup_sys_mregmap()
         (void*)kimg_paddr(),
         (void*)(kimg_paddr() + kimg_size() - 1));
 
-    if (_kboot_has_initrd)
-    {
-        /* Reserve the kernel initrd. */
-        size_t aligned_size = bytes_align_up64(_kboot_initrd_size, PAGESIZE);
-        mregmap_rm_reg(_kboot_initrd_paddr, aligned_size, &g_sys_mregmap);
-        klogln(
-            INFO,
-            "Reserving [mem 0x%p-0x%p].",
-            (void*)_kboot_initrd_paddr,
-            (void*)(_kboot_initrd_paddr + aligned_size - 1));
-    }
-
     mregmap_align_regs(PAGESIZE, &g_sys_mregmap);
 
     return true;
 }
 
-/* The kernel heap is the memory starting right after the kernel image, in
- * virtual space. It is not guaranteed to be contiguous in physical memory. If
- * are looking for that check out the dma API.
+/* The kernel heap is the memory starting right after the kernel image, both in
+ * physical & virtual space, and stopping at ???. The reason for doing this
+ * instead of using the whole address space, is that translations to physical
+ * addresses are trivial (vaddr - _kernel_map_offset) and allocating phsyical &
+ * virtual contiguous pages is also easy. Basically everything that is part of
+ * the kernel is contiguous in physical & virtual memory. There is a nice
+ * diagram of the system address space when it comes to page frames in falloc.c
  * :)
  */
 static _INIT int mm_setup_kernel_heap()
@@ -365,10 +333,13 @@ static _INIT int mm_setup_kernel_heap()
      depending on KHEAP_SIZE, parts of the kheap may not be mapped to physical
      memory. In case the kheap does fall outside the kernel pagetable, we do try
      to handle pagefaults for it, but they are kind of hack-ish and may panic
-     the kernel. See arch/x86/mem/pagefault.c for more info. */
+     the kernel
+     :(. See arch/x86/mem/pagefault.c for more info. */
 
-    ptr kheap_start = bytes_align_up64(kimg_vaddr() + kimg_size(), PAGESIZE);
-    Heap kheap = {.vaddr = kheap_start, .pagespan = KHEAP_SIZE / PAGESIZE};
+    ptr kernel_vend = kimg_vaddr() + kimg_size();
+    ASSERT(kernel_vend % PAGESIZE == 0);
+
+    Heap kheap = {.vaddr = kernel_vend, .pagespan = KHEAP_SIZE / PAGESIZE};
 
     char unit[4];
     u32 heapsize = bytes_to_human_readable(kheap.pagespan * PAGESIZE, unit);
@@ -542,7 +513,7 @@ int mm_new_user_page(ptr vaddr, u16 flags, PagingStruct* ps)
 {
     ASSERT(vaddr % PAGESIZE == 0);
 
-    ptr paddr = falloc_one();
+    ptr paddr = falloc_one_user();
     if (!paddr)
         return -ENOMEM;
 

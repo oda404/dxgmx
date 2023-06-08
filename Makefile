@@ -21,7 +21,6 @@ SCRIPTSDIR        := scripts
 ### BINARY/ISO PATHS ###
 KERNEL_BIN   := $(KERNEL_NAME)-$(VER_MAJ).$(VER_MIN).$(PATCH_N)
 KERNEL_ISO   ?= $(KERNEL_BIN).iso
-INITRD       ?= $(BUILDDIR)/initrd.img
 
 # Die if we are not using a LLVM toolchain
 LLVM=$(shell $(SCRIPTSDIR)/is-llvm.sh)
@@ -44,7 +43,7 @@ INCLUDE_SRCDIR    := include
 DRIVERS_SRCDIR    := drivers
 
 ### BASE FLAGS ###
-CFLAGS            := \
+BASE_CFLAGS            := \
 -MD -MP -isystem=/usr/include -std=c2x \
 -fno-omit-frame-pointer -ffreestanding \
 -fno-builtin -march=$(DXGMX_ARCH) \
@@ -76,6 +75,7 @@ KERNELOBJS         :=
 LDSCRIPT           :=
 MODULEOBJS         :=
 MODULE_INCLUDEDIRS := 
+KINIT_STAGE3_OBJ   :=
 
 ifdef TARGET_FILE
     include $(TARGET_FILE)
@@ -90,7 +90,8 @@ include $(KERNEL_SRCDIR)/Makefile
 # Add module include directories to INCLUDEDIRS
 INCLUDEDIRS += $(patsubst %, -I%, $(MODULE_INCLUDEDIRS))
 
-CFLAGS             += $(INCLUDEDIRS) $(WARNINGS) $(DEFINES) $(EXTRA_CFLAGS) $(EXTRA_WARNINGS) $(EXTRA_MACROS)
+BASE_CFLAGS        += $(INCLUDEDIRS) $(WARNINGS) $(DEFINES)
+CFLAGS             += $(BASE_CFLAGS) $(EXTRA_CFLAGS) $(EXTRA_WARNINGS) $(EXTRA_MACROS)
 LDFLAGS            += $(EXTRA_LDFLAGS)
 
 CORE_OBJS          := $(ARCHOBJS) $(KERNELOBJS)
@@ -116,7 +117,10 @@ SMODDEPS           := $(SMODOBJS:%.o=%.d)
 
 MISCOBJS           := $(addprefix $(BUILDDIR)/, $(MISCOBJS))
 
-ALL_OBJS           := $(COBJS) $(ASMOBJS) $(CMODOBJS) $(SMODOBJS) $(MISCOBJS)
+KINIT_STAGE3_OBJ   := $(addprefix $(BUILDDIR)/, $(KINIT_STAGE3_OBJ))
+KINIT_STAGE3_DEP   := $(KINIT_STAGE3_OBJ:%.o=%.d)
+
+ALL_OBJS           := $(COBJS) $(KINIT_STAGE3_OBJ) $(ASMOBJS) $(CMODOBJS) $(SMODOBJS) $(MISCOBJS)
 
 DXGMX_COMMON_DEPS  := Makefile $(TARGET_FILE)
 
@@ -144,6 +148,12 @@ $(BUILDDIR)/%.S.o: %.S $(DXGMX_COMMON_DEPS)
 	@$(PRETTY_PRINT) AS $<
 	@$(AS) -c $< $(CFLAGS) -o $@
 
+-include $(KINIT_STAGE3_DEP)
+$(BUILDDIR)/%_kinit3.c.o: %.c $(DXGMX_COMMON_DEPS)
+	@mkdir -p $(dir $@)
+	@$(PRETTY_PRINT) CC $<
+	@$(CC) -c $< $(BASE_CFLAGS) -o $@
+
 -include $(CMODDEPS)
 $(BUILDDIR)/%_mod.c.o: %.c $(DXGMX_COMMON_DEPS)
 	@mkdir -p $(dir $@)
@@ -158,11 +168,10 @@ $(BUILDDIR)/%_mod.S.o: %.S $(DXGMX_COMMON_DEPS)
 
 PHONY += iso 
 iso: $(KERNEL_ISO)
-$(KERNEL_ISO): $(KERNEL_BIN) $(INITRD)
+$(KERNEL_ISO): $(KERNEL_BIN)
 	$(SCRIPTSDIR)/create-iso.sh \
 	--sysroot $(DXGMX_SYSROOT) \
 	--kernel $(KERNEL_BIN) \
-	--initrd $(INITRD) \
 	--out $(KERNEL_ISO)
 
 PHONY += iso-run 
@@ -175,8 +184,8 @@ run: $(KERNEL_BIN)
 
 PHONY += clean 
 clean:
-	@rm -f $(COBJS) $(ASMOBJS) $(CMODOBJS) $(SMODOBJS) $(MISCOBJS)
-	@rm -f $(CDEPS) $(ASMDEPS) $(CMODDEPS) $(SMODDEPS)
+	@rm -f $(COBJS) $(ASMOBJS) $(CMODOBJS) $(KINIT_STAGE3_OBJ) $(MISCOBJS)
+	@rm -f $(CDEPS) $(ASMDEPS) $(MODDEPS) $(KINIT_STAGE3_DEP)
 
 PHONY += mrclean 
 mrclean:
@@ -214,12 +223,5 @@ buildinfo:
 	@echo System root: $(DXGMX_SYSROOT)
 	@echo CFLAGS: $(CFLAGS)
 	@echo LDFLAGS: $(LDFLAGS)
-
-PHONY += initrd
-initrd: $(INITRD)
-$(INITRD):
-	cmake -S initrd/src -B initrd/src/build
-	$(MAKE) -C initrd/src/build
-	$(SCRIPTSDIR)/create-initrd.sh
 
 .PHONY: $(PHONY)

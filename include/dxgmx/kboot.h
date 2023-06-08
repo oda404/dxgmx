@@ -17,8 +17,4 @@ extern size_t _kboot_framebuffer_width;
 extern size_t _kboot_framebuffer_height;
 extern size_t _kboot_framebuffer_bpp;
 
-extern bool _kboot_has_initrd;
-extern ptr _kboot_initrd_paddr;
-extern size_t _kboot_initrd_size;
-
 #endif // !_DXGMX_KBOOT_H

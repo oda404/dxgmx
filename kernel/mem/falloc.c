@@ -19,6 +19,31 @@
 
 #define KLOGF_PREFIX "falloc: "
 
+/**
+ * This pageframe allocator is built with the kernel heap in mind.
+ * The 'official' way of allocating page frames, is using falloc_one_user(). The
+ * thing to keep in mind about this function is that it allocates it's frames
+ * starting from the end of the bitmap, going backwards. This way the starting
+ * frames (the ones that may get used by the kernel heap are left available).
+ * This doesn't mean that they are guaranteed to be available through the whole
+ * runtime of the kernel, the userspace may allocate a lot of pageframes which
+ * may result in falloc_one_user() to start allocation frames that "belong" to
+ * the kernel heap. A map of the free pageframes may look like this:
+ *
+ *                      'kernel heap (low-address) frames'
+ *                                     |
+ * [ x frames ] [ kernel image ] [ y frames ] --->           <--- [ z frames ]
+ *       ^                                                             ^
+ *  We should minimize these.                       'user (high-address) frames'
+ *
+ * Of course, in a real system we may have a lot of memory holes, but the point
+ * still stands. The kernel is loaded at a low-ish address in memory, in hopes
+ * of minimizing the number of "x frames" (frames before the kernel image).
+ * falloc_one_user() tries allocating as many high-address frames as possible,
+ * leaving the low-address frames, to be requested manually through
+ * falloc_one_at().
+ */
+
 /* 1024 * 16 64-bit numbers are enough to hold the
 state of 1048576 4KiB pages which hold a total of 4GiB of memory. */
 #define PAGEFRAME_POOL_SIZE (1024 * 16)
@@ -58,7 +83,7 @@ _INIT int falloc_init()
 }
 
 /* Returns a free page's address */
-ptr falloc_one()
+ptr falloc_one_user()
 {
     // TODO: implement some sort of cache so we don't iterate over the whole
     // pool everytime.
