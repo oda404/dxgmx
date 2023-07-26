@@ -75,7 +75,6 @@ KERNELOBJS         :=
 LDSCRIPT           :=
 MODULEOBJS         :=
 MODULE_INCLUDEDIRS := 
-KINIT_STAGE3_OBJ   :=
 
 ifdef TARGET_FILE
     include $(TARGET_FILE)
@@ -117,10 +116,11 @@ SMODDEPS           := $(SMODOBJS:%.o=%.d)
 
 MISCOBJS           := $(addprefix $(BUILDDIR)/, $(MISCOBJS))
 
-KINIT_STAGE3_OBJ   := $(addprefix $(BUILDDIR)/, $(KINIT_STAGE3_OBJ))
-KINIT_STAGE3_DEP   := $(KINIT_STAGE3_OBJ:%.o=%.d)
+CMODOBJS           := $(sort $(CMODOBJS))
+SMODOBJS           := $(sort $(SMODOBJS))
+MISCOBJS           := $(sort $(MISCOBJS))
 
-ALL_OBJS           := $(COBJS) $(KINIT_STAGE3_OBJ) $(ASMOBJS) $(CMODOBJS) $(SMODOBJS) $(MISCOBJS)
+ALL_OBJS           := $(COBJS) $(ASMOBJS) $(CMODOBJS) $(SMODOBJS) $(MISCOBJS)
 
 DXGMX_COMMON_DEPS  := Makefile $(TARGET_FILE)
 
@@ -147,12 +147,6 @@ $(BUILDDIR)/%.S.o: %.S $(DXGMX_COMMON_DEPS)
 	@mkdir -p $(dir $@)
 	@$(PRETTY_PRINT) AS $<
 	@$(AS) -c $< $(CFLAGS) -o $@
-
--include $(KINIT_STAGE3_DEP)
-$(BUILDDIR)/%_kinit3.c.o: %.c $(DXGMX_COMMON_DEPS)
-	@mkdir -p $(dir $@)
-	@$(PRETTY_PRINT) CC $<
-	@$(CC) -c $< $(BASE_CFLAGS) -o $@
 
 -include $(CMODDEPS)
 $(BUILDDIR)/%_mod.c.o: %.c $(DXGMX_COMMON_DEPS)
@@ -184,8 +178,8 @@ run: $(KERNEL_BIN)
 
 PHONY += clean 
 clean:
-	@rm -f $(COBJS) $(ASMOBJS) $(CMODOBJS) $(KINIT_STAGE3_OBJ) $(MISCOBJS)
-	@rm -f $(CDEPS) $(ASMDEPS) $(MODDEPS) $(KINIT_STAGE3_DEP)
+	@rm -f $(COBJS) $(ASMOBJS) $(CMODOBJS) $(MISCOBJS)
+	@rm -f $(CDEPS) $(ASMDEPS) $(MODDEPS)
 
 PHONY += mrclean 
 mrclean:

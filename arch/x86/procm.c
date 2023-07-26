@@ -7,8 +7,13 @@
 #include <dxgmx/proc/procm.h>
 #include <dxgmx/x86/gdt.h>
 
-int procm_arch_load_ctx(Process* proc)
+int procm_arch_load_ctx(const Process* proc)
 {
     tss_set_esp0(proc->kstack_top);
     return 0;
+}
+
+ptr procm_arch_get_kstack_top()
+{
+    return tss_get_esp0();
 }

@@ -138,3 +138,8 @@ void tss_set_esp0(ptr esp)
 {
     g_tss.esp0 = esp;
 }
+
+ptr tss_get_esp0()
+{
+    return g_tss.esp0;
+}

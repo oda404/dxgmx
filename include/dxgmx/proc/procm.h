@@ -19,7 +19,13 @@
 pid_t procm_spawn_init();
 
 /**
- * Spawn a new process
+ * Spawn the kernel acting process.
+ */
+pid_t procm_spawn_kernel_proc();
+
+/**
+ * Spawn a new process. The spawned process is added to the process queue and
+ * will run when the scheduler decides to.
  *
  * 'path' path of the new process. Should not be NULL.
  * 'argv' Arguments.
@@ -55,15 +61,13 @@ int procm_replace_proc(
     const char** envp,
     Process* actingproc);
 
-/* Kill a process, freeing anything held by this process. */
-int procm_kill(Process* proc);
-
 /* Mark a process as dead, letting it be reaped by the scheduler. */
 int procm_mark_dead(int st, Process* proc);
 
 /* Start executing this process. */
-_ATTR_NORETURN void procm_switch_ctx(Process* proc);
+_ATTR_NORETURN void procm_switch_ctx(const Process* proc);
 
+Process* procm_get_procs();
 size_t procm_proc_count();
 
 /**
@@ -81,6 +85,8 @@ size_t procm_proc_count();
  */
 int procm_try_kill_proc(Process* actingproc, Process* targetproc);
 
+ptr procm_arch_get_kstack_top();
+
 /**
  * Get the next process that is queued to run.
  *
@@ -88,5 +94,9 @@ int procm_try_kill_proc(Process* actingproc, Process* targetproc);
  * A non-NULL Process*.
  */
 Process* procm_next_queued_proc();
+
+Process* procm_get_kernel_proc();
+
+Process* procm_get_proc_by_pid(pid_t pid);
 
 #endif // !_DXGMX_PROC_PROCM_H

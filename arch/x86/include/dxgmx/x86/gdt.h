@@ -94,6 +94,7 @@ void gdt_init();
 void tss_init();
 
 void tss_set_esp0(ptr esp);
+ptr tss_get_esp0();
 
 #endif // !_ASM
 

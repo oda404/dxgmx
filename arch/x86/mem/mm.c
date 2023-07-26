@@ -560,7 +560,7 @@ int mm_map_kernel_into_paging_struct(PagingStruct* ps)
     return 0;
 }
 
-int mm_load_paging_struct(PagingStruct* ps)
+int mm_load_paging_struct(const PagingStruct* ps)
 {
     if (!ps)
         return -EINVAL;

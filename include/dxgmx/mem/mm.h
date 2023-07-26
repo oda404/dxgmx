@@ -18,7 +18,7 @@ const MemoryRegionMap* mm_get_sys_mregmap();
 int mm_init_paging_struct(PagingStruct*);
 int mm_destroy_paging_struct(PagingStruct*);
 int mm_map_kernel_into_paging_struct(PagingStruct*);
-int mm_load_paging_struct(PagingStruct*);
+int mm_load_paging_struct(const PagingStruct*);
 int mm_load_kernel_paging_struct();
 
 /**

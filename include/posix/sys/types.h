@@ -27,6 +27,7 @@ typedef int64_t clock_t;
 
 typedef int64_t loff_t;
 
-typedef long pid_t;
+#define PID_MAX 2147483647
+typedef i32 pid_t;
 
 #endif // !_SYS_TYPES_H

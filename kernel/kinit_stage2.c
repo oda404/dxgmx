@@ -75,14 +75,10 @@ _ATTR_NORETURN void kinit_stage2()
     if (syscalls_init() < 0)
         panic("Failed to setup system calls. Not proceeding!");
 
-    if (vfs_init() < 0)
-        panic("Failed to initialize VFS!");
+    vfs_init();
 
-    /* Spawn PID 1. Here, we only load the binary in memory and have it ready to
-     * run, waiting for the scheduler to kick in. For details on how this binary
-     * works check out kernel/kinit_stage3.c */
-    if (procm_spawn_init() != 1)
-        panic("Failed to spawn PID 1!");
+    procm_spawn_kernel_proc();
+    procm_spawn_init();
 
     /* Let it rip */
     sched_init();

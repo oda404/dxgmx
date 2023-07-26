@@ -12,8 +12,6 @@ $(KERNEL_SRCDIR)/user.c.o \
 $(KERNEL_SRCDIR)/kstdio.c.o \
 $(KERNEL_SRCDIR)/kboot.c.o \
 
-KINIT_STAGE3_OBJ := $(KERNEL_SRCDIR)/kinit_stage3.c.o
-
 include $(KERNEL_SRCDIR)/mem/Makefile
 include $(KERNEL_SRCDIR)/utils/Makefile
 include $(KERNEL_SRCDIR)/crypto/Makefile
