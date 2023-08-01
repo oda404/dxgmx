@@ -18,8 +18,6 @@ typedef struct S_FrameBuffer
     size_t bytespp;
 } FrameBuffer;
 
-int fb_init();
-
 int fb_ensure_init();
 
 int fb_write_pixel(size_t x, size_t y, u32 pixel);

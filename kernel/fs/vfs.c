@@ -272,9 +272,10 @@ _INIT int vfs_init()
     if (st < 0)
         panic("Failed to mount / %d :(", st);
 
-    st = vfs_mount("ramfs", "/ramfs", "ramfs", NULL, 0);
-    if (st < 0)
-        panic("Failed to mount ramfs");
+    st = vfs_mount("devfs", "/dev", "devfs", NULL, 0);
+
+    return 0;
+}
 
     FOR_EACH_ENTRY_IN_LL (g_filesystems_ll, FileSystem*, fs)
         KLOGF(INFO, "%s on %s", fs->mntsrc, fs->mntpoint);

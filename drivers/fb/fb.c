@@ -3,6 +3,10 @@
  * Distributed under the MIT license.
  */
 
+#ifdef CONFIG_DEVFS
+#include <dxgmx/devfs.h>
+#include <posix/sys/stat.h>
+#endif
 #include <dxgmx/fb.h>
 #include <dxgmx/kboot.h>
 #include <dxgmx/klog.h>
@@ -22,15 +26,24 @@ static ERR_OR(ptr) fb_map_to_virtual_space(ptr paddr, size_t n)
     return dma_map_range(paddr, n, PAGE_R | PAGE_W);
 }
 
-int fb_ensure_init()
+static ssize_t
+fb_vnode_read(const VirtualNode* vnode, void* buf, size_t n, loff_t off)
 {
-    if (!g_fb_up)
-        return fb_init();
-
+    KLOGF(INFO, "fb read");
     return 0;
 }
 
-int fb_init()
+static ssize_t
+fb_vnode_write(VirtualNode* vnode, const void* buf, size_t n, loff_t off)
+{
+    KLOGF(INFO, "fb write");
+    return 0;
+}
+
+VirtualNodeOperations g_fb_vnode_ops = {
+    .read = fb_vnode_read, .write = fb_vnode_write};
+
+static int fb_init()
 {
     ptr paddr = _kboot_framebuffer_paddr;
     size_t width = _kboot_framebuffer_width;
@@ -52,8 +65,24 @@ int fb_init()
     g_fb.bpp = bpp;
     g_fb.bytespp = bpp / 8;
     g_fb.vaddr = res.value;
-
     g_fb_up = true;
+
+#ifdef CONFIG_DEVFS
+    devfs_register(
+        "fb",
+        S_IFREG | (S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP),
+        0,
+        0,
+        &g_fb_vnode_ops);
+#endif
+
+    return 0;
+}
+
+int fb_ensure_init()
+{
+    if (!g_fb_up)
+        return fb_init();
 
     return 0;
 }
