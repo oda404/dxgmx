@@ -248,41 +248,32 @@ fat_write(VirtualNode* vnode, const void* buf, size_t n, loff_t off)
     TODO_FATAL();
 }
 
-static int fat_mkfile(const char* path, mode_t mode, FileSystem* fs)
+static ERR_OR(ino_t) fat_mkfile(
+    VirtualNode* dir,
+    const char* name,
+    mode_t mode,
+    uid_t uid,
+    gid_t gid,
+    FileSystem* fs)
 {
     (void)fs;
-    (void)path;
     (void)mode;
+    (void)uid;
+    (void)gid;
+    (void)name;
+    (void)dir;
     TODO_FATAL();
-}
-
-static int fat_mkdir(const char* pathname, mode_t mode, FileSystem* fs)
-{
-    (void)pathname;
-    (void)mode;
-    (void)fs;
-    TODO_FATAL();
-}
-
-static VirtualNode* fat_vnode_lookup(const char* path, FileSystem* fs)
-{
-    (void)path;
-    (void)fs;
-    TODO();
-    return NULL;
 }
 
 static const VirtualNodeOperations g_fatfs_vnode_ops = {
-    .mkdir = fat_mkdir,
-    .mkfile = fat_mkfile,
-    .read = fat_read,
-    .write = fat_write};
+    .read = fat_read, .write = fat_write};
 
 static const FileSystemDriver g_fatfs_driver = {
     .name = MODULE_NAME,
+    .generic_probe = true,
     .init = fat_init,
     .destroy = fat_destroy,
-    .vnode_lookup = fat_vnode_lookup,
+    .mkfile = fat_mkfile,
     .vnode_ops = &g_fatfs_vnode_ops};
 
 static int fatfs_main()
@@ -379,6 +370,7 @@ void fat_read_one_entry(u8* clustersrc, size_t idx, FATEntry* entry)
 int fat_free_vnode(VirtualNode* vnode)
 {
     kfree(vnode->name);
+    vnode->name = NULL;
     return 0;
 }
 

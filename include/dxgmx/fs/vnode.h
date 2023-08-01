@@ -36,6 +36,8 @@ typedef struct S_VirtualNode
     size_t size;
     /* Access mode. */
     mode_t mode;
+    uid_t uid;
+    gid_t gid;
     /* If the file has been removed but is not  */
     u16 state;
 
@@ -65,10 +67,6 @@ typedef struct S_VirtualNode
  */
 typedef struct S_VirtualNodeOperations
 {
-    /* Incomplete API */
-    int (*mkfile)(const char* path, mode_t mode, struct S_FileSystem* fs);
-    int (*mkdir)(const char* path, mode_t mode, struct S_FileSystem* fs);
-
     /**
      * Read from a file described by a vnode.
      *

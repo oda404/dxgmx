@@ -37,15 +37,17 @@
 #define O_SYNC 0x2000
 
 int vfs_init();
+void vfs_dump_mounts();
 
 /** Mount a partition.
- * 'src' is the mount source, could be anything from a block device path, uuid,
- * or nothing at all. Only the respective driver knows what to do with this.
+ * 'src' is the mount source, could be anything from a block device path,
+ * uuid, or nothing at all. Only the respective driver knows what to do with
+ * this.
  *
  * 'mntpoint' is the mount point in the vfs.
  *
- * 'type' is the name of the filesystem (driver). If null all filesystem drivers
- * are probed to see if any fit.
+ * 'type' is the name of the filesystem (driver). If null all filesystem
+ * drivers are probed to see if any fit.
  *
  * 'args' is a string of driver-specific options.
  *

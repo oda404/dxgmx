@@ -384,27 +384,25 @@ int fat_enumerate_and_cache_dir(const VirtualNode* dir_vnode, FileSystem* fs)
     {
         VirtualNode vnode = {0};
         vnode.owner = fs;
-        vnode.parent = dir_vnode;
-        vnode.ops = fs->driver->vnode_ops;
 
         int st = fat_dir_entry_to_vnode(&loc, &vnode);
         if (st == -EAGAIN)
-            continue; // Entry skipped
+            continue;  // Entry skipped
         else if (st == -ENOENT)
-            break; // No more entries.
+            break;     // No more entries.
         else if (st < 0)
             return st; // Error occurred
 
-        VirtualNode* cached_vnode = fs_new_vnode_cache(fs);
+        VirtualNode* cached_vnode = fs_new_vnode_cache(vnode.name, fs);
+        fat_free_vnode(&vnode);
         if (!cached_vnode)
-        {
-            fat_free_vnode(&vnode);
-            /* Let's be nice and at least try to enumerate any remaining
-             * entries, maybe something will free up in the mean time. */
             continue;
-        }
 
-        *cached_vnode = vnode;
+        cached_vnode->n = vnode.n;
+        cached_vnode->mode = vnode.mode;
+        cached_vnode->state = vnode.state;
+        cached_vnode->size = vnode.size;
+        cached_vnode->parent = dir_vnode;
 
         /* I love recursion (not) */
         if ((cached_vnode->mode & S_IFMT) == S_IFDIR)
@@ -418,7 +416,7 @@ int fat_cache_root_vnode(FileSystem* fs)
 {
     FAT32Ctx* fatctx = FAT32_CTX(fs);
 
-    VirtualNode* vnode = fs_new_vnode_cache(fs);
+    VirtualNode* vnode = fs_new_vnode_cache("/", fs);
     if (!vnode)
         return -ENOMEM;
 
@@ -426,16 +424,6 @@ int fat_cache_root_vnode(FileSystem* fs)
     vnode->parent = NULL;
     vnode->mode = FAT_DIR_MODE;
     vnode->size = 0;
-
-    vnode->name = kmalloc(2);
-    if (!vnode->name)
-    {
-        fs_free_cached_vnode(vnode, fs);
-        return -ENOMEM;
-    }
-    vnode->name[0] = '/';
-    vnode->name[1] = '\0';
-
     vnode->state = 0;
 
     return 0;

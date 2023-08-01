@@ -3,6 +3,7 @@
  * Distributed under the MIT license.
  */
 
+#include <dxgmx/assert.h>
 #include <dxgmx/errno.h>
 #include <dxgmx/fs/fs.h>
 #include <dxgmx/fs/path.h>
@@ -72,24 +73,31 @@ fs_lookup_vnode_cached_relative(const char* path, FileSystem* fs)
         if (strcmp(tmp_path, path) == 0)
         {
             vnode_hit = vnode;
-            break;
+            BREAK_LL(vnode);
         }
     }
 
     return vnode_hit;
 }
 
-VirtualNode* fs_new_vnode_cache(FileSystem* fs)
+VirtualNode* fs_new_vnode_cache(const char* name, FileSystem* fs)
 {
     VirtualNode* new_vnode = kcalloc(sizeof(VirtualNode));
     if (!new_vnode)
         return NULL;
 
+    new_vnode->name = strdup(name);
     new_vnode->owner = fs;
     new_vnode->ops = fs->driver->vnode_ops;
+    if (!new_vnode->name)
+    {
+        kfree(new_vnode);
+        return NULL;
+    }
 
     if (linkedlist_add(new_vnode, &fs->vnode_ll) < 0)
     {
+        kfree(new_vnode->name);
         kfree(new_vnode);
         return NULL;
     }
@@ -99,25 +107,24 @@ VirtualNode* fs_new_vnode_cache(FileSystem* fs)
 
 int fs_free_cached_vnode(VirtualNode* vnode, FileSystem* fs)
 {
-    int st = linkedlist_remove_by_data(vnode, &fs->vnode_ll);
-    if (st == 0)
-        kfree(vnode);
-
-    return st;
+    linkedlist_remove_by_data(vnode, &fs->vnode_ll);
+    kfree(vnode->name);
+    vnode->name = NULL;
+    kfree(vnode);
+    return 0;
 }
 
 int fs_free_all_cached_vnodes(FileSystem* fs)
 {
-    // FIXME: maybe improve the linkedlist API to return the data it just freed.
+    if (!fs->vnode_ll.root)
+        return 0;
+
     do
     {
-        LinkedListNode* n = fs->vnode_ll.root;
-        if (n)
-        {
-            VirtualNode* vnode = n->data;
-            kfree(vnode);
-            n->data = NULL;
-        }
+        VirtualNode* vnode = fs->vnode_ll.root->data;
+        kfree(vnode->name);
+        vnode->name = NULL;
+        kfree(vnode);
     } while (linkedlist_remove_by_position(0, &fs->vnode_ll) == 0);
 
     return 0;
@@ -125,18 +132,55 @@ int fs_free_all_cached_vnodes(FileSystem* fs)
 
 VirtualNode* fs_lookup_vnode(const char* path, FileSystem* fs)
 {
-    char working_path[PATH_MAX];
-    strncpy(working_path, path, PATH_MAX);
+    char* tmp = __builtin_alloca(strlen(path) + 1);
+    strcpy(tmp, path);
 
-    path_make_relative(fs, working_path);
+    path_make_canonical(tmp);
+    path_make_relative(tmp, fs);
+    return fs_lookup_vnode_cached_relative(tmp, fs);
+}
 
-    /* Look for any cached vnodes */
-    VirtualNode* vnode = fs_lookup_vnode_cached_relative(working_path, fs);
-    if (!vnode)
+VirtualNode* fs_get_dir_vnode_for_file(const char* path, FileSystem* fs)
+{
+    const char* end = strrchr(path, '/');
+    ASSERT(end); // we should at least have a leading /
+
+    size_t newlen = end - path + 1;
+    char* tmp = __builtin_alloca(newlen + 1);
+
+    for (size_t i = 0; i < newlen; ++i)
+        tmp[i] = path[i];
+
+    if (tmp[newlen - 1] == '/' && newlen > 1)
+        tmp[newlen - 1] = '\0';
+    else
+        tmp[newlen] = '\0';
+
+    return fs_lookup_vnode_cached_relative(tmp, fs);
+}
+
+VirtualNode* fs_ino_to_vnode(ino_t ino, FileSystem* fs)
+{
+    FOR_EACH_ENTRY_IN_LL (fs->vnode_ll, VirtualNode*, vnode)
     {
-        /* That failed, so we query the driver */
-        vnode = fs->driver->vnode_lookup(working_path, fs);
+        if (vnode->n == ino)
+            return vnode;
     }
 
-    return vnode;
+    return NULL;
+}
+
+ERR_OR(ino_t)
+fs_mkfile(const char* path, mode_t mode, uid_t uid, gid_t gid, FileSystem* fs)
+{
+    char* tmp = __builtin_alloca(strlen(path) + 1);
+    strcpy(tmp, path);
+
+    path_make_canonical(tmp);
+    path_make_relative(tmp, fs);
+    VirtualNode* parent = fs_get_dir_vnode_for_file(tmp, fs);
+    path_make_filename(tmp);
+
+    ERR_OR(ino_t) res = fs->driver->mkfile(parent, tmp, mode, uid, gid, fs);
+    return res;
 }

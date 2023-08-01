@@ -301,6 +301,7 @@ int vfs_mount(
     {
         /* Set the driver to the one we are (possibly) probing. */
         fs->driver = *driver;
+        st = -ENOENT;
 
         /* Look for and probe the corresponding driver if type is not NULL. */
         if (type)
@@ -311,7 +312,7 @@ int vfs_mount(
                 goto out;
             }
         }
-        else
+        else if ((*driver)->generic_probe)
         {
             st = (*driver)->init(fs);
         }
@@ -428,9 +429,10 @@ int vfs_open(const char* _USERPTR path, int flags, mode_t mode, Process* proc)
         /* Try to create it */
         if (flags & O_CREAT)
         {
-            int st = fs->driver->vnode_ops->mkfile(path, mode, vnode->owner);
-            if (st < 0)
-                return st;
+            // FIXME: uid/gid
+            ERR_OR(ino_t) tmp = fs_mkfile(path, mode, 0, 0, fs);
+            if (tmp.error < 0)
+                return tmp.error;
 
             /* Try again, this time it should work */
             vnode = fs_lookup_vnode(path, fs);

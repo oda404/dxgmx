@@ -28,6 +28,10 @@ typedef int64_t clock_t;
 typedef int64_t loff_t;
 
 #define PID_MAX 2147483647
-typedef i32 pid_t;
+typedef int32_t pid_t;
+
+#ifdef DXGMX_KERNEL
+DEFINE_ERR_OR(ino_t);
+#endif // DXGMX_KERKEL
 
 #endif // !_SYS_TYPES_H

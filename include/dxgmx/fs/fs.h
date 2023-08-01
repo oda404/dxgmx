@@ -50,6 +50,11 @@ typedef struct S_FileSystemDriver
     /* Driver name */
     char* name;
 
+    /* True if the driver can be probed for a specific source. Examples of this
+     * include disk backed filesystems (fat, ext2). False for stuff like ram
+     * backed filesystems. */
+    bool generic_probe;
+
     /**
      * Check if the filesystem on 'src' is valid. If the filesystem is valid it
      * is initialized.
@@ -74,19 +79,16 @@ typedef struct S_FileSystemDriver
      *
      * 'fs' Non-NULL target filesystem.
      */
-    void (*destroy)(FileSystem*);
+    void (*destroy)(FileSystem* fs);
 
-    /**
-     * Query the driver for a path's vnode. Called if a vnode isn't found in the
-     * filesystem's cache.
-     *
-     * 'path' Non-NULL relative to the filesystem path.
-     *
-     * Returns:
-     * A VirtualNode* on success.
-     * NULL if no vnode has been found, i.e. path doesn't exist.
-     */
-    VirtualNode* (*vnode_lookup)(const char* path, FileSystem* fs);
+    ERR_OR(ino_t)
+    (*mkfile)(
+        VirtualNode* dir,
+        const char* name,
+        mode_t mode,
+        uid_t uid,
+        gid_t gid,
+        struct S_FileSystem* fs);
 
     /* Default operations that performed on this filesystem's vnodes. */
     const VirtualNodeOperations* vnode_ops;
@@ -103,7 +105,7 @@ typedef struct S_FileSystemDriver
  * A VirtualNode* on sucess.
  * NULL on out of memory.
  */
-VirtualNode* fs_new_vnode_cache(FileSystem* fs);
+VirtualNode* fs_new_vnode_cache(const char* name, FileSystem* fs);
 
 /**
  * Remove a vnode from the vnode cache of 'fs'.
@@ -146,5 +148,10 @@ int fs_free_all_cached_vnodes(FileSystem* fs);
  * NULL if no vnode has been found.
  */
 VirtualNode* fs_lookup_vnode(const char* path, FileSystem* fs);
+
+VirtualNode* fs_ino_to_vnode(ino_t ino, FileSystem* fs);
+
+ERR_OR(ino_t)
+fs_mkfile(const char* path, mode_t mode, uid_t uid, gid_t gid, FileSystem* fs);
 
 #endif // !_DXGMX_FS_FS_H
