@@ -69,10 +69,19 @@ int linkedlist_remove_by_data(void* data, LinkedList* ll);
  */
 int linkedlist_remove_by_position(size_t pos, LinkedList* ll);
 
+/* This whole thing is scuffed as hell, i love C */
+static LinkedListNode _g_break_node;
+
 /* Convenience macro for walking a linked list. */
 #define FOR_EACH_ENTRY_IN_LL(_ll, _type, _name)                                \
     for (LinkedListNode* _node_##_name = _ll.root; _node_##_name;              \
          _node_##_name = _node_##_name->next)                                  \
         for (_type _name = _node_##_name->data; _name; _name = NULL)
+
+#define BREAK_LL(_name)                                                        \
+    {                                                                          \
+        _node_##_name = &_g_break_node;                                        \
+        break;                                                                 \
+    }
 
 #endif // !_DXGMX_UTILS_LINKEDLIST_H
