@@ -4,6 +4,7 @@
  */
 
 #include <dxgmx/kmalloc.h>
+#include <dxgmx/math.h>
 #include <dxgmx/string.h>
 #include <dxgmx/types.h>
 
@@ -115,6 +116,31 @@ char* strdup(const char* str)
         strcpy(ret, str);
 
     return ret;
+}
+
+char* strchr(const char* str, char c)
+{
+    const size_t len = strlen(str);
+    for (size_t i = 0; i < len; ++i)
+    {
+        if (str[i] == c)
+            return (char*)&str[i];
+    }
+
+    return NULL;
+}
+
+char* strrchr(const char* str, char c)
+{
+    size_t len = min(strlen(str), _SSIZE_MAX_);
+    // i = len because the null terminator is part of string as per the spec
+    for (ssize_t i = len; i >= 0; --i)
+    {
+        if (str[i] == c)
+            return (char*)&str[i];
+    }
+
+    return NULL;
 }
 
 const char* strstr(const char* haystack, const char* needle)
