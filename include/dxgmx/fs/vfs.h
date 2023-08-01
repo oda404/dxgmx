@@ -37,7 +37,6 @@
 #define O_SYNC 0x2000
 
 int vfs_init();
-void vfs_dump_mounts();
 
 /** Mount a partition.
  * 'src' is the mount source, could be anything from a block device path,

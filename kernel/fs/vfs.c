@@ -274,15 +274,11 @@ _INIT int vfs_init()
 
     st = vfs_mount("devfs", "/dev", "devfs", NULL, 0);
 
-    return 0;
-}
-
     FOR_EACH_ENTRY_IN_LL (g_filesystems_ll, FileSystem*, fs)
         KLOGF(INFO, "%s on %s", fs->mntsrc, fs->mntpoint);
 
     return 0;
 }
-
 int vfs_mount(
     const char* _SAFE_USERPTR src,
     const char* _SAFE_USERPTR dest,
