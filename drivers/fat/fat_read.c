@@ -11,7 +11,7 @@
 
 ssize_t fat_read(const VirtualNode* vnode, void* buf, size_t n, off_t off)
 {
-    if (n == 0 || off >= vnode->size)
+    if (n == 0 || (size_t)off >= vnode->size)
         return 0;
 
     FileSystem* fs = vnode->owner;

@@ -27,14 +27,14 @@ static ERR_OR(ptr) fb_map_to_virtual_space(ptr paddr, size_t n)
 }
 
 static ssize_t
-fb_vnode_read(const VirtualNode* vnode, void* buf, size_t n, loff_t off)
+fb_vnode_read(const VirtualNode* vnode, void* buf, size_t n, off_t off)
 {
     KLOGF(INFO, "fb read");
     return 0;
 }
 
 static ssize_t
-fb_vnode_write(VirtualNode* vnode, const void* buf, size_t n, loff_t off)
+fb_vnode_write(VirtualNode* vnode, const void* buf, size_t n, off_t off)
 {
     KLOGF(INFO, "fb write");
     return 0;

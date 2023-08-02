@@ -7,19 +7,20 @@ set(CMAKE_C_FLAGS "-fno-builtin -std=c2x ${CMAKE_C_FLAGS}")
 
 # libc.a
 add_library(c STATIC
-    stdlib.c
-    syscalls.c
-    fcntl.c
-    dxgmx.c
+    src/stdlib.c
+    src/syscalls.c
+    src/fcntl.c
+    src/dxgmx.c
+    src/unistd.c
 )
-target_include_directories(c PRIVATE include $ENV{DXGMX_SRC_ROOT}/include)
+target_include_directories(c PRIVATE include)
 install(TARGETS c DESTINATION ${CMAKE_SYSROOT}/usr/lib/)
 
 # Install headers
 install(DIRECTORY include/ DESTINATION ${CMAKE_SYSROOT}/usr/include/)
 
 # crt0.o
-add_library(crt0 STATIC crt0.c)
+add_library(crt0 STATIC src/crt0.c)
 target_include_directories(crt0 PRIVATE include)
 add_custom_command(
     TARGET crt0 POST_BUILD

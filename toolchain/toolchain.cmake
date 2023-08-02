@@ -1,6 +1,6 @@
 
 # the name of the target operating system
-set(CMAKE_SYSTEM_NAME dxgmx)
+set(CMAKE_SYSTEM_NAME Generic)
 
 set(CMAKE_C_COMPILER_FORCED TRUE)
 set(CMAKE_CXX_COMPILER_FORCED TRUE)

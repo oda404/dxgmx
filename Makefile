@@ -15,7 +15,7 @@ SYSROOT_DISK_MNTPOINT  ?= /mnt/dxgmx-sysroot
 
 ### MISC DIRECTORIES ###
 BUILDDIR          := build
-DXGMX_SYSROOT     ?= $(PWD)/sysroot
+SYSROOT           ?= $(PWD)/sysroot
 SCRIPTSDIR        := scripts
 
 ### BINARY/ISO PATHS ###
@@ -52,7 +52,7 @@ BASE_CFLAGS            := \
 INCLUDEDIRS := -I$(INCLUDE_SRCDIR) 
 
 DEFINES            := \
--DDXGMX_KERNEL \
+-D_KERNEL \
 -DDXGMX_VER_MAJ=$(VER_MAJ) \
 -DDXGMX_VER_MIN=$(VER_MIN) -DDXGMX_PATCH_N=$(PATCH_N) \
 -DDXGMX_CODENAME='"$(CODENAME)"' 
@@ -75,7 +75,8 @@ ARCHOBJS           :=
 KERNELOBJS         :=
 LDSCRIPT           :=
 MODULEOBJS         :=
-MODULE_INCLUDEDIRS := 
+MODULE_INCLUDEDIRS :=
+EXPORT_APIS        :=
 
 ifdef TARGET_FILE
     include $(TARGET_FILE)
@@ -86,6 +87,7 @@ endif
 # Include main subdirs
 include $(ARCH_SRCDIR)/Makefile
 include $(KERNEL_SRCDIR)/Makefile
+include $(INCLUDE_SRCDIR)/Makefile
 
 # Add module include directories to INCLUDEDIRS
 INCLUDEDIRS += $(patsubst %, -I%, $(MODULE_INCLUDEDIRS))
@@ -161,11 +163,22 @@ $(BUILDDIR)/%_mod.S.o: %.S $(DXGMX_COMMON_DEPS)
 	@$(PRETTY_PRINT) "AS MOD" $<
 	@$(AS) -c $< $(CFLAGS) -o $@
 
+PHONY += install_apis
+install_apis:
+	@$(SCRIPTSDIR)/install-apis.sh --sysroot $(SYSROOT) --apis "$(EXPORT_APIS)"
+
+PHONY += install
+install: $(KERNEL_BIN)
+	@mkdir -p $(SYSROOT)/boot
+	@mkdir -p $(SYSROOT)/usr/include
+	@$(MAKE) install_apis
+	@cp $(KERNEL_BIN) $(SYSROOT)/boot/
+
 PHONY += iso 
 iso: $(KERNEL_ISO)
 $(KERNEL_ISO): $(KERNEL_BIN)
 	$(SCRIPTSDIR)/create-iso.sh \
-	--sysroot $(DXGMX_SYSROOT) \
+	--sysroot $(SYSROOT) \
 	--kernel $(KERNEL_BIN) \
 	--out $(KERNEL_ISO)
 
@@ -202,7 +215,7 @@ unmount-root:
 PHONY += syncroot
 syncroot:
 	sudo $(SCRIPTSDIR)/syncroot.sh \
-	--sysroot $(DXGMX_SYSROOT) \
+	--sysroot $(SYSROOT) \
 	--image-path build/image.img \
 	--mountpoint $(SYSROOT_DISK_MNTPOINT) \
 	--cachefile $(BUILDDIR)/root-loopdev
@@ -215,7 +228,7 @@ buildinfo:
 	@echo Build target name: $(shell [ $(shell expr length "$(TARGET_NAME)") -gt 0 ] && echo $(TARGET_NAME) || echo No target )
 	@echo Target architecture: $(DXGMX_ARCH)
 	@echo Target triplet: $(DXGMX_TARGET_TRIP)
-	@echo System root: $(DXGMX_SYSROOT)
+	@echo System root: $(SYSROOT)
 	@echo CFLAGS: $(CFLAGS)
 	@echo LDFLAGS: $(LDFLAGS)
 

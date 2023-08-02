@@ -3,8 +3,8 @@
  * Distributed under the MIT license.
  */
 
-#ifndef _SYS_STAT_H
-#define _SYS_STAT_H
+#ifndef _DXGMX_POSIX_SYS_STAT_H
+#define _DXGMX_POSIX_SYS_STAT_H
 
 #include <posix/sys/types.h>
 #include <posix/time.h>
@@ -63,4 +63,4 @@ struct stat
 #define st_mtime st_mtim.tv_sec
 #define st_ctime st_ctim.tv_sec
 
-#endif // !_SYS_STAT_H
+#endif // !_DXGMX_POSIX_SYS_STAT_H

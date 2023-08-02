@@ -3,8 +3,8 @@
  * Distributed under the MIT license.
  */
 
-#ifndef _TIME_H
-#define _TIME_H
+#ifndef _DXGMX_POSIX_TIME_H
+#define _DXGMX_POSIX_TIME_H
 
 #include <posix/sys/types.h>
 
@@ -14,4 +14,4 @@ struct timespec
     long tv_nsec;
 };
 
-#endif // !_TIME_H
+#endif // !_DXGMX_POSIX_TIME_H

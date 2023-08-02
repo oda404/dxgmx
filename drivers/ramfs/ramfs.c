@@ -118,12 +118,12 @@ ramfs_mkfile(
     return VALUE(ino_t, vnode->n);
 }
 
-ssize_t ramfs_read(const VirtualNode* vnode, void* buf, size_t n, loff_t off)
+ssize_t ramfs_read(const VirtualNode* vnode, void* buf, size_t n, off_t off)
 {
     if (!vnode || !buf)
         return -EINVAL;
 
-    if (!n || off >= vnode->size)
+    if (!n || (size_t)off >= vnode->size)
         return 0;
 
     FileSystem* fs = vnode->owner;
@@ -141,7 +141,7 @@ ssize_t ramfs_read(const VirtualNode* vnode, void* buf, size_t n, loff_t off)
     return n;
 }
 
-ssize_t ramfs_write(VirtualNode* vnode, const void* buf, size_t n, loff_t off)
+ssize_t ramfs_write(VirtualNode* vnode, const void* buf, size_t n, off_t off)
 {
     if (!vnode || !buf)
         return -EINVAL;
@@ -169,7 +169,7 @@ ssize_t ramfs_write(VirtualNode* vnode, const void* buf, size_t n, loff_t off)
 
         filedata->data = newdata;
 
-        if (off > vnode->size)
+        if ((size_t)off > vnode->size)
             memset(filedata->data + vnode->size, 0, off - vnode->size);
 
         vnode->size = write_size;

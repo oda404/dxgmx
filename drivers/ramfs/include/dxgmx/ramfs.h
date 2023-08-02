@@ -34,7 +34,7 @@ ramfs_mkfile(
     gid_t gid,
     FileSystem* fs);
 
-ssize_t ramfs_read(const VirtualNode* vnode, void* buf, size_t n, loff_t off);
-ssize_t ramfs_write(VirtualNode* vnode, const void* buf, size_t n, loff_t off);
+ssize_t ramfs_read(const VirtualNode* vnode, void* buf, size_t n, off_t off);
+ssize_t ramfs_write(VirtualNode* vnode, const void* buf, size_t n, off_t off);
 
 #endif // !_DXGMX_FS_RAMFS_RAMFS_H

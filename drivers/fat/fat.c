@@ -239,7 +239,7 @@ static int fat_init(FileSystem* fs)
 }
 
 static ssize_t
-fat_write(VirtualNode* vnode, const void* buf, size_t n, loff_t off)
+fat_write(VirtualNode* vnode, const void* buf, size_t n, off_t off)
 {
     (void)vnode;
     (void)buf;

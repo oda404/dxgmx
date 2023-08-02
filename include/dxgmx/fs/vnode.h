@@ -80,7 +80,7 @@ typedef struct S_VirtualNodeOperations
      * Returns:
      * Non negative integer describing how many bytes were read on success.
      */
-    ssize_t (*read)(const VirtualNode* vnode, void* buf, size_t n, loff_t off);
+    ssize_t (*read)(const VirtualNode* vnode, void* buf, size_t n, off_t off);
 
     /**
      * Write to a file described by a vnode.
@@ -95,7 +95,7 @@ typedef struct S_VirtualNodeOperations
      * Returns:
      * Non negative integer describing how many bytes were written on success.
      */
-    ssize_t (*write)(VirtualNode* vnode, const void* buf, size_t n, loff_t off);
+    ssize_t (*write)(VirtualNode* vnode, const void* buf, size_t n, off_t off);
 
 } VirtualNodeOperations;
 
