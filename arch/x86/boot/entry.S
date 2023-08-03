@@ -39,7 +39,7 @@ boot_pgtable0:
   .fill 512, 8, 0
 
 # The kernel stack
-.section .kstack, "aw"
+.section .kstack, "aw", @nobits
 .align 16
 .global _kernel_stack_bot
 .global _kernel_stack_top
