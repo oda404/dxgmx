@@ -218,13 +218,6 @@ _INIT static void mm_enforce_ksections_perms()
         pte->exec_disable = true;
     }
 
-    /* Can't write to kinit_stage3 */
-    FOR_EACH_KPTE_IN_RANGE (
-        kimg_kinit_stage3_text_start(), kimg_kinit_stage3_text_end(), pte)
-    {
-        pte->writable = false;
-    }
-
     /* Can't write to init, which is just text */
     FOR_EACH_KPTE_IN_RANGE (kimg_init_start(), kimg_init_end(), pte)
         pte->writable = false;

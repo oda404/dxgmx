@@ -111,15 +111,6 @@ ptr kimg_init_end()
     return (ptr)_init_end;
 }
 
-ptr kimg_kinit_stage3_text_start()
-{
-    return (ptr)_kinit_stage3_text_start;
-}
-ptr kimg_kinit_stage3_text_end()
-{
-    return (ptr)_kinit_stage3_text_end;
-}
-
 ptr kimg_module_start()
 {
     return (ptr)_modules_start;
