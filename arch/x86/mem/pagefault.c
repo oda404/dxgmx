@@ -13,6 +13,7 @@
 #include <dxgmx/panic.h>
 #include <dxgmx/string.h>
 #include <dxgmx/todo.h>
+#include <dxgmx/user.h>
 #include <dxgmx/utils/bytes.h>
 #include <dxgmx/x86/idt.h>
 #include <dxgmx/x86/pagefault.h>
@@ -143,6 +144,8 @@ static void pagefault_handle_absent(ptr faultaddr, InterruptFrame* frame)
 static void pagefault_isr(InterruptFrame* frame)
 {
     const ptr faultaddr = cpu_read_cr2();
+    const bool user_access = frame->eip >= kimg_useraccess_start() &&
+                             frame->eip < kimg_useraccess_end();
 
 #if PAGEFAULT_VERBOSE == 1
     const char* action_msg = NULL;
@@ -162,13 +165,20 @@ static void pagefault_isr(InterruptFrame* frame)
 
     KLOGF(
         DEBUG,
-        "Fault at: 0x%p (%s/%s), cpl: %d, ip: 0x%p",
+        "Fault at: 0x%p (%s/%s), cpl: %d%s, ip: 0x%p",
         (void*)faultaddr,
         action_msg,
         result_msg,
         frame->cs & 3,
+        frame->cs & 3 || user_access ? " -> user" : "",
         (void*)frame->eip);
 #endif // PAGEFAULT_VERBOSE == 1
+
+    if (user_access)
+    {
+        frame->eip = (ptr)user_access_fault_stub;
+        return;
+    }
 
     if (PAGEFAULT_IS_PROT_VIOL(frame->code))
         pagefault_handle_prot_viol(faultaddr, frame);

@@ -210,6 +210,9 @@ _INIT static void mm_enforce_ksections_perms()
     FOR_EACH_KPTE_IN_RANGE (kimg_text_start(), kimg_text_end(), pte)
         pte->writable = false;
 
+    FOR_EACH_KPTE_IN_RANGE (kimg_useraccess_start(), kimg_useraccess_end(), pte)
+        pte->writable = false;
+
     /* Can't write to modules */
     FOR_EACH_KPTE_IN_RANGE (kimg_module_start(), kimg_module_end(), pte)
     {

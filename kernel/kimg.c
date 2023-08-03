@@ -31,6 +31,8 @@ extern u8 _modules_start[];
 extern u8 _modules_end[];
 extern u8 _ksyms_start[];
 extern u8 _ksyms_end[];
+extern u8 _useraccess_start[];
+extern u8 _useraccess_end[];
 
 ptr kimg_bootloader_start()
 {
@@ -149,4 +151,14 @@ ptr kimg_vaddr()
 size_t kimg_size()
 {
     return (ptr)_kernel_size;
+}
+
+ptr kimg_useraccess_start()
+{
+    return (ptr)_useraccess_start;
+}
+
+ptr kimg_useraccess_end()
+{
+    return (ptr)_useraccess_end;
 }

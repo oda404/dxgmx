@@ -1,5 +1,5 @@
 /**
- * Copyright 2022 Alexandru Olaru.
+ * Copyright 2023 Alexandru Olaru.
  * Distributed under the MIT license.
  */
 
@@ -8,6 +8,9 @@
 
 #include <dxgmx/compiler_attrs.h>
 #include <dxgmx/types.h>
+
+_CDECL _ATTR_NEVER_INLINE int user_copy_to(void* dest, void* src, size_t n);
+int user_access_fault_stub();
 
 _ATTR_NORETURN void user_jump2user(ptr instrptr, ptr stackptr);
 

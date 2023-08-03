@@ -468,9 +468,6 @@ int vfs_open(const char* _USERPTR path, int flags, mode_t mode, Process* proc)
 
 ssize_t vfs_read(fd_t fd, void* _USERPTR buf, size_t n, Process* proc)
 {
-    if (!buf)
-        return -EFAULT;
-
     FileDescriptor* sysfd = vfs_get_sysfd(fd, proc);
     if (!sysfd)
         return -EBADF;

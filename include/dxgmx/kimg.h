@@ -50,4 +50,7 @@ ptr kimg_vaddr();
 /* Size of the kernel image. */
 size_t kimg_size();
 
+ptr kimg_useraccess_start();
+ptr kimg_useraccess_end();
+
 #endif // !_DXGMX_KIMG_H

@@ -31,6 +31,13 @@ SECTIONS
         _text_end = .;
     }
 
+    .useraccess ALIGN(4K) : AT (ADDR(.useraccess) - _kernel_map_offset)
+    {
+        _useraccess_start = .;
+        *(.useraccess)
+        _useraccess_end = .;
+    }
+
     .modules ALIGN(4K) : AT(ADDR(.modules) - _kernel_map_offset)
     {
         _modules_start = .;
