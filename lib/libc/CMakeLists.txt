@@ -10,7 +10,6 @@ add_library(c STATIC
     src/stdlib.c
     src/syscalls.c
     src/fcntl.c
-    src/dxgmx.c
     src/unistd.c
 )
 target_include_directories(c PRIVATE include)

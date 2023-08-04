@@ -11,7 +11,6 @@
 #include <dxgmx/kstdio/kstdio.h>
 #include <dxgmx/ksyms.h>
 #include <dxgmx/module.h>
-#include <dxgmx/panic.h>
 #include <dxgmx/proc/procm.h>
 #include <dxgmx/sched/sched.h>
 #include <dxgmx/syscalls.h>
@@ -72,8 +71,7 @@ _ATTR_NORETURN void kinit_stage2()
 
     modules_dump_builtins();
 
-    if (syscalls_init() < 0)
-        panic("Failed to setup system calls. Not proceeding!");
+    syscalls_init();
 
     vfs_init();
 

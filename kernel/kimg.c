@@ -33,6 +33,8 @@ extern u8 _ksyms_start[];
 extern u8 _ksyms_end[];
 extern u8 _useraccess_start[];
 extern u8 _useraccess_end[];
+extern u8 _syscalls_start[];
+extern u8 _syscalls_end[];
 
 ptr kimg_bootloader_start()
 {
@@ -161,4 +163,13 @@ ptr kimg_useraccess_start()
 ptr kimg_useraccess_end()
 {
     return (ptr)_useraccess_end;
+}
+
+ptr kimg_syscalls_start()
+{
+    return (ptr)_syscalls_start;
+}
+ptr kimg_syscalls_end()
+{
+    return (ptr)_syscalls_end;
 }

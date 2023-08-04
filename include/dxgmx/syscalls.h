@@ -1,5 +1,5 @@
 /**
- * Copyright 2022 Alexandru Olaru.
+ * Copyright 2023 Alexandru Olaru.
  * Distributed under the MIT license.
  */
 
@@ -7,20 +7,10 @@
 #define _DXGMX_SYSCALLS_H
 
 #include <dxgmx/attrs.h>
-#include <dxgmx/types.h>
-
-typedef u32 syscall_t;
-
-#if defined(_X86_) // FIXME: should really be something like DXGMX_32BITS bits
-/* Returns type of syscalls */
-typedef u32 syscall_arg_t;
-typedef i32 syscall_ret_t;
-#endif
-
-/* Syscall handler callback */
-typedef syscall_ret_t (*syscall_handler_t)(syscall_t sysn, ...);
+#include <dxgmx/syscall_types.h>
 
 /* Initialize system calls */
 _INIT int syscalls_init();
+syscall_ret_t syscalls_do_handle(syscall_t n, ...);
 
 #endif // !_DXGMX_SYSCALLS_H

@@ -53,4 +53,7 @@ size_t kimg_size();
 ptr kimg_useraccess_start();
 ptr kimg_useraccess_end();
 
+ptr kimg_syscalls_start();
+ptr kimg_syscalls_end();
+
 #endif // !_DXGMX_KIMG_H

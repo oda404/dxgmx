@@ -210,6 +210,12 @@ _INIT static void mm_enforce_ksections_perms()
     FOR_EACH_KPTE_IN_RANGE (kimg_text_start(), kimg_text_end(), pte)
         pte->writable = false;
 
+    FOR_EACH_KPTE_IN_RANGE (kimg_syscalls_start(), kimg_syscalls_end(), pte)
+    {
+        pte->writable = false;
+        pte->exec_disable = true;
+    }
+
     FOR_EACH_KPTE_IN_RANGE (kimg_useraccess_start(), kimg_useraccess_end(), pte)
         pte->writable = false;
 

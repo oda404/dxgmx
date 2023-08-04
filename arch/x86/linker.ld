@@ -31,6 +31,13 @@ SECTIONS
         _text_end = .;
     }
 
+    .syscalls ALIGN(4K) : AT (ADDR(.syscalls) - _kernel_map_offset)
+    {
+        _syscalls_start = .;
+        *(.syscalls)
+        _syscalls_end = .;
+    }
+
     .useraccess ALIGN(4K) : AT (ADDR(.useraccess) - _kernel_map_offset)
     {
         _useraccess_start = .;
