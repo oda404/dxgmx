@@ -9,7 +9,10 @@
 
 /* This way of checking for userspace faults in kernel space may have been appropriated from linux */
 .section .useraccess, "a"
-.local user_copy_to_end
+user_access_end:
+    pop %ebx
+    pop %ebp
+    ret
 
 .global user_copy_to
 .type user_copy_to, @function
@@ -36,16 +39,46 @@ user_copy_to:
 
     # Everything was fine
     xor %eax, %eax
-user_copy_to_end:
-    pop %ebx
-    pop %ebp
-    ret
+    jmp user_access_end   
 
 .global user_access_fault_stub
 .type user_access_fault_stub, @function
 user_access_fault_stub:
     mov $-EFAULT, %eax
-    jmp user_copy_to_end
+    jmp user_access_end
+
+.global user_copy_str_from
+.type user_copy_str_from, @function
+user_copy_str_from:
+    push %ebp
+    mov %esp, %ebp
+    push %ebx
+
+    xor %ecx, %ecx
+    movl 0x8(%ebp), %ebx # Get src from stack
+    movl 0xc(%ebp), %edx # Get dest from stack
+
+1:
+    movl (%ebx), %eax
+    movb %al, (%edx)
+
+    # End early if we hit the null terminator
+    cmp $0, %al
+    je loop_end
+
+    inc %ebx
+    inc %edx
+    inc %ecx
+    cmp 0x10(%ebp), %ecx
+    jl 1b
+
+    # If we got here we hit maxn, and we don't have a null terminator
+    dec %edx
+    movb $0, (%edx)
+
+loop_end:
+    xor %eax, %eax
+    jmp user_access_end
 
 .section .text
 .global user_jump2user_arch
