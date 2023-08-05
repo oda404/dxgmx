@@ -41,7 +41,7 @@ int syscalls_init()
 
     g_syscall_entries = (SyscallEntry*)kimg_syscalls_start();
     g_syscall_entry_count =
-        (kimg_syscalls_end() - kimg_syscalls_start()) / sizeof(void*);
+        (kimg_syscalls_end() - kimg_syscalls_start()) / sizeof(SyscallEntry);
 
     return 0;
 }
