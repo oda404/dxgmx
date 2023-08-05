@@ -41,8 +41,4 @@ kinit_stage1 function. */
 /* Doesn't do jack shit. Just a visual cue that a pointer is from userspace. */
 #define _USERPTR
 
-/* Doesn't do jack shit. Just a visual cue that a pointer is from userspace and
- * has been sanitized, i.e. it's safe to access for a particular operation. */
-#define _SAFE_USERPTR
-
 #endif // _DXGMX_ATTRS_H
