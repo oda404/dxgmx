@@ -56,12 +56,12 @@ ptr kimg_text_end()
     return (ptr)_text_end;
 }
 
-ptr kimg_stack_top()
+ptr kimg_kstack_top()
 {
     return (ptr)_kernel_stack_top;
 }
 
-ptr kimg_stack_bot()
+ptr kimg_kstack_bot()
 {
     return (ptr)_kernel_stack_bot;
 }

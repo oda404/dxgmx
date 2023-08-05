@@ -16,8 +16,8 @@ ptr kimg_bootloader_end();
 ptr kimg_text_start();
 ptr kimg_text_end();
 
-ptr kimg_stack_top();
-ptr kimg_stack_bot();
+ptr kimg_kstack_top();
+ptr kimg_kstack_bot();
 
 ptr kimg_bss_start();
 ptr kimg_bss_end();

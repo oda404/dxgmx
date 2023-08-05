@@ -3,13 +3,15 @@
  * Distributed under the MIT license.
  */
 
+#include <dxgmx/assert.h>
 #include <dxgmx/cpu.h>
 #include <dxgmx/kimg.h>
 #include <dxgmx/klog.h>
 #include <dxgmx/ksyms.h>
-#include <dxgmx/stack_trace.h>
+#include <dxgmx/proc/proc_limits.h>
+#include <dxgmx/stack_info.h>
 
-void stack_trace_dump()
+void stack_info_dump_trace()
 {
     const StackFrame* frame = NULL;
 #if defined(_X86_)
@@ -57,4 +59,27 @@ void stack_trace_dump()
         if (frames == FRAMES_UNWIND_MAX)
             klogln(WARN, "- Hit FRAMES_UNWIND_MAX, truncated stack strace!");
     }
+}
+
+void stack_info_dump_limits(const char* func, int line)
+{
+    Process* proc = sched_current_proc();
+    size_t esp = cpu_read_esp();
+    size_t rem;
+    if (proc)
+    {
+        rem = esp - (proc->kstack_top - PROC_KSTACK_SIZE);
+    }
+    else
+    {
+        size_t stack_size = kimg_kstack_top() - kimg_kstack_bot();
+        rem = esp - (kimg_kstack_top() - stack_size);
+    }
+
+    klogln(
+        DEBUG,
+        "kstack: @%s():%d is %d bytes away from overflowing.",
+        func,
+        line,
+        rem);
 }

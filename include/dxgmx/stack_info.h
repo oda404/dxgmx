@@ -1,11 +1,13 @@
 /**
- * Copyright 2022 Alexandru Olaru.
+ * Copyright 2023 Alexandru Olaru.
  * Distributed under the MIT license.
  */
 
 #ifndef _DXGMX_STACK_TRACE_H
 #define _DXGMX_STACK_TRACE_H
 
+#include <dxgmx/proc/proc.h>
+#include <dxgmx/sched/sched.h>
 #include <dxgmx/types.h>
 
 typedef struct S_StackFrame
@@ -15,6 +17,10 @@ typedef struct S_StackFrame
 } StackFrame;
 
 /* Dumps a backtrace of all the function calls. */
-void stack_trace_dump();
+void stack_info_dump_trace();
+
+#define STACK_INFO_DUMP_LIMITS() stack_info_dump_limits(__FUNCTION__, __LINE__)
+
+void stack_info_dump_limits(const char* func, int line);
 
 #endif //!_DXGMX_STACK_TRACE_H

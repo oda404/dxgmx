@@ -7,7 +7,7 @@
 #include <dxgmx/kabort.h>
 #include <dxgmx/klog.h>
 #include <dxgmx/panic.h>
-#include <dxgmx/stack_trace.h>
+#include <dxgmx/stack_info.h>
 #include <stdarg.h>
 
 void panic(const char* lastmsg, ...)
@@ -17,7 +17,7 @@ void panic(const char* lastmsg, ...)
     klogln(FATAL, "");
     klogln(FATAL, "--- uh-oh kernel panic :( ---");
 
-    stack_trace_dump();
+    stack_info_dump_trace();
 
     if (lastmsg)
     {
