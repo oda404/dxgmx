@@ -4,10 +4,12 @@
  */
 
 #include "fat.h"
+#include <dxgmx/attrs.h>
 #include <dxgmx/errno.h>
 #include <dxgmx/kmalloc.h>
 #include <dxgmx/math.h>
 #include <dxgmx/string.h>
+#include <dxgmx/user.h>
 
 ssize_t fat_read(const VirtualNode* vnode, void* buf, size_t n, off_t off)
 {
@@ -108,7 +110,7 @@ ssize_t fat_read(const VirtualNode* vnode, void* buf, size_t n, off_t off)
         }
     }
 
-    memcpy(buf, clusbuf + off, n);
+    user_copy_to(buf, clusbuf + off, n);
 
     kfree(fatbuf);
     kfree(clusbuf);

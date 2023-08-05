@@ -20,6 +20,7 @@
 #include <dxgmx/stdio.h>
 #include <dxgmx/string.h>
 #include <dxgmx/todo.h>
+#include <dxgmx/user.h>
 #include <dxgmx/utils/bitwise.h>
 #include <dxgmx/utils/hashtable.h>
 #include <posix/sys/stat.h>
@@ -190,7 +191,7 @@ static const FileSystemDriver** vfs_new_fs_driver()
  * A non NULL FileSystem*. Note that "at least" the filesystem mounted on / will
  * be returned.
  */
-static FileSystem* vfs_topmost_fs_for_path(const char* _USERPTR path)
+static FileSystem* vfs_topmost_fs_for_path(const char* path)
 {
     FileSystem* fs_hit = NULL;
     FOR_EACH_ENTRY_IN_LL (g_filesystems_ll, FileSystem*, fs)
@@ -279,19 +280,39 @@ _INIT int vfs_init()
 
     return 0;
 }
+
 int vfs_mount(
-    const char* _SAFE_USERPTR src,
-    const char* _SAFE_USERPTR dest,
-    const char* _SAFE_USERPTR type,
-    const char* _SAFE_USERPTR args,
+    const char* _USERPTR src,
+    const char* _USERPTR dest,
+    const char* _USERPTR type,
+    const char* _USERPTR args,
     u32 flags)
 {
-    /* Create new filesystem */
-    FileSystem* fs = vfs_new_fs(src, dest, args);
-    if (!fs)
-        return -ENOMEM;
+    FileSystem* fs = NULL;
+    {
+        char safe_src[PATH_MAX];
+        char safe_dest[PATH_MAX];
+        char safe_args[PATH_MAX];
+        if (user_copy_str_from(src, safe_src, PATH_MAX) < 0)
+            return -EFAULT;
+        if (user_copy_str_from(dest, safe_dest, PATH_MAX) < 0)
+            return -EFAULT;
+        if (args && user_copy_str_from(args, safe_args, PATH_MAX) < 0)
+            return -EFAULT;
+
+        fs = vfs_new_fs(safe_src, safe_dest, safe_args);
+        if (!fs)
+            return -ENOMEM;
+    }
 
     fs->flags = flags;
+
+    char safe_type[PATH_MAX];
+    if (type && user_copy_str_from(type, safe_type, PATH_MAX) < 0)
+    {
+        vfs_free_fs(fs);
+        return -EFAULT;
+    }
 
     int st = -ENOENT;
     FOR_EACH_ELEM_IN_DARR (g_fs_drivers, g_fs_driver_count, driver)
@@ -303,7 +324,7 @@ int vfs_mount(
         /* Look for and probe the corresponding driver if type is not NULL. */
         if (type)
         {
-            if (strcmp((*driver)->name, type) == 0)
+            if (strcmp((*driver)->name, safe_type) == 0)
             {
                 st = (*driver)->init(fs);
                 goto out;
@@ -349,13 +370,6 @@ int vfs_unmount(const char* src_or_dest)
 
 int vfs_register_fs_driver(const FileSystemDriver* driver)
 {
-    // FIXME: replace
-    // if (!(fs_driver.name && fs_driver.init && fs_driver.destroy &&
-    //       fs_driver.read))
-    // {
-    //     return -EINVAL;
-    // }
-
     /* Check to see if there is already a driver with the same name. */
     FOR_EACH_ELEM_IN_DARR (g_fs_drivers, g_fs_driver_count, drv)
     {
@@ -412,27 +426,33 @@ int vfs_unregister_fs_driver(const FileSystemDriver* driver)
 
 int vfs_open(const char* _USERPTR path, int flags, mode_t mode, Process* proc)
 {
+    char safe_path[PATH_MAX];
+    int st = user_copy_str_from(path, safe_path, PATH_MAX);
+    if (st < 0)
+        return st;
+
+    STACK_INFO_DUMP_LIMITS();
+
     /* We only allow absolute paths */
-    if (!path || path[0] != '/')
+    if (safe_path[0] != '/')
         return -EINVAL;
 
-    FileSystem* fs = vfs_topmost_fs_for_path(path);
-    if (!fs)
-        return -ENOMEM;
+    FileSystem* fs = vfs_topmost_fs_for_path(safe_path);
+    ASSERT(fs);
 
-    VirtualNode* vnode = fs_lookup_vnode(path, fs);
+    VirtualNode* vnode = fs_lookup_vnode(safe_path, fs);
     if (!vnode)
     {
         /* Try to create it */
         if (flags & O_CREAT)
         {
             // FIXME: uid/gid
-            ERR_OR(ino_t) tmp = fs_mkfile(path, mode, 0, 0, fs);
+            ERR_OR(ino_t) tmp = fs_mkfile(safe_path, mode, 0, 0, fs);
             if (tmp.error < 0)
                 return tmp.error;
 
             /* Try again, this time it should work */
-            vnode = fs_lookup_vnode(path, fs);
+            vnode = fs_lookup_vnode(safe_path, fs);
             ASSERT(vnode);
         }
 
@@ -475,7 +495,7 @@ ssize_t vfs_read(fd_t fd, void* _USERPTR buf, size_t n, Process* proc)
     if (sysfd->vnode->mode & S_IFDIR)
         return -EISDIR;
 
-    if (!BW_MASK(sysfd->flags, O_RDONLY))
+    if (!(sysfd->flags & O_RDONLY))
         return -EBADF;
 
     if (!n)
@@ -491,9 +511,6 @@ ssize_t vfs_read(fd_t fd, void* _USERPTR buf, size_t n, Process* proc)
 
 ssize_t vfs_write(fd_t fd, const void* _USERPTR buf, size_t n, Process* proc)
 {
-    if (!buf)
-        return -EFAULT;
-
     FileDescriptor* sysfd = vfs_get_sysfd(fd, proc);
     if (!sysfd)
         return -EBADF;

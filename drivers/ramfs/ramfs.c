@@ -4,6 +4,7 @@
  */
 
 #include <dxgmx/assert.h>
+#include <dxgmx/attrs.h>
 #include <dxgmx/errno.h>
 #include <dxgmx/fs/vfs.h>
 #include <dxgmx/klog.h>
@@ -15,6 +16,7 @@
 #include <dxgmx/string.h>
 #include <dxgmx/todo.h>
 #include <dxgmx/types.h>
+#include <dxgmx/user.h>
 #include <posix/sys/stat.h>
 
 #define KLOGF_PREFIX "ramfs: "
@@ -118,66 +120,30 @@ ramfs_mkfile(
     return VALUE(ino_t, vnode->n);
 }
 
-ssize_t ramfs_read(const VirtualNode* vnode, void* buf, size_t n, off_t off)
+ssize_t
+ramfs_read(const VirtualNode* vnode, _USERPTR void* buf, size_t n, off_t off)
 {
-    if (!vnode || !buf)
-        return -EINVAL;
-
     if (!n || (size_t)off >= vnode->size)
         return 0;
 
     FileSystem* fs = vnode->owner;
-
     RamFsMetadata* meta = fs->driver_ctx;
     if (!meta || !meta->files)
         return -EINVAL;
 
     ASSERT(vnode->n > 0 && vnode->n < meta->file_count);
 
-    RamFsFileData* filedata = &meta->files[vnode->n - 1];
-
+    /* Cap n with respect to offset */
     n = min(n, vnode->size - off);
-    memcpy(buf, filedata->data + off, n);
+
+    RamFsFileData* filedata = &meta->files[vnode->n - 1];
+    user_copy_to(buf, filedata->data + off, n);
     return n;
 }
 
 ssize_t ramfs_write(VirtualNode* vnode, const void* buf, size_t n, off_t off)
 {
-    if (!vnode || !buf)
-        return -EINVAL;
-
-    if (!n)
-        return 0;
-
-    FileSystem* fs = vnode->owner;
-
-    RamFsMetadata* meta = fs->driver_ctx;
-    if (!meta || !meta->files)
-        return -EINVAL;
-
-    ASSERT(vnode->n > 0 && vnode->n < meta->file_count);
-
-    RamFsFileData* filedata = &meta->files[vnode->n - 1];
-
-    /* FIXME: check for overflow ? */
-    const size_t write_size = off + n;
-    if (write_size > vnode->size)
-    {
-        void* newdata = krealloc(filedata->data, write_size);
-        if (!newdata)
-            return -ENOMEM;
-
-        filedata->data = newdata;
-
-        if ((size_t)off > vnode->size)
-            memset(filedata->data + vnode->size, 0, off - vnode->size);
-
-        vnode->size = write_size;
-    }
-
-    memcpy(filedata->data + off, buf, n);
-
-    return n;
+    return 0;
 }
 
 #define MODULE_NAME "ramfs"
