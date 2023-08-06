@@ -6,3 +6,4 @@ dxgmx-*
 .vscode
 buildconfig
 *.buildtarget
+syscall_defs.h
