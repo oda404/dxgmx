@@ -17,6 +17,7 @@
 #include <dxgmx/limits.h>
 #include <dxgmx/panic.h>
 #include <dxgmx/proc/procm.h>
+#include <dxgmx/sched/sched.h>
 #include <dxgmx/stdio.h>
 #include <dxgmx/string.h>
 #include <dxgmx/todo.h>
@@ -431,8 +432,6 @@ int vfs_open(const char* _USERPTR path, int flags, mode_t mode, Process* proc)
     if (st < 0)
         return st;
 
-    STACK_INFO_DUMP_LIMITS();
-
     /* We only allow absolute paths */
     if (safe_path[0] != '/')
         return -EINVAL;
@@ -582,4 +581,14 @@ int vfs_close(fd_t fd, Process* proc)
     ASSERT(idx < g_sys_fd_count);
 
     return vfs_free_file_descriptor(&g_sys_fds[idx]);
+}
+
+int sys_open(const char* path, int flags, mode_t mode)
+{
+    return vfs_open(path, flags, mode, sched_current_proc());
+}
+
+ssize_t sys_read(int fd, void* buf, size_t n)
+{
+    return vfs_read(fd, buf, n, sched_current_proc());
 }
