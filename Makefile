@@ -16,20 +16,20 @@ SYSROOT_DISK_MNTPOINT  ?= /mnt/dxgmx-sysroot
 ### MISC DIRECTORIES ###
 BUILDDIR          := build
 SYSROOT           ?= $(PWD)/sysroot
-SCRIPTSDIR        := scripts
+TOOLS_SRCDIR      := tools
 
 ### BINARY/ISO PATHS ###
 KERNEL_BIN   := $(KERNEL_NAME)-$(VER_MAJ).$(VER_MIN).$(PATCH_N)
 KERNEL_ISO   ?= $(KERNEL_BIN).iso
 
 # Die if we are not using a LLVM toolchain
-LLVM=$(shell $(SCRIPTSDIR)/is-llvm.sh)
+LLVM=$(shell $(TOOLS_SRCDIR)/is-llvm.sh)
 ifneq ($(LLVM),1)
     $(error You need an LLVM toolchain to build dxgmx.)
 endif
 
 # Translate arch into src arch.
-SRCARCH           := $(shell $(SCRIPTSDIR)/arch.sh --to-srcarch $(DXGMX_ARCH))
+SRCARCH           := $(shell $(TOOLS_SRCDIR)/arch.sh --to-srcarch $(DXGMX_ARCH))
 ifeq ($(SRCARCH), undefined)
     $(error Unsupported arch: '$(DXGMX_ARCH)')
 endif
@@ -41,7 +41,6 @@ ARCH_SRCDIR       := arch/$(SRCARCH)
 KERNEL_SRCDIR     := kernel
 INCLUDE_SRCDIR    := include
 DRIVERS_SRCDIR    := drivers
-TOOLS_SRCDIR      := tools
 
 ### BASE FLAGS ###
 BASE_CFLAGS            := \
@@ -68,7 +67,7 @@ LDFLAGS           := -nostdlib
 
 MAKEFLAGS         += --no-print-directory
 
-PRETTY_PRINT  = $(SCRIPTSDIR)/pretty-print.sh
+PRETTY_PRINT  = $(TOOLS_SRCDIR)/pretty-print.sh
 export PRETTY_PRINT
 
 ### OBJ FILES ###
@@ -140,8 +139,8 @@ $(KERNEL_BIN): $(SYSCALL_DEFS) $(ALL_OBJS) $(LDSCRIPT) $(DXGMX_COMMON_DEPS)
 	@$(PRETTY_PRINT) LD $@
 	@$(LD) -T $(LDSCRIPT) $(ALL_OBJS) $(LDFLAGS) -o $(KERNEL_BIN)
 
-	@[ -f build/image.img ] || $(SCRIPTSDIR)/create-disk.sh -p build/image.img
-	@$(SCRIPTSDIR)/bake_symbols.sh $(KERNEL_BIN)
+	@[ -f build/image.img ] || $(TOOLS_SRCDIR)/create-disk.sh -p build/image.img
+	@$(TOOLS_SRCDIR)/bake_symbols.sh $(KERNEL_BIN)
 
 $(SYSCALL_DEFS): $(TOOL_SYSCALLS_GEN) $(KERNEL_SRCDIR)/syscalls_common.defs
 	@$(PRETTY_PRINT) SYSDEFS $@
@@ -179,7 +178,7 @@ $(BUILDDIR)/$(TOOLS_SRCDIR)/%: $(TOOLS_SRCDIR)/%.*
 
 PHONY += install_apis
 install_apis:
-	@$(SCRIPTSDIR)/install-apis.sh --sysroot $(SYSROOT) --apis "$(EXPORT_APIS)"
+	@$(TOOLS_SRCDIR)/install-apis.sh --sysroot $(SYSROOT) --apis "$(EXPORT_APIS)"
 
 PHONY += install
 install: $(KERNEL_BIN)
@@ -191,18 +190,18 @@ install: $(KERNEL_BIN)
 PHONY += iso 
 iso: $(KERNEL_ISO)
 $(KERNEL_ISO): $(KERNEL_BIN)
-	$(SCRIPTSDIR)/create-iso.sh \
+	$(TOOLS_SRCDIR)/create-iso.sh \
 	--sysroot $(SYSROOT) \
 	--kernel $(KERNEL_BIN) \
 	--out $(KERNEL_ISO)
 
 PHONY += iso-run 
 iso-run: $(KERNEL_ISO)
-	$(SCRIPTSDIR)/run-qemu.sh -i $(KERNEL_ISO) -a $(DXGMX_ARCH)
+	$(TOOLS_SRCDIR)/run-qemu.sh -i $(KERNEL_ISO) -a $(DXGMX_ARCH)
 
 PHONY += run 
 run: $(KERNEL_BIN)
-	$(SCRIPTSDIR)/run-qemu.sh -k $(KERNEL_BIN) -a $(DXGMX_ARCH)
+	$(TOOLS_SRCDIR)/run-qemu.sh -k $(KERNEL_BIN) -a $(DXGMX_ARCH)
 
 PHONY += clean 
 clean:
@@ -217,18 +216,18 @@ mrclean:
 
 PHONY += mount-root
 mount-root: build/image.img
-	sudo $(SCRIPTSDIR)/mount-root.sh \
+	sudo $(TOOLS_SRCDIR)/mount-root.sh \
 	--image-path build/image.img \
 	--mountpoint $(SYSROOT_DISK_MNTPOINT) \
 	--cachefile $(BUILDDIR)/root-loopdev
 
 PHONY += unmount-root
 unmount-root:
-	sudo $(SCRIPTSDIR)/unmount-root.sh --cachefile $(BUILDDIR)/root-loopdev
+	sudo $(TOOLS_SRCDIR)/unmount-root.sh --cachefile $(BUILDDIR)/root-loopdev
 
 PHONY += syncroot
 syncroot:
-	sudo $(SCRIPTSDIR)/syncroot.sh \
+	sudo $(TOOLS_SRCDIR)/syncroot.sh \
 	--sysroot $(SYSROOT) \
 	--image-path build/image.img \
 	--mountpoint $(SYSROOT_DISK_MNTPOINT) \
