@@ -41,6 +41,7 @@ ARCH_SRCDIR       := arch/$(SRCARCH)
 KERNEL_SRCDIR     := kernel
 INCLUDE_SRCDIR    := include
 DRIVERS_SRCDIR    := drivers
+TOOLS_SRCDIR      := tools
 
 ### BASE FLAGS ###
 BASE_CFLAGS            := \
@@ -88,6 +89,7 @@ endif
 include $(ARCH_SRCDIR)/Makefile
 include $(KERNEL_SRCDIR)/Makefile
 include $(INCLUDE_SRCDIR)/Makefile
+include $(TOOLS_SRCDIR)/Makefile
 
 # Add module include directories to INCLUDEDIRS
 INCLUDEDIRS += $(patsubst %, -I%, $(MODULE_INCLUDEDIRS))
@@ -127,17 +129,23 @@ ALL_OBJS           := $(COBJS) $(ASMOBJS) $(CMODOBJS) $(SMODOBJS) $(MISCOBJS)
 
 DXGMX_COMMON_DEPS  := Makefile $(TARGET_FILE)
 
+SYSCALL_DEFS       := $(INCLUDE_SRCDIR)/dxgmx/syscall_defs.h
+
 PHONY              :=
 
 PHONY += all
 all: $(KERNEL_BIN)
 
-$(KERNEL_BIN): $(ALL_OBJS) $(LDSCRIPT) $(DXGMX_COMMON_DEPS)
+$(KERNEL_BIN): $(SYSCALL_DEFS) $(ALL_OBJS) $(LDSCRIPT) $(DXGMX_COMMON_DEPS)
 	@$(PRETTY_PRINT) LD $@
 	@$(LD) -T $(LDSCRIPT) $(ALL_OBJS) $(LDFLAGS) -o $(KERNEL_BIN)
 
 	@[ -f build/image.img ] || $(SCRIPTSDIR)/create-disk.sh -p build/image.img
 	@$(SCRIPTSDIR)/bake_symbols.sh $(KERNEL_BIN)
+
+$(SYSCALL_DEFS): $(TOOL_SYSCALLS_GEN) $(KERNEL_SRCDIR)/syscalls_common.defs
+	@$(PRETTY_PRINT) SYSDEFS $@
+	@$(TOOL_SYSCALLS_GEN) --common-defs $(KERNEL_SRCDIR)/syscalls_common.defs --output $@
 
 -include $(CDEPS)
 $(BUILDDIR)/%.c.o: %.c $(DXGMX_COMMON_DEPS)
@@ -162,6 +170,12 @@ $(BUILDDIR)/%_mod.S.o: %.S $(DXGMX_COMMON_DEPS)
 	@mkdir -p $(dir $@)
 	@$(PRETTY_PRINT) "AS MOD" $<
 	@$(AS) -c $< $(CFLAGS) -o $@
+
+$(BUILDDIR)/$(TOOLS_SRCDIR)/%: $(TOOLS_SRCDIR)/%.*
+	@# Hardcoded to c++ for now :)
+	@mkdir -p $(dir $@)
+	@$(PRETTY_PRINT) "HOSTCXX" $<
+	@$(HOSTCXX) $< -o $@
 
 PHONY += install_apis
 install_apis:
@@ -192,7 +206,7 @@ run: $(KERNEL_BIN)
 
 PHONY += clean 
 clean:
-	@rm -f $(COBJS) $(ASMOBJS) $(CMODOBJS) $(MISCOBJS)
+	@rm -f $(COBJS) $(ASMOBJS) $(CMODOBJS) $(MISCOBJS) $(BUILDDIR)/$(TOOLS_SRCDIR)/*
 	@rm -f $(CDEPS) $(ASMDEPS) $(MODDEPS)
 
 PHONY += mrclean 

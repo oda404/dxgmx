@@ -9,6 +9,7 @@ export AS=$DXGMX_TOOLCHAIN_ROOT/usr/bin/clang
 export LD=$DXGMX_TOOLCHAIN_ROOT/usr/bin/ld.lld
 export NM=$DXGMX_TOOLCHAIN_ROOT/usr/bin/llvm-nm
 export OBJCOPY=$DXGMX_TOOLCHAIN_ROOT/usr/bin/llvm-objcopy
+export HOSTCXX=clang++
 
 export RUSTC=rustc
 
