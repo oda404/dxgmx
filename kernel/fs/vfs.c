@@ -522,7 +522,7 @@ ssize_t vfs_write(fd_t fd, const void* _USERPTR buf, size_t n, Process* proc)
 
     /* Set offset to the end of the file if appending */
     if (sysfd->flags & O_APPEND)
-        sysfd->off = sysfd->vnode->size;
+        TODO_FATAL();
 
     if (!n)
         return 0;

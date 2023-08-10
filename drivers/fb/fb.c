@@ -73,7 +73,8 @@ static int fb_init()
         S_IFREG | (S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP),
         0,
         0,
-        &g_fb_vnode_ops);
+        &g_fb_vnode_ops,
+        &g_fb);
 #endif
 
     return 0;

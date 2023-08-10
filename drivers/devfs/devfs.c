@@ -17,6 +17,7 @@ typedef struct DevFSEntry
     uid_t uid;
     gid_t gid;
     VirtualNodeOperations* ops;
+    void* data;
 } DevFSEntry;
 
 static DevFSEntry* g_registered_entries;
@@ -41,7 +42,8 @@ devfs_entry_t devfs_register(
     mode_t mode,
     uid_t uid,
     gid_t gid,
-    VirtualNodeOperations* ops)
+    VirtualNodeOperations* ops,
+    void* data)
 {
     char* fullname = kmalloc(strlen(name) + 1 + name[0] != '/');
     if (!fullname)
@@ -58,7 +60,12 @@ devfs_entry_t devfs_register(
     }
 
     g_registered_entries[g_registered_entry_count - 1] = (DevFSEntry){
-        .name = fullname, .mode = mode, .uid = uid, .gid = gid, .ops = ops};
+        .name = fullname,
+        .mode = mode,
+        .uid = uid,
+        .gid = gid,
+        .ops = ops,
+        .data = data};
 
     return 0;
 }
@@ -82,7 +89,9 @@ static int devfs_init(FileSystem* fs)
             continue;
         }
 
-        fs_ino_to_vnode(res.value, fs)->ops = entry->ops;
+        VirtualNode* vnode = fs_ino_to_vnode(res.value, fs);
+        vnode->ops = entry->ops;
+        vnode->data = entry->data;
     }
 
     return 0;

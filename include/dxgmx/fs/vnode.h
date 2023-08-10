@@ -12,10 +12,6 @@
 struct S_FileSystem;
 struct S_VirtualNodeOperations;
 
-/* If the file has been removed but metadata bits are still
-present on disk. */
-#define INODE_STATE_WILL_FREE 1
-
 /* Virtual node representing an object in the vfs, be it a file, dir, link,
  * whatever. Note that you should be careful when allocating and storing a bunch
  * of VirtualNodes for a filesystem, as VirtualNode*s are stored as
@@ -38,8 +34,6 @@ typedef struct S_VirtualNode
     mode_t mode;
     uid_t uid;
     gid_t gid;
-    /* If the file has been removed but is not  */
-    u16 state;
 
     /* The parent directory VirtualNode, NULL for / */
     const struct S_VirtualNode* parent;
@@ -48,6 +42,8 @@ typedef struct S_VirtualNode
     struct S_FileSystem* owner;
 
     const struct S_VirtualNodeOperations* ops;
+
+    void* data;
 } VirtualNode;
 
 /**

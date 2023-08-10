@@ -13,6 +13,7 @@ devfs_entry_t devfs_register(
     mode_t mode,
     uid_t uid,
     gid_t gid,
-    VirtualNodeOperations* ops);
+    VirtualNodeOperations* ops,
+    void* data);
 
 #endif // !_DXGMX_DEVFS_H

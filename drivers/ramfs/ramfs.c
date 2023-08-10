@@ -113,7 +113,6 @@ ramfs_mkfile(
     vnode->n = ++meta->file_count;
     vnode->mode = mode;
     vnode->size = 0;
-    vnode->state = 0;
     vnode->uid = uid;
     vnode->gid = gid;
     vnode->parent = dir;

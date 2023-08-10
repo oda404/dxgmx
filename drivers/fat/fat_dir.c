@@ -362,7 +362,6 @@ static int fat_dir_entry_to_vnode(FATEntryLoc* loc, VirtualNode* vnode)
     }
 
     vnode->size = entry.file_size;
-    vnode->state = 0;
 
     kfree(fatbuf);
     kfree(clusbuf);
@@ -400,7 +399,6 @@ int fat_enumerate_and_cache_dir(const VirtualNode* dir_vnode, FileSystem* fs)
 
         cached_vnode->n = vnode.n;
         cached_vnode->mode = vnode.mode;
-        cached_vnode->state = vnode.state;
         cached_vnode->size = vnode.size;
         cached_vnode->parent = dir_vnode;
 
@@ -424,7 +422,6 @@ int fat_cache_root_vnode(FileSystem* fs)
     vnode->parent = NULL;
     vnode->mode = FAT_DIR_MODE;
     vnode->size = 0;
-    vnode->state = 0;
 
     return 0;
 }
