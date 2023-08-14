@@ -42,6 +42,8 @@ _ATTR_FMT_PRINTF(2, 3) size_t klog(KLogLevel lvl, const char* fmt, ...);
 size_t kvlog(KLogLevel lvl, const char* fmt, va_list list);
 size_t kvlogln(KLogLevel lvl, const char* fmt, va_list list);
 
+void klog_set_show_ts(bool show);
+
 /* Convenience macro for putting a prefix before the given fmt.
 To use this macro you must define KLOGF_PREFIX to a literal string
 before expanding it. */

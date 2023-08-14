@@ -9,11 +9,12 @@
 #include <dxgmx/timekeep.h>
 
 static KLogLevel g_loglvl;
+static bool g_show_ts;
 
 _INIT int klog_init(KLogLevel lvl)
 {
     klog_set_max_level(lvl);
-
+    g_show_ts = true;
     return 0;
 }
 
@@ -34,8 +35,11 @@ size_t kvlog(KLogLevel lvl, const char* fmt, va_list list)
     struct timespec ts = timekeep_uptime();
     double time = ts.tv_sec + ts.tv_nsec / 1000000000.0;
 
-    size_t written = kprintf("[%11.6f] ", time) + kvprintf(fmt, list);
+    size_t written = 0;
+    if (g_show_ts)
+        written += kprintf("[%11.6f] ", time);
 
+    written += kvprintf(fmt, list);
     return written;
 }
 
@@ -65,4 +69,9 @@ size_t klogln(KLogLevel lvl, const char* fmt, ...)
     va_end(valist);
 
     return written;
+}
+
+void klog_set_show_ts(bool show)
+{
+    g_show_ts = show;
 }
