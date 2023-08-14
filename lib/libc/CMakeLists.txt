@@ -11,6 +11,7 @@ add_library(c STATIC
     src/syscalls.c
     src/fcntl.c
     src/unistd.c
+    src/string.c
 )
 target_include_directories(c PRIVATE include)
 install(TARGETS c DESTINATION ${CMAKE_SYSROOT}/usr/lib/)
