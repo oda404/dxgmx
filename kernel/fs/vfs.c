@@ -592,3 +592,8 @@ ssize_t sys_read(int fd, void* buf, size_t n)
 {
     return vfs_read(fd, buf, n, sched_current_proc());
 }
+
+ssize_t sys_write(int fd, const void* buf, size_t n)
+{
+    return vfs_write(fd, buf, n, sched_current_proc());
+}

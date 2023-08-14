@@ -9,3 +9,4 @@ void	sys_exit	int
 int	sys_open	const char*	int	mode_t
 ssize_t	sys_read	int	void*	size_t
 int	sys_execve	const char*	const char**	const char**
+ssize_t	sys_write	int	const void*	size_t
