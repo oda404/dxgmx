@@ -80,6 +80,34 @@ loop_end:
     xor %eax, %eax
     jmp user_access_end
 
+
+.global user_copy_from
+.type user_copy_from, @function
+user_copy_from:
+    push %ebp
+    mov %esp, %ebp
+    push %ebx # ebx is the only gp reg we use that is not caller saved
+
+    xor %ecx, %ecx
+    movl 0x8(%ebp), %ebx # Get src from stack
+    movl 0xc(%ebp), %edx # Get dest from stack
+
+    # We only do 1 byte at a time... oh well
+1:
+    # Copy, maybe faulting
+    mov (%ebx), %eax
+    movb %al, (%edx)
+
+    inc %ecx
+    inc %ebx
+    inc %edx
+    cmp 0x10(%ebp), %ecx
+    jl 1b
+
+    # Everything was fine
+    xor %eax, %eax
+    jmp user_access_end   
+
 .section .text
 .global user_jump2user_arch
 .type user_jump2user_arch, @function

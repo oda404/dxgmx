@@ -16,6 +16,9 @@ user_copy_to(_USERPTR void* dest, const void* src, size_t n);
 _CDECL _ATTR_NEVER_INLINE int
 user_copy_str_from(_USERPTR const void* src, void* dest, size_t maxn);
 
+_CDECL _ATTR_NEVER_INLINE int
+user_copy_from(const void* _USERPTR src, void* dest, size_t n);
+
 int user_access_fault_stub();
 
 _ATTR_NORETURN void user_jump2user(ptr instrptr, ptr stackptr);
