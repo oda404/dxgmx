@@ -106,7 +106,7 @@ static void devfs_destroy(FileSystem* fs)
 #define MODULE_NAME "devfs"
 
 static const VirtualNodeOperations g_devfs_vnode_ops = {
-    .read = ramfs_read, .write = ramfs_write};
+    .read = ramfs_read, .write = ramfs_write, .ioctl = ramfs_ioctl};
 
 static const FileSystemDriver g_devfs_driver = {
     .name = MODULE_NAME,

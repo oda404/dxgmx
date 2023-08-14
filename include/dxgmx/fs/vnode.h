@@ -93,6 +93,8 @@ typedef struct S_VirtualNodeOperations
      */
     ssize_t (*write)(VirtualNode* vnode, const void* buf, size_t n, off_t off);
 
+    int (*ioctl)(VirtualNode* vnode, int req, void* data);
+
 } VirtualNodeOperations;
 
 #endif // !_DXGMX_FS_VNODE_H

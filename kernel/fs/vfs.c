@@ -508,6 +508,15 @@ ssize_t vfs_read(fd_t fd, void* _USERPTR buf, size_t n, Process* proc)
     return rd;
 }
 
+int vfs_ioctl(fd_t fd, int req, void* data, Process* proc)
+{
+    FileDescriptor* sysfd = vfs_get_sysfd(fd, proc);
+    if (!sysfd)
+        return -EBADF;
+
+    return sysfd->vnode->ops->ioctl(sysfd->vnode, req, data);
+}
+
 ssize_t vfs_write(fd_t fd, const void* _USERPTR buf, size_t n, Process* proc)
 {
     FileDescriptor* sysfd = vfs_get_sysfd(fd, proc);
@@ -591,6 +600,11 @@ int sys_open(const char* path, int flags, mode_t mode)
 ssize_t sys_read(int fd, void* buf, size_t n)
 {
     return vfs_read(fd, buf, n, sched_current_proc());
+}
+
+int sys_ioctl(int fd, int req, void* data)
+{
+    return vfs_ioctl(fd, req, data, sched_current_proc());
 }
 
 ssize_t sys_write(int fd, const void* buf, size_t n)

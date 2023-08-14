@@ -78,6 +78,8 @@ int vfs_open(const char* path, int flags, mode_t mode, Process* proc);
  */
 ssize_t vfs_read(fd_t fd, void* buf, size_t n, Process* proc);
 
+int vfs_ioctl(fd_t fd, int req, void* n, Process* proc);
+
 /**
  * Write to an opened file on behalf of a process.
  * 'fd' The file descriptor returned by vfs_open

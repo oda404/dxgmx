@@ -7,41 +7,67 @@
 #include <dxgmx/devfs.h>
 #include <posix/sys/stat.h>
 #endif
+#include <dxgmx/assert.h>
+#include <dxgmx/errno.h>
 #include <dxgmx/fb.h>
+#include <dxgmx/fb_ioctl.h>
+#include <dxgmx/fb_user.h>
 #include <dxgmx/kboot.h>
 #include <dxgmx/klog.h>
 #include <dxgmx/mem/dma.h>
 #include <dxgmx/mem/falloc.h>
 #include <dxgmx/mem/mm.h>
-#include <dxgmx/sched/sched.h>
 #include <dxgmx/string.h>
+#include <dxgmx/user.h>
 
 #define KLOGF_PREFIX "fb: "
 
 static FrameBuffer g_fb;
 static bool g_fb_up;
 
+#ifdef CONFIG_DEVFS
+static ssize_t fb_vnode_read(const VirtualNode*, void*, size_t, off_t)
+{
+    return -1;
+}
+
+static ssize_t fb_vnode_write(
+    VirtualNode* vnode, const void* _USERPTR buf, size_t n, off_t off)
+{
+    FrameBuffer* fb = vnode->data;
+    ASSERT(fb);
+
+    size_t fbsize = fb->width * fb->height * fb->bytespp;
+    if (off + n > fbsize)
+        return -ENOSPC; // ?
+
+    return user_copy_from(buf, (void*)(fb->vaddr + off), n);
+}
+
+static int fb_vnode_ioctl(VirtualNode* vnode, int req, void* data)
+{
+    if (!g_fb_up)
+        return -EINVAL;
+
+    switch (req)
+    {
+    case FBIO_GET_INFO:
+        return fbio_get_info(vnode, data);
+
+    default:
+        return -EINVAL;
+    }
+}
+
+static VirtualNodeOperations g_fb_vnode_ops = {
+    .read = fb_vnode_read, .write = fb_vnode_write, .ioctl = fb_vnode_ioctl};
+
+#endif // CONFIG_DEVFS
+
 static ERR_OR(ptr) fb_map_to_virtual_space(ptr paddr, size_t n)
 {
     return dma_map_range(paddr, n, PAGE_R | PAGE_W);
 }
-
-static ssize_t
-fb_vnode_read(const VirtualNode* vnode, void* buf, size_t n, off_t off)
-{
-    KLOGF(INFO, "fb read");
-    return 0;
-}
-
-static ssize_t
-fb_vnode_write(VirtualNode* vnode, const void* buf, size_t n, off_t off)
-{
-    KLOGF(INFO, "fb write");
-    return 0;
-}
-
-VirtualNodeOperations g_fb_vnode_ops = {
-    .read = fb_vnode_read, .write = fb_vnode_write};
 
 static int fb_init()
 {

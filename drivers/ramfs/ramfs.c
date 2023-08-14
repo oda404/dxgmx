@@ -140,7 +140,12 @@ ramfs_read(const VirtualNode* vnode, _USERPTR void* buf, size_t n, off_t off)
     return n;
 }
 
-ssize_t ramfs_write(VirtualNode* vnode, const void* buf, size_t n, off_t off)
+int ramfs_ioctl(VirtualNode*, int, void*)
+{
+    return -1;
+}
+
+ssize_t ramfs_write(VirtualNode*, const void*, size_t, off_t)
 {
     return 0;
 }
@@ -148,7 +153,7 @@ ssize_t ramfs_write(VirtualNode* vnode, const void* buf, size_t n, off_t off)
 #define MODULE_NAME "ramfs"
 
 static const VirtualNodeOperations g_ramfs_vnode_ops = {
-    .read = ramfs_read, .write = ramfs_write};
+    .read = ramfs_read, .write = ramfs_write, .ioctl = ramfs_ioctl};
 
 static const FileSystemDriver g_ramfs_driver = {
     .name = MODULE_NAME,
