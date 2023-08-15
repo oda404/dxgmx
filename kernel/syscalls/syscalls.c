@@ -12,8 +12,8 @@
 #include <posix/sys/types.h>
 #include <stdarg.h>
 
-static SyscallEntry* g_syscall_entries;
-static size_t g_syscall_entry_count;
+static _RO_POST_INIT SyscallEntry* g_syscall_entries;
+static _RO_POST_INIT size_t g_syscall_entry_count;
 
 static int sys_undefined(syscall_t sysn)
 {

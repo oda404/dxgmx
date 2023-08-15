@@ -11,6 +11,8 @@
 
 /* Initialize system calls */
 _INIT int syscalls_init();
+
+/* Global syscall handler. Called by the arch specific syscall ISR. */
 syscall_ret_t syscalls_do_handle(syscall_t n, ...);
 
 #endif // !_DXGMX_SYSCALLS_H
