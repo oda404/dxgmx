@@ -301,7 +301,7 @@ int vfs_mount(
         if (args && user_copy_str_from(args, safe_args, PATH_MAX) < 0)
             return -EFAULT;
 
-        fs = vfs_new_fs(safe_src, safe_dest, safe_args);
+        fs = vfs_new_fs(safe_src, safe_dest, args ? safe_args : NULL);
         if (!fs)
             return -ENOMEM;
     }
