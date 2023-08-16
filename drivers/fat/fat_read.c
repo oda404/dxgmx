@@ -10,14 +10,14 @@
 #include <dxgmx/math.h>
 #include <dxgmx/string.h>
 #include <dxgmx/user.h>
+#include <dxgmx/utils/bytes.h>
 
 ssize_t fat_read(const VirtualNode* vnode, void* buf, size_t n, off_t off)
 {
     if (n == 0 || (size_t)off >= vnode->size)
         return 0;
 
-    FileSystem* fs = vnode->owner;
-
+    const FileSystem* fs = vnode->owner;
     const FAT32Ctx* ctx = FAT32_CTX(fs);
 
     const MountableBlockDevice* part = ctx->blkdev;
@@ -49,23 +49,22 @@ ssize_t fat_read(const VirtualNode* vnode, void* buf, size_t n, off_t off)
         --cluster_offset;
     }
 
-    size_t cluster_alloc_size =
-        (u32)ceil((double)n / ctx->clustersize) * ctx->clustersize;
+    size_t working_size =
+        bytes_align_up64(n + off % ctx->clustersize, ctx->clustersize);
 
     /* Allocate a buffer for reading ALL of our clusters. This can be done a lot
      * better by only allocating a buffer for one cluster, and reading them one
      * at a time... Oh well */
-    u8* clusbuf = kmalloc(cluster_alloc_size);
+    u8* clusbuf = kmalloc(working_size);
     if (!clusbuf)
     {
         kfree(fatbuf);
         return -ENOMEM;
     }
 
-    size_t working_size = n;
     size_t clusbuf_off = 0;
     /* Read multiple clusters if n requires us to do so. */
-    while (working_size >= ctx->clustersize)
+    while (working_size > 0)
     {
         int st = part->read(
             part,
@@ -90,24 +89,6 @@ ssize_t fat_read(const VirtualNode* vnode, void* buf, size_t n, off_t off)
 
         working_size -= ctx->clustersize;
         ++clusbuf_off;
-    }
-
-    /* If the above loop didn't run, or we are still left with some data, read
-     * another cluster */
-    if (working_size > 0)
-    {
-        int st = part->read(
-            part,
-            fat_cluster_to_sector(cluster, ctx),
-            ctx->sectors_per_cluster,
-            clusbuf + clusbuf_off * ctx->clustersize);
-
-        if (st < 0)
-        {
-            kfree(clusbuf);
-            kfree(fatbuf);
-            return st;
-        }
     }
 
     user_copy_to(buf, clusbuf + off, n);
