@@ -106,7 +106,33 @@ user_copy_from:
 
     # Everything was fine
     xor %eax, %eax
-    jmp user_access_end   
+    jmp user_access_end
+
+.global user_strnlen
+.type user_strnlen, @function
+user_strnlen:
+    push %ebp
+    mov %esp, %ebp
+    push %ebx
+
+    xor %ecx, %ecx
+    movl 0x8(%ebp), %ebx # Get str from stack
+
+1:
+    movl (%ebx), %edx
+
+    # End early if we hit the null terminator
+    cmp $0, %dl
+    je 2f
+
+    inc %ebx
+    inc %ecx
+    cmp 0xc(%ebp), %ecx
+    jl 1b
+
+2:
+    mov %ecx, %eax
+    jmp user_access_end
 
 .section .text
 .global user_jump2user_arch
