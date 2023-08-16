@@ -7,10 +7,8 @@
 #define _DXGMX_FS_FS_H
 
 #include <dxgmx/fs/vnode.h>
-#include <dxgmx/storage/blkdev.h>
 #include <dxgmx/types.h>
 #include <dxgmx/utils/linkedlist.h>
-#include <posix/sys/types.h>
 
 struct S_FileSystemDriver;
 

@@ -12,9 +12,8 @@
  * and some helper functions that I ripped off unix spec.
  */
 
+#include <dxgmx/posix/time.h>
 #include <dxgmx/types.h>
-#include <posix/time.h>
-#include <stddef.h>
 
 #define CLOCKS_PER_SEC 1000000
 

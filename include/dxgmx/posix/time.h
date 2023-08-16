@@ -6,7 +6,7 @@
 #ifndef _DXGMX_POSIX_TIME_H
 #define _DXGMX_POSIX_TIME_H
 
-#include <posix/sys/types.h>
+#include <dxgmx/posix/sys/types.h>
 
 struct timespec
 {

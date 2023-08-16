@@ -18,7 +18,6 @@
 #include <dxgmx/storage/blkdevm.h>
 #include <dxgmx/string.h>
 #include <dxgmx/todo.h>
-#include <posix/sys/stat.h>
 
 #define KLOGF_PREFIX "fatfs: "
 

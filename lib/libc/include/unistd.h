@@ -2,7 +2,7 @@
 #ifndef _UNISTD_H
 #define _UNISTD_H 1
 
-#include <dxgmx/unistd_defs.h>
+#include <dxgmx/posix/unistd.h>
 #include <stddef.h>
 #include <sys/types.h>
 

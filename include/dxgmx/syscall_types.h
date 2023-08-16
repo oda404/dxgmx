@@ -6,11 +6,7 @@
 #ifndef _DXGMX_SYSCALL_TYPES_H
 #define _DXGMX_SYSCALL_TYPES_H
 
-#ifdef _KERNEL
-#include <dxgmx/types.h>
-#else
-#include <dxgmx/sys/types_defs.h>
-#endif
+#include <dxgmx/posix/sys/types.h>
 
 typedef size_t syscall_t;
 typedef size_t syscall_arg_t;

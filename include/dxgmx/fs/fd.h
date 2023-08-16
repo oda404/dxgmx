@@ -7,7 +7,7 @@
 #define _DXGMX_FS_FD_H
 
 #include <dxgmx/fs/vnode.h>
-#include <posix/sys/types.h>
+#include <dxgmx/types.h>
 
 /* Global file descriptor. A process only holds an int that it gives to the vfs
  * to find the global file descriptor I.E. this */

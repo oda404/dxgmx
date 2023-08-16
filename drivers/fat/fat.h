@@ -11,8 +11,9 @@
 #include <dxgmx/assert.h>
 #include <dxgmx/compiler_attrs.h>
 #include <dxgmx/fs/fs.h>
+#include <dxgmx/posix/sys/stat.h>
+#include <dxgmx/storage/blkdev.h>
 #include <dxgmx/types.h>
-#include <posix/sys/stat.h>
 
 /* Fat files don't support permissions so they are all RWX R-X R-X, user, group,
  * others */

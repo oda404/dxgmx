@@ -11,13 +11,13 @@
 #include <dxgmx/kmalloc.h>
 #include <dxgmx/math.h>
 #include <dxgmx/module.h>
+#include <dxgmx/posix/sys/stat.h>
 #include <dxgmx/ramfs.h>
 #include <dxgmx/storage/blkdev.h>
 #include <dxgmx/string.h>
 #include <dxgmx/todo.h>
 #include <dxgmx/types.h>
 #include <dxgmx/user.h>
-#include <posix/sys/stat.h>
 
 #define KLOGF_PREFIX "ramfs: "
 #define RAMFS_DIR_MODE                                                         \

@@ -8,7 +8,7 @@
 
 #include <dxgmx/fs/fd.h>
 #include <dxgmx/mem/mm.h>
-#include <posix/sys/types.h>
+#include <dxgmx/types.h>
 
 typedef int fd_t;
 

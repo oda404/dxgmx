@@ -7,7 +7,6 @@
 #define _DXGMX_FS_VNODE_H
 
 #include <dxgmx/types.h>
-#include <posix/sys/types.h>
 
 struct S_FileSystem;
 struct S_VirtualNodeOperations;

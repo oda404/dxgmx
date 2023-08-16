@@ -7,7 +7,7 @@
 #define _DXGMX_TYPES_H
 
 #include <dxgmx/err_or.h>
-#include <posix/sys/types.h>
+#include <dxgmx/posix/sys/types.h>
 
 #define NULL ((void*)0)
 

@@ -4,7 +4,6 @@
 
 #include <dxgmx/fs/vfs.h>
 #include <dxgmx/types.h>
-#include <posix/sys/types.h>
 
 typedef int devfs_entry_t;
 

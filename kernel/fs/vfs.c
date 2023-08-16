@@ -16,15 +16,16 @@
 #include <dxgmx/kmalloc.h>
 #include <dxgmx/limits.h>
 #include <dxgmx/panic.h>
+#include <dxgmx/posix/sys/stat.h>
 #include <dxgmx/proc/procm.h>
 #include <dxgmx/sched/sched.h>
 #include <dxgmx/stdio.h>
 #include <dxgmx/string.h>
 #include <dxgmx/todo.h>
+#include <dxgmx/types.h>
 #include <dxgmx/user.h>
 #include <dxgmx/utils/bitwise.h>
 #include <dxgmx/utils/hashtable.h>
-#include <posix/sys/stat.h>
 
 #define KLOGF_PREFIX "vfs: "
 

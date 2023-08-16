@@ -9,7 +9,7 @@
 #include <dxgmx/panic.h>
 #include <dxgmx/syscall_defs.h>
 #include <dxgmx/syscalls.h>
-#include <posix/sys/types.h>
+#include <dxgmx/types.h>
 #include <stdarg.h>
 
 static _RO_POST_INIT SyscallEntry* g_syscall_entries;

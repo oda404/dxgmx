@@ -5,7 +5,7 @@
 
 #ifdef CONFIG_DEVFS
 #include <dxgmx/devfs.h>
-#include <posix/sys/stat.h>
+#include <dxgmx/posix/sys/stat.h>
 #endif
 #include <dxgmx/assert.h>
 #include <dxgmx/errno.h>

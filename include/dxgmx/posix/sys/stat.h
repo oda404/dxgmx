@@ -6,8 +6,8 @@
 #ifndef _DXGMX_POSIX_SYS_STAT_H
 #define _DXGMX_POSIX_SYS_STAT_H
 
-#include <posix/sys/types.h>
-#include <posix/time.h>
+#include <dxgmx/posix/sys/types.h>
+#include <dxgmx/posix/time.h>
 
 #define S_IXOTH 1
 #define S_IWOTH 2

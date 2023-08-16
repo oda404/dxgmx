@@ -6,11 +6,7 @@
 #ifndef _DXGMX_FB_USER_H
 #define _DXGMX_FB_USER_H
 
-#ifdef _KERNEL
-#include <posix/sys/types.h>
-#else
-#include <sys/types.h>
-#endif
+#include <dxgmx/posix/sys/types.h>
 
 #define FBIO_GET_INFO 0xFF01
 typedef struct FBInfo

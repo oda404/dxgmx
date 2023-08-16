@@ -8,7 +8,6 @@
 
 #include <dxgmx/proc/proc.h>
 #include <dxgmx/proc/proc_limits.h>
-#include <posix/sys/types.h>
 
 /* Load the 'first' PID 1 into memory and have it on standby, waiting for the
  * scheduler to start running. This is only a stub for the actual PID 1. This is
