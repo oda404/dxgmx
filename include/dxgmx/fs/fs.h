@@ -39,6 +39,8 @@ typedef struct S_FileSystem
     LinkedList vnode_ll;
 } FileSystem;
 
+DEFINE_ERR_OR_PTR(FileSystem);
+
 /**
  * Defines the operations of a filesystem driver implementation.
  * Any arguments passed to any functions MAY be null, unless otherwise

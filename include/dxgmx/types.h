@@ -37,5 +37,6 @@ typedef __UINTPTR_TYPE__ ptr;
     for (__typeof__(arr) elem = arr; elem < arr + count; ++elem)
 
 DEFINE_ERR_OR(ptr);
+DEFINE_ERR_OR_PTR(char);
 
 #endif //!_DXGMX_TYPES_H

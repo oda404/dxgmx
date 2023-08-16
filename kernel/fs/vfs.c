@@ -28,6 +28,8 @@
 
 #define KLOGF_PREFIX "vfs: "
 
+#define VFS_TYPE_MAX 32
+
 /**
  * Global file descriptor table.
  */
@@ -105,32 +107,38 @@ static int vfs_free_file_descriptor(FileDescriptor* fd)
  * A FileSystem* with mntsrc, mntpoint and args set on success.
  * NULL on out of memory.
  */
-static FileSystem*
-vfs_new_fs(const char* mntsrc, const char* mntpoint, const char* args)
+static ERR_OR_PTR(FileSystem)
+    vfs_new_fs(const char* mntsrc, const char* mntpoint, const char* args)
 {
     FileSystem* newfs = kcalloc(sizeof(FileSystem));
     if (!newfs)
-        return NULL;
+        return ERR_PTR(FileSystem, -ENOMEM);
 
-    newfs->mntsrc = strdup(mntsrc);
-    if (!newfs->mntsrc)
+    ERR_OR_PTR(char) user_res = user_strndup(mntsrc, PATH_MAX);
+    if (user_res.error)
         goto out_err;
+    newfs->mntsrc = user_res.value;
 
-    newfs->mntpoint = strdup(mntpoint);
-    if (!newfs->mntpoint)
+    user_res = user_strndup(mntpoint, PATH_MAX);
+    if (user_res.error)
         goto out_err;
+    newfs->mntpoint = user_res.value;
 
     if (args)
     {
-        newfs->args = strdup(args);
-        if (!newfs->args)
+        user_res = user_strndup(args, PATH_MAX);
+        if (user_res.error)
             goto out_err;
+        newfs->args = user_res.value;
     }
 
     if (linkedlist_add(newfs, &g_filesystems_ll) < 0)
+    {
+        user_res.error = -ENOMEM;
         goto out_err;
+    }
 
-    return newfs;
+    return VALUE_PTR(FileSystem, newfs);
 
 out_err:
     if (newfs->mntsrc)
@@ -143,8 +151,7 @@ out_err:
         kfree((void*)newfs->args);
 
     kfree(newfs);
-
-    return NULL;
+    return ERR_PTR(FileSystem, user_res.error);
 }
 
 static int vfs_free_fs(FileSystem* fs)
@@ -289,30 +296,23 @@ int vfs_mount(
     const char* _USERPTR args,
     u32 flags)
 {
-    FileSystem* fs = NULL;
-    {
-        char safe_src[PATH_MAX];
-        char safe_dest[PATH_MAX];
-        char safe_args[PATH_MAX];
-        if (user_copy_str_from(src, safe_src, PATH_MAX) < 0)
-            return -EFAULT;
-        if (user_copy_str_from(dest, safe_dest, PATH_MAX) < 0)
-            return -EFAULT;
-        if (args && user_copy_str_from(args, safe_args, PATH_MAX) < 0)
-            return -EFAULT;
+    ERR_OR_PTR(FileSystem) fsres = vfs_new_fs(src, dest, args);
+    if (fsres.error)
+        return fsres.error;
 
-        fs = vfs_new_fs(safe_src, safe_dest, args ? safe_args : NULL);
-        if (!fs)
-            return -ENOMEM;
-    }
-
+    FileSystem* fs = fsres.value;
     fs->flags = flags;
 
-    char safe_type[PATH_MAX];
-    if (type && user_copy_str_from(type, safe_type, PATH_MAX) < 0)
+    char* safe_type = NULL;
+    if (type)
     {
-        vfs_free_fs(fs);
-        return -EFAULT;
+        ERR_OR_PTR(char) user_res = user_strndup(type, VFS_TYPE_MAX);
+        if (user_res.error)
+        {
+            vfs_free_fs(fs);
+            return user_res.error;
+        }
+        safe_type = user_res.value;
     }
 
     int st = -ENOENT;
@@ -323,7 +323,7 @@ int vfs_mount(
         st = -ENOENT;
 
         /* Look for and probe the corresponding driver if type is not NULL. */
-        if (type)
+        if (safe_type)
         {
             if (strcmp((*driver)->name, safe_type) == 0)
             {
@@ -347,6 +347,9 @@ int vfs_mount(
 out:
     if (st < 0)
         vfs_free_fs(fs);
+
+    if (safe_type)
+        kfree(safe_type);
 
     return st;
 }
