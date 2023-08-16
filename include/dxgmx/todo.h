@@ -15,13 +15,13 @@
         "Hit TODO in \"%s\" at %s():%d.",                                      \
         __FILE__,                                                              \
         __FUNCTION__,                                                          \
-        __LINE__);
+        __LINE__)
 
 #define TODO_FATAL()                                                           \
     panic(                                                                     \
         "Hit TODO_FATAL in \"%s\" at %s():%d.",                                \
         __FILE__,                                                              \
         __FUNCTION__,                                                          \
-        __LINE__);
+        __LINE__)
 
 #endif //_DXGMX_TODO_H
