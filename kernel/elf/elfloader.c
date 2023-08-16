@@ -1,5 +1,5 @@
 /**
- * Copyright 2022 Alexandru Olaru.
+ * Copyright 2023 Alexandru Olaru.
  * Distributed under the MIT license.
  */
 
@@ -12,6 +12,23 @@
 #include <dxgmx/string.h>
 #include <dxgmx/todo.h>
 #include <dxgmx/utils/bytes.h>
+
+static int
+elfloader_copy_section_from_file(int fd, Elf32Phdr* phdr, Process* actingproc)
+{
+    off_t off = vfs_lseek(fd, phdr->offset, SEEK_SET, actingproc);
+    if (off < 0)
+        return -EINVAL;
+
+    /* Read section into buf. */
+    ssize_t read = vfs_read(fd, (void*)phdr->vaddr, phdr->filesize, actingproc);
+    if (read < 0)
+        return read;
+    else if ((size_t)read < phdr->filesize)
+        return -EINVAL;
+
+    return 0;
+}
 
 static int
 elfloader_load_from_file32(fd_t fd, Process* actingproc, Process* targetproc)
@@ -38,12 +55,11 @@ elfloader_load_from_file32(fd_t fd, Process* actingproc, Process* targetproc)
         if (phdr->type != PT_LOAD)
             continue;
 
-        /* Calculate stuff */
-        /* Let's hope phdr->align is right */
-        const ptr aligned_start = bytes_align_down64(phdr->vaddr, phdr->align);
-
+        const ptr aligned_start = bytes_align_down64(phdr->vaddr, PAGESIZE);
         const size_t pagespan =
-            bytes_align_up64(phdr->memsize, PAGESIZE) / PAGESIZE;
+            bytes_align_up64(
+                phdr->memsize + (phdr->vaddr - aligned_start), PAGESIZE) /
+            PAGESIZE;
 
         /* Map pages */
         for (size_t i = 0; i < pagespan; ++i)
@@ -54,7 +70,6 @@ elfloader_load_from_file32(fd_t fd, Process* actingproc, Process* targetproc)
             u16 flags = (phdr->flags & PAGE_ACCESS_MODE) | PAGE_W;
 
             st = mm_new_user_page(vaddr, flags, &targetproc->paging_struct);
-
             if (st < 0)
             {
                 kfree(phdrs32);
@@ -62,47 +77,21 @@ elfloader_load_from_file32(fd_t fd, Process* actingproc, Process* targetproc)
             }
         }
 
-        /* Allocate stuff for reading */
-        u8* buf = kmalloc(phdr->filesize);
-        if (!buf)
+        if (phdr->filesize)
         {
-            kfree(phdrs32);
-            return -ENOMEM;
+            st = elfloader_copy_section_from_file(fd, phdr, actingproc);
+            if (st < 0)
+            {
+                kfree(phdrs32);
+                return st;
+            }
         }
-
-        /* Seek to where we need to be */
-        off_t off = vfs_lseek(fd, phdr->offset, SEEK_SET, actingproc);
-        if (off < 0)
-        {
-            kfree(buf);
-            kfree(phdrs32);
-            return -EINVAL;
-        }
-
-        /* Read section into buf. */
-        ssize_t read = vfs_read(fd, buf, phdr->filesize, actingproc);
-        if (read < 0)
-        {
-            kfree(buf);
-            kfree(phdrs32);
-            return read;
-        }
-        else if ((size_t)read < phdr->filesize)
-        {
-            kfree(buf);
-            kfree(phdrs32);
-            return -EINVAL;
-        }
-
-        /* Rawdoggin it */
-        memcpy((void*)phdr->vaddr, buf, phdr->filesize);
 
         /* If memsize > filesize we pad the rest of the memory with zeros. */
         if (phdr->memsize > phdr->filesize)
         {
             void* start = (void*)(phdr->vaddr + phdr->filesize);
-            size_t size = phdr->memsize - phdr->filesize;
-            memset(start, 0, size);
+            memset(start, 0, phdr->memsize - phdr->filesize);
         }
 
         /* Remove the previously possibly forced PAGE_W and set PAGE_USER. */
@@ -114,8 +103,6 @@ elfloader_load_from_file32(fd_t fd, Process* actingproc, Process* targetproc)
             st = mm_set_page_flags(vaddr, flags, &targetproc->paging_struct);
             ASSERT(st == 0);
         }
-
-        kfree(buf);
     }
 
     targetproc->inst_ptr = ehdr32.entry;
@@ -124,14 +111,9 @@ elfloader_load_from_file32(fd_t fd, Process* actingproc, Process* targetproc)
     return 0;
 }
 
-int elfloader_validate_file(fd_t fd, Process* actingproc)
+static int elfloader_validate_file(ElfGenericEhdr* ehdr)
 {
-    ElfGenericEhdr ehdr;
-    int st = elf_read_generic_ehdr(fd, actingproc, &ehdr);
-    if (st < 0)
-        return st;
-
-    if (ehdr.type != ET_EXEC)
+    if (ehdr->type != ET_EXEC)
         return -ENOEXEC;
 
     return 0;
@@ -144,21 +126,19 @@ int elfloader_load_from_file(fd_t fd, Process* actingproc, Process* targetproc)
     if (st < 0)
         return st;
 
+    st = elfloader_validate_file(&ehdr);
+    if (st < 0)
+        return st;
+
     /* Map target process' paging struct. */
     mm_load_paging_struct(&targetproc->paging_struct);
 
     if (ehdr.ident[EI_CLASS] == ELFCLASS32)
-    {
         st = elfloader_load_from_file32(fd, actingproc, targetproc);
-    }
     else if (ehdr.ident[EI_CLASS] == ELFCLASS64)
-    {
         TODO_FATAL();
-    }
     else
-    {
         st = -EINVAL;
-    }
 
     /* Go back to the acting process' paging struct.
     This is needed for now since if we fail, we will be dropped back into the
