@@ -140,7 +140,10 @@ static int procm_load_proc(
 
     int st = elfloader_validate_file(fd, actingproc);
     if (st < 0)
+    {
+        vfs_close(fd, actingproc);
         return st;
+    }
 
     st = elfloader_load_from_file(fd, actingproc, targetproc);
 
