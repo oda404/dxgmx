@@ -53,6 +53,9 @@ state of 1048576 4KiB pages which hold a total of 4GiB of memory. */
 static u64 g_pgframe_pool[PAGEFRAME_POOL_SIZE];
 static size_t g_pgframes_cnt = 0;
 
+static size_t g_pgframes_user_cursor = PAGEFRAME_POOL_SIZE - 1;
+static i8 g_pgframes_user_subcursor = 63;
+
 /* Adds any complete PAGE_FRAME_SIZE sized frames from the given area. */
 static void pageframe_add_available(const MemoryRegion* region)
 {
@@ -85,22 +88,21 @@ _INIT int falloc_init()
 /* Returns a free page's address */
 ptr falloc_one_user()
 {
-    // TODO: implement some sort of cache so we don't iterate over the whole
-    // pool everytime.
-
-    for (ssize_t i = PAGEFRAME_POOL_SIZE - 1; i >= 0; --i)
+    for (; g_pgframes_user_cursor >= 1; --g_pgframes_user_cursor)
     {
-        u64* pageframe_pool = &g_pgframe_pool[i];
+        u64* pageframe_pool = &g_pgframe_pool[g_pgframes_user_cursor];
 
-        for (i8 k = 63; k >= 0; --k)
+        for (; g_pgframes_user_subcursor >= 0; --g_pgframes_user_subcursor)
         {
-            if (!((*pageframe_pool >> k) & 1))
+            if (!((*pageframe_pool >> g_pgframes_user_subcursor) & 1))
             {
-                bw_set(pageframe_pool, k);
+                bw_set(pageframe_pool, g_pgframes_user_subcursor);
                 --g_pgframes_cnt;
-                return i * 64 * PAGESIZE + k * PAGESIZE;
+                return g_pgframes_user_cursor * 64 * PAGESIZE +
+                       g_pgframes_user_subcursor * PAGESIZE;
             }
         }
+        g_pgframes_user_subcursor = 63;
     }
 
     return 0;
