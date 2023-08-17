@@ -227,7 +227,10 @@ static int fat_init(FileSystem* fs)
         return st;
     }
 
-    st = fat_enumerate_and_cache_dir(fs_lookup_vnode("/", fs), fs);
+    ERR_OR_PTR(VirtualNode) vnode_res = fs_lookup_vnode("/", fs);
+    ASSERT(vnode_res.value);
+
+    st = fat_enumerate_and_cache_dir(vnode_res.value, fs);
     if (st < 0)
     {
         fat_destroy(fs);

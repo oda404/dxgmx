@@ -130,14 +130,24 @@ int fs_free_all_cached_vnodes(FileSystem* fs)
     return 0;
 }
 
-VirtualNode* fs_lookup_vnode(const char* path, FileSystem* fs)
+ERR_OR_PTR(VirtualNode) fs_lookup_vnode(const char* path, FileSystem* fs)
 {
     char* tmp = __builtin_alloca(strlen(path) + 1);
     strcpy(tmp, path);
 
-    path_make_canonical(tmp);
-    path_make_relative(tmp, fs);
-    return fs_lookup_vnode_cached_relative(tmp, fs);
+    int st = path_make_canonical(tmp);
+    if (st < 0)
+        return ERR_PTR(VirtualNode, st);
+
+    st = path_make_relative(tmp, fs);
+    if (st < 0)
+        return ERR_PTR(VirtualNode, st);
+
+    VirtualNode* vnode = fs_lookup_vnode_cached_relative(tmp, fs);
+    if (!vnode)
+        return ERR_PTR(VirtualNode, -ENOENT);
+
+    return VALUE_PTR(VirtualNode, vnode);
 }
 
 VirtualNode* fs_get_dir_vnode_for_file(const char* path, FileSystem* fs)

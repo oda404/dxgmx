@@ -443,8 +443,8 @@ int vfs_open(const char* _USERPTR path, int flags, mode_t mode, Process* proc)
     FileSystem* fs = vfs_topmost_fs_for_path(safe_path);
     ASSERT(fs);
 
-    VirtualNode* vnode = fs_lookup_vnode(safe_path, fs);
-    if (!vnode)
+    ERR_OR_PTR(VirtualNode) vnode_res = fs_lookup_vnode(safe_path, fs);
+    if (vnode_res.error == -ENOENT)
     {
         /* Try to create it */
         if (flags & O_CREAT)
@@ -455,11 +455,15 @@ int vfs_open(const char* _USERPTR path, int flags, mode_t mode, Process* proc)
                 return tmp.error;
 
             /* Try again, this time it should work */
-            vnode = fs_lookup_vnode(safe_path, fs);
-            ASSERT(vnode);
+            vnode_res = fs_lookup_vnode(safe_path, fs);
+            ASSERT(vnode_res.value);
         }
 
         return -ENOENT;
+    }
+    else if (vnode_res.error < 0)
+    {
+        return vnode_res.error;
     }
 
     /* Create a new system-wide file descriptor */
@@ -484,7 +488,7 @@ int vfs_open(const char* _USERPTR path, int flags, mode_t mode, Process* proc)
     sysfd->pid = proc->pid;
     sysfd->off = 0;
     sysfd->flags = flags;
-    sysfd->vnode = vnode;
+    sysfd->vnode = vnode_res.value;
 
     return sysfd->fd;
 }

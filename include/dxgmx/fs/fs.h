@@ -144,10 +144,12 @@ int fs_free_all_cached_vnodes(FileSystem* fs);
  * 'fs' The filesystem to scan.
  *
  * Returns:
- * A VirtualNode* on success.
- * NULL if no vnode has been found.
+ * ERR_OR_PTR(VirtualNode)
+ * value: A VirtualNode*
+ * error:
+ *  -ENOENT if no vnode was found
  */
-VirtualNode* fs_lookup_vnode(const char* path, FileSystem* fs);
+ERR_OR_PTR(VirtualNode) fs_lookup_vnode(const char* path, FileSystem* fs);
 
 VirtualNode* fs_ino_to_vnode(ino_t ino, FileSystem* fs);
 

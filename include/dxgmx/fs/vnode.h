@@ -6,6 +6,7 @@
 #ifndef _DXGMX_FS_VNODE_H
 #define _DXGMX_FS_VNODE_H
 
+#include <dxgmx/err_or.h>
 #include <dxgmx/types.h>
 
 struct S_FileSystem;
@@ -44,6 +45,8 @@ typedef struct S_VirtualNode
 
     void* data;
 } VirtualNode;
+
+DEFINE_ERR_OR_PTR(VirtualNode);
 
 /**
  * Operations performed on a vnode. Each member of this struct is a function
