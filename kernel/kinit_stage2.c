@@ -73,9 +73,10 @@ _ATTR_NORETURN void kinit_stage2()
 
     syscalls_init();
 
+    procm_spawn_kernel_proc();
+
     vfs_init();
 
-    procm_spawn_kernel_proc();
     procm_spawn_init();
 
     /* Let it rip */
