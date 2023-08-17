@@ -1,5 +1,5 @@
 /**
- * Copyright 2022 Alexandru Olaru.
+ * Copyright 2023 Alexandru Olaru.
  * Distributed under the MIT license.
  */
 
@@ -16,11 +16,11 @@ void user_jump2user(ptr instrptr, ptr stackptr)
 ERR_OR_PTR(char) user_strndup(const void* _USERPTR str, size_t maxn)
 {
     ssize_t len = user_strnlen(str, maxn);
-    if (len == maxn)
-        return ERR_PTR(char, -ENAMETOOLONG);
-
     if (len < 0)
         return ERR_PTR(char, len);
+
+    if ((size_t)len == maxn)
+        return ERR_PTR(char, -ENAMETOOLONG);
 
     void* dupstr = kmalloc(len + 1);
     if (!dupstr)
