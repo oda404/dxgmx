@@ -4,8 +4,10 @@
 #include <dxgmx/fs/vfs.h>
 #include <dxgmx/klog.h>
 #include <dxgmx/kmalloc.h>
+#include <dxgmx/limits.h>
 #include <dxgmx/module.h>
 #include <dxgmx/ramfs.h>
+#include <dxgmx/stdio.h>
 #include <dxgmx/string.h>
 
 #define KLOGF_PREFIX "devfs: "
@@ -80,8 +82,18 @@ static int devfs_init(FileSystem* fs)
     {
         DevFSEntry* entry = &g_registered_entries[i];
 
+        size_t tmpstr_size = strlen(fs->mntpoint) + 1 + strlen(entry->name) + 1;
+        if (tmpstr_size > PATH_MAX)
+        {
+            KLOGF(ERR, "Entry idx: %u is bigger than PATH_MAX!", i);
+            continue;
+        }
+
+        char* tmpstr = __builtin_alloca(tmpstr_size);
+        sprintf(tmpstr, "%s/%s", fs->mntpoint, entry->name);
+
         ERR_OR(ino_t)
-        res = fs_mkfile(entry->name, entry->mode, entry->uid, entry->gid, fs);
+        res = fs_mkfile(tmpstr, entry->mode, entry->uid, entry->gid, fs);
 
         if (res.error < 0)
         {
