@@ -186,11 +186,18 @@ fs_mkfile(const char* path, mode_t mode, uid_t uid, gid_t gid, FileSystem* fs)
     char* tmp = __builtin_alloca(strlen(path) + 1);
     strcpy(tmp, path);
 
-    path_make_canonical(tmp);
-    path_make_relative(tmp, fs);
-    VirtualNode* parent = fs_get_dir_vnode_for_file(tmp, fs);
-    path_make_filename(tmp);
+    int st = path_make_canonical(tmp);
+    if (st < 0)
+        return ERR(ino_t, st);
 
-    ERR_OR(ino_t) res = fs->driver->mkfile(parent, tmp, mode, uid, gid, fs);
-    return res;
+    st = path_make_relative(tmp, fs);
+    if (st < 0)
+        return ERR(ino_t, st);
+
+    VirtualNode* parent = fs_get_dir_vnode_for_file(tmp, fs);
+    st = path_make_filename(tmp);
+    if (st < 0)
+        return ERR(ino_t, st);
+
+    return fs->driver->mkfile(parent, tmp, mode, uid, gid, fs);
 }
