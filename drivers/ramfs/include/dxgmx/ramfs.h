@@ -35,6 +35,8 @@ ramfs_mkfile(
     gid_t gid,
     FileSystem* fs);
 
+int ramfs_rmnode(VirtualNode* vnode);
+
 ssize_t ramfs_read(const VirtualNode* vnode, void* buf, size_t n, off_t off);
 int ramfs_ioctl(VirtualNode* vnode, int req, void* data);
 ssize_t ramfs_write(VirtualNode* vnode, const void* buf, size_t n, off_t off);

@@ -90,6 +90,8 @@ typedef struct S_FileSystemDriver
         gid_t gid,
         struct S_FileSystem* fs);
 
+    int (*rmnode)(VirtualNode* vnode);
+
     /* Default operations that performed on this filesystem's vnodes. */
     const VirtualNodeOperations* vnode_ops;
 

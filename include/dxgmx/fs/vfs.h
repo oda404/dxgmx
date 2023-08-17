@@ -1,5 +1,5 @@
 /**
- * Copyright 2022 Alexandru Olaru.
+ * Copyright 2023 Alexandru Olaru.
  * Distributed under the MIT license.
  */
 
@@ -60,6 +60,8 @@ int vfs_register_fs_driver(const FileSystemDriver* driver);
 int vfs_unregister_fs_driver(const FileSystemDriver* driver);
 
 /* File operations */
+
+int vfs_rmfile(const char* path, Process* proc);
 
 /** Open a file on behalf of a process
  * 'path' Path to the file.

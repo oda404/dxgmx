@@ -85,17 +85,24 @@ static int vfs_free_file_descriptor(FileDescriptor* fd)
         fd >= g_sys_fds && fd < g_sys_fds + g_sys_fd_count &&
         (size_t)fd % sizeof(ptr) == 0);
 
+    /* We should have at least one reference */
+    ASSERT(fd->vnode->ref_count > 0);
+    --fd->vnode->ref_count;
+
+    int st = 0;
+    if (fd->vnode->ref_count == 0 && (fd->vnode->flags & VNODE_PENDING_RM))
+        st = fd->vnode->owner->driver->rmnode(fd->vnode);
+
     /**
      * We do not shrink nor shift the array. This is beacause:
      * 1) Files are often opened and closed, shrinking this array every time
      * would cause a lot of overhead
      * 2) This array is indexed by the local file descriptor table of every
-     * process. Shifting the elements in this array would mean messing up those
-     * offsets.
+     * process. Shifting the elements in this array would mean messing up
+     * those offsets.
      */
     memset(fd, 0, sizeof(FileDescriptor));
-
-    return 0;
+    return st;
 }
 
 /**
@@ -429,6 +436,36 @@ int vfs_unregister_fs_driver(const FileSystemDriver* driver)
     return 0;
 }
 
+int vfs_rmfile(const char* _USERPTR path, Process* proc)
+{
+    (void)proc;
+
+    char safe_path[PATH_MAX];
+    int st = user_copy_str_from(path, safe_path, PATH_MAX);
+    if (st < 0)
+        return st;
+
+    if (safe_path[0] != '/')
+        return -EINVAL;
+
+    FileSystem* fs = vfs_topmost_fs_for_path(safe_path);
+    ASSERT(fs);
+
+    ERR_OR_PTR(VirtualNode) vnode_res = fs_lookup_vnode(safe_path, fs);
+    if (vnode_res.error)
+        return vnode_res.error;
+
+    VirtualNode* vnode = vnode_res.value;
+    if (vnode->mode & S_IFDIR)
+        return -EISDIR;
+
+    vnode->flags |= VNODE_PENDING_RM;
+    if (vnode->ref_count == 0)
+        return vnode->owner->driver->rmnode(vnode);
+
+    return 0;
+}
+
 int vfs_open(const char* _USERPTR path, int flags, mode_t mode, Process* proc)
 {
     char safe_path[PATH_MAX];
@@ -489,6 +526,7 @@ int vfs_open(const char* _USERPTR path, int flags, mode_t mode, Process* proc)
     sysfd->off = 0;
     sysfd->flags = flags;
     sysfd->vnode = vnode_res.value;
+    ++sysfd->vnode->ref_count;
 
     return sysfd->fd;
 }
@@ -596,7 +634,6 @@ int vfs_close(fd_t fd, Process* proc)
         return -EINVAL;
 
     ASSERT(idx < g_sys_fd_count);
-
     return vfs_free_file_descriptor(&g_sys_fds[idx]);
 }
 

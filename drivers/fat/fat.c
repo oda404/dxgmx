@@ -272,6 +272,11 @@ static ERR_OR(ino_t) fat_mkfile(
     TODO_FATAL();
 }
 
+static int fat_rmnode(VirtualNode*)
+{
+    TODO_FATAL();
+}
+
 static const VirtualNodeOperations g_fatfs_vnode_ops = {
     .read = fat_read, .write = fat_write, .ioctl = fat_ioctl};
 
@@ -281,6 +286,7 @@ static const FileSystemDriver g_fatfs_driver = {
     .init = fat_init,
     .destroy = fat_destroy,
     .mkfile = fat_mkfile,
+    .rmnode = fat_rmnode,
     .vnode_ops = &g_fatfs_vnode_ops};
 
 static int fatfs_main()

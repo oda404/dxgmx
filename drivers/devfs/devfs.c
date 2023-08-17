@@ -114,6 +114,7 @@ static const FileSystemDriver g_devfs_driver = {
     .init = devfs_init,
     .destroy = devfs_destroy,
     .mkfile = ramfs_mkfile,
+    .rmnode = ramfs_rmnode,
     .vnode_ops = &g_devfs_vnode_ops};
 
 static int devfs_main()

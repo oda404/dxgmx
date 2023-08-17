@@ -152,6 +152,32 @@ ramfs_mkfile(
     return VALUE(ino_t, vnode->n);
 }
 
+int ramfs_rmnode(VirtualNode* vnode)
+{
+    FileSystem* fs = vnode->owner;
+    RamFsMetadata* meta = fs->driver_ctx;
+    ASSERT(meta);
+
+    if (vnode->mode & S_IFDIR)
+    {
+        TODO_FATAL();
+    }
+    else
+    {
+        meta->file_cursor = vnode->n - 1;
+
+        RamFsFileData* filedata = &meta->files[vnode->n - 1];
+        if (filedata->data)
+        {
+            kfree(filedata->data);
+            filedata->data = NULL;
+        }
+        filedata->used = false;
+    }
+
+    return fs_free_cached_vnode(vnode, fs);
+}
+
 ssize_t
 ramfs_read(const VirtualNode* vnode, _USERPTR void* buf, size_t n, off_t off)
 {
@@ -190,6 +216,7 @@ static const FileSystemDriver g_ramfs_driver = {
     .init = ramfs_init,
     .destroy = ramfs_destroy,
     .mkfile = ramfs_mkfile,
+    .rmnode = ramfs_rmnode,
     .vnode_ops = &g_ramfs_vnode_ops};
 
 static int ramfs_main()

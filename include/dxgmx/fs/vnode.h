@@ -12,6 +12,10 @@
 struct S_FileSystem;
 struct S_VirtualNodeOperations;
 
+/* Vnode is pending removal, and will be removed once all references to it are
+ * closed. */
+#define VNODE_PENDING_RM (1 << 0)
+
 /* Virtual node representing an object in the vfs, be it a file, dir, link,
  * whatever. Note that you should be careful when allocating and storing a bunch
  * of VirtualNodes for a filesystem, as VirtualNode*s are stored as
@@ -25,15 +29,21 @@ typedef struct S_VirtualNode
 {
     /* The name of the file. */
     char* name;
+
     /* Arbitrarily unique number for the 'owner' filesystem. May
     or may not mean something to the underlying filesystem. */
     ino_t n;
+
     /* The size of the vnode in bytes. */
     size_t size;
+
     /* Access mode. */
     mode_t mode;
     uid_t uid;
     gid_t gid;
+
+    size_t ref_count;
+    u8 flags;
 
     /* The parent directory VirtualNode, NULL for / */
     const struct S_VirtualNode* parent;
