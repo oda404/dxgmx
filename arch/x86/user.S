@@ -27,6 +27,9 @@ user_copy_to:
 
     # We only do 1 byte at a time... oh well
 1:
+    cmp 0x10(%ebp), %ecx
+    jae 2f
+
     # Copy, maybe faulting
     mov (%edx), %eax
     movb %al, (%ebx)
@@ -34,9 +37,9 @@ user_copy_to:
     inc %ecx
     inc %ebx
     inc %edx
-    cmp 0x10(%ebp), %ecx
-    jl 1b
+    jmp 1b
 
+2:
     # Everything was fine
     xor %eax, %eax
     jmp user_access_end   
@@ -53,6 +56,10 @@ user_copy_str_from:
     push %ebp
     mov %esp, %ebp
     push %ebx
+
+    # End right now if maxn is 0
+    cmpl $0, 0x10(%ebp)
+    je loop_end
 
     xor %ecx, %ecx
     movl 0x8(%ebp), %ebx # Get src from stack
@@ -94,6 +101,9 @@ user_copy_from:
 
     # We only do 1 byte at a time... oh well
 1:
+    cmp 0x10(%ebp), %ecx
+    jae 2f
+
     # Copy, maybe faulting
     mov (%ebx), %eax
     movb %al, (%edx)
@@ -101,9 +111,9 @@ user_copy_from:
     inc %ecx
     inc %ebx
     inc %edx
-    cmp 0x10(%ebp), %ecx
-    jl 1b
+    jmp 1b
 
+2:
     # Everything was fine
     xor %eax, %eax
     jmp user_access_end
@@ -119,6 +129,10 @@ user_strnlen:
     movl 0x8(%ebp), %ebx # Get str from stack
 
 1:
+    # Finish if we hit the maxn
+    cmp 0xc(%ebp), %ecx
+    jae 2f
+
     movl (%ebx), %edx
 
     # End early if we hit the null terminator
@@ -127,8 +141,7 @@ user_strnlen:
 
     inc %ebx
     inc %ecx
-    cmp 0xc(%ebp), %ecx
-    jl 1b
+    jmp 1b
 
 2:
     mov %ecx, %eax
