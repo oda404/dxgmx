@@ -11,6 +11,19 @@
 static KLogLevel g_loglvl;
 static bool g_show_ts;
 
+#ifdef CONFIG_KLOG_COLOR
+static const char* g_klog_lvl_colors[] = {
+    [QUIET] = "",
+    [FATAL] = "\x1b[1;31;49m",
+    [ERR] = "\x1b[0;31;49m",
+    [WARN] = "\x1b[0;33;49m",
+    [INFO] = "\x1b[0;39;49m",
+    [DEBUG] = "\x1b[0;36;49m",
+};
+static const char* g_klog_clear_color = "\x1b[0m";
+static const char* g_klog_ts_color = "\x1b[0;37;49m";
+#endif
+
 _INIT int klog_init(KLogLevel lvl)
 {
     klog_set_max_level(lvl);
@@ -37,9 +50,22 @@ size_t kvlog(KLogLevel lvl, const char* fmt, va_list list)
 
     size_t written = 0;
     if (g_show_ts)
+    {
+#ifdef CONFIG_KLOG_COLOR
+        written += kprintf("%s", g_klog_ts_color);
+#endif
         written += kprintf("[%11.6f] ", time);
+    }
+
+#ifdef CONFIG_KLOG_COLOR
+    written += kprintf("%s", g_klog_lvl_colors[lvl]);
+#endif
 
     written += kvprintf(fmt, list);
+
+#ifdef CONFIG_KLOG_COLOR
+    written += kprintf("%s", g_klog_clear_color);
+#endif
     return written;
 }
 

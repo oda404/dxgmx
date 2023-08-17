@@ -43,6 +43,59 @@ static int kstdio_validate_sink(KOutputSink* sink)
     return 0;
 }
 
+static size_t kstdio_parse_ansi_sequence(
+    const char* str, size_t n, KOutputColor* fg, KOutputColor* bg)
+{
+    bool next_mode = false;
+    bool next_fg = false;
+    bool next_bg = false;
+
+    int nn = 0;
+
+    for (size_t i = 1; i < n; ++i)
+    {
+        char c = str[i];
+        if (c == '[')
+        {
+            next_mode = true;
+            continue;
+        }
+        else if (c == ';')
+        {
+            if (next_mode)
+            {
+                nn = 0;
+                next_fg = true;
+                next_mode = false;
+            }
+            else if (next_fg)
+            {
+                if (nn == 31)
+                    *fg = KOUTPUT_RED;
+                else if (nn == 33)
+                    *fg = KOUTPUT_YELLOW;
+                else if (nn == 39)
+                    *fg = KOUTPUT_WHITE;
+                else if (nn == 36)
+                    *fg = KOUTPUT_CYAN;
+                nn = 0;
+                next_bg = true;
+                next_fg = false;
+            }
+        }
+        else if (c == 'm')
+        {
+            return i;
+        }
+        else
+        {
+            nn = nn * 10 + (c - '0');
+        }
+    }
+
+    return 0;
+}
+
 int kstdio_register_sink(KOutputSink* sink)
 {
     if (kstdio_validate_sink(sink) < 0)
@@ -106,6 +159,18 @@ size_t kstdio_write(const char* buf, size_t n)
     {
         switch (buf[i])
         {
+        case '\x1b':
+        {
+            KOutputColor fg, bg;
+            i += kstdio_parse_ansi_sequence(&buf[i], n - i, &fg, &bg);
+            FOR_EACH_SINK_OF_TYPE (KOUTPUT_TERMINAL, sink)
+            {
+                (*sink)->fgcolor = fg;
+                (*sink)->bgcolor = bg;
+            }
+            break;
+        }
+
         case '\n':
             FOR_EACH_SINK_OF_TYPE (KOUTPUT_TERMINAL, sink)
                 (*sink)->newline(*sink);
