@@ -11,6 +11,7 @@
 #include <dxgmx/types.h>
 
 typedef int fd_t;
+DEFINE_ERR_OR(fd_t);
 
 /* Structure representing a process. */
 typedef struct S_Process

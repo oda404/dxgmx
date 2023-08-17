@@ -31,8 +31,32 @@ static int ramfs_enlarge_files(size_t newcount, RamFsMetadata* meta)
         return -ENOMEM;
 
     meta->files = tmp;
+
+    memset(
+        meta->files + meta->file_capacity,
+        0,
+        (newcount - meta->file_capacity) * sizeof(RamFsFileData));
+
     meta->file_capacity = newcount;
     return 0;
+}
+
+static ERR_OR(fd_t) ramfs_find_next_avail_fd(RamFsMetadata* meta)
+{
+    while (meta->file_cursor < meta->file_capacity)
+    {
+        RamFsFileData* data = &meta->files[meta->file_cursor++];
+        if (!data->used)
+        {
+            data->used = true;
+            return VALUE(fd_t, meta->file_cursor);
+        }
+    }
+
+    if (ramfs_enlarge_files(meta->file_capacity * 2, meta) < 0)
+        return ERR(fd_t, -ENOMEM);
+
+    return VALUE(fd_t, meta->file_cursor);
 }
 
 int ramfs_init(FileSystem* fs)
@@ -44,7 +68,7 @@ int ramfs_init(FileSystem* fs)
     fs->driver_ctx = meta;
 
 #define STARTING_FILES_COUNT 8
-    meta->file_count = 0;
+    meta->file_cursor = 0;
     if (ramfs_enlarge_files(STARTING_FILES_COUNT, meta) < 0)
     {
         ramfs_destroy(fs);
@@ -65,11 +89,16 @@ int ramfs_init(FileSystem* fs)
 void ramfs_destroy(FileSystem* fs)
 {
     RamFsMetadata* meta = fs->driver_ctx;
-    for (size_t i = 0; i < meta->file_count; ++i)
+    for (size_t i = 0; i < meta->file_capacity; ++i)
     {
-        RamFsFileData* data = &meta->files[i];
-        if (data->data)
-            kfree(data);
+        RamFsFileData* filedata = &meta->files[i];
+        if (filedata->data)
+        {
+            kfree(filedata->data);
+            filedata->data = NULL;
+        }
+
+        filedata->used = false;
     }
 
     if (meta->files)
@@ -77,7 +106,7 @@ void ramfs_destroy(FileSystem* fs)
         kfree(meta->files);
         meta->files = NULL;
         meta->file_capacity = 0;
-        meta->file_count = 0;
+        meta->file_cursor = 0;
     }
 
     kfree(fs->driver_ctx);
@@ -102,20 +131,24 @@ ramfs_mkfile(
     if (!vnode)
         return ERR(ino_t, -ENOMEM);
 
-    /* Check if we have space for a new file */
-    if (meta->file_count >= meta->file_capacity &&
-        ramfs_enlarge_files(meta->file_capacity * 2, meta) < 0)
+    ERR_OR(fd_t) fd_res = ramfs_find_next_avail_fd(meta);
+    if (fd_res.error)
     {
         fs_free_cached_vnode(vnode, fs);
-        return ERR(ino_t, -ENOMEM);
+        return ERR(ino_t, fd_res.error);
     }
 
-    vnode->n = ++meta->file_count;
+    vnode->n = fd_res.value;
     vnode->mode = mode;
     vnode->size = 0;
     vnode->uid = uid;
     vnode->gid = gid;
     vnode->parent = dir;
+
+    RamFsFileData* filedata = &meta->files[vnode->n - 1];
+    filedata->data = NULL;
+    filedata->used = true;
+
     return VALUE(ino_t, vnode->n);
 }
 
@@ -127,14 +160,10 @@ ramfs_read(const VirtualNode* vnode, _USERPTR void* buf, size_t n, off_t off)
 
     FileSystem* fs = vnode->owner;
     RamFsMetadata* meta = fs->driver_ctx;
-    if (!meta || !meta->files)
-        return -EINVAL;
-
-    ASSERT(vnode->n > 0 && vnode->n < meta->file_count);
+    ASSERT(meta);
 
     /* Cap n with respect to offset */
     n = min(n, vnode->size - off);
-
     RamFsFileData* filedata = &meta->files[vnode->n - 1];
     user_copy_to(buf, filedata->data + off, n);
     return n;

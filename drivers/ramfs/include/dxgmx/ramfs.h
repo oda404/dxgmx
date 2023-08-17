@@ -12,13 +12,14 @@
 typedef struct S_RamFsFileData
 {
     void* data;
+    bool used;
 } RamFsFileData;
 
 typedef struct S_RamFsMetadata
 {
     RamFsFileData* files;
-    size_t file_count;
     size_t file_capacity;
+    size_t file_cursor;
 } RamFsMetadata;
 
 int ramfs_init(FileSystem* fs);
