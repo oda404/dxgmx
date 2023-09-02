@@ -106,7 +106,7 @@ _ATTR_ALWAYS_INLINE static void sha1_pad(SHA1Context* ctx)
 
 static void sha1_process_block(SHA1Context* ctx)
 {
-    ASSERT(ctx->block.size == 64)
+    ASSERT(ctx->block.size == 64);
 
     u32 a = ctx->regs.h0;
     u32 b = ctx->regs.h1;
