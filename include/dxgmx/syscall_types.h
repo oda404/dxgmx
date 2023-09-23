@@ -47,6 +47,23 @@ typedef struct SyscallEntry
     _ATTR_USED SyscallEntry _g_##_name##_entry =                               \
         (SyscallEntry){.func = _g_##_name##_stub};
 
+#define SYSCALL_RETV_6(_ret, _name, _arg1, _arg2, _arg3, _arg4, _arg5, _arg6)  \
+    _ret _name(_arg1, _arg2, _arg3, _arg4, _arg5, _arg6);                      \
+    static syscall_ret_t _g_##_name##_stub(va_list _list)                      \
+    {                                                                          \
+        _arg1 _1 = va_arg(_list, _arg1);                                       \
+        _arg2 _2 = va_arg(_list, _arg2);                                       \
+        _arg3 _3 = va_arg(_list, _arg3);                                       \
+        _arg4 _4 = va_arg(_list, _arg4);                                       \
+        _arg5 _5 = va_arg(_list, _arg5);                                       \
+        _arg6 _6 = va_arg(_list, _arg6);                                       \
+        va_end(_list);                                                         \
+        return (syscall_ret_t)_name(_1, _2, _3, _4, _5, _6);                   \
+    }                                                                          \
+    _ATTR_SECTION(".syscalls")                                                 \
+    _ATTR_USED SyscallEntry _g_##_name##_entry =                               \
+        (SyscallEntry){.func = _g_##_name##_stub};
+
 #endif // _KERNEL
 
 #endif // !_DXGMX_SYSCALL_TYPES_H
