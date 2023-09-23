@@ -3,8 +3,8 @@
  * Distributed under the MIT license.
  */
 
-#ifndef _SYS_MMAN_H
-#define _SYS_MMAN_H
+#ifndef _DXGMX_SYS_MMAN_H
+#define _DXGMX_SYS_MMAN_H
 
 /* Data can be read */
 #define PROT_READ (1 << 0)
@@ -21,4 +21,4 @@
 
 #define MAP_FAILED ((void*)0)
 
-#endif // !_SYS_MMAN_H
+#endif // !_DXGMX_SYS_MMAN_H
