@@ -13,6 +13,7 @@ add_library(c STATIC
     src/unistd.c
     src/ioctl.c
     src/string.c
+    src/mman.c
 )
 target_include_directories(c PRIVATE include)
 install(TARGETS c DESTINATION ${CMAKE_SYSROOT}/usr/lib/)
