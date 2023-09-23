@@ -637,6 +637,23 @@ int vfs_close(fd_t fd, Process* proc)
     return vfs_free_file_descriptor(&g_sys_fds[idx]);
 }
 
+void* vfs_mmap(
+    void* addr,
+    size_t len,
+    int prot,
+    int flags,
+    int fd,
+    off_t off,
+    Process* proc)
+{
+    FileDescriptor* sysfd = vfs_get_sysfd(fd, proc);
+    if (!sysfd)
+        return (void*)EBADF;
+
+    ASSERT(sysfd->vnode->ops->mmap);
+    return sysfd->vnode->ops->mmap(sysfd->vnode, addr, len, prot, flags, off);
+}
+
 int sys_open(const char* path, int flags, mode_t mode)
 {
     return vfs_open(path, flags, mode, sched_current_proc());
@@ -655,4 +672,9 @@ int sys_ioctl(int fd, int req, void* data)
 ssize_t sys_write(int fd, const void* buf, size_t n)
 {
     return vfs_write(fd, buf, n, sched_current_proc());
+}
+
+void* sys_mmap(void* addr, size_t len, int prot, int flags, int fd, off_t off)
+{
+    return vfs_mmap(addr, len, prot, flags, fd, off, sched_current_proc());
 }

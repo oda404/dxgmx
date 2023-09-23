@@ -107,6 +107,14 @@ typedef struct S_VirtualNodeOperations
 
     int (*ioctl)(VirtualNode* vnode, int req, void* data);
 
+    void* (*mmap)(
+        VirtualNode* vnode,
+        void* addr,
+        size_t len,
+        int prot,
+        int flags,
+        off_t off);
+
 } VirtualNodeOperations;
 
 #endif // !_DXGMX_FS_VNODE_H
