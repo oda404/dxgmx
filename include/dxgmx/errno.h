@@ -87,4 +87,6 @@
 
 #define ETIMEDOUT 40
 
+#define ERRNO_MAX 4096
+
 #endif // _DXGMX_ERRNO_H
