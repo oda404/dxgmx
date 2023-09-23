@@ -39,5 +39,6 @@ typedef __UINTPTR_TYPE__ ptr;
 DEFINE_ERR_OR(ptr);
 DEFINE_ERR_OR_PTR(char);
 DEFINE_ERR_OR(u8);
+DEFINE_ERR_OR_PTR(void);
 
 #endif //!_DXGMX_TYPES_H
