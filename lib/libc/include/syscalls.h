@@ -32,4 +32,13 @@ syscall_ret_t syscall5(
     syscall_arg_t a4,
     syscall_arg_t a5);
 
+syscall_ret_t syscall6(
+    syscall_arg_t sysn,
+    syscall_arg_t a1,
+    syscall_arg_t a2,
+    syscall_arg_t a3,
+    syscall_arg_t a4,
+    syscall_arg_t a5,
+    syscall_arg_t a6);
+
 #endif // !_LIBC_SYSCALLS_H
