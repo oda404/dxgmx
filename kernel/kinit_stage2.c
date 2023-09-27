@@ -56,6 +56,8 @@ _ATTR_NORETURN void kinit_stage2()
      * allocation, page faults, dma, etc.. */
     mm_init();
 
+    procm_spawn_kernel_proc();
+
     /* Load kernel sysmbols, now that we have kmalloc */
     ksyms_load();
 
@@ -72,8 +74,6 @@ _ATTR_NORETURN void kinit_stage2()
     modules_dump_builtins();
 
     syscalls_init();
-
-    procm_spawn_kernel_proc();
 
     vfs_init();
 
