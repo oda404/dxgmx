@@ -7,3 +7,8 @@ dxgmx-*
 buildconfig
 *.buildtarget
 syscall_defs.h
+todos
+compile_commands.json
+test
+.cache
+.fleet
