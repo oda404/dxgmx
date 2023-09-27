@@ -8,7 +8,7 @@ $(ARCH_SRCDIR)/gdt.c.o \
 $(ARCH_SRCDIR)/serial.c.o \
 $(ARCH_SRCDIR)/panic.c.o \
 $(ARCH_SRCDIR)/syscalls.c.o \
-$(ARCH_SRCDIR)/procm.c.o \
+$(ARCH_SRCDIR)/proc.c.o \
 $(ARCH_SRCDIR)/user.S.o \
 
 DEFINES += -D_X86_

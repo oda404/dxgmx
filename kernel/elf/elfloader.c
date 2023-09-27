@@ -69,7 +69,7 @@ elfloader_load_from_file32(fd_t fd, Process* actingproc, Process* targetproc)
              * cleared later if necessary. */
             u16 flags = (phdr->flags & PAGE_ACCESS_MODE) | PAGE_W;
 
-            st = mm_new_user_page(vaddr, flags, &targetproc->paging_struct);
+            st = mm_new_user_page(vaddr, flags, targetproc->paging_struct);
             if (st < 0)
             {
                 kfree(phdrs32);
@@ -100,7 +100,7 @@ elfloader_load_from_file32(fd_t fd, Process* actingproc, Process* targetproc)
             ptr vaddr = aligned_start + i * PAGESIZE;
             u16 flags = (phdr->flags & PAGE_ACCESS_MODE) | PAGE_USER;
 
-            st = mm_set_page_flags(vaddr, flags, &targetproc->paging_struct);
+            st = mm_set_page_flags(vaddr, flags, targetproc->paging_struct);
             ASSERT(st == 0);
         }
     }
@@ -131,7 +131,7 @@ int elfloader_load_from_file(fd_t fd, Process* actingproc, Process* targetproc)
         return st;
 
     /* Map target process' paging struct. */
-    mm_load_paging_struct(&targetproc->paging_struct);
+    mm_load_paging_struct(targetproc->paging_struct);
 
     if (ehdr.ident[EI_CLASS] == ELFCLASS32)
         st = elfloader_load_from_file32(fd, actingproc, targetproc);
@@ -142,8 +142,8 @@ int elfloader_load_from_file(fd_t fd, Process* actingproc, Process* targetproc)
 
     /* Go back to the acting process' paging struct.
     This is needed for now since if we fail, we will be dropped back into the
-    acting process. FIXME: seems hackish*/
-    mm_load_paging_struct(&actingproc->paging_struct);
+    acting process. FIXME: seems hackish */
+    mm_load_paging_struct(actingproc->paging_struct);
 
     return st;
 }

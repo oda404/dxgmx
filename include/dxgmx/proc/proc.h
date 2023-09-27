@@ -1,5 +1,5 @@
 /**
- * Copyright 2022 Alexandru Olaru.
+ * Copyright 2023 Alexandru Olaru.
  * Distributed under the MIT license.
  */
 
@@ -23,7 +23,7 @@ typedef struct S_Process
     pid_t pid;
 
     /* The paging structure used by this process. */
-    PagingStruct paging_struct;
+    PagingStruct* paging_struct;
 
     /**
      * List of indexes into the system wide file descriptor table.
@@ -62,11 +62,22 @@ typedef struct S_Process
  * -ENOMEM if the fd could not be allocated.
  */
 int proc_new_fd(size_t sysfd_idx, Process* proc);
+
 /**
  * Removes the given fd from the process' fd table.
  * Returns the index into the system wide fd table that was just removed,
  * PLATFORM_MAX_UNSIGNED on invalid fd.
  */
 size_t proc_free_fd(fd_t fd, Process* proc);
+
+int proc_load_ctx(const Process* proc);
+
+/* Create a new kernel stack for a process used for context switches */
+int proc_create_kernel_stack(Process* targetproc);
+
+void proc_free(Process* proc);
+
+int proc_create_address_space(
+    const char* path, Process* actingproc, Process* targetproc);
 
 #endif // !_DXGMX_PROC_PROC_H

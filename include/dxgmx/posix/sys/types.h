@@ -54,7 +54,6 @@ typedef ssize_t pid_t;
 #ifdef _KERNEL
 #include <dxgmx/err_or.h>
 
-#define PID_MAX _SSIZE_MAX_
 DEFINE_ERR_OR(ino_t);
 #endif // DXGMX_KERKEL
 

@@ -9,6 +9,8 @@
 #include <dxgmx/proc/proc.h>
 #include <dxgmx/proc/proc_limits.h>
 
+#define PID_MAX _SSIZE_MAX_
+
 /* Load the 'first' PID 1 into memory and have it on standby, waiting for the
  * scheduler to start running. This is only a stub for the actual PID 1. This is
  * because the only way for us to read files from disk is through syscalls,
@@ -83,8 +85,6 @@ size_t procm_proc_count();
  * -EINVAL if targetproc == actingproc.
  */
 int procm_try_kill_proc(Process* actingproc, Process* targetproc);
-
-ptr procm_arch_get_kstack_top();
 
 /**
  * Get the next process that is queued to run.
