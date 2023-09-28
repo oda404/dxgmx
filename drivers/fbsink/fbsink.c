@@ -30,6 +30,22 @@ typedef struct S_FrameBufferTextRenderingContext
     void* glyph_buf;
 } FrameBufferTextRenderingContext;
 
+static void fbsink_ensure_correct_paging_struct()
+{
+    /* !!! Stinky poopy smelly goofy hack alert. The framebuffer is only mapped
+     * at a known location in the kernel's paging struct. If the framebuffer has
+     * not been overtook and we want to write to it, we need to do something
+     * like this. The same goes for fbsink_maybe_revert_paging_struct() */
+    if (sched_current_proc())
+        mm_load_kernel_paging_struct();
+}
+
+static void fbsink_maybe_revert_paging_struct()
+{
+    if (sched_current_proc())
+        mm_load_paging_struct(sched_current_proc()->paging_struct);
+}
+
 static u32 fbsink_koutput_color2pixel(KOutputColor color)
 {
     switch (color)
@@ -126,12 +142,21 @@ static int fbsink_destroy(KOutputSink* sink)
 static int fbsink_newline(KOutputSink* sink)
 {
     FrameBufferTextRenderingContext* ctx = sink->ctx;
+    if (ctx->fb->takeover)
+        return 0;
+
     ctx->cx = 0;
 
     if (ctx->cy + 1 >= ctx->glyphs_per_col)
+    {
+        fbsink_ensure_correct_paging_struct();
         fbsink_scroll(ctx);
+        fbsink_maybe_revert_paging_struct();
+    }
     else
+    {
         ++ctx->cy;
+    }
 
     return 0;
 }
@@ -139,6 +164,9 @@ static int fbsink_newline(KOutputSink* sink)
 static int fbsink_print_char(char c, KOutputSink* sink)
 {
     FrameBufferTextRenderingContext* ctx = sink->ctx;
+    if (ctx->fb->takeover)
+        return 0;
+
     const PSF2Header* font = ctx->font;
 
     const size_t x = ctx->cx * font->glyph_width;
@@ -146,6 +174,8 @@ static int fbsink_print_char(char c, KOutputSink* sink)
     const size_t bytes_per_row = font->glyph_width / 8;
     const u32 pixel = fbsink_koutput_color2pixel(sink->fgcolor);
     u32 glyphrow;
+
+    fbsink_ensure_correct_paging_struct();
 
     psf_get_glyph_data(c, ctx->glyph_buf, font);
 
@@ -165,6 +195,7 @@ static int fbsink_print_char(char c, KOutputSink* sink)
     else
         ++ctx->cx;
 
+    fbsink_maybe_revert_paging_struct();
     return 0;
 }
 

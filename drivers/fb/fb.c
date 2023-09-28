@@ -8,6 +8,7 @@
 #include <dxgmx/posix/sys/stat.h>
 #endif
 #include <dxgmx/assert.h>
+#include <dxgmx/err_or.h>
 #include <dxgmx/errno.h>
 #include <dxgmx/fb.h>
 #include <dxgmx/fb_ioctl.h>
@@ -17,6 +18,7 @@
 #include <dxgmx/mem/dma.h>
 #include <dxgmx/mem/falloc.h>
 #include <dxgmx/mem/mm.h>
+#include <dxgmx/posix/sys/mman.h>
 #include <dxgmx/proc/procm.h>
 #include <dxgmx/sched/sched.h>
 #include <dxgmx/string.h>
@@ -71,14 +73,36 @@ static int fb_vnode_ioctl(VirtualNode* vnode, int req, void* data)
     }
 }
 
-static VirtualNodeOperations g_fb_vnode_ops = {
-    .read = fb_vnode_read, .write = fb_vnode_write, .ioctl = fb_vnode_ioctl};
-
-#endif // CONFIG_DEVFS
-
-static ERR_OR(ptr) fb_map_to_virtual_space(ptr paddr, size_t n)
+static void* fb_vnode_mmap(
+    VirtualNode* vnode, void* addr, size_t len, int prot, int flags, off_t off)
 {
-    return dma_map_range(paddr, n, PAGE_R | PAGE_W);
+    (void)flags;
+
+    if (!len)
+        return NULL;
+
+    ASSERT(addr == 0); // FIXME
+    ASSERT(off == 0);  // FIXME
+
+    FBInfo fbinfo;
+    fbio_get_info(vnode, &fbinfo);
+    const size_t fblen = fbinfo.width * fbinfo.height * (fbinfo.bpp / 8);
+
+    if (len > fblen)
+        return (void*)E2BIG;
+
+    FrameBuffer* fb = vnode->data;
+
+    u16 map_flags = PAGE_USER;
+    map_flags |= prot & PROT_READ ? PAGE_R : 0;
+    map_flags |= prot & PROT_WRITE ? PAGE_W : 0;
+
+    ERR_OR(ptr)
+    res = dma_map_range(fb->paddr, len, map_flags, sched_current_proc());
+    if (res.error)
+        return (void*)res.error;
+
+    return (void*)res.value;
 }
 
 static VirtualNodeOperations g_fb_vnode_ops = {
@@ -87,6 +111,8 @@ static VirtualNodeOperations g_fb_vnode_ops = {
     .write = fb_vnode_write,
     .ioctl = fb_vnode_ioctl,
     .mmap = fb_vnode_mmap};
+
+#endif // CONFIG_DEVFS
 
 static int fb_init()
 {
