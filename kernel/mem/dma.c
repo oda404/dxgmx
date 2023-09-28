@@ -4,7 +4,6 @@
  */
 
 #include <dxgmx/assert.h>
-#include <dxgmx/errno.h>
 #include <dxgmx/klog.h>
 #include <dxgmx/mem/dma.h>
 #include <dxgmx/mem/falloc.h>
@@ -20,20 +19,6 @@ STATIC_ASSERT(
     "DMA pool end must be aligned on page boundary");
 
 #define KLOGF_PREFIX "dma: "
-
-/* Goofy ahh bump allocator */
-static ERR_OR(ptr) dma_find_start(size_t pages)
-{
-    static ptr start = DMA_POOL_START;
-
-    size_t size = pages * PAGESIZE;
-    if (start + size > DMA_POOL_END)
-        return ERR(ptr, -ENOMEM);
-
-    start += size;
-
-    return VALUE(ptr, start - size);
-}
 
 int dma_init()
 {
@@ -54,18 +39,27 @@ int dma_init()
     return 0;
 }
 
-ERR_OR(ptr) dma_map_range(ptr paddr, size_t n, u16 flags)
+ERR_OR(ptr) dma_map_range(ptr paddr, size_t n, u16 flags, Process* proc)
 {
-    const size_t pages = bytes_align_up64(n, PAGESIZE) / PAGESIZE;
+    if (BITMAP_NOT_INIT(proc->dma_bitmap))
+    {
+        int st = bitmap_init(128 * MIB / PAGESIZE, &proc->dma_bitmap);
+        if (st < 0)
+        {
+            KLOGF(ERR, "Failed to initialize bitmap for pid %zd", proc->pid);
+            return ERR(ptr, st);
+        }
+    }
 
+    const size_t pages = bytes_align_up64(n, PAGESIZE) / PAGESIZE;
     const ptr aligned_paddr = bytes_align_down64(paddr, PAGESIZE);
     const size_t off = paddr - aligned_paddr;
 
-    ERR_OR(ptr) res = dma_find_start(pages);
-    if (res.error)
-        return ERR(ptr, res.error);
+    ssize_t start = bitmap_first_n_free_and_mark(pages, &proc->dma_bitmap);
+    if (start < 0)
+        return ERR(ptr, start);
 
-    ptr start = res.value;
+    start = DMA_POOL_START + start * PAGESIZE;
 
     for (size_t i = 0; i < pages; ++i)
     {
@@ -81,9 +75,7 @@ ERR_OR(ptr) dma_map_range(ptr paddr, size_t n, u16 flags)
         the two, and sees such memory as just being allocated. */
         falloc_one_at(frame);
 
-        int st =
-            mm_new_page(vaddr, frame, flags, mm_get_kernel_paging_struct());
-
+        int st = mm_new_page(vaddr, frame, flags, proc->paging_struct);
         if (st < 0)
             return ERR(ptr, st);
     }

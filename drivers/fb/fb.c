@@ -17,6 +17,8 @@
 #include <dxgmx/mem/dma.h>
 #include <dxgmx/mem/falloc.h>
 #include <dxgmx/mem/mm.h>
+#include <dxgmx/proc/procm.h>
+#include <dxgmx/sched/sched.h>
 #include <dxgmx/string.h>
 #include <dxgmx/user.h>
 
@@ -81,7 +83,8 @@ static int fb_init()
 
     const size_t fb_size = width * height * (bpp / 8);
 
-    ERR_OR(ptr) res = fb_map_to_virtual_space(paddr, fb_size);
+    ERR_OR(ptr)
+    res = dma_map_range(paddr, fb_size, PAGE_RW, procm_get_kernel_proc());
     if (res.error < 0)
         return res.error;
 

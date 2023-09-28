@@ -552,13 +552,6 @@ int mm_map_kernel_into_paging_struct(PagingStruct* ps)
 
     mm_tlb_flush_single(kimg_vaddr());
 
-    /* Map the 0-1 GIB region used by DMA. */
-    kpdpte = pdpte_from_vaddr(DMA_POOL_START, g_pdpt);
-    pdpte = pdpte_from_vaddr(DMA_POOL_START, pdpt);
-    *pdpte = *kpdpte;
-
-    mm_tlb_flush_single(DMA_POOL_START);
-
     return 0;
 }
 

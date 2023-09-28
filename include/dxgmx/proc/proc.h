@@ -9,6 +9,7 @@
 #include <dxgmx/fs/fd.h>
 #include <dxgmx/mem/mm.h>
 #include <dxgmx/types.h>
+#include <dxgmx/utils/bitmap.h>
 
 typedef int fd_t;
 DEFINE_ERR_OR(fd_t);
@@ -24,6 +25,8 @@ typedef struct S_Process
 
     /* The paging structure used by this process. */
     PagingStruct* paging_struct;
+
+    Bitmap dma_bitmap;
 
     /**
      * List of indexes into the system wide file descriptor table.

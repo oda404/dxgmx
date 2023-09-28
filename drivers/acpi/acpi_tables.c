@@ -13,6 +13,7 @@
 #include <dxgmx/mem/dma.h>
 #include <dxgmx/module.h>
 #include <dxgmx/panic.h>
+#include <dxgmx/proc/procm.h>
 #include <dxgmx/string.h>
 #include <dxgmx/todo.h>
 #include <dxgmx/utils/bytes.h>
@@ -133,14 +134,16 @@ static ERR_OR(ptr) acpi_map_table(ptr hdr_paddr)
 #define MIN_MAP (PAGESIZE)
 
     /* We map the minimum we can, just so we can access the header. */
-    ERR_OR(ptr) res = dma_map_range(hdr_paddr, MIN_MAP, PAGE_RW);
+    ERR_OR(ptr)
+    res = dma_map_range(hdr_paddr, MIN_MAP, PAGE_RW, procm_get_kernel_proc());
     if (res.error)
         return ERR(ptr, res.error);
 
     ACPISDTHeader* hdr = (ACPISDTHeader*)res.value;
     if (hdr->len > MIN_MAP)
     {
-        res = dma_map_range(hdr_paddr, hdr->len, PAGE_RW);
+        res = dma_map_range(
+            hdr_paddr, hdr->len, PAGE_RW, procm_get_kernel_proc());
         if (res.error)
             return ERR(ptr, res.error); // FIXME: free the initial allocation
     }
@@ -227,8 +230,7 @@ ACPIMADTable* acpi_get_mad_table()
 
 static int acpi_main()
 {
-    acpi_init_rsdt();
-    return 0;
+    return acpi_init_rsdt();
 }
 
 static int acpi_exit()

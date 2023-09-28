@@ -7,6 +7,7 @@
 #define _DXGMX_MEM_DMA_H
 
 #include <dxgmx/mem/paging.h>
+#include <dxgmx/proc/proc.h>
 #include <dxgmx/proc/proc_limits.h>
 #include <dxgmx/types.h>
 
@@ -33,6 +34,6 @@ int dma_init();
  * error:
  *      -ENOMEM on out of memory.
  */
-ERR_OR(ptr) dma_map_range(ptr paddr, size_t n, u16 flags);
+ERR_OR(ptr) dma_map_range(ptr paddr, size_t n, u16 flags, Process* proc);
 
 #endif // !_DXGMX_MEM_DMA_H
