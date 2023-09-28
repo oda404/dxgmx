@@ -240,9 +240,11 @@ static int fat_init(FileSystem* fs)
     return 0;
 }
 
-static int fat_ioctl(VirtualNode*, int, void*)
+static int fat_open(VirtualNode* vnode, int flags)
 {
-    return -1;
+    (void)vnode;
+    (void)flags;
+    return 0;
 }
 
 static ssize_t
@@ -253,6 +255,11 @@ fat_write(VirtualNode* vnode, const void* buf, size_t n, off_t off)
     (void)n;
     (void)off;
     TODO_FATAL();
+}
+
+static int fat_ioctl(VirtualNode*, int, void*)
+{
+    return -1;
 }
 
 static ERR_OR(ino_t) fat_mkfile(
@@ -278,7 +285,7 @@ static int fat_rmnode(VirtualNode*)
 }
 
 static const VirtualNodeOperations g_fatfs_vnode_ops = {
-    .read = fat_read, .write = fat_write, .ioctl = fat_ioctl};
+    .open = fat_open, .read = fat_read, .write = fat_write, .ioctl = fat_ioctl};
 
 static const FileSystemDriver g_fatfs_driver = {
     .name = MODULE_NAME,

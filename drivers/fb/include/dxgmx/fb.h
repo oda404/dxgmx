@@ -16,6 +16,8 @@ typedef struct S_FrameBuffer
     size_t height;
     size_t bpp;
     size_t bytespp;
+
+    bool takeover;
 } FrameBuffer;
 
 int fb_ensure_init();

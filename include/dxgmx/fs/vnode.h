@@ -75,6 +75,8 @@ DEFINE_ERR_OR_PTR(VirtualNode);
  */
 typedef struct S_VirtualNodeOperations
 {
+    int (*open)(VirtualNode* vnode, int flags);
+
     /**
      * Read from a file described by a vnode.
      *

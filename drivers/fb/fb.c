@@ -28,6 +28,16 @@ static FrameBuffer g_fb;
 static bool g_fb_up;
 
 #ifdef CONFIG_DEVFS
+
+static int fb_vnode_open(VirtualNode* vnode, int flags)
+{
+    (void)flags;
+
+    FrameBuffer* fb = vnode->data;
+    fb->takeover = true;
+    return 0;
+}
+
 static ssize_t fb_vnode_read(const VirtualNode*, void*, size_t, off_t)
 {
     return -1;
@@ -70,6 +80,13 @@ static ERR_OR(ptr) fb_map_to_virtual_space(ptr paddr, size_t n)
 {
     return dma_map_range(paddr, n, PAGE_R | PAGE_W);
 }
+
+static VirtualNodeOperations g_fb_vnode_ops = {
+    .open = fb_vnode_open,
+    .read = fb_vnode_read,
+    .write = fb_vnode_write,
+    .ioctl = fb_vnode_ioctl,
+    .mmap = fb_vnode_mmap};
 
 static int fb_init()
 {

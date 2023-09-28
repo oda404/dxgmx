@@ -503,6 +503,10 @@ int vfs_open(const char* _USERPTR path, int flags, mode_t mode, Process* proc)
         return vnode_res.error;
     }
 
+    st = vnode_res.value->ops->open(vnode_res.value, flags);
+    if (st < 0)
+        return st;
+
     /* Create a new system-wide file descriptor */
     FileDescriptor* sysfd = vfs_new_file_descriptor();
     if (!sysfd)
