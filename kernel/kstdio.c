@@ -46,9 +46,10 @@ static int kstdio_validate_sink(KOutputSink* sink)
 static size_t kstdio_parse_ansi_sequence(
     const char* str, size_t n, KOutputColor* fg, KOutputColor* bg)
 {
+    (void)bg;
+
     bool next_mode = false;
     bool next_fg = false;
-    bool next_bg = false;
 
     int nn = 0;
 
@@ -79,7 +80,6 @@ static size_t kstdio_parse_ansi_sequence(
                 else if (nn == 36)
                     *fg = KOUTPUT_CYAN;
                 nn = 0;
-                next_bg = true;
                 next_fg = false;
             }
         }

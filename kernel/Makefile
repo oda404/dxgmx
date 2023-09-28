@@ -1,6 +1,5 @@
 
 KERNELOBJS += \
-$(KERNEL_SRCDIR)/kprintf.c.o \
 $(KERNEL_SRCDIR)/kabort.c.o \
 $(KERNEL_SRCDIR)/klog.c.o \
 $(KERNEL_SRCDIR)/kinit_stage2.c.o \
