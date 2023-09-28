@@ -15,8 +15,6 @@
 #include <dxgmx/sched/sched.h>
 #include <dxgmx/syscalls.h>
 #include <dxgmx/timekeep.h>
-#include <dxgmx/types.h>
-#include <dxgmx/utils/linkedlist.h>
 
 extern int kinit_arch();
 
