@@ -1,5 +1,5 @@
 /**
- * Copyright 2022 Alexandru Olaru.
+ * Copyright 2023 Alexandru Olaru.
  * Distributed under the MIT license.
  */
 
@@ -17,7 +17,7 @@ void panic(const char* lastmsg, ...)
     klogln(FATAL, "");
     klogln(FATAL, "--- uh-oh kernel panic :( ---");
 
-    stack_info_dump_trace();
+    stack_info_dump_trace_lvl(FATAL);
 
     if (lastmsg)
     {

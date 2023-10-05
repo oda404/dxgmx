@@ -1,17 +1,21 @@
 /**
- * Copyright 2022 Alexandru Olaru.
+ * Copyright 2023 Alexandru Olaru.
  * Distributed under the MIT license.
  */
 
 #include <dxgmx/assert.h>
 #include <dxgmx/cpu.h>
 #include <dxgmx/kimg.h>
-#include <dxgmx/klog.h>
 #include <dxgmx/ksyms.h>
 #include <dxgmx/proc/proc_limits.h>
 #include <dxgmx/stack_info.h>
 
 void stack_info_dump_trace()
+{
+    stack_info_dump_trace_lvl(DEBUG);
+}
+
+void stack_info_dump_trace_lvl(KLogLevel lvl)
 {
     const StackFrame* frame = NULL;
 #if defined(CONFIG_X86)
@@ -20,10 +24,10 @@ void stack_info_dump_trace()
     frame = (StackFrame*)cpu_read_rbp();
 #endif
 
-    klogln(INFO, "Call stack backtrace:");
+    klogln(lvl, "Call stack backtrace:");
     if (!frame)
     {
-        klogln(ERR, "- ebp is NULL, aborting stack trace!");
+        klogln(lvl, "- ebp is NULL, aborting stack trace!");
         return;
     }
 
@@ -36,7 +40,7 @@ void stack_info_dump_trace()
         if (frame->instptr < kimg_vaddr())
         {
             /* This pointer belongs to the userspace */
-            klogln(ERR, "- next ip is in userspace, aborting stack trace!");
+            klogln(lvl, "- next ip is in userspace, aborting stack trace!");
             return;
         }
 
@@ -46,7 +50,7 @@ void stack_info_dump_trace()
         ksyms_get_symbol_name(frame->instptr - 1, &offset, buf, FUNC_BUF_MAX);
 
         klogln(
-            INFO,
+            lvl,
             "  0x%p - [%s] + 0x%X",
             (void*)(frame->instptr - 1),
             buf,
@@ -57,7 +61,7 @@ void stack_info_dump_trace()
         ++frames;
 
         if (frames == FRAMES_UNWIND_MAX)
-            klogln(WARN, "- Hit FRAMES_UNWIND_MAX, truncated stack strace!");
+            klogln(lvl, "- Hit FRAMES_UNWIND_MAX, truncated stack strace!");
     }
 }
 
