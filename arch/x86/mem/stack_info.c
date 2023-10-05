@@ -14,9 +14,9 @@
 void stack_info_dump_trace()
 {
     const StackFrame* frame = NULL;
-#if defined(_X86_)
+#if defined(CONFIG_X86)
     frame = (StackFrame*)cpu_read_ebp();
-#elif defined(_X86_64_)
+#elif defined(CONFIG_X86_64)
     frame = (StackFrame*)cpu_read_rbp();
 #endif
 

@@ -49,9 +49,9 @@ static size_t kprintf(const char* fmt, ...)
     return written;
 }
 
-_INIT int klog_init(KLogLevel lvl)
+_INIT int klog_init()
 {
-    klog_set_max_level(lvl);
+    klog_set_max_level(CONFIG_KLOG_LEVEL);
     return 0;
 }
 

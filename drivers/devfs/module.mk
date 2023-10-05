@@ -1,7 +1,7 @@
 
 include drivers/ramfs/module.mk
 
-DEFINES += -DCONFIG_DEVFS
+EXTRA_DEFINES += -DCONFIG_DEVFS
 
 MODULE_INCLUDEDIRS += \
 $(DRIVERS_SRCDIR)/devfs/include

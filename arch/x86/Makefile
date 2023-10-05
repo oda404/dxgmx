@@ -11,11 +11,11 @@ $(ARCH_SRCDIR)/syscalls.c.o \
 $(ARCH_SRCDIR)/proc.c.o \
 $(ARCH_SRCDIR)/user.S.o \
 
-DEFINES += -D_X86_
+EXTRA_DEFINES += -DCONFIG_X86 -DCONFIG_LITTLE_ENDIAN
 ifeq ($(ARCH),x86_64)
-    DEFINES += -D_X86_64_
+    EXTRA_DEFINES += -DCONFIG_X86_64
 else
-    CFLAGS += -m32
+    EXTRA_CFLAGS += -m32
 endif
 
 LDSCRIPT := \

@@ -64,7 +64,7 @@ ENDBR instruction." - from a linux patch. */
 #define IRQ_ATA1 0x2E
 #define IRQ_ATA2 0x2F
 
-#ifdef _X86_
+#ifdef CONFIG_X86
 
 typedef struct _ATTR_PACKED S_IDTEntry
 {
@@ -92,7 +92,7 @@ typedef struct _ATTR_PACKED S_IDTR
     IDTEntry* base;
 } IDTR;
 
-#endif // _X86_
+#endif // CONFIG_X86
 
 typedef void (*x86isr_t)(InterruptFrame* frame);
 

@@ -43,7 +43,7 @@ INCLUDE_SRCDIR    := include
 DRIVERS_SRCDIR    := drivers
 
 ### BASE FLAGS ###
-BASE_CFLAGS            := \
+CFLAGS            := \
 -MD -MP -isystem=/usr/include -std=c2x \
 -fno-omit-frame-pointer -ffreestanding \
 -fno-builtin -march=$(DXGMX_ARCH) \
@@ -53,9 +53,9 @@ INCLUDEDIRS := -I$(INCLUDE_SRCDIR)
 
 DEFINES            := \
 -D_KERNEL \
--DDXGMX_VER_MAJ=$(VER_MAJ) \
--DDXGMX_VER_MIN=$(VER_MIN) -DDXGMX_PATCH_N=$(PATCH_N) \
--DDXGMX_CODENAME='"$(CODENAME)"' 
+-DCONFIG_VER_MAJ=$(VER_MAJ) \
+-DCONFIG_VER_MIN=$(VER_MIN) -DCONFIG_PATCH_N=$(PATCH_N) \
+-DCONFIG_CODENAME='"$(CODENAME)"' 
 
 WARNINGS          := -Wall -Wextra -Wshadow \
 -Werror=implicit-int \
@@ -93,8 +93,7 @@ include $(TOOLS_SRCDIR)/Makefile
 # Add module include directories to INCLUDEDIRS
 INCLUDEDIRS += $(patsubst %, -I%, $(MODULE_INCLUDEDIRS))
 
-BASE_CFLAGS        += $(INCLUDEDIRS) $(WARNINGS) $(DEFINES)
-CFLAGS             += $(BASE_CFLAGS) $(EXTRA_CFLAGS) $(EXTRA_WARNINGS) $(EXTRA_MACROS)
+CFLAGS             += $(EXTRA_CFLAGS) $(WARNINGS) $(EXTRA_WARNINGS) $(INCLUDEDIRS) $(DEFINES) $(EXTRA_DEFINES)
 LDFLAGS            += $(EXTRA_LDFLAGS)
 
 CORE_OBJS          := $(ARCHOBJS) $(KERNELOBJS)

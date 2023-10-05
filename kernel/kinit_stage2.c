@@ -6,7 +6,6 @@
 #include <dxgmx/attrs.h>
 #include <dxgmx/cpu.h>
 #include <dxgmx/fs/vfs.h>
-#include <dxgmx/kconfig.h>
 #include <dxgmx/klog.h>
 #include <dxgmx/kstdio/kstdio.h>
 #include <dxgmx/ksyms.h>
@@ -27,10 +26,10 @@ static void kinit_print_banner()
     klogln(
         INFO,
         " \\__,_/_/\\_\\__, |_| |_| |_/_/\\_\\ %s - %d.%d.%d",
-        DXGMX_CODENAME,
-        DXGMX_VER_MAJ,
-        DXGMX_VER_MIN,
-        DXGMX_PATCH_N);
+        CONFIG_CODENAME,
+        CONFIG_VER_MAJ,
+        CONFIG_VER_MIN,
+        CONFIG_PATCH_N);
     klogln(INFO, "           |___/");
 }
 
@@ -45,7 +44,7 @@ _ATTR_NORETURN void kinit_stage2()
     /* Load the first stage of builtin modules. */
     modules_init_stage1();
 
-    klog_init(DXGMX_CONFIG_LOG_LEVEL);
+    klog_init();
 
     /* Identify CPU so other sub systems know what they are working with. */
     cpu_identify();

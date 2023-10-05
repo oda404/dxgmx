@@ -152,10 +152,10 @@ user_strnlen:
 .type user_jump2user_arch, @function
 user_jump2user_arch:
 
-#if defined(_X86_)
+#if defined(CONFIG_X86)
     movl 0x4(%esp), %ebx  # The instruction pointer
     movl 0x8(%esp), %ecx  # The stack pointer
-#endif // _X86_
+#endif // CONFIG_X86
 
     # Move the ring 3 data segment into all segment registers.
     # ss will be handled by iret.

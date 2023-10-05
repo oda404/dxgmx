@@ -9,11 +9,11 @@
 #include <dxgmx/compiler_attrs.h>
 #include <dxgmx/types.h>
 
-#if defined(_X86_)
+#if defined(CONFIG_X86)
 #include <dxgmx/bits/x86/cpu.h>
 #else
 #error "Unknown CPU arch"
-#endif // defined(_X86_)
+#endif // defined(CONFIG_X86_)
 
 /** Tries to identify the CPU and it's features. */
 int cpu_identify();

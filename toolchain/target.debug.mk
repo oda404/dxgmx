@@ -3,7 +3,7 @@ TARGET_NAME = debug
 
 # Extra build flags
 EXTRA_CFLAGS += -fstack-protector-all -g -O0
-EXTRA_MACROS += -DDXGMX_CONFIG_LOG_LEVEL=5 -DCONFIG_KLOG_COLOR -DCONFIG_LITTLE_ENDIAN
+EXTRA_DEFINES += -DCONFIG_KLOG_LEVEL=5 -DCONFIG_KLOG_COLOR
 
 # Modules
 include arch/x86/multiboot/module.mk
