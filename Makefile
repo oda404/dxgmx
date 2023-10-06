@@ -22,6 +22,9 @@ TOOLS_SRCDIR      := tools
 KERNEL_BIN   := $(KERNEL_NAME)-$(VER_MAJ).$(VER_MIN).$(PATCH_N)
 KERNEL_ISO   ?= $(KERNEL_BIN).iso
 
+PHONY += all
+all: $(KERNEL_BIN)
+
 # Die if we are not using a LLVM toolchain
 LLVM=$(shell $(TOOLS_SRCDIR)/is-llvm.sh)
 ifneq ($(LLVM),1)
@@ -85,10 +88,10 @@ else
 endif
 
 # Include main subdirs
-include $(ARCH_SRCDIR)/Makefile
-include $(KERNEL_SRCDIR)/Makefile
-include $(INCLUDE_SRCDIR)/Makefile
-include $(TOOLS_SRCDIR)/Makefile
+include $(ARCH_SRCDIR)/sub.mk
+include $(KERNEL_SRCDIR)/sub.mk
+include $(INCLUDE_SRCDIR)/sub.mk
+include $(TOOLS_SRCDIR)/sub.mk
 
 # Add module include directories to INCLUDEDIRS
 INCLUDEDIRS += $(patsubst %, -I%, $(MODULE_INCLUDEDIRS))
@@ -131,9 +134,6 @@ SYSCALL_DEFS       := $(INCLUDE_SRCDIR)/dxgmx/syscall_defs.h
 
 PHONY              :=
 
-PHONY += all
-all: $(KERNEL_BIN)
-
 $(KERNEL_BIN): $(SYSCALL_DEFS) $(ALL_OBJS) $(LDSCRIPT) $(DXGMX_COMMON_DEPS)
 	@$(PRETTY_PRINT) LD $@
 	@$(LD) -T $(LDSCRIPT) $(ALL_OBJS) $(LDFLAGS) -o $(KERNEL_BIN)
@@ -169,12 +169,6 @@ $(BUILDDIR)/%_mod.S.o: %.S $(DXGMX_COMMON_DEPS)
 	@$(PRETTY_PRINT) "AS MOD" $<
 	@$(AS) -c $< $(CFLAGS) -o $@
 
-$(BUILDDIR)/$(TOOLS_SRCDIR)/%: $(TOOLS_SRCDIR)/%.*
-	@# Hardcoded to c++ for now :)
-	@mkdir -p $(dir $@)
-	@$(PRETTY_PRINT) "HOSTCXX" $<
-	@$(HOSTCXX) $< -o $@
-
 PHONY += install_apis
 install_apis:
 	@$(TOOLS_SRCDIR)/install-apis.sh --sysroot $(SYSROOT) --apis "$(EXPORT_APIS)"
@@ -204,12 +198,14 @@ run: $(KERNEL_BIN)
 
 PHONY += clean 
 clean:
-	@rm -f $(COBJS) $(ASMOBJS) $(CMODOBJS) $(MISCOBJS) $(BUILDDIR)/$(TOOLS_SRCDIR)/*
+	@rm -f $(COBJS) $(ASMOBJS) $(CMODOBJS) $(MISCOBJS)
+	@rm -rf $(BUILDDIR)/$(TOOLS_SRCDIR)/*
 	@rm -f $(CDEPS) $(ASMDEPS) $(MODDEPS)
 
 PHONY += mrclean 
 mrclean:
 	$(MAKE) clean
+	@rm -f $(SYSCALL_DEFS)
 	@rm -f $$(ls | grep -Eo '^dxgmx-[0-9]+.[0-9]+.[0-9]+(.iso)?$$')
 	@rm -r $(BUILDDIR) 2> /dev/null || true
 

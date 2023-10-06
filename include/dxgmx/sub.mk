@@ -1,5 +1,5 @@
 
-include $(INCLUDE_SRCDIR)/dxgmx/posix/Makefile
+include $(INCLUDE_SRCDIR)/dxgmx/posix/sub.mk
 
 EXPORT_APIS += \
 $(INCLUDE_SRCDIR)/dxgmx/syscall_defs.h \

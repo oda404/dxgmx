@@ -23,6 +23,6 @@ $(ARCH_SRCDIR)/linker.ld
 
 INCLUDEDIRS += -I$(ARCH_SRCDIR)/include
 
-include $(ARCH_SRCDIR)/boot/Makefile
-include $(ARCH_SRCDIR)/int/Makefile
-include $(ARCH_SRCDIR)/mem/Makefile
+include $(ARCH_SRCDIR)/boot/sub.mk
+include $(ARCH_SRCDIR)/int/sub.mk
+include $(ARCH_SRCDIR)/mem/sub.mk

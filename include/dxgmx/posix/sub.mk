@@ -1,5 +1,5 @@
 
-include $(INCLUDE_SRCDIR)/dxgmx/posix/sys/Makefile
+include $(INCLUDE_SRCDIR)/dxgmx/posix/sys/sub.mk
 
 EXPORT_APIS += \
 $(INCLUDE_SRCDIR)/dxgmx/posix/unistd.h:posix/unistd.h \
