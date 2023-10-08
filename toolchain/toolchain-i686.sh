@@ -11,7 +11,4 @@ export NM=$DXGMX_TOOLCHAIN_ROOT/usr/bin/llvm-nm
 export OBJCOPY=$DXGMX_TOOLCHAIN_ROOT/usr/bin/llvm-objcopy
 export HOSTCXX=clang++
 
-export RUSTC=rustc
-
-export DXGMX_ARCH=i686
 export CMAKE_TOOLCHAIN_FILE=$DXGMX_SRC_ROOT/toolchain/toolchain.cmake

@@ -18,4 +18,11 @@ $(WD)/core_gen.cpp $(WD)/core_menu.cpp $(WD)/core_ops.cpp $(WD)/core_load.cpp
 		$(TOOLS_SRCDIR)/conf_engine/core_load.cpp \
 		$(TOOLS_SRCDIR)/conf_engine/core_ops.cpp -ljsoncpp -lncursesw -o $@
 
+TOOL_KCONFIG_H_GENERATOR := $(BUILDDIR)/$(WD)/kconfig_h_generator
+
+$(TOOL_KCONFIG_H_GENERATOR): $(WD)/kconfig_h_generator.cpp
+	@mkdir -p $(dir $@)
+	@$(PRETTY_PRINT) "HOSTCXX" $<
+	@$(HOSTCXX) $< -o $@
+
 undefine WD

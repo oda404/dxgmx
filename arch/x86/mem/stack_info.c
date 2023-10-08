@@ -5,6 +5,7 @@
 
 #include <dxgmx/assert.h>
 #include <dxgmx/cpu.h>
+#include <dxgmx/generated/kconfig.h>
 #include <dxgmx/kimg.h>
 #include <dxgmx/ksyms.h>
 #include <dxgmx/proc/proc_limits.h>

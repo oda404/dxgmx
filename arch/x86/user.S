@@ -6,6 +6,7 @@
 #define _ASM
 #include <dxgmx/x86/gdt.h>
 #include <dxgmx/errno.h>
+#include <dxgmx/generated/kconfig.h>
 
 /* This way of checking for userspace faults in kernel space may have been appropriated from linux */
 .section .useraccess, "a"

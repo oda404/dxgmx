@@ -4,6 +4,7 @@
  */
 
 #include <dxgmx/attrs.h>
+#include <dxgmx/generated/kconfig.h>
 #include <dxgmx/klog.h>
 #include <dxgmx/kstdio/kstdio.h>
 #include <dxgmx/stdio.h>

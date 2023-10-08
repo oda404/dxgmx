@@ -7,9 +7,9 @@ VER_MIN           := 19
 PATCH_N           := 0
 CODENAME          := angel_attack
 
-ifeq ($(DXGMX_ARCH),)
-    $(error DXGMX_ARCH is undefined!)
-endif
+CONFIG_FILE ?= config.mk
+
+-include $(CONFIG_FILE)
 
 SYSROOT_DISK_MNTPOINT  ?= /mnt/dxgmx-sysroot
 
@@ -32,12 +32,12 @@ ifneq ($(LLVM),1)
 endif
 
 # Translate arch into src arch.
-SRCARCH           := $(shell $(TOOLS_SRCDIR)/arch.sh --to-srcarch $(DXGMX_ARCH))
+SRCARCH           := $(shell $(TOOLS_SRCDIR)/arch.sh --to-srcarch $(CONFIG_ARCH))
 ifeq ($(SRCARCH), undefined)
-    $(error Unsupported arch: '$(DXGMX_ARCH)')
+    $(error Unsupported arch: '$(CONFIG_ARCH)')
 endif
 
-DXGMX_TARGET_TRIP := $(DXGMX_ARCH)-unknown-dxgmx
+DXGMX_TARGET_TRIP := $(CONFIG_ARCH)-unknown-dxgmx
 
 ### SRC DIRECTORIES ###
 ARCH_SRCDIR       := arch/$(SRCARCH)
@@ -49,8 +49,8 @@ DRIVERS_SRCDIR    := drivers
 CFLAGS            := \
 -MD -MP -isystem=/usr/include -std=c2x \
 -fno-omit-frame-pointer -ffreestanding \
--fno-builtin -march=$(DXGMX_ARCH) \
--fno-pie -fno-pic --target=$(DXGMX_ARCH)-unknown-dxgmx
+-fno-builtin -march=$(CONFIG_ARCH) \
+-fno-pie -fno-pic --target=$(CONFIG_ARCH)-unknown-dxgmx
 
 INCLUDEDIRS := -I$(INCLUDE_SRCDIR) 
 
@@ -131,10 +131,11 @@ ALL_OBJS           := $(COBJS) $(ASMOBJS) $(CMODOBJS) $(SMODOBJS) $(MISCOBJS)
 DXGMX_COMMON_DEPS  := Makefile $(TARGET_FILE)
 
 SYSCALL_DEFS       := $(INCLUDE_SRCDIR)/dxgmx/syscall_defs.h
+CONFIG_DEFS        := $(INCLUDE_SRCDIR)/dxgmx/generated/kconfig.h
 
 PHONY              :=
 
-$(KERNEL_BIN): $(SYSCALL_DEFS) $(ALL_OBJS) $(LDSCRIPT) $(DXGMX_COMMON_DEPS)
+$(KERNEL_BIN): $(CONFIG_DEFS) $(SYSCALL_DEFS) $(ALL_OBJS) $(LDSCRIPT) $(DXGMX_COMMON_DEPS)
 	@$(PRETTY_PRINT) LD $@
 	@$(LD) -T $(LDSCRIPT) $(ALL_OBJS) $(LDFLAGS) -o $(KERNEL_BIN)
 
@@ -144,6 +145,10 @@ $(KERNEL_BIN): $(SYSCALL_DEFS) $(ALL_OBJS) $(LDSCRIPT) $(DXGMX_COMMON_DEPS)
 $(SYSCALL_DEFS): $(TOOL_SYSCALLS_GEN) $(KERNEL_SRCDIR)/syscalls_common.defs
 	@$(PRETTY_PRINT) SYSDEFS $@
 	@$(TOOL_SYSCALLS_GEN) --common-defs $(KERNEL_SRCDIR)/syscalls_common.defs --output $@
+
+$(CONFIG_DEFS): $(TOOL_KCONFIG_H_GENERATOR) $(CONFIG_FILE)
+	@$(PRETTY_PRINT) KCONFIG $@
+	@$(TOOL_KCONFIG_H_GENERATOR) -i $(PWD)/$(CONFIG_FILE) -o $(CONFIG_DEFS)
 
 -include $(CDEPS)
 $(BUILDDIR)/%.c.o: %.c $(DXGMX_COMMON_DEPS)
@@ -190,11 +195,11 @@ $(KERNEL_ISO): $(KERNEL_BIN)
 
 PHONY += iso-run 
 iso-run: $(KERNEL_ISO)
-	$(TOOLS_SRCDIR)/run-qemu.sh -i $(KERNEL_ISO) -a $(DXGMX_ARCH)
+	$(TOOLS_SRCDIR)/run-qemu.sh -i $(KERNEL_ISO) -a $(CONFIG_ARCH)
 
 PHONY += run 
 run: $(KERNEL_BIN)
-	$(TOOLS_SRCDIR)/run-qemu.sh -k $(KERNEL_BIN) -a $(DXGMX_ARCH)
+	$(TOOLS_SRCDIR)/run-qemu.sh -k $(KERNEL_BIN) -a $(CONFIG_ARCH)
 
 PHONY += clean 
 clean:
@@ -234,7 +239,7 @@ buildinfo:
 	@echo AS: $(AS)
 	@echo LD: $(LD)
 	@echo Build target name: $(shell [ $(shell expr length "$(TARGET_NAME)") -gt 0 ] && echo $(TARGET_NAME) || echo No target )
-	@echo Target architecture: $(DXGMX_ARCH)
+	@echo Target architecture: $(CONFIG_ARCH)
 	@echo Target triplet: $(DXGMX_TARGET_TRIP)
 	@echo System root: $(SYSROOT)
 	@echo CFLAGS: $(CFLAGS)

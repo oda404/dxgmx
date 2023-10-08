@@ -7,6 +7,7 @@
 #define _DXGMX_X86_IDT_H
 
 #include <dxgmx/compiler_attrs.h>
+#include <dxgmx/generated/kconfig.h>
 #include <dxgmx/interrupts.h>
 #include <dxgmx/types.h>
 #include <dxgmx/x86/interrupt_frame.h>

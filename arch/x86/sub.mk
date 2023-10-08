@@ -11,10 +11,7 @@ $(ARCH_SRCDIR)/syscalls.c.o \
 $(ARCH_SRCDIR)/proc.c.o \
 $(ARCH_SRCDIR)/user.S.o \
 
-EXTRA_DEFINES += -DCONFIG_X86 -DCONFIG_LITTLE_ENDIAN
-ifeq ($(ARCH),x86_64)
-    EXTRA_DEFINES += -DCONFIG_X86_64
-else
+ifeq ($(CONFIG_ARCH),i686)
     EXTRA_CFLAGS += -m32
 endif
 

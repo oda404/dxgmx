@@ -13,6 +13,7 @@
 #include <dxgmx/fb.h>
 #include <dxgmx/fb_ioctl.h>
 #include <dxgmx/fb_user.h>
+#include <dxgmx/generated/kconfig.h>
 #include <dxgmx/kboot.h>
 #include <dxgmx/klog.h>
 #include <dxgmx/mem/dma.h>

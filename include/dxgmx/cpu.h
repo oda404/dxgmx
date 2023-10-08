@@ -7,6 +7,7 @@
 #define _DXGMX_CPU_H
 
 #include <dxgmx/compiler_attrs.h>
+#include <dxgmx/generated/kconfig.h>
 #include <dxgmx/types.h>
 
 #if defined(CONFIG_X86)

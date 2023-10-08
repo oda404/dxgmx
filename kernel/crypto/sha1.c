@@ -6,6 +6,7 @@
 #include <dxgmx/assert.h>
 #include <dxgmx/attrs.h>
 #include <dxgmx/crypto/sha1.h>
+#include <dxgmx/generated/kconfig.h>
 #include <dxgmx/string.h>
 #include <dxgmx/utils/bitwise.h>
 
