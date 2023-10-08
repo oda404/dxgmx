@@ -1,0 +1,27 @@
+{
+    "title": "CPU",
+    "options": [
+        {
+            "name": "CONFIG_LITTLE_ENDIAN",
+            "title": "Little endianness",
+            "description": "",
+            "view_only": true
+        },
+        {
+            "name": "CONFIG_64BIT",
+            "title": "Native 64bit CPU",
+            "description": "",
+            "view_only": true
+        },
+        {
+            "name": "CONFIG_ARCH",
+            "title": "Architecture",
+            "type": "input",
+            "description": "",
+            "view_only": true
+        }
+    ],
+    "menus": [
+        "arch/x86/config_menu.json"
+    ]
+}

@@ -12,3 +12,4 @@ compile_commands.json
 test
 .cache
 .fleet
+config.mk

@@ -240,4 +240,9 @@ buildinfo:
 	@echo CFLAGS: $(CFLAGS)
 	@echo LDFLAGS: $(LDFLAGS)
 
+PHONY += conf
+conf: $(TOOL_NCURSES_CONFIG)
+	@$(PRETTY_PRINT) CONFIG config
+	@$(TOOL_NCURSES_CONFIG) -c config.mk -r $(PWD)/root_config_menu.json
+
 .PHONY: $(PHONY)

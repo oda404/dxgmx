@@ -1,0 +1,17 @@
+{
+    "title": "Generic kernel features",
+    "description": "Configuration options for generic kernel features, anything that doesn't specifically fall into any other category.",
+    "options": [
+        {
+            "name": "CONFIG_KLOG_LEVEL",
+            "type": "input",
+            "title": "klog log level",
+            "description": "The klog log level. Only values less than the klog level will get logged, the others will get discarded. This can be:\n1 - FATAL\n2 - ERR\n3 - WARN\n4 - INFO\n5 - DEBUG\nEither the number or the name can be used."
+        },
+        {
+            "name": "CONFIG_KLOG_COLOR",
+            "title": "klog color support",
+            "description": "Enable if you would like klog to use colored output using ANSI sequences."
+        }
+    ]
+}
