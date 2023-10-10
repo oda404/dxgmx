@@ -1,3 +1,3 @@
 
 ARCHOBJS += \
-$(ARCH_SRCDIR)/boot/entry.S.o \
+arch/x86/boot/entry.S.o \

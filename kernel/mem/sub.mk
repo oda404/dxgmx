@@ -1,9 +1,9 @@
 
 KERNELOBJS += \
-$(KERNEL_SRCDIR)/mem/mregmap.c.o \
-$(KERNEL_SRCDIR)/mem/falloc.c.o \
-$(KERNEL_SRCDIR)/mem/kmalloc.c.o \
-$(KERNEL_SRCDIR)/mem/heap.c.o \
-$(KERNEL_SRCDIR)/mem/gallocator.c.o \
-$(KERNEL_SRCDIR)/mem/paging.c.o \
-$(KERNEL_SRCDIR)/mem/dma.c.o \
+kernel/mem/mregmap.c.o \
+kernel/mem/falloc.c.o \
+kernel/mem/kmalloc.c.o \
+kernel/mem/heap.c.o \
+kernel/mem/gallocator.c.o \
+kernel/mem/paging.c.o \
+kernel/mem/dma.c.o \

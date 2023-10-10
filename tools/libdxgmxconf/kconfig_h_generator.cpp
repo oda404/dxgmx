@@ -101,6 +101,9 @@ int main(int argc, char** argv)
         if (!line.size() || line[0] == '#')
             continue;
 
+        if (line.find("include") == 0)
+            continue;
+
         size_t eq = line.find('=');
         if (eq == line.npos)
         {

@@ -4,10 +4,10 @@
  */
 
 #include <dxgmx/errno.h>
+#include <dxgmx/generated/syscall_defs.h>
 #include <dxgmx/kimg.h>
 #include <dxgmx/klog.h>
 #include <dxgmx/panic.h>
-#include <dxgmx/syscall_defs.h>
 #include <dxgmx/syscalls.h>
 #include <dxgmx/types.h>
 #include <stdarg.h>

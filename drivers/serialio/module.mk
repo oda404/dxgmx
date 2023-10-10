@@ -1,6 +1,6 @@
 
 MODULE_INCLUDEDIRS += \
-$(DRIVERS_SRCDIR)/serialio/include
+drivers/serialio/include
 
 MODULEOBJS += \
-$(DRIVERS_SRCDIR)/serialio/serialio.c.o
+drivers/serialio/serialio.c.o

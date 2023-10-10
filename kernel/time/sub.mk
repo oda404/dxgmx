@@ -1,4 +1,4 @@
 
 KERNELOBJS += \
-$(KERNEL_SRCDIR)/time/timekeep.c.o \
-$(KERNEL_SRCDIR)/time/timer.c.o \
+kernel/time/timekeep.c.o \
+kernel/time/timer.c.o \

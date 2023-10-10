@@ -1,8 +1,8 @@
 
 KERNELOBJS += \
-$(KERNEL_SRCDIR)/utils/bytes.c.o \
-$(KERNEL_SRCDIR)/utils/hashtable.c.o \
-$(KERNEL_SRCDIR)/utils/bitwise.c.o \
-$(KERNEL_SRCDIR)/utils/uuid.c.o \
-$(KERNEL_SRCDIR)/utils/linkedlist.c.o \
-$(KERNEL_SRCDIR)/utils/bitmap.c.o 
+kernel/utils/bytes.c.o \
+kernel/utils/hashtable.c.o \
+kernel/utils/bitwise.c.o \
+kernel/utils/uuid.c.o \
+kernel/utils/linkedlist.c.o \
+kernel/utils/bitmap.c.o 

@@ -1,6 +1,6 @@
 
 ARCHOBJS += \
-$(ARCH_SRCDIR)/int/idt.c.o \
-$(ARCH_SRCDIR)/int/pic.c.o \
-$(ARCH_SRCDIR)/int/interrupts.c.o \
-$(ARCH_SRCDIR)/int/exceptions.c.o \
+arch/x86/int/idt.c.o \
+arch/x86/int/pic.c.o \
+arch/x86/int/interrupts.c.o \
+arch/x86/int/exceptions.c.o \

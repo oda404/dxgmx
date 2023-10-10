@@ -1,2 +1,2 @@
 
-MODULEOBJS += $(ARCH_SRCDIR)/multiboot/multiboot.c.o
+MODULEOBJS += arch/x86/multiboot/multiboot.c.o

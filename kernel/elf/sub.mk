@@ -1,4 +1,4 @@
 
 KERNELOBJS += \
-$(KERNEL_SRCDIR)/elf/elf.c.o \
-$(KERNEL_SRCDIR)/elf/elfloader.c.o
+kernel/elf/elf.c.o \
+kernel/elf/elfloader.c.o

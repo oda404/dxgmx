@@ -1,3 +1,3 @@
 
 KERNELOBJS += \
-$(KERNEL_SRCDIR)/syscalls/syscalls.c.o \
+kernel/syscalls/syscalls.c.o \

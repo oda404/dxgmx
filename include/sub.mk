@@ -1,2 +1,2 @@
 
-include $(INCLUDE_SRCDIR)/dxgmx/sub.mk
+include include/dxgmx/sub.mk

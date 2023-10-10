@@ -1,9 +1,6 @@
 
 TARGET_NAME = debug
 
-# Extra build flags
-EXTRA_CFLAGS += -fstack-protector-all -g -O0
-
 # Modules
 include arch/x86/multiboot/module.mk
 include drivers/x86/serialsink/module.mk
@@ -19,3 +16,5 @@ include drivers/fbsink/module.mk
 include drivers/pci/module.mk
 include drivers/acpi/module.mk
 include drivers/devfs/module.mk
+include drivers/x86/ps2io/module.mk
+include drivers/ps2kbd/module.mk

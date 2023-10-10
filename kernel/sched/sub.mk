@@ -1,3 +1,3 @@
 
 KERNELOBJS += \
-$(KERNEL_SRCDIR)/sched/sched.c.o
+kernel/sched/sched.c.o

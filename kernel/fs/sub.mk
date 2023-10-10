@@ -1,5 +1,5 @@
 
 KERNELOBJS += \
-$(KERNEL_SRCDIR)/fs/vfs.c.o \
-$(KERNEL_SRCDIR)/fs/fs.c.o \
-$(KERNEL_SRCDIR)/fs/path.c.o \
+kernel/fs/vfs.c.o \
+kernel/fs/fs.c.o \
+kernel/fs/path.c.o \

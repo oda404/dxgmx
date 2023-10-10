@@ -1,8 +1,8 @@
 
-include $(TOOLS_SRCDIR)/conf_engine/sub.mk
+include tools/libdxgmxconf/sub.mk
 
-TOOL_SYSCALLS_GEN := $(BUILDDIR)/$(TOOLS_SRCDIR)/syscalls_generate
-$(TOOL_SYSCALLS_GEN): $(TOOLS_SRCDIR)/syscalls_generate.cpp
+TOOL_SYSCALLS_GEN := $(BUILDDIR)/tools/syscalls_generate
+$(TOOL_SYSCALLS_GEN): tools/syscalls_generate.cpp
 	@mkdir -p $(dir $@)
-	@$(PRETTY_PRINT) "HOSTCXX" $<
+	@$(PRETTY_PRINT) "HOSTCXX LD" $(notdir $@)
 	@$(HOSTCXX) $< -o $@

@@ -1,24 +1,24 @@
 
 KERNELOBJS += \
-$(KERNEL_SRCDIR)/kabort.c.o \
-$(KERNEL_SRCDIR)/klog.c.o \
-$(KERNEL_SRCDIR)/kinit_stage2.c.o \
-$(KERNEL_SRCDIR)/ksyms.c.o \
-$(KERNEL_SRCDIR)/kimg.c.o \
-$(KERNEL_SRCDIR)/module.c.o \
-$(KERNEL_SRCDIR)/panic.c.o \
-$(KERNEL_SRCDIR)/user.c.o \
-$(KERNEL_SRCDIR)/kstdio.c.o \
-$(KERNEL_SRCDIR)/kboot.c.o \
+kernel/kabort.c.o \
+kernel/klog.c.o \
+kernel/kinit_stage2.c.o \
+kernel/ksyms.c.o \
+kernel/kimg.c.o \
+kernel/module.c.o \
+kernel/panic.c.o \
+kernel/user.c.o \
+kernel/kstdio.c.o \
+kernel/kboot.c.o \
 
-include $(KERNEL_SRCDIR)/mem/sub.mk
-include $(KERNEL_SRCDIR)/utils/sub.mk
-include $(KERNEL_SRCDIR)/crypto/sub.mk
-include $(KERNEL_SRCDIR)/kstdlib/sub.mk
-include $(KERNEL_SRCDIR)/storage/sub.mk
-include $(KERNEL_SRCDIR)/fs/sub.mk
-include $(KERNEL_SRCDIR)/elf/sub.mk
-include $(KERNEL_SRCDIR)/proc/sub.mk
-include $(KERNEL_SRCDIR)/syscalls/sub.mk
-include $(KERNEL_SRCDIR)/sched/sub.mk
-include $(KERNEL_SRCDIR)/time/sub.mk
+include kernel/mem/sub.mk
+include kernel/utils/sub.mk
+include kernel/crypto/sub.mk
+include kernel/kstdlib/sub.mk
+include kernel/storage/sub.mk
+include kernel/fs/sub.mk
+include kernel/elf/sub.mk
+include kernel/proc/sub.mk
+include kernel/syscalls/sub.mk
+include kernel/sched/sub.mk
+include kernel/time/sub.mk

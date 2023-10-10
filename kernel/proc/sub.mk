@@ -1,4 +1,4 @@
 
 KERNELOBJS += \
-$(KERNEL_SRCDIR)/proc/procm.c.o \
-$(KERNEL_SRCDIR)/proc/proc.c.o \
+kernel/proc/procm.c.o \
+kernel/proc/proc.c.o \

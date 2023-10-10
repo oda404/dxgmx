@@ -1,6 +1,6 @@
 
 MODULE_INCLUDEDIRS += \
-$(DRIVERS_SRCDIR)/ramfs/include
+drivers/ramfs/include
 
 MODULEOBJS += \
-$(DRIVERS_SRCDIR)/ramfs/ramfs.c.o
+drivers/ramfs/ramfs.c.o

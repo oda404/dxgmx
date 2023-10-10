@@ -1,25 +1,25 @@
 
 ARCHOBJS += \
-$(ARCH_SRCDIR)/kinit_arch.c.o \
-$(ARCH_SRCDIR)/cpu.c.o \
-$(ARCH_SRCDIR)/cpuid.c.o \
-$(ARCH_SRCDIR)/cmos.c.o \
-$(ARCH_SRCDIR)/gdt.c.o \
-$(ARCH_SRCDIR)/serial.c.o \
-$(ARCH_SRCDIR)/panic.c.o \
-$(ARCH_SRCDIR)/syscalls.c.o \
-$(ARCH_SRCDIR)/proc.c.o \
-$(ARCH_SRCDIR)/user.S.o \
+arch/x86/kinit_arch.c.o \
+arch/x86/cpu.c.o \
+arch/x86/cpuid.c.o \
+arch/x86/cmos.c.o \
+arch/x86/gdt.c.o \
+arch/x86/serial.c.o \
+arch/x86/panic.c.o \
+arch/x86/syscalls.c.o \
+arch/x86/proc.c.o \
+arch/x86/user.S.o \
 
 ifeq ($(CONFIG_ARCH),i686)
     EXTRA_CFLAGS += -m32
 endif
 
 LDSCRIPT := \
-$(ARCH_SRCDIR)/linker.ld
+arch/x86/linker.ld
 
-INCLUDEDIRS += -I$(ARCH_SRCDIR)/include
+INCLUDEDIRS += -Iarch/x86/include
 
-include $(ARCH_SRCDIR)/boot/sub.mk
-include $(ARCH_SRCDIR)/int/sub.mk
-include $(ARCH_SRCDIR)/mem/sub.mk
+include arch/x86/boot/sub.mk
+include arch/x86/int/sub.mk
+include arch/x86/mem/sub.mk
