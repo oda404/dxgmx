@@ -1,0 +1,16 @@
+{
+    "title": "Security",
+    "description": "Security related features",
+    "menus": [],
+    "options": [
+        {
+            "name": "CONFIG_STACK_PROT",
+            "type": "input",
+            "title": "Generate stack guards",
+            "description": "Generate stack guards to catch possible stack overflows. Possible values include:\n- strong\n- all\n",
+            "modules": [
+                "drivers/security/stackprot"
+            ]
+        }
+    ]
+}

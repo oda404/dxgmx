@@ -1,0 +1,24 @@
+{
+    "title": "System buses",
+    "options": [
+        {
+            "name": "CONFIG_PCI",
+            "title": "PCI Support",
+            "description": "Support for the PCI bus.",
+            "modules": [
+                "drivers/buses/pci"
+            ]
+        },
+        {
+            "name": "CONFIG_PS2IO",
+            "title": "PS2 Devices support",
+            "description": "Support for PS2 devices like keyboards and mice.",
+            "implies": [
+                "CONFIG_SERIALIO"
+            ],
+            "modules": [
+                "drivers/buses/ps2io"
+            ]
+        }
+    ]
+}

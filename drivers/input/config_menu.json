@@ -1,0 +1,26 @@
+{
+    "title": "Input devices",
+    "description": "",
+    "options": [
+        {
+            "name": "CONFIG_PS2KBD",
+            "title": "PS2 Keyboard support",
+            "description": "Driver for interacting with PS2 keyboards.",
+            "implies": [
+                "CONFIG_DEVFS",
+                "CONFIG_PS2IO"
+            ],
+            "modules": [
+                "drivers/input/ps2kbd"
+            ]
+        },
+        {
+            "name": "CONFIG_SERIALIO",
+            "title": "Serial IO subsystems",
+            "description": "Register and find drivers for serial devices.",
+            "modules": [
+                "drivers/input/serialio"
+            ]
+        }
+    ]
+}

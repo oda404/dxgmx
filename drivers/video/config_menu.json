@@ -1,0 +1,13 @@
+{
+    "title": "Video",
+    "options": [
+        {
+            "name": "CONFIG_FB",
+            "title": "Linear framebuffer support",
+            "description": "Enable support for linear framebuffers. This relies on the bootloader to first give info about any existing framebuffers. This is exposed to userspace in /dev (if devfs is enabled)",
+            "modules": [
+                "drivers/video/fb"
+            ]
+        }
+    ]
+}

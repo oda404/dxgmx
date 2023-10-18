@@ -1,0 +1,32 @@
+{
+    "title": "Klog sinks",
+    "options": [
+        {
+            "name": "CONFIG_RS232_SINK",
+            "title": "RS-232 Serial sink",
+            "description": "Enable RS-232 klog sink. This is really useful for early debugging in the boot process, before any other sinks come online (if at all). If you're running in an emulator the serial connection can be tied to the terminal's stdout. If running on bare metal it may be the only way of getting early logs, in some cases. (x86 only for now)",
+            "modules": [
+                "drivers/sinks/rs232_sink"
+            ]
+        },
+        {
+            "name": "CONFIG_VGA_TEXT_SINK",
+            "title": "VGA Text sink",
+            "description": "A pretty old and mostly deprecated way of printing text to a screen, but due to it's ease of use and basically 0 dependencies on supporting systems, it may be a good way of getting some kernel output if anything else fails. (x86 only for now)",
+            "modules": [
+                "drivers/sinks/vgasink"
+            ]
+        },
+        {
+            "name": "CONFIG_FBSINK",
+            "title": "Framebuffer sink",
+            "description": "Enable printing characters to a linear framebuffer",
+            "implies": [
+                "CONFIG_FB"
+            ],
+            "modules": [
+                "drivers/sinks/fbsink"
+            ]
+        }
+    ]
+}

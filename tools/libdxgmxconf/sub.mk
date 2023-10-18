@@ -3,9 +3,7 @@ WD = tools/libdxgmxconf
 
 # common libconf
 LIB_CONF     := $(BUILDDIR)/$(WD)/libdxgmxconf.a
-LIB_CONF_OBJS := \
-$(BUILDDIR)/$(WD)/core_gen.cpp.o $(BUILDDIR)/$(WD)/core_menu.cpp.o \
-$(BUILDDIR)/$(WD)/core_ops.cpp.o $(BUILDDIR)/$(WD)/core_load.cpp.o 
+LIB_CONF_OBJS := $(BUILDDIR)/$(WD)/core.cpp.o $(BUILDDIR)/$(WD)/core_tree.cpp.o
 
 $(LIB_CONF): $(LIB_CONF_OBJS)
 	@mkdir -p $(dir $@)

@@ -1,0 +1,14 @@
+{
+    "title": "Storage",
+    "description": "",
+    "options": [
+        {
+            "name": "CONFIG_PATA",
+            "title": "PATA",
+            "modules": [
+                "drivers/storage/ata"
+            ],
+            "description": "Enable Parallel ATA support, a legacy storage device interface. (x86 only for now)"
+        }
+    ]
+}

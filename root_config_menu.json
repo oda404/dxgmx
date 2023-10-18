@@ -2,6 +2,7 @@
     "title": "Main menu",
     "menus": [
         "arch/config_menu.json",
-        "kernel/config_menu.json"
+        "kernel/config_menu.json",
+        "drivers/config_menu.json"
     ]
 }

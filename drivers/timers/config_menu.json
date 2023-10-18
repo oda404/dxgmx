@@ -1,0 +1,24 @@
+{
+    "title": "Timers",
+    "description": "",
+    "options": [
+        {
+            "name": "CONFIG_X86_PIT",
+            "title": "PIT (Programmable Interval Timer)",
+            "description": "Enable Programmable Interval Timer support on x86 systems.",
+            "visible": "CONFIG_X86",
+            "modules": [
+                "drivers/timers/pit"
+            ]
+        },
+        {
+            "name": "CONFIG_X86_RTC",
+            "title": "RTC (Real Time Clock)",
+            "description": "Enable Programmable Interval Timer support on x86 systems.",
+            "visible": "CONFIG_X86",
+            "modules": [
+                "drivers/timers/rtc"
+            ]
+        }
+    ]
+}

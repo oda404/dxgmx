@@ -5,20 +5,20 @@
             "name": "CONFIG_LITTLE_ENDIAN",
             "title": "Little endianness",
             "description": "",
-            "view_only": true
+            "visible": false
         },
         {
             "name": "CONFIG_64BIT",
             "title": "Native 64bit CPU",
             "description": "",
-            "view_only": true
+            "visible": false
         },
         {
             "name": "CONFIG_ARCH",
             "title": "Architecture",
             "type": "input",
             "description": "",
-            "view_only": true
+            "visible": false
         }
     ],
     "menus": [

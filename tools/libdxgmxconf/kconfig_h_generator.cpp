@@ -1,3 +1,7 @@
+/**
+ * Copyright 2023 Alexandru Olaru.
+ * Distributed under the MIT license.
+ */
 
 #include <algorithm>
 #include <cstring>

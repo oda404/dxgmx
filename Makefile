@@ -41,9 +41,6 @@ endif
 
 # Translate arch into src arch.
 SRCARCH           := $(shell tools/arch.sh --to-srcarch $(CONFIG_ARCH))
-ifeq ($(SRCARCH), undefined)
-    $(error Unsupported arch: '$(CONFIG_ARCH)')
-endif
 
 TARGET_TRIP       := $(CONFIG_ARCH)-unknown-dxgmx
 
@@ -72,8 +69,7 @@ LDFLAGS           := -nostdlib
 
 MAKEFLAGS         += --no-print-directory
 
-PRETTY_PRINT  = tools/pretty-print.sh
-export PRETTY_PRINT
+PRETTY_PRINT      := tools/pretty-print.sh
 
 ifeq ($(CONFIG_DEBUG_INFO),y) 
 	EXTRA_CFLAGS += -g
@@ -84,7 +80,7 @@ ifdef CONFIG_OPTIMIZATIONS
 endif
 
 # Include main subdirs
-include arch/$(SRCARCH)/sub.mk
+-include arch/$(SRCARCH)/sub.mk
 include kernel/sub.mk
 include include/sub.mk
 include tools/sub.mk
@@ -124,7 +120,7 @@ MISCOBJS           := $(sort $(MISCOBJS))
 
 ALL_OBJS           := $(COBJS) $(ASMOBJS) $(CMODOBJS) $(SMODOBJS) $(MISCOBJS)
 
-DXGMX_COMMON_DEPS  := Makefile $(TARGET_FILE)
+DXGMX_COMMON_DEPS  := Makefile $(TARGET_FILE) $(CONFIG_FILE)
 
 SYSCALL_DEFS       := include/dxgmx/generated/syscall_defs.h
 CONFIG_DEFS        := include/dxgmx/generated/kconfig.h

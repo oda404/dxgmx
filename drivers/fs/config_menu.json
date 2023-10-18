@@ -1,0 +1,32 @@
+{
+    "title": "Filesystems",
+    "options": [
+        {
+            "name": "CONFIG_FATFS",
+            "title": "FAT32 Support",
+            "description": "Enable support for FAT32 filesystems.",
+            "modules": [
+                "drivers/fs/fat"
+            ]
+        },
+        {
+            "name": "CONFIG_RAMFS",
+            "title": "RAM FS Support",
+            "description": "Enable support for mounting ram backed filesystems.",
+            "modules": [
+                "drivers/fs/ramfs"
+            ]
+        },
+        {
+            "name": "CONFIG_DEVFS",
+            "title": "Devfs support",
+            "description": "Enable support for the devfs. The kernel exposes device files through this file fs.",
+            "implies": [
+                "CONFIG_RAMFS"
+            ],
+            "modules": [
+                "drivers/fs/devfs"
+            ]
+        }
+    ]
+}

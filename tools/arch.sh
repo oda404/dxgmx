@@ -44,14 +44,12 @@ from_target_trip() {
 
 exit_if_bad_usage() {
     if [[ -z $2 ]]; then
-        printf "Bad usage for option: $1.\n\n"
-        help
+        printf "undefined\n"
         exit 1
     fi
 }
 
 if [[ "$#" -eq 0 ]]; then
-    help
     exit 1
 fi
 
@@ -80,7 +78,6 @@ do
         ;;
         *)
             printf "Unrecognized option: $1.\n\n"
-            help
             exit 1
         ;;
     esac
@@ -92,7 +89,6 @@ if [[ $OPTS -gt 1 ]]; then
 fi
 
 if [[ $HELP -eq 1 ]]; then
-    help
     exit
 fi
 

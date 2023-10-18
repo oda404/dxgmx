@@ -1,0 +1,22 @@
+{
+    "title": "Core",
+    "description": "Core kernel features",
+    "options": [
+        {
+            "name": "CONFIG_MULTIBOOT_BOOTLOADER",
+            "title": "Multiboot 0.6.96 support",
+            "modules": [
+                "arch/x86/multiboot"
+            ],
+            "description": "Enable Multiboot 0.6.96 support. The kernel will be able to boot and get it's information from a Multiboot 0.6.96 compliant bootloader. If multiple bootloader specs are enabled the kernel will figure it which one is being used. If none are enabled the kernel will not boot."
+        },
+        {
+            "name": "CONFIG_COMPILE_BUILTINS",
+            "title": "Compiler builtins",
+            "modules": [
+                "drivers/core/builtins"
+            ],
+            "description": "Compile and link compiler builtins for handling non-native operations. This may be necessary to even compile the kernel."
+        }
+    ]
+}

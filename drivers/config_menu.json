@@ -1,0 +1,16 @@
+{
+    "title": "Drivers",
+    "description": "Kernel drivers and extra features. The base kernel doesn't really do anything useful without any hardware drivers.",
+    "menus": [
+        "drivers/core/config_menu.json",
+        "drivers/sinks/config_menu.json",
+        "drivers/timers/config_menu.json",
+        "drivers/storage/config_menu.json",
+        "drivers/video/config_menu.json",
+        "drivers/fs/config_menu.json",
+        "drivers/buses/config_menu.json",
+        "drivers/input/config_menu.json",
+        "drivers/security/config_menu.json"
+    ],
+    "options": []
+}

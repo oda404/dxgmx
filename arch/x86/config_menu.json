@@ -1,15 +1,7 @@
 {
+    "name": "CONFIG_X86",
     "title": "x86",
     "options": [
-        {
-            "name": "CONFIG_X86",
-            "title": "x86 (32bit)",
-            "description": "Compile for x86 (32bit)",
-            "implies": [
-                "CONFIG_LITTLE_ENDIAN",
-                "CONFIG_ARCH = i686"
-            ]
-        },
         {
             "name": "CONFIG_X86_64",
             "title": "x86_64",
@@ -20,5 +12,9 @@
                 "CONFIG_ARCH = x86_64"
             ]
         }
+    ],
+    "implies": [
+        "CONFIG_LITTLE_ENDIAN",
+        "CONFIG_ARCH = i686"
     ]
 }

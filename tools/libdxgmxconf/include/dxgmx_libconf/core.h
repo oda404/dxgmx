@@ -7,6 +7,7 @@
 
 #include <memory>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 enum ConfigOptionType
@@ -22,83 +23,79 @@ enum ConfigInteractableType
     CONFIG_OPTION = 2,
 };
 
-/**
- * 'p' prefix - Parsed from the config files.
- * 'c' prefix - Computed based on some config rules.
- * 'e' prefix - Engine convenience stuff that may be useful for frontends.
- */
+struct ConfigTree;
 
 struct ConfigInteractable
 {
     virtual ~ConfigInteractable() = default;
 
+    /* If this is set the Interactable will define this macro once it's
+     * selected. In case of menus/radios, they need to be selected first before
+     * they can be expanded */
     std::string name;
+
     std::string title;
     std::string description;
 
-    std::string view_only_rule;
-    bool view_only = false;
+    std::string visible_rule;
+    bool visible = true;
+
+    bool set = false;
+    std::string value;
+
+    ConfigOptionType input_type = CONFIG_OPTION_BOOL;
+    std::vector<std::string> implies;
+    std::vector<std::string> modules;
 
     ConfigInteractableType type = CONFIG_BASE;
+
+    virtual int define(ConfigTree& tree);
+    virtual int define(const std::string& value, ConfigTree& tree);
+    virtual int undefine(ConfigTree& tree);
 };
 
 struct ConfigOption : ConfigInteractable
 {
-    ConfigOption()
-    {
-        type = CONFIG_OPTION;
-    }
+    ConfigOption();
 
-    ConfigOptionType input_type = CONFIG_OPTION_BOOL;
-    std::vector<std::string> implies;
-
-    bool set = false;
-    std::string value;
+    int define(ConfigTree& tree) override;
+    int define(const std::string& value, ConfigTree& tree) override;
+    int undefine(ConfigTree& tree) override;
 };
 
 struct ConfigMenu : ConfigInteractable
 {
-    ConfigMenu()
-    {
-        type = CONFIG_MENU;
-    }
+    ConfigMenu();
 
-    ConfigInteractable* selected_inter()
-    {
-        if (sel_idx == -1)
-            return nullptr;
+    ConfigInteractable* selected_inter();
 
-        return interactables[sel_idx].get();
-    }
+    int set_next_element();
+    int set_prev_element();
 
-    ssize_t first_interactable_idx()
-    {
-        for (size_t i = 0; i < interactables.size(); ++i)
-        {
-            if (!interactables[i]->view_only)
-                return i;
-        }
+    int set_first_element();
+    int set_last_element();
 
-        return -1;
-    }
+    bool needs_selecting();
+
+    int define(ConfigTree& tree) override;
+    int define(const std::string& value, ConfigTree& tree) override;
+    int undefine(ConfigTree& tree) override;
+
+    size_t visible_elements_count() const;
 
     std::vector<std::unique_ptr<ConfigInteractable>> interactables;
     ssize_t sel_idx = -1;
 };
 
-int conf_engine_load_menus_recursive(
-    const std::string& menu_path, ConfigMenu* root_menu);
+struct ConfigTree
+{
+    ConfigMenu root_menu;
+    std::unordered_map<std::string, ConfigInteractable*> options_map;
 
-int conf_engine_validate_implied(const ConfigMenu* root_menu);
-
-int conf_engine_parse_conf_file(
-    const std::string& config_path, ConfigMenu* menu);
-
-int conf_engine_define_option(ConfigMenu* root_menu, ConfigOption& opt);
-int conf_engine_undefine_option(ConfigMenu* root_menu, ConfigOption& opt);
-int conf_engine_set_option(
-    ConfigMenu* root_menu, const std::string& val, ConfigOption& opt);
-int conf_engine_unset_option(ConfigMenu* root_menu, ConfigOption& opt);
+    int build_from_path(const std::string& path);
+    int load_options_from_conf_file(const std::string& conf_path);
+    int save_to_gnumake_file(const std::string& conf_path);
+};
 
 int conf_engine_generate_gnumake_defs(
     const std::string& out_path, ConfigMenu* root);
