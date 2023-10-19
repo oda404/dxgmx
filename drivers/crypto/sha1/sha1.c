@@ -5,10 +5,13 @@
 
 #include <dxgmx/assert.h>
 #include <dxgmx/attrs.h>
-#include <dxgmx/crypto/sha1.h>
+#include <dxgmx/crypto/hashing.h>
 #include <dxgmx/generated/kconfig.h>
+#include <dxgmx/module.h>
 #include <dxgmx/string.h>
 #include <dxgmx/utils/bitwise.h>
+
+#define SHA1_DIGEST_SIZE 20
 
 /** Papa bless for this:
  * https://datatracker.ietf.org/doc/html/rfc3174
@@ -214,7 +217,7 @@ static size_t sha1_read_block(SHA1Context* ctx)
     return read;
 }
 
-int sha1_chew(const char* buf, size_t buflen, u8* digest)
+static int sha1_chew(const void* buf, size_t buflen, void* digest)
 {
     SHA1Context ctx = sha1_create_context(buf, buflen);
 
@@ -235,3 +238,26 @@ int sha1_chew(const char* buf, size_t buflen, u8* digest)
     memcpy(digest, &ctx.regs.h0, SHA1_DIGEST_SIZE);
     return 0;
 }
+
+static int sha1_main()
+{
+    HashingFunction hashfunc = {
+        .name = "sha1",
+        .digest_size = SHA1_DIGEST_SIZE,
+        .chew = sha1_chew,
+        .security_priority = 100,
+        .speed_priority = 1000};
+
+    return hashing_register_hashfunc(&hashfunc);
+}
+
+static int sha1_exit()
+{
+    return hashing_unregister_hashfunc("sha1");
+}
+
+MODULE g_sha1_module = {
+    .name = "sha1",
+    .main = sha1_main,
+    .exit = sha1_exit,
+    .stage = MODULE_STAGE2};

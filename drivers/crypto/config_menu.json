@@ -1,0 +1,13 @@
+{
+    "title": "Cryptography",
+    "options": [
+        {
+            "name": "CONFIG_SHA1",
+            "title": "SHA1 Support",
+            "description": "Enable Secure Hash Algorithm 1 support.",
+            "modules": [
+                "drivers/crypto/sha1"
+            ]
+        }
+    ]
+}
