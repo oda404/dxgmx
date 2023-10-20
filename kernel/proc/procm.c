@@ -98,6 +98,7 @@ int procm_replace_proc(
     newproc.pid = actingproc->pid;
     newproc.fds = actingproc->fds;
     newproc.fd_count = actingproc->fd_count;
+    newproc.fd_last_free_idx = actingproc->fd_last_free_idx;
     newproc.kstack_top = actingproc->kstack_top;
 
     /* Load the context of the new process, so the old can be freed without any
@@ -120,9 +121,12 @@ pid_t procm_spawn_proc(
     (void)argv;
     (void)envp;
 
-    Process newproc = {0};
+    Process newproc;
+    int st = proc_init(&newproc);
+    if (st < 0)
+        return st;
 
-    int st = proc_create_address_space(path, actingproc, &newproc);
+    st = proc_create_address_space(path, actingproc, &newproc);
     if (st < 0)
         return st;
 
@@ -160,6 +164,9 @@ pid_t procm_spawn_proc(
 
 _INIT pid_t procm_spawn_kernel_proc()
 {
+    if (proc_init(&g_kernel_proc) < 0)
+        panic("Failed to init kernel proc!");
+
     g_kernel_proc.paging_struct = mm_get_kernel_paging_struct();
     return 0;
 }

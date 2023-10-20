@@ -12,6 +12,7 @@
 #include <dxgmx/errno.h>
 #include <dxgmx/fs/fd.h>
 #include <dxgmx/fs/vfs.h>
+#include <dxgmx/fs/vfs_fdt.h>
 #include <dxgmx/klog.h>
 #include <dxgmx/kmalloc.h>
 #include <dxgmx/limits.h>
@@ -25,17 +26,10 @@
 #include <dxgmx/types.h>
 #include <dxgmx/user.h>
 #include <dxgmx/utils/bitwise.h>
-#include <dxgmx/utils/hashtable.h>
 
 #define KLOGF_PREFIX "vfs: "
 
 #define VFS_TYPE_MAX 32
-
-/**
- * Global file descriptor table.
- */
-static FileDescriptor* g_sys_fds = NULL;
-static size_t g_sys_fd_count = 0;
 
 /* Registered filesystem drivers. */
 static const FileSystemDriver** g_fs_drivers = NULL;
@@ -47,63 +41,6 @@ static size_t g_fs_driver_count = 0;
  * enlarge that array with krealloc, that block of memory might change it's
  * starting point, leaving all references dangling. */
 static LinkedList g_filesystems_ll;
-
-/**
- * Create a new system-wide open file description.
- * Retuns a FileDescriptor* on sucess, NULL on out memory.
- */
-static FileDescriptor* vfs_new_file_descriptor()
-{
-    /* Try finding any allocated but unused fds. */
-    for (size_t i = 0; i < g_sys_fd_count; ++i)
-    {
-        if (g_sys_fds[i].fd == 0)
-            return &g_sys_fds[i];
-    }
-
-    /* If none were found, we allocate one. FIXME: maybe multiple ? */
-    FileDescriptor* tmp =
-        krealloc(g_sys_fds, (g_sys_fd_count + 1) * sizeof(FileDescriptor));
-
-    if (!tmp)
-        return NULL;
-
-    g_sys_fds = tmp;
-    ++g_sys_fd_count;
-
-    tmp = &g_sys_fds[g_sys_fd_count - 1];
-    memset(tmp, 0, sizeof(FileDescriptor));
-
-    return tmp;
-}
-
-/* Destroy a system-wide file description. */
-static int vfs_free_file_descriptor(FileDescriptor* fd)
-{
-    /* Check if fd is actually part of g_sys_fds */
-    ASSERT(
-        fd >= g_sys_fds && fd < g_sys_fds + g_sys_fd_count &&
-        (size_t)fd % sizeof(ptr) == 0);
-
-    /* We should have at least one reference */
-    ASSERT(fd->vnode->ref_count > 0);
-    --fd->vnode->ref_count;
-
-    int st = 0;
-    if (fd->vnode->ref_count == 0 && (fd->vnode->flags & VNODE_PENDING_RM))
-        st = fd->vnode->owner->driver->rmnode(fd->vnode);
-
-    /**
-     * We do not shrink nor shift the array. This is beacause:
-     * 1) Files are often opened and closed, shrinking this array every time
-     * would cause a lot of overhead
-     * 2) This array is indexed by the local file descriptor table of every
-     * process. Shifting the elements in this array would mean messing up
-     * those offsets.
-     */
-    memset(fd, 0, sizeof(FileDescriptor));
-    return st;
-}
 
 /**
  * Create a new fileystem
@@ -251,41 +188,15 @@ static FileSystem* vfs_find_fs_by_src_or_dest(const char* src_or_dest)
     return NULL;
 }
 
-/**
- * Get the system-wide file descriptor for 'fd' and 'proc'.
- * 'fd' is a local file descriptor for the 'proc' process.
- * Does not do safety checks.
- */
-static FileDescriptor* vfs_get_sysfd(fd_t fd, Process* proc)
-{
-    if (fd < 0 || (size_t)fd >= proc->fd_count)
-        return NULL;
-
-    size_t idx = proc->fds[fd];
-    if (idx >= g_sys_fd_count)
-        return NULL; // somethings wrong ?
-
-    return &g_sys_fds[idx];
-}
-
-/**
- * Transform a system wide file descriptor into it's index in the system wide fd
- * table.
- */
-static size_t vfs_sysfd_to_idx(FileDescriptor* fd)
-{
-    ASSERT(
-        fd >= g_sys_fds && fd < g_sys_fds + g_sys_fd_count &&
-        (ptr)fd % sizeof(ptr) == 0);
-
-    return (ptr)fd - (ptr)g_sys_fds;
-}
-
 _INIT int vfs_init()
 {
+    int st = vfs_fdt_init();
+    if (st < 0)
+        panic("Failed to initialize VFS FDT, %d.", st);
+
     linkedlist_init(&g_filesystems_ll);
 
-    int st = vfs_mount("hdap0", "/", NULL, NULL, 0);
+    st = vfs_mount("hdap0", "/", NULL, NULL, 0);
     if (st < 0)
         panic("Failed to mount / %d :(", st);
 
@@ -396,7 +307,6 @@ int vfs_register_fs_driver(const FileSystemDriver* driver)
     *newfs_driver = driver;
 
     KLOGF(INFO, "Registered filesystem: '%s'.", (*newfs_driver)->name);
-
     return 0;
 }
 
@@ -503,41 +413,39 @@ int vfs_open(const char* _USERPTR path, int flags, mode_t mode, Process* proc)
         return vnode_res.error;
     }
 
-    st = vnode_res.value->ops->open(vnode_res.value, flags);
-    if (st < 0)
-        return st;
+    fd_t procfd = proc_new_fd(proc);
+    if (procfd < 0)
+        return procfd;
 
     /* Create a new system-wide file descriptor */
-    FileDescriptor* sysfd = vfs_new_file_descriptor();
+    FileDescriptor* sysfd = vfs_fdt_new_sysfd(procfd, proc->pid);
     if (!sysfd)
-        return -ENOMEM;
-
-    /* Get current process and create a new process fd */
-    int procfd = proc_new_fd(vfs_sysfd_to_idx(sysfd), proc);
-    if (procfd < 0)
     {
-        /* FIXME: delete file if it was created with O_CREAT */
-        vfs_free_file_descriptor(sysfd);
-        return procfd;
+        proc_free_fd(procfd, proc);
+        return -ENOMEM;
     }
 
-    if ((flags & O_RDWR) && (flags & O_TRUNC))
-        TODO();
+    st = vnode_res.value->ops->open(vnode_res.value, flags);
+    if (st < 0)
+    {
+        proc_free_fd(procfd, proc);
+        vfs_fdt_free_sysfd(procfd, proc->pid);
+        return st;
+    }
 
     /* Fill out sysfd */
-    sysfd->fd = procfd;
-    sysfd->pid = proc->pid;
-    sysfd->off = 0;
     sysfd->flags = flags;
     sysfd->vnode = vnode_res.value;
-    ++sysfd->vnode->ref_count;
-
-    return sysfd->fd;
+    vnode_increase_refcount(sysfd->vnode);
+    return procfd;
 }
 
 ssize_t vfs_read(fd_t fd, void* _USERPTR buf, size_t n, Process* proc)
 {
-    FileDescriptor* sysfd = vfs_get_sysfd(fd, proc);
+    if (fd < 0)
+        return -EINVAL;
+
+    FileDescriptor* sysfd = vfs_fdt_get_sysfd(fd, proc->pid);
     if (!sysfd)
         return -EBADF;
 
@@ -560,7 +468,10 @@ ssize_t vfs_read(fd_t fd, void* _USERPTR buf, size_t n, Process* proc)
 
 int vfs_ioctl(fd_t fd, int req, void* data, Process* proc)
 {
-    FileDescriptor* sysfd = vfs_get_sysfd(fd, proc);
+    if (fd < 0)
+        return -EINVAL;
+
+    FileDescriptor* sysfd = vfs_fdt_get_sysfd(fd, proc->pid);
     if (!sysfd)
         return -EBADF;
 
@@ -569,7 +480,10 @@ int vfs_ioctl(fd_t fd, int req, void* data, Process* proc)
 
 ssize_t vfs_write(fd_t fd, const void* _USERPTR buf, size_t n, Process* proc)
 {
-    FileDescriptor* sysfd = vfs_get_sysfd(fd, proc);
+    if (fd < 0)
+        return -EINVAL;
+
+    FileDescriptor* sysfd = vfs_fdt_get_sysfd(fd, proc->pid);
     if (!sysfd)
         return -EBADF;
 
@@ -596,7 +510,10 @@ ssize_t vfs_write(fd_t fd, const void* _USERPTR buf, size_t n, Process* proc)
 
 off_t vfs_lseek(fd_t fd, off_t off, int whence, Process* proc)
 {
-    FileDescriptor* sysfd = vfs_get_sysfd(fd, proc);
+    if (fd < 0)
+        return -EINVAL;
+
+    FileDescriptor* sysfd = vfs_fdt_get_sysfd(fd, proc->pid);
     if (!sysfd)
         return -EBADF;
 
@@ -633,12 +550,12 @@ off_t vfs_lseek(fd_t fd, off_t off, int whence, Process* proc)
 
 int vfs_close(fd_t fd, Process* proc)
 {
-    size_t idx = proc_free_fd(fd, proc);
-    if (idx == PLATFORM_MAX_UNSIGNED)
+    if (fd < 0)
         return -EINVAL;
 
-    ASSERT(idx < g_sys_fd_count);
-    return vfs_free_file_descriptor(&g_sys_fds[idx]);
+    proc_free_fd(fd, proc);
+    vfs_fdt_free_sysfd(fd, proc->pid);
+    return 0;
 }
 
 void* vfs_mmap(
@@ -650,7 +567,7 @@ void* vfs_mmap(
     off_t off,
     Process* proc)
 {
-    FileDescriptor* sysfd = vfs_get_sysfd(fd, proc);
+    FileDescriptor* sysfd = vfs_fdt_get_sysfd(fd, proc->pid);
     if (!sysfd)
         return (void*)EBADF;
 

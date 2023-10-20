@@ -11,6 +11,7 @@
 #include <dxgmx/kmalloc.h>
 #include <dxgmx/proc/proc.h>
 #include <dxgmx/proc/proc_limits.h>
+#include <dxgmx/string.h>
 #include <dxgmx/todo.h>
 
 #define KLOGF_PREFIX "proc: "
@@ -76,44 +77,63 @@ static int proc_load_from_file(
     return st;
 }
 
-int proc_new_fd(size_t sysfd_idx, Process* proc)
+static int proc_enlarge_fds(Process* proc)
 {
-    if (sysfd_idx == PLATFORM_MAX_UNSIGNED)
-        return -E2BIG;
+    /* Four ?? 4 ! */
+#define STEP 4
+    size_t prevsize = proc->fd_count * sizeof(bool);
+    size_t stepsize = STEP * sizeof(bool);
 
-    /* Try to find the first available fd */
-    for (size_t i = 0; i < proc->fd_count; ++i)
-    {
-        if (proc->fds[i] == PLATFORM_MAX_UNSIGNED)
-        {
-            proc->fds[i] = sysfd_idx;
-            return i;
-        }
-    }
-
-    /* No free fd was found, allocate new one */
-    size_t* tmp = krealloc(proc->fds, (proc->fd_count + 1) * sizeof(size_t));
+    bool* tmp = krealloc(proc->fds, prevsize + stepsize);
     if (!tmp)
         return -ENOMEM;
 
     proc->fds = tmp;
-    ++proc->fd_count;
-
-    int fd = proc->fd_count - 1;
-    proc->fds[fd] = sysfd_idx;
-    return fd;
+    memset(proc->fds + prevsize, 0, stepsize);
+    proc->fd_count += STEP;
+    return 0;
+#undef STEP
 }
 
-size_t proc_free_fd(fd_t fd, Process* proc)
+int proc_init(Process* proc)
 {
-    if (fd < 0 || (size_t)fd >= proc->fd_count)
-        return PLATFORM_MAX_UNSIGNED;
+    memset(proc, 0, sizeof(Process));
+    if (proc_enlarge_fds(proc) < 0)
+        return -ENOMEM;
 
-    /* FIXME: shrink array once we a hit a threshold. */
+    proc->fd_last_free_idx = 0;
+    return 0;
+}
 
-    size_t ret = proc->fds[fd];
-    proc->fds[fd] = PLATFORM_MAX_UNSIGNED; // available flag
-    return ret;
+fd_t proc_new_fd(Process* proc)
+{
+    const size_t start_point = proc->fd_last_free_idx;
+    while (proc->fd_last_free_idx < proc->fd_count &&
+           proc->fds[proc->fd_last_free_idx])
+    {
+        ++proc->fd_last_free_idx;
+        // overflow check, unlikey to happen but I don't want to bash my head in
+        // if it does
+        if (proc->fd_last_free_idx == start_point)
+            return -EOVERFLOW;
+    }
+
+    if (proc->fd_last_free_idx >= proc->fd_count)
+    {
+        if (proc_enlarge_fds(proc) < 0)
+            return -ENOMEM;
+    }
+
+    proc->fds[proc->fd_last_free_idx] = true;
+    return proc->fd_last_free_idx++;
+}
+
+void proc_free_fd(fd_t fd, Process* proc)
+{
+    if ((size_t)fd >= proc->fd_count)
+        return; // Out of range
+
+    proc->fds[fd] = false;
 }
 
 /**

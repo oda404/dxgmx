@@ -9,6 +9,7 @@
 #include <dxgmx/fs/fs.h>
 #include <dxgmx/fs/vnode.h>
 #include <dxgmx/posix/fcntl.h>
+#include <dxgmx/posix/sys/stat.h>
 #include <dxgmx/posix/sys/types.h>
 #include <dxgmx/posix/unistd.h>
 #include <dxgmx/proc/proc.h>

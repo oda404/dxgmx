@@ -49,7 +49,7 @@ typedef ssize_t blkcnt_t;
 typedef int64_t time_t;
 typedef int64_t clock_t;
 
-typedef ssize_t pid_t;
+typedef int32_t pid_t;
 
 #ifdef _KERNEL
 #include <dxgmx/err_or.h>

@@ -29,12 +29,11 @@ typedef struct S_Process
     Bitmap dma_bitmap;
 
     /**
-     * List of indexes into the system wide file descriptor table.
-     * A process fd is used as an index into this table.
-     * PLATFORM_MAX_UNSIGNED is used as the value of available/unused fds.
+     * Lookup table of process file descriptors
      */
-    size_t* fds;
+    bool* fds;
     size_t fd_count;
+    size_t fd_last_free_idx;
 
     /* Instruction pointer to which we should jump when running this process */
     ptr inst_ptr;
@@ -58,20 +57,10 @@ typedef struct S_Process
     int exit_status;
 } Process;
 
-/**
- * Get the next available fd int for this process
- * Returns a positive int (fd) on sucess, or:
- * -E2BIG if 'sysfd_idx' is too big.
- * -ENOMEM if the fd could not be allocated.
- */
-int proc_new_fd(size_t sysfd_idx, Process* proc);
+int proc_init(Process* proc);
 
-/**
- * Removes the given fd from the process' fd table.
- * Returns the index into the system wide fd table that was just removed,
- * PLATFORM_MAX_UNSIGNED on invalid fd.
- */
-size_t proc_free_fd(fd_t fd, Process* proc);
+fd_t proc_new_fd(Process* proc);
+void proc_free_fd(fd_t fd, Process* proc);
 
 int proc_load_ctx(const Process* proc);
 

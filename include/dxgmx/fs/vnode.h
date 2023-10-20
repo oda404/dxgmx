@@ -56,6 +56,9 @@ typedef struct S_VirtualNode
     void* data;
 } VirtualNode;
 
+int vnode_increase_refcount(VirtualNode* vnode);
+int vnode_decrease_refcount(VirtualNode* vnode);
+
 DEFINE_ERR_OR_PTR(VirtualNode);
 
 /**
