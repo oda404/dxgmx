@@ -26,6 +26,8 @@
 #define PAGEFAULT_IS_WRITE(x) (x & (1 << 1))
 #define PAGEFAULT_IS_EXEC(x) (x & (1 << 4))
 
+static ptr g_kheap_start;
+
 /* Handler for a page protection violation fault. */
 static void
 pagefault_handle_prot_viol(ptr faultaddr, const InterruptFrame* frame)
@@ -37,14 +39,14 @@ pagefault_handle_prot_viol(ptr faultaddr, const InterruptFrame* frame)
     {
         const char* action_msg = NULL;
         if (PAGEFAULT_IS_EXEC(frame->code))
-            action_msg = "exec";
+            action_msg = "x";
         else if (PAGEFAULT_IS_WRITE(frame->code))
-            action_msg = "write";
+            action_msg = "w";
         else
-            action_msg = "read";
+            action_msg = "r";
 
         panic(
-            "Kernel page protection violation at: 0x%p (%s), ip: 0x%p",
+            "Kernel page protection violation @ 0x%p (%s)  ip(0x%p)!",
             (void*)faultaddr,
             action_msg,
             (void*)frame->eip);
@@ -130,7 +132,7 @@ static void pagefault_handle_absent(ptr faultaddr, InterruptFrame* frame)
 
     if (cpl == 0)
     {
-        if (faultaddr >= kimg_vaddr() + kimg_size())
+        if (faultaddr >= g_kheap_start)
             pagefault_handle_absent_kernel_heap(faultaddr);
         else
             pagefault_handle_absent_kernel_bogus(faultaddr);
@@ -150,43 +152,56 @@ static void pagefault_isr(InterruptFrame* frame)
 #if PAGEFAULT_VERBOSE == 1
     const char* action_msg = NULL;
     if (PAGEFAULT_IS_EXEC(frame->code))
-        action_msg = "exec";
+        action_msg = "x";
     else if (PAGEFAULT_IS_WRITE(frame->code))
-        action_msg = "write";
+        action_msg = "w";
     else
-        action_msg = "read";
+        action_msg = "r";
 
     const char* result_msg = NULL;
-
     if (PAGEFAULT_IS_PROT_VIOL(frame->code))
-        result_msg = "prot. violation";
+        result_msg = "prot. fault";
     else
         result_msg = "absent";
 
     KLOGF(
         DEBUG,
-        "Fault at: 0x%p (%s/%s), cpl: %d%s, ip: 0x%p",
+        "Fault @ 0x%p (%s/%s) cpl(%d) ip(0x%p)%s%s",
         (void*)faultaddr,
         action_msg,
         result_msg,
         frame->cs & 3,
-        frame->cs & 3 || user_access ? " -> user" : "",
-        (void*)frame->eip);
+        (void*)frame->eip,
+        user_access ? " (.useraccess)" : "",
+        faultaddr >= g_kheap_start ? " (.kheap)" : "");
 #endif // PAGEFAULT_VERBOSE == 1
 
-    if (user_access)
-    {
-        frame->eip = (ptr)user_access_fault_stub;
-        return;
-    }
-
     if (PAGEFAULT_IS_PROT_VIOL(frame->code))
+    {
+        if (user_access)
+        {
+            frame->eip = (ptr)user_access_fault_stub;
+            return;
+        }
+
         pagefault_handle_prot_viol(faultaddr, frame);
+    }
     else
+    {
+        /* We might user fault when trying to access an unmapped kheap page. In
+         * which case we want to map it. */
+        if (user_access && faultaddr < g_kheap_start)
+        {
+            frame->eip = (ptr)user_access_fault_stub;
+            return;
+        }
+
         pagefault_handle_absent(faultaddr, frame);
+    }
 }
 
 void pagefault_setup_isr()
 {
+    g_kheap_start = kimg_vaddr() + kimg_size();
     idt_register_trap_isr(TRAP_PAGEFAULT, 0, pagefault_isr);
 }
