@@ -5,8 +5,11 @@
 
 #include <dxgmx/crypto/hashing.h>
 #include <dxgmx/errno.h>
+#include <dxgmx/klog.h>
 #include <dxgmx/kmalloc.h>
 #include <dxgmx/string.h>
+
+#define KLOGF_PREFIX "hashing: "
 
 static HashingFunction* g_hash_funcs;
 static size_t g_hash_func_count;
@@ -83,4 +86,24 @@ HashingFunction* hashing_best_func_by_speed()
     }
 
     return func;
+}
+
+void hashing_increase_refcount(HashingFunction* func)
+{
+    ++func->refcount;
+}
+
+int hashing_decrease_refcount(HashingFunction* func)
+{
+    if (!func->refcount)
+    {
+        KLOGF(
+            ERR,
+            "Tried to descrease refcount of \"%s\", but it's already 0!",
+            func->name);
+
+        return -ENOENT;
+    }
+    --func->refcount;
+    return 0;
 }

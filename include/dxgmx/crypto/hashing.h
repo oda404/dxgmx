@@ -26,4 +26,7 @@ int hashing_unregister_hashfunc(const char* name);
 
 HashingFunction* hashing_best_func_by_speed();
 
+void hashing_increase_refcount(HashingFunction* func);
+int hashing_decrease_refcount(HashingFunction* func);
+
 #endif // !_DXGMX_CRYPTO_HASHING_H
