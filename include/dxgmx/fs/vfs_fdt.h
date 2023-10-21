@@ -1,3 +1,7 @@
+/**
+ * Copyright 2023 Alexandru Olaru.
+ * Distributed under the MIT license.
+ */
 
 #ifndef _DXGMX_FS_VFS_FDT_H
 #define _DXGMX_FS_VFS_FDT_H
@@ -11,6 +15,6 @@ int vfs_fdt_init();
 
 FileDescriptor* vfs_fdt_new_sysfd(fd_t procfd, pid_t pid);
 FileDescriptor* vfs_fdt_get_sysfd(fd_t procd, pid_t pid);
-void vfs_fdt_free_sysfd(fd_t procfd, pid_t pid);
+void vfs_fdt_free_sysfd(FileDescriptor* sysfd);
 
 #endif // !_DXGMX_FS_VFS_FDT_H

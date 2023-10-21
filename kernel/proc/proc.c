@@ -89,7 +89,7 @@ static int proc_enlarge_fds(Process* proc)
         return -ENOMEM;
 
     proc->fds = tmp;
-    memset(proc->fds + prevsize, 0, stepsize);
+    memset((void*)proc->fds + prevsize, 0, stepsize);
     proc->fd_count += STEP;
     return 0;
 #undef STEP
@@ -118,7 +118,7 @@ fd_t proc_new_fd(Process* proc)
             return -EOVERFLOW;
     }
 
-    if (proc->fd_last_free_idx >= proc->fd_count)
+    if (proc->fd_last_free_idx == proc->fd_count)
     {
         if (proc_enlarge_fds(proc) < 0)
             return -ENOMEM;
@@ -178,9 +178,22 @@ void proc_free(Process* proc)
         proc->path = NULL;
     }
 
-    mm_destroy_paging_struct(proc->paging_struct);
-    kfree(proc->paging_struct);
-    proc->paging_struct = NULL;
+    if (proc->paging_struct)
+    {
+        mm_destroy_paging_struct(proc->paging_struct);
+        kfree(proc->paging_struct);
+        proc->paging_struct = NULL;
+    }
+
+    if (proc->fds)
+    {
+        kfree(proc->fds);
+        proc->fds = NULL;
+        proc->fd_count = 0;
+        proc->fd_last_free_idx = 0;
+    }
+
+    // FIXME: dma bitmap memleak :)
 
     /* Make sure we don't pull the stack from under our feet. This can
      * happen when replacing a process. Let's hope this hack-ish solution

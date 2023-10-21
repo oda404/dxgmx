@@ -429,7 +429,7 @@ int vfs_open(const char* _USERPTR path, int flags, mode_t mode, Process* proc)
     if (st < 0)
     {
         proc_free_fd(procfd, proc);
-        vfs_fdt_free_sysfd(procfd, proc->pid);
+        vfs_fdt_free_sysfd(sysfd);
         return st;
     }
 
@@ -553,8 +553,13 @@ int vfs_close(fd_t fd, Process* proc)
     if (fd < 0)
         return -EINVAL;
 
+    FileDescriptor* sysfd = vfs_fdt_get_sysfd(fd, proc->pid);
+    if (!sysfd)
+        return -ENOENT;
+
+    vnode_decrease_refcount(sysfd->vnode);
     proc_free_fd(fd, proc);
-    vfs_fdt_free_sysfd(fd, proc->pid);
+    vfs_fdt_free_sysfd(sysfd);
     return 0;
 }
 

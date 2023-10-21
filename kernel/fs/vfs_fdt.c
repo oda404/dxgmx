@@ -1,3 +1,7 @@
+/**
+ * Copyright 2023 Alexandru Olaru.
+ * Distributed under the MIT license.
+ */
 
 #include <dxgmx/fs/vfs_fdt.h>
 #include <dxgmx/kmalloc.h>
@@ -50,17 +54,9 @@ FileDescriptor* vfs_fdt_get_sysfd(fd_t procfd, pid_t pid)
     return (FileDescriptor*)find_res.value;
 }
 
-void vfs_fdt_free_sysfd(fd_t procfd, pid_t pid)
+void vfs_fdt_free_sysfd(FileDescriptor* sysfd)
 {
-    ERR_OR(hashtable_val_t)
-    find_res = hashtable_find(
-        vfs_fdt_combo_to_hashkey(procfd, pid), &g_sys_fd_hashtable);
-
-    if (find_res.error)
-        return; // (Not found)
-
-    FileDescriptor* sysfd = (FileDescriptor*)find_res.value;
-    vnode_decrease_refcount(sysfd->vnode);
     hashtable_remove(
-        vfs_fdt_combo_to_hashkey(procfd, pid), &g_sys_fd_hashtable);
+        vfs_fdt_combo_to_hashkey(sysfd->fd, sysfd->pid), &g_sys_fd_hashtable);
+    kfree(sysfd);
 }
