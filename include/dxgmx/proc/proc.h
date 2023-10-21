@@ -51,7 +51,7 @@ typedef struct S_Process
     ptr kstack_top;
 
     /* Process has been terminated and is waiting to be freed up. */
-    bool dead;
+    bool zombie;
 
     /* Return status of the process. */
     int exit_status;

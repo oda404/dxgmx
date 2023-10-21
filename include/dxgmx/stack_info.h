@@ -8,7 +8,6 @@
 
 #include <dxgmx/klog.h>
 #include <dxgmx/proc/proc.h>
-#include <dxgmx/sched/sched.h>
 #include <dxgmx/types.h>
 
 typedef struct S_StackFrame

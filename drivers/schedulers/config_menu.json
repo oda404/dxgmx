@@ -1,0 +1,14 @@
+{
+    "title": "Schedulers",
+    "description": "Scheduler drivers and settings",
+    "options": [
+        {
+            "name": "CONFIG_RINGSCHED",
+            "title": "Ring scheduler",
+            "description": "Ring scheduler driver. Runs each runnable process in a cyclical manner.",
+            "modules": [
+                "drivers/schedulers/ringsched"
+            ]
+        }
+    ]
+}

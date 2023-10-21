@@ -19,7 +19,6 @@
 #include <dxgmx/panic.h>
 #include <dxgmx/posix/sys/stat.h>
 #include <dxgmx/proc/procm.h>
-#include <dxgmx/sched/sched.h>
 #include <dxgmx/stdio.h>
 #include <dxgmx/string.h>
 #include <dxgmx/todo.h>
@@ -582,25 +581,26 @@ void* vfs_mmap(
 
 int sys_open(const char* path, int flags, mode_t mode)
 {
-    return vfs_open(path, flags, mode, sched_current_proc());
+    return vfs_open(path, flags, mode, procm_sched_current_proc());
 }
 
 ssize_t sys_read(int fd, void* buf, size_t n)
 {
-    return vfs_read(fd, buf, n, sched_current_proc());
+    return vfs_read(fd, buf, n, procm_sched_current_proc());
 }
 
 int sys_ioctl(int fd, int req, void* data)
 {
-    return vfs_ioctl(fd, req, data, sched_current_proc());
+    return vfs_ioctl(fd, req, data, procm_sched_current_proc());
 }
 
 ssize_t sys_write(int fd, const void* buf, size_t n)
 {
-    return vfs_write(fd, buf, n, sched_current_proc());
+    return vfs_write(fd, buf, n, procm_sched_current_proc());
 }
 
 void* sys_mmap(void* addr, size_t len, int prot, int flags, int fd, off_t off)
 {
-    return vfs_mmap(addr, len, prot, flags, fd, off, sched_current_proc());
+    return vfs_mmap(
+        addr, len, prot, flags, fd, off, procm_sched_current_proc());
 }

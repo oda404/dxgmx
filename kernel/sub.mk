@@ -20,5 +20,4 @@ include kernel/fs/sub.mk
 include kernel/elf/sub.mk
 include kernel/proc/sub.mk
 include kernel/syscalls/sub.mk
-include kernel/sched/sub.mk
 include kernel/time/sub.mk

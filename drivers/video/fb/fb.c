@@ -17,7 +17,6 @@
 #include <dxgmx/mem/mm.h>
 #include <dxgmx/posix/sys/mman.h>
 #include <dxgmx/proc/procm.h>
-#include <dxgmx/sched/sched.h>
 #include <dxgmx/string.h>
 #include <dxgmx/user.h>
 
@@ -100,7 +99,7 @@ static void* fb_vnode_mmap(
     map_flags |= prot & PROT_WRITE ? PAGE_W : 0;
 
     ERR_OR(ptr)
-    res = dma_map_range(fb->paddr, len, map_flags, sched_current_proc());
+    res = dma_map_range(fb->paddr, len, map_flags, procm_sched_current_proc());
     if (res.error)
         return (void*)res.error;
 

@@ -9,6 +9,7 @@
 #include <dxgmx/kimg.h>
 #include <dxgmx/ksyms.h>
 #include <dxgmx/proc/proc_limits.h>
+#include <dxgmx/proc/procm.h>
 #include <dxgmx/stack_info.h>
 
 void stack_info_dump_trace()
@@ -68,18 +69,14 @@ void stack_info_dump_trace_lvl(KLogLevel lvl)
 
 void stack_info_dump_limits(const char* func, int line)
 {
-    Process* proc = sched_current_proc();
-    size_t esp = cpu_read_esp();
+    const Process* proc = procm_sched_current_proc();
+    const size_t esp = cpu_read_esp();
+
     size_t rem;
     if (proc)
-    {
         rem = esp - (proc->kstack_top - PROC_KSTACK_SIZE);
-    }
     else
-    {
-        size_t stack_size = kimg_kstack_top() - kimg_kstack_bot();
-        rem = esp - (kimg_kstack_top() - stack_size);
-    }
+        rem = esp - kimg_kstack_bot();
 
     klogln(
         DEBUG,

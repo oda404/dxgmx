@@ -8,8 +8,11 @@
 
 #include <dxgmx/proc/proc.h>
 #include <dxgmx/proc/proc_limits.h>
+#include <dxgmx/proc/sched.h>
 
-#define PID_MAX _SSIZE_MAX_
+#define PID_MAX __INT32_MAX__
+
+int procm_init();
 
 /* Load the 'first' PID 1 into memory and have it on standby, waiting for the
  * scheduler to start running. This is only a stub for the actual PID 1. This is
@@ -65,37 +68,13 @@ int procm_replace_proc(
 /* Mark a process as dead, letting it be reaped by the scheduler. */
 int procm_mark_dead(int st, Process* proc);
 
-/* Start executing this process. */
-_ATTR_NORETURN void procm_switch_ctx(const Process* proc);
-
-Process* procm_get_procs();
-size_t procm_proc_count();
-
-/**
- * Try to kill a process. This function can fail if we are trying to kill the
- * acting process.
- *
- * No NULL pointers should be passed to this function.
- *
- * 'actingproc' Acting process.
- * 'targetproc' The process to be kill.
- *
- * Returns:
- * 0 on sucess.
- * -EINVAL if targetproc == actingproc.
- */
-int procm_try_kill_proc(Process* actingproc, Process* targetproc);
-
-/**
- * Get the next process that is queued to run.
- *
- * Returns:
- * A non-NULL Process*.
- */
-Process* procm_next_queued_proc();
-
 Process* procm_get_kernel_proc();
 
-Process* procm_get_proc_by_pid(pid_t pid);
+int procm_sched_register(Scheduler* sched);
+int procm_sched_unregister(Scheduler* sched);
+
+_ATTR_NORETURN void procm_sched_start();
+Process* procm_sched_current_proc();
+_ATTR_NORETURN void procm_sched_yield();
 
 #endif // !_DXGMX_PROC_PROCM_H

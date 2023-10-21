@@ -7,11 +7,9 @@
 #include <dxgmx/cpu.h>
 #include <dxgmx/fs/vfs.h>
 #include <dxgmx/klog.h>
-#include <dxgmx/kstdio/kstdio.h>
 #include <dxgmx/ksyms.h>
 #include <dxgmx/module.h>
 #include <dxgmx/proc/procm.h>
-#include <dxgmx/sched/sched.h>
 #include <dxgmx/syscalls.h>
 #include <dxgmx/timekeep.h>
 
@@ -71,8 +69,10 @@ _ATTR_NORETURN void kinit_stage2()
 
     vfs_init();
 
+    procm_init();
+
     procm_spawn_init();
 
     /* Let it rip */
-    sched_init();
+    procm_sched_start();
 }

@@ -11,7 +11,8 @@
         "drivers/buses/config_menu.json",
         "drivers/input/config_menu.json",
         "drivers/security/config_menu.json",
-        "drivers/crypto/config_menu.json"
+        "drivers/crypto/config_menu.json",
+        "drivers/schedulers/config_menu.json"
     ],
     "options": []
 }
