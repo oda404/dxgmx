@@ -47,14 +47,6 @@ int timekeep_register_timesource(TimeSource* ts);
 int timekeep_unregister_timesource(TimeSource* ts);
 
 /**
- * Initialize timekeep before any TimeSources are registered. This is done so
- * any subsystems that use the timekeep API before timers come online, will do
- * so in a defined maner. You can read more about that in the definition of this
- * function.
- */
-void timekeep_early_init();
-
-/**
  * Initialize timekeep after TimeSources were registered. This function will
  * enumerate all TimeSources, find the best one and allow the meaningfull usage
  * of timers.

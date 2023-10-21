@@ -8,6 +8,15 @@
 
 #include <dxgmx/time.h>
 
+#define TIMER_DORMANT                                                          \
+    (Timer)                                                                    \
+    {                                                                          \
+        .now = timer_stub_now, .starting_ts = (struct timespec)                \
+        {                                                                      \
+            0                                                                  \
+        }                                                                      \
+    }
+
 typedef struct S_Timer
 {
     /* Starting timespec struct. */
@@ -15,17 +24,6 @@ typedef struct S_Timer
     /* Internal getter for timespec structs. */
     struct timespec (*now)();
 } Timer;
-
-/**
- * Start a timer as a stub. This timer will just return 0 everytime it's
- * accessed.
- *
- * 't' the timer;
- *
- * Returns:
- * 0 on success.
- */
-int timer_start_stub(Timer* t);
 
 /**
  * Start a timer. Once a timer has been started you can get how much time has
@@ -81,5 +79,7 @@ double timer_elapsed_sec(const Timer* t);
  * point type.
  */
 double timer_elapsed_ms(const Timer* t);
+
+struct timespec timer_stub_now();
 
 #endif //!_DXGMX_TIMER_H

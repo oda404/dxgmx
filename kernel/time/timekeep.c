@@ -13,7 +13,7 @@
 
 #define KLOGF_PREFIX "timekeep: "
 
-static Timer g_uptime_timer;
+static Timer g_uptime_timer = TIMER_DORMANT;
 static LinkedList g_timesources;
 static TimeSource* g_best_timesource;
 
@@ -37,16 +37,6 @@ int timekeep_unregister_timesource(TimeSource* ts)
 {
     ts->destroy(ts);
     return linkedlist_remove_by_data(ts, &g_timesources);
-}
-
-_INIT void timekeep_early_init()
-{
-    /* Here we do some early initilizations for the timekeep. This is needed
-     * because TimeSources usually don't come online until much later after
-     * calling this function, but timekeep is used regardless by stuff like
-     * klog. This way klog will just get 0 until the actual TimeSources kick in.
-     */
-    timer_start_stub(&g_uptime_timer);
 }
 
 _INIT int timekeep_init()

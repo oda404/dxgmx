@@ -10,16 +10,9 @@
 #include <dxgmx/timer.h>
 #include <dxgmx/todo.h>
 
-static struct timespec timer_stub_now()
+struct timespec timer_stub_now()
 {
     return (struct timespec){0};
-}
-
-int timer_start_stub(Timer* t)
-{
-    t->now = timer_stub_now;
-    t->starting_ts = t->now();
-    return 0;
 }
 
 int timer_start(Timer* t)
