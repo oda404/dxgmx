@@ -64,6 +64,17 @@ typedef struct SyscallEntry
     _ATTR_USED SyscallEntry _g_##_name##_entry =                               \
         (SyscallEntry){.func = _g_##_name##_stub};
 
+#define SYSCALL_NULL(_n)                                                       \
+    int sys_undefined(syscall_t);                                              \
+    static syscall_ret_t _g_null_##_n##_stub(va_list _list)                    \
+    {                                                                          \
+        va_end(_list);                                                         \
+        return sys_undefined(_n);                                              \
+    }                                                                          \
+    _ATTR_SECTION(".syscalls")                                                 \
+    _ATTR_USED SyscallEntry _g_null_##_n##_entry =                             \
+        (SyscallEntry){.func = _g_null_##_n##_stub};
+
 #endif // _KERNEL
 
 #endif // !_DXGMX_SYSCALL_TYPES_H

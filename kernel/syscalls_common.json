@@ -1,0 +1,63 @@
+[
+    {
+        "n": 0,
+        "ret": "void",
+        "name": "sys_exit",
+        "args": [
+            "int"
+        ]
+    },
+    {
+        "n": 1,
+        "ret": "int",
+        "name": "sys_open",
+        "args": [
+            "const char*",
+            "int",
+            "mode_t"
+        ]
+    },
+    {
+        "n": 2,
+        "ret": "ssize_t",
+        "name": "sys_read",
+        "args": [
+            "int",
+            "void*",
+            "size_t"
+        ]
+    },
+    {
+        "n": 3,
+        "ret": "int",
+        "name": "sys_ioctl",
+        "args": [
+            "int",
+            "int",
+            "void*"
+        ]
+    },
+    {
+        "n": 4,
+        "ret": "ssize_t",
+        "name": "sys_write",
+        "args": [
+            "int",
+            "const void*",
+            "size_t"
+        ]
+    },
+    {
+        "n": 5,
+        "ret": "void*",
+        "name": "sys_mmap",
+        "args": [
+            "void*",
+            "size_t",
+            "int",
+            "int",
+            "int",
+            "off_t"
+        ]
+    }
+]

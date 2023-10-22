@@ -48,23 +48,6 @@ pid_t procm_spawn_proc(
     const char** envp,
     Process* actingproc);
 
-/**
- * Replace a running process with a fresly spawned version of another one.
- * Basically an execve.
- * 'path' path of the new process. Should not be NULL.
- * 'argv' Arguments.
- * 'envp' Environment variables.
- * 'proc' The process to be replaced. Should not be NULL.
- *
- * Returns:
- * doesn't return on success.
- */
-int procm_replace_proc(
-    const char* path,
-    const char** argv,
-    const char** envp,
-    Process* actingproc);
-
 /* Mark a process as dead, letting it be reaped by the scheduler. */
 int procm_mark_dead(int st, Process* proc);
 

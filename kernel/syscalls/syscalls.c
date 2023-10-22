@@ -15,9 +15,9 @@
 static _RO_POST_INIT SyscallEntry* g_syscall_entries;
 static _RO_POST_INIT size_t g_syscall_entry_count;
 
-static int sys_undefined(syscall_t sysn)
+int sys_undefined(syscall_t sysn)
 {
-    klogln(WARN, "syscalls: Invalid syscall number: 0x%X!", sysn);
+    klogln(WARN, "syscalls: Called invalid syscall number 0x%X!", sysn);
     return -ENOSYS;
 }
 

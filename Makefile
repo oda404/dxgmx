@@ -134,9 +134,9 @@ $(KERNEL_BIN): $(CONFIG_DEFS) $(SYSCALL_DEFS) $(ALL_OBJS) $(LDSCRIPT) $(DXGMX_CO
 	@[ -f build/image.img ] || tools/create-disk.sh -p build/image.img
 	@tools/bake_symbols.sh $(KERNEL_BIN)
 
-$(SYSCALL_DEFS): $(TOOL_SYSCALLS_GEN) kernel/syscalls_common.defs
+$(SYSCALL_DEFS): $(TOOL_SYSCALLS_GEN) kernel/syscalls_common.json
 	@$(PRETTY_PRINT) SYSDEFS $@
-	@$(TOOL_SYSCALLS_GEN) --common-defs kernel/syscalls_common.defs --output $@
+	@$(TOOL_SYSCALLS_GEN) --common-defs kernel/syscalls_common.json --output $@
 
 $(CONFIG_DEFS): $(TOOL_KCONFIG_H_GENERATOR) $(CONFIG_FILE)
 	@$(PRETTY_PRINT) KCONFIG $@
@@ -198,11 +198,11 @@ clean:
 	@rm -f $(ALL_OBJS)
 	@rm -rf $(BUILDDIR)/tools/*
 	@rm -f $(CDEPS) $(ASMDEPS) $(CMODDEPS) $(SMODDEPS)
+	@rm -rf include/dxgmx/generated/*
 
 PHONY += mrclean 
 mrclean:
 	$(MAKE) clean
-	@rm -rf include/dxgmx/generated
 	@rm -f $$(ls | grep -Eo '^dxgmx-[0-9]+.[0-9]+.[0-9]+(.iso)?$$')
 	@rm -r $(BUILDDIR) 2> /dev/null || true
 

@@ -142,60 +142,6 @@ _INIT int procm_init()
     return 0;
 }
 
-int procm_replace_proc(
-    const char* _USERPTR path,
-    const char** argv,
-    const char** envv,
-    Process* actingproc)
-{
-    (void)path;
-    (void)argv;
-    (void)envv;
-    (void)actingproc;
-    TODO_FATAL();
-    // (void)argv;
-    // (void)envp;
-
-    // if (!path)
-    //     return -EINVAL;
-
-    // /* When we replace a process, we keep everything from the old process
-    // except
-    //  * it's path, and paging structure. Critically it's kernel stack is kept
-    //  the
-    //  * same. */
-
-    // Process newproc = {0};
-    // int st = proc_create_address_space(path, actingproc, &newproc);
-    // if (st < 0)
-    //     return st;
-
-    // /* Change path */
-    // newproc.path = strdup(path);
-    // if (!newproc.path)
-    // {
-    //     proc_free(&newproc);
-    //     return -ENOMEM;
-    // }
-
-    // newproc.pid = actingproc->pid;
-    // newproc.fds = actingproc->fds;
-    // newproc.fd_count = actingproc->fd_count;
-    // newproc.fd_last_free_idx = actingproc->fd_last_free_idx;
-    // newproc.kstack_top = actingproc->kstack_top;
-
-    // /* Load the context of the new process, so the old can be freed without
-    // any
-    //  * worries. */
-    // proc_load_ctx(&newproc);
-    // // proc_free(actingproc);
-    // *actingproc = newproc;
-
-    // /* At this point the old process is gone, and the new one is waiting to
-    //  * run */
-    // procm_sched_yield();
-}
-
 pid_t procm_spawn_proc(
     const char* _USERPTR path,
     const char** argv,
@@ -366,9 +312,4 @@ void sys_exit(int status)
      * the scheduling code clean it up when it knows it safe to do so. */
     procm_mark_dead(status, procm_sched_current_proc());
     procm_sched_yield();
-}
-
-int sys_execve(const char* path, const char* argv[], const char* envp[])
-{
-    return procm_replace_proc(path, argv, envp, procm_sched_current_proc());
 }
