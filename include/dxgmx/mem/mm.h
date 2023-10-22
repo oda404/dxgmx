@@ -6,14 +6,10 @@
 #ifndef _DXGMX_MEM_MM_H
 #define _DXGMX_MEM_MM_H
 
-#include <dxgmx/mem/mregmap.h>
 #include <dxgmx/mem/paging.h>
 #include <dxgmx/types.h>
 
 int mm_init();
-/* Get the system memory region map. This map only includes
-regions that are available. */
-const MemoryRegionMap* mm_get_sys_mregmap();
 
 int mm_init_paging_struct(PagingStruct*);
 int mm_destroy_paging_struct(PagingStruct*);

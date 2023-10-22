@@ -117,13 +117,13 @@ static VirtualNodeOperations g_fb_vnode_ops = {
 
 static int fb_init()
 {
-    ptr paddr = _kboot_framebuffer_paddr;
-    size_t width = _kboot_framebuffer_width;
-    size_t height = _kboot_framebuffer_height;
-    size_t bpp = _kboot_framebuffer_bpp;
-
-    if (paddr == 0)
+    if (!___kboot_info.has_fb)
         return -1;
+
+    const ptr paddr = ___kboot_info.fb_pa;
+    const size_t width = ___kboot_info.fb_width;
+    const size_t height = ___kboot_info.fb_height;
+    const size_t bpp = ___kboot_info.fb_bpp;
 
     const size_t fb_size = width * height * (bpp / 8);
 

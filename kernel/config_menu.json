@@ -23,6 +23,12 @@
             "type": "input",
             "title": "Generate optimized code",
             "description": "The optimization level. Can be:\n- 0 (None)\n- 1 (Basic)\n- 2 (Modest)\n- 3 (Aggressive)\n- fast (Very Aggressive)\nEach of these directly coresponds with gcc/clang's -O* flags."
+        },
+        {
+            "name": "CONFIG_KSTACK_SIZE",
+            "type": "input",
+            "title": "Kernel stack size",
+            "description": "Size of the kernel stack used both during bootup and as the kernel stack for syscalls. Set to a multiple of 4096"
         }
     ]
 }

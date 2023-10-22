@@ -6,6 +6,7 @@
 #ifndef _DXGMX_MEM_FALLOC_H
 #define _DXGMX_MEM_FALLOC_H
 
+#include <dxgmx/mem/mregmap.h>
 #include <dxgmx/types.h>
 
 /* falloc stands for (page) Frame ALLOCator. */
@@ -14,7 +15,7 @@
  * Initializes the page frame allocator.
  * Returns 0 on success, negative on error.
  */
-int falloc_init();
+int falloc_init(const MemoryRegionMap* mregmap);
 
 /**
  * Tries to allocate one 'user' pageframe.

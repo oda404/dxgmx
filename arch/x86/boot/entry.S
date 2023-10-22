@@ -3,11 +3,7 @@
  * Distributed under the MIT license.
 */
 
-.global _multiboot_magic
-.type _multiboot_magic, @object
-
-.global _multiboot_info_struct_base
-.type _multiboot_info_struct_base, @object
+#include <dxgmx/generated/kconfig.h>
 
 .global kinit_stage2
 .type kinit_stage2, @function
@@ -44,58 +40,17 @@ boot_pgtable0:
 .global _kernel_stack_bot
 .global _kernel_stack_top
 _kernel_stack_bot:
-  .skip 4096
+  .skip CONFIG_KSTACK_SIZE
 _kernel_stack_top:
 
 .section .init.text, "a"
 
 .type _early_die, @function
 _early_die:
-  # Clear screen
-  movl $1999, %ecx
-  movl $0xB8000, %eax
-clear:
-  movw $0, (%eax)
-  addl $2, %eax
-  loop clear
-
-  popl %eax           # Get the string address
-  movl $0xB8000, %ecx # Address of the VGA text buffer.
-loop1:
-  movb (%eax), %bl # Put the char in the lower half
-  movb $0x0F, %bh  # Black bg, white fg in the higher half.
-
-  movw %bx, (%ecx)
-
-  addl $1, %eax    # Next char
-  addl $2, %ecx    # Next slot in the VGA buffer.
-
-  # Exit if NULL terminator has been reached.
-  cmp $0, %bl
-  jne loop1
-
 1:
   cli
   hlt
   jmp 1b
-
-.size _early_die, . - _early_die
-
-zero_out_bss:
-  # The bootloader that got us here has probably done this for us already,
-  # but I'm not taking any chances.
-
-  # Pretty dumb implementation zeroing 1 byte at a time, but oh well.
-  movl $_bss_start - OFFSET, %eax
-  movl $_bss_end - OFFSET, %ecx
-  sub %eax, %ecx
-
-1:
-  movb $0, (%eax)
-  addl $1, %eax
-  loop 1b
-
-  ret
 
 .global _start
 .type _start, @function
@@ -107,51 +62,60 @@ _start:
   # Setup stack
   movl $_kernel_stack_top - OFFSET, %esp
 
-  # Make sure .bss is zeroed out
-  call zero_out_bss
+  # Check for and save bootloader variables
+#if defined(CONFIG_MULTIBOOT_BOOTLOADER)
+  cmpl $0x2BADB002, %eax
+  jne 1f
+  movl %eax, ___multiboot_magic - OFFSET
+  movl %ebx, ___multiboot_struct_pa - OFFSET
+1:
+#endif
+  # Even if we don't find a configured bootloader spec, 
+  # we keep going. kinit_arch will panic later because of this.
 
-  # Save eax and ebx, since they hold multiboot stuff.
-  pushl %eax
-  pushl %ebx
+  # Make sure .bss is zeroed out
+  # The bootloader that got us here has probably done this for us already, but I'm not taking any chances.
+  # Pretty dumb implementation zeroing 1 byte at a time, but oh well.
+  movl $_bss_start - OFFSET, %eax
+  movl $_bss_end - OFFSET, %ecx
+  sub %eax, %ecx
+
+1:
+  movb $0, (%eax)
+  addl $1, %eax
+  loop 1b
 
   # If PAE is not supported, die.
   movl $1, %eax
   cpuid
-  
   shr $6, %edx
   andl $1, %edx
   cmpl $1, %edx
-
   pushl $no_pae_string - OFFSET
   jne _early_die
   addl $4, %esp
 
-  # If the kernel is bigger than 1MiB, die, as we don't have
-  # enough pages to map it. 
+  # If the kernel is bigger than 1MiB, die, as we don't have enough pages to map it. 
   movl $_kernel_size, %eax
   cmpl $(1024 * 1024), %eax
-
   pushl $kernel_too_large_string - OFFSET
   jg _early_die
   addl $4, %esp
 
+  # Set up the first two page tables for identity mapping  
   movl $boot_pgdir - OFFSET + 1, (boot_pdpt - OFFSET)
   movl $boot_pgdir - OFFSET + 1, (boot_pdpt - OFFSET + 3 * 8)
-
-  # Set up the first two page tables for identity mapping  
   movl $boot_pgtable0 - OFFSET + 3, (boot_pgdir - OFFSET)
-
   movl $boot_pgtable0 - OFFSET, %eax
   movl $512, %ecx      # loop 512 times.
-
   movl $3, %edx        # Start from base 0 + 3 (present and r/w bits set)
 
-higher_half_map:
+1:
   movl %edx, (%eax)    # set the page frame base
   addl $8, %eax        # increment to the next pte
   addl $4096, %edx     # next page frame base.
 
-  loop higher_half_map # loop until %ecx is 0
+  loop 1b # loop until %ecx is 0
 
   # Set the PAE bit of CR4.
   movl %cr4, %ecx
@@ -186,23 +150,10 @@ higher_half:
   # Flush the PDPT.
   movl %cr3, %ecx
   movl %ecx, %cr3
-
-  # Restore eax and ebx
-  popl %ebx
-  popl %eax
-
-  # Store multiboot stuff
-  movl %ebx, _multiboot_info_struct_base
-  movl %eax, _multiboot_magic
   
   # clear eflags
   pushl $0
   popf
 
-  # One more time just for good measure
-  cld
-
   # less go
   call kinit_stage2
-
-.size _start, . - _start

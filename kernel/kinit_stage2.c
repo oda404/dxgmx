@@ -6,14 +6,13 @@
 #include <dxgmx/attrs.h>
 #include <dxgmx/cpu.h>
 #include <dxgmx/fs/vfs.h>
+#include <dxgmx/kboot.h>
 #include <dxgmx/klog.h>
 #include <dxgmx/ksyms.h>
 #include <dxgmx/module.h>
 #include <dxgmx/proc/procm.h>
 #include <dxgmx/syscalls.h>
 #include <dxgmx/timekeep.h>
-
-extern int kinit_arch();
 
 static void kinit_print_banner()
 {
@@ -34,12 +33,16 @@ static void kinit_print_banner()
 _ATTR_NORETURN void kinit_stage2()
 {
     /* Initialize early architecture stuff. */
+    extern void kinit_arch();
     kinit_arch();
 
     /* Load the first stage of builtin modules. */
     modules_init_stage1();
 
     klog_init();
+
+    /* Let's hope nothing needs kboot variables before this */
+    kbootinfo_parse();
 
     /* Identify CPU so other sub systems know what they are working with. */
     cpu_identify();
@@ -48,10 +51,10 @@ _ATTR_NORETURN void kinit_stage2()
      * allocation, page faults, dma, etc.. */
     mm_init();
 
-    procm_spawn_kernel_proc();
-
     /* Load kernel sysmbols, now that we have kmalloc */
     ksyms_load();
+
+    procm_spawn_kernel_proc();
 
     /* Second stage of modules. */
     modules_init_stage2();

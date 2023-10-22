@@ -64,11 +64,11 @@ static void pageframe_add_available(const MemoryRegion* region)
         ffree_one(frame);
 }
 
-_INIT int falloc_init()
+_INIT int falloc_init(const MemoryRegionMap* mregmap)
 {
     memset(g_pgframe_pool, 0xFF, sizeof(g_pgframe_pool));
 
-    FOR_EACH_MEM_REGION (area, mm_get_sys_mregmap())
+    FOR_EACH_MEM_REGION (area, mregmap)
         pageframe_add_available(area);
 
     if (!g_pgframes_cnt)

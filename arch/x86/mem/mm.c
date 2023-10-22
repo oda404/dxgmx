@@ -7,6 +7,7 @@
 #include <dxgmx/attrs.h>
 #include <dxgmx/cpu.h>
 #include <dxgmx/errno.h>
+#include <dxgmx/kboot.h>
 #include <dxgmx/kimg.h>
 #include <dxgmx/klog.h>
 #include <dxgmx/kmalloc.h>
@@ -15,12 +16,12 @@
 #include <dxgmx/mem/falloc.h>
 #include <dxgmx/mem/heap.h>
 #include <dxgmx/mem/mm.h>
+#include <dxgmx/mem/mregmap.h>
 #include <dxgmx/mem/pagesize.h>
 #include <dxgmx/string.h>
 #include <dxgmx/todo.h>
 #include <dxgmx/types.h>
 #include <dxgmx/utils/bytes.h>
-#include <dxgmx/x86/multiboot.h>
 #include <dxgmx/x86/pagefault.h>
 #include <dxgmx/x86/pd.h>
 #include <dxgmx/x86/pdpt.h>
@@ -32,6 +33,7 @@
  * paging struct. g_kernel_paging_struct.data == g_pdpt */
 static PagingStruct g_kernel_paging_struct;
 static pdpt_t* g_pdpt;
+static MemoryRegionMap* g_sys_mregmap;
 
 #define FOR_EACH_PTE_IN_RANGE(s, e, pt, pte)                                   \
     for (pte_t* pte = pte_from_vaddr(s, pt); pte; pte = NULL)                  \
@@ -41,13 +43,6 @@ static pdpt_t* g_pdpt;
     for (pte_t* pte = pte_from_vaddr_abs(s, g_pdpt); pte; pte = NULL)          \
         for (ptr _i = s; _i < e;                                               \
              _i += PAGESIZE, pte = pte_from_vaddr_abs(_i, g_pdpt))
-
-#define SYS_MEMORY_REGIONS_MAX 16
-static MemoryRegion g_sys_mregs[SYS_MEMORY_REGIONS_MAX];
-static MemoryRegionMap g_sys_mregmap = {
-    .regions = g_sys_mregs,
-    .regions_size = 0,
-    .regions_capacity = SYS_MEMORY_REGIONS_MAX};
 
 static void mm_tlb_flush_whole()
 {
@@ -263,35 +258,10 @@ _INIT static void mm_enforce_ksections_perms()
 
 static _INIT bool mm_setup_sys_mregmap()
 {
-    /* Zero out areas. */
-    memset(
-        g_sys_mregmap.regions,
-        0,
-        g_sys_mregmap.regions_capacity * sizeof(MemoryRegion));
-
-    MultibootMBI* mbi =
-        (MultibootMBI*)(_multiboot_info_struct_base + kimg_map_offset());
-
-    size_t total_regions = 0;
-    for (MultibootMMAP* mmap =
-             (MultibootMMAP*)(mbi->mmap_base + kimg_map_offset());
-         (ptr)mmap < mbi->mmap_base + kimg_map_offset() + mbi->mmap_length;
-         mmap = (MultibootMMAP*)((ptr)mmap + mmap->size + sizeof(mmap->size)))
-    {
-        if (total_regions > SYS_MEMORY_REGIONS_MAX)
-            panic("Hit maximum number of system memory regions!");
-
-        if (mmap->type != MULTIBOOT_MMAP_TYPE_AVAILABLE)
-            continue;
-
-        const MemoryRegion newreg = {
-            .start = mmap->base, .size = mmap->length, .perms = MEM_REGION_RWX};
-        mregmap_add_reg(&newreg, &g_sys_mregmap);
-        ++total_regions;
-    }
+    g_sys_mregmap = ___kboot_info.mregmap;
 
     klogln(INFO, "Available memory provided by firmware:");
-    FOR_EACH_MEM_REGION (region, &g_sys_mregmap)
+    FOR_EACH_MEM_REGION (region, g_sys_mregmap)
     {
         klogln(
             INFO,
@@ -301,17 +271,17 @@ static _INIT bool mm_setup_sys_mregmap()
     }
 
     /* Remove the 1st MiB */
-    mregmap_rm_reg(0, MIB, &g_sys_mregmap);
+    mregmap_rm_reg(0, MIB, g_sys_mregmap);
     klogln(INFO, "Reserving [mem 0x%p-0x%p].", (void*)0, (void*)(MIB - 1));
     /* Remove the kernel image. */
-    mregmap_rm_reg(kimg_paddr(), kimg_size(), &g_sys_mregmap);
+    mregmap_rm_reg(kimg_paddr(), kimg_size(), g_sys_mregmap);
     klogln(
         INFO,
         "Reserving [mem 0x%p-0x%p].",
         (void*)kimg_paddr(),
         (void*)(kimg_paddr() + kimg_size() - 1));
 
-    mregmap_align_regs(PAGESIZE, &g_sys_mregmap);
+    mregmap_align_regs(PAGESIZE, g_sys_mregmap);
 
     return true;
 }
@@ -395,7 +365,7 @@ _INIT int mm_init()
     mm_setup_sys_mregmap();
 
     /* Initialize the frame allocator, depends on the system memory map. */
-    falloc_init();
+    falloc_init(g_sys_mregmap);
 
     /* Setup kmalloc */
     mm_setup_kmalloc();
@@ -569,11 +539,6 @@ int mm_load_kernel_paging_struct()
 {
     cpu_write_cr3(mm_vaddr2paddr_arch((ptr)g_pdpt, g_pdpt));
     return 0;
-}
-
-const MemoryRegionMap* mm_get_sys_mregmap()
-{
-    return &g_sys_mregmap;
 }
 
 PagingStruct* mm_get_kernel_paging_struct()

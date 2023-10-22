@@ -1,10 +1,10 @@
 /**
- * Copyright 2021 Alexandru Olaru.
+ * Copyright 2023 Alexandru Olaru.
  * Distributed under the MIT license.
  */
 
-#ifndef _DXGMX_X86_MULTIBOOT_H
-#define _DXGMX_X86_MULTIBOOT_H
+#ifndef _DXGMX_MULTIBOOT_H
+#define _DXGMX_MULTIBOOT_H
 
 #define MULTIBOOT_HEADER_ALIGN 4
 #define MULTIBOOT_HEADER_MAGIC 0x1BADB002
@@ -21,6 +21,7 @@
 #ifndef _ASM
 
 #include <dxgmx/compiler_attrs.h>
+#include <dxgmx/kboot.h>
 #include <dxgmx/types.h>
 
 typedef struct _ATTR_PACKED S_MultibootMBI
@@ -101,9 +102,11 @@ typedef struct _ATTR_PACKED S_MultibootMMAP
     u32 type;
 } MultibootMMAP;
 
-extern const u32 _multiboot_magic;
-extern const ptr _multiboot_info_struct_base;
+extern const u32 ___multiboot_magic;
+extern const ptr ___multiboot_struct_pa;
+
+int multiboot_parse_info(KernelBootInfo* kbootinfo);
 
 #endif // _ASM
 
-#endif // _DXGMX_X86_MULTIBOOT_H
+#endif // _DXGMX_MULTIBOOT_H
