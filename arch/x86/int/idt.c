@@ -48,7 +48,6 @@ __asm__(".type int_common_exit, @function                       \n"
         __asm__ volatile(                                                             \
             "pusha                         # Push all registers*                  \n" \
             "pushl %esp                    # Set the InterruptFrame*              \n" \
-            "movl $0, %ebp                 # Set ebp to NULL to stop stack traces \n" \
             "cld                           # Clear direction flag                 \n" \
             "call *(g_isrs + " #id " * 4)  # Call isr    \n"                          \
             "jmp int_common_exit                                \n");                 \
@@ -62,7 +61,6 @@ __asm__(".type int_common_exit, @function                       \n"
             "pushl $0                      # Push fake code                       \n" \
             "pusha                         # Push all general registers           \n" \
             "pushl %esp                    # Set the InterruptFrame*              \n" \
-            "movl $0, %ebp                 # Set ebp to NULL to stop stack traces \n" \
             "cld                           # Clear direction flag                 \n" \
             "call *(g_isrs + " #id " * 4)  # Call isr    \n"                          \
             "jmp int_common_exit                                \n");                 \
@@ -76,7 +74,6 @@ __asm__(".type int_common_exit, @function                       \n"
             "pushl $0                      # Push fake code                       \n" \
             "pusha                         # Push all general registers           \n" \
             "pushl %esp                    # Set the InterruptFrame*              \n" \
-            "movl $0, %ebp                 # Set ebp to NULL to stop stack traces \n" \
             "cld                           # Clear direction flag                 \n" \
             "call idt_is_irq_spurious      # Check if it's spurious               \n" \
             "cmp $1, %eax                                                         \n" \
