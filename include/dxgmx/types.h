@@ -36,6 +36,12 @@ typedef __UINTPTR_TYPE__ ptr;
 #define FOR_EACH_ELEM_IN_DARR(arr, count, elem)                                \
     for (__typeof__(arr) elem = arr; elem < arr + count; ++elem)
 
+#if __has_builtin(__builtin_offsetof)
+#define OFFSETOF(_struct, _memb) __builtin_offsetof(_struct, _memb)
+#else
+#define OFFSETOF(_struct, _memb) ((size_t)(&((_struct*)0)->_memb))
+#endif
+
 DEFINE_ERR_OR(ptr);
 DEFINE_ERR_OR_PTR(char);
 DEFINE_ERR_OR(u8);
