@@ -17,7 +17,6 @@
 #define KLOGF_PREFIX "proc: "
 
 extern int proc_arch_load_ctx(const Process* proc);
-extern ptr proc_arch_get_current_kstack_top();
 
 static void proc_destroy_kernel_stack(Process* targetproc)
 {
@@ -195,11 +194,7 @@ void proc_free(Process* proc)
 
     // FIXME: dma bitmap memleak :)
 
-    /* Make sure we don't pull the stack from under our feet. This can
-     * happen when replacing a process. Let's hope this hack-ish solution
-     * doesn't trigger some edge case... */
-    if (proc->kstack_top != proc_arch_get_current_kstack_top())
-        proc_destroy_kernel_stack(proc);
+    proc_destroy_kernel_stack(proc);
 }
 
 int proc_create_address_space(
