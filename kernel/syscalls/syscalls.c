@@ -28,8 +28,18 @@ syscall_ret_t syscalls_do_handle(syscall_t n, ...)
 
     va_list list;
     va_start(list, n);
-    return g_syscall_entries[n].func(list);
-    /* The syscall entry calls va_end on list, since it may not return at all */
+    return g_syscall_entries[n].func(&list);
+    /* NOTE: The syscall entry calls va_end on list, since it may not return at
+     * all. The man page for va_end says that va_end MUST be called within the
+     * same function that called va_start. I went down a rabbit hole trying to
+     * find examples of ABIs where this would actually be a MUST but I came out
+     * empty handed. Moreover 99.9% (and 100% of sane) implementations (that I
+     * could find) actually define va_end as either a noop or a simple
+     * asignment. Even if we ever hit an obscure case where va_end would need to
+     * be called inside this function, I don't think I'd like to support such
+     * platforms, at least without a solid argument for doing so. That being
+     * said, until further notice we have (un)defined behaviour in the syscall
+     * layer. */
 }
 
 int syscalls_init()
