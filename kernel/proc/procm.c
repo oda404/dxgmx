@@ -74,13 +74,6 @@ static int procm_add_proc_to_pool(Process* proc)
     return 0;
 }
 
-static _ATTR_NORETURN void procm_run(const Process* proc)
-{
-    ASSERT(proc);
-    proc_load_ctx(proc);
-    user_jump2user(proc->inst_ptr, proc->stack_ptr);
-}
-
 static int procm_kill(Process* proc)
 {
     /* FIXME: We don't shrink the g_procs array at all, we may want to cut
@@ -283,9 +276,8 @@ void procm_sched_start()
     if (g_active_sched->reset(g_active_sched) < 0)
         panic("Failed to preapre scheduler!");
 
-    /* With this function we officially exit kernel mode and start executing
-     * pid 1. */
-    procm_sched_yield();
+    Process* pid1 = g_active_sched->current_proc(g_active_sched);
+    proc_enter_initial(pid1);
 }
 
 Process* procm_sched_current_proc()
@@ -296,12 +288,13 @@ Process* procm_sched_current_proc()
 void procm_sched_yield()
 {
     Process* current_proc = g_active_sched->current_proc(g_active_sched);
-    Process* next;
+    current_proc->state = PROC_YIELDED;
 
+    Process* next;
     while ((next = g_active_sched->next_proc(g_active_sched))->zombie)
         procm_try_kill_proc(next, current_proc);
 
-    procm_run(next);
+    proc_switch(current_proc, next);
 }
 
 void sys_exit(int status)
@@ -312,4 +305,5 @@ void sys_exit(int status)
      * the scheduling code clean it up when it knows it safe to do so. */
     procm_mark_dead(status, procm_sched_current_proc());
     procm_sched_yield();
+    panic("procm_sched_yield() returned execution in sys_exit()!");
 }

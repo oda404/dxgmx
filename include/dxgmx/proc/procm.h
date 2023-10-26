@@ -58,6 +58,6 @@ int procm_sched_unregister(Scheduler* sched);
 
 _ATTR_NORETURN void procm_sched_start();
 Process* procm_sched_current_proc();
-_ATTR_NORETURN void procm_sched_yield();
+void procm_sched_yield();
 
 #endif // !_DXGMX_PROC_PROCM_H

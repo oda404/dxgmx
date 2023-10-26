@@ -8,8 +8,8 @@ arch/x86/gdt.c.o \
 arch/x86/serial.c.o \
 arch/x86/panic.c.o \
 arch/x86/syscalls.c.o \
-arch/x86/proc.c.o \
 arch/x86/user.S.o \
+arch/x86/task.c.o \
 
 ifeq ($(CONFIG_ARCH),i686)
     EXTRA_CFLAGS += -m32

@@ -6,13 +6,24 @@
 #ifndef _DXGMX_PROC_PROC_H
 #define _DXGMX_PROC_PROC_H
 
+#include <dxgmx/attrs.h>
 #include <dxgmx/fs/fd.h>
 #include <dxgmx/mem/mm.h>
+#include <dxgmx/task/task.h>
 #include <dxgmx/types.h>
 #include <dxgmx/utils/bitmap.h>
 
 typedef int fd_t;
 DEFINE_ERR_OR(fd_t);
+
+typedef enum ProcessState
+{
+    PROC_NEVER_RAN = 0x1,
+    PROC_RUNNING = 0x2,
+    PROC_YIELDED = 0x4,
+    PROC_PREEMPTED = PROC_YIELDED | 0x8,
+    PROC_BLOCKED = PROC_YIELDED | 0x10
+} ProcessState;
 
 /* Structure representing a process. */
 typedef struct S_Process
@@ -55,21 +66,25 @@ typedef struct S_Process
 
     /* Return status of the process. */
     int exit_status;
+
+    TaskContext task_ctx;
+
+    ProcessState state;
 } Process;
 
 int proc_init(Process* proc);
+void proc_free(Process* proc);
 
 fd_t proc_new_fd(Process* proc);
 void proc_free_fd(fd_t fd, Process* proc);
 
-int proc_load_ctx(const Process* proc);
-
 /* Create a new kernel stack for a process used for context switches */
 int proc_create_kernel_stack(Process* targetproc);
 
-void proc_free(Process* proc);
-
 int proc_create_address_space(
     const char* path, Process* actingproc, Process* targetproc);
+
+_ATTR_NORETURN void proc_enter_initial(Process* proc);
+void proc_switch(Process* curproc, Process* nextproc);
 
 #endif // !_DXGMX_PROC_PROC_H

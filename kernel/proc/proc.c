@@ -3,6 +3,7 @@
  * Distributed under the MIT license.
  */
 
+#include <dxgmx/assert.h>
 #include <dxgmx/attrs.h>
 #include <dxgmx/elf/elfloader.h>
 #include <dxgmx/errno.h>
@@ -12,11 +13,11 @@
 #include <dxgmx/proc/proc.h>
 #include <dxgmx/proc/proc_limits.h>
 #include <dxgmx/string.h>
+#include <dxgmx/task/task.h>
 #include <dxgmx/todo.h>
+#include <dxgmx/user.h>
 
 #define KLOGF_PREFIX "proc: "
-
-extern int proc_arch_load_ctx(const Process* proc);
 
 static void proc_destroy_kernel_stack(Process* targetproc)
 {
@@ -101,6 +102,7 @@ int proc_init(Process* proc)
         return -ENOMEM;
 
     proc->fd_last_free_idx = 0;
+    proc->state = PROC_NEVER_RAN;
     return 0;
 }
 
@@ -133,25 +135,6 @@ void proc_free_fd(fd_t fd, Process* proc)
         return; // Out of range
 
     proc->fds[fd] = false;
-}
-
-/**
- * Load a process' context. If successful, should be followed by a
- * userspace_jump2user.
- *
- * Returns:
- * 0 on sucess.
- * -errno values on error.
- */
-int proc_load_ctx(const Process* proc)
-{
-    /* Switch to this process' paging struct */
-    int st = mm_load_paging_struct(proc->paging_struct);
-    if (st < 0)
-        return st;
-
-    /* Let the architecture do anything it needs */
-    return proc_arch_load_ctx(proc);
 }
 
 /* Create a new kernel stack for a process used for context switches */
@@ -231,4 +214,28 @@ int proc_create_address_space(
     }
 
     return 0;
+}
+
+void proc_enter_initial(Process* proc)
+{
+    /* Note to self: We may want to disable future preemption from happening
+     * during all this */
+    proc->state = PROC_RUNNING;
+    mm_load_paging_struct(proc->paging_struct);
+    task_set_impending_stack_top(proc->kstack_top);
+    user_enter_arch(proc->inst_ptr, proc->stack_top);
+}
+
+void proc_switch(Process* curproc, Process* nextproc)
+{
+    ASSERT(nextproc->state != PROC_RUNNING);
+    if (nextproc->state == PROC_NEVER_RAN)
+    {
+        proc_enter_initial(nextproc); // never returns
+        ASSERT_NOT_HIT();
+    }
+
+    mm_load_paging_struct(nextproc->paging_struct);
+    task_set_impending_stack_top(nextproc->kstack_top);
+    task_switch(&curproc->task_ctx, &nextproc->task_ctx);
 }

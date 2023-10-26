@@ -27,6 +27,6 @@ ERR_OR_PTR(char) user_strndup(const void* _USERPTR str, size_t maxn);
 
 int user_access_fault_stub();
 
-_ATTR_NORETURN void user_jump2user(ptr instrptr, ptr stackptr);
+_ATTR_NORETURN void user_enter_arch(ptr ip, ptr sp);
 
 #endif // !_DXGMX_USERSPACE_H

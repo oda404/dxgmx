@@ -149,9 +149,9 @@ user_strnlen:
     jmp user_access_end
 
 .section .text
-.global user_jump2user_arch
-.type user_jump2user_arch, @function
-user_jump2user_arch:
+.global user_enter_arch
+.type user_enter_arch, @function
+user_enter_arch:
 
 #if defined(CONFIG_X86)
     movl 0x4(%esp), %ebx  # The instruction pointer

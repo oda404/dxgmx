@@ -7,12 +7,6 @@
 #include <dxgmx/kmalloc.h>
 #include <dxgmx/user.h>
 
-void user_jump2user(ptr instrptr, ptr stackptr)
-{
-    extern _ATTR_NORETURN void user_jump2user_arch(ptr instrptr, ptr stackptr);
-    user_jump2user_arch(instrptr, stackptr);
-}
-
 ERR_OR_PTR(char) user_strndup(const void* _USERPTR str, size_t maxn)
 {
     ssize_t len = user_strnlen(str, maxn);
