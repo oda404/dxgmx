@@ -30,7 +30,7 @@ EXPORT_APIS        :=
 KERNEL_BIN   := dxgmx-$(VER_MAJ).$(VER_MIN).$(PATCH_N)
 KERNEL_ISO   ?= $(KERNEL_BIN).iso
 
-PHONY += all
+.PHONY += all
 all: $(KERNEL_BIN)
 
 # Die if we are not using a LLVM toolchain
@@ -120,64 +120,66 @@ MISCOBJS           := $(sort $(MISCOBJS))
 
 ALL_OBJS           := $(COBJS) $(ASMOBJS) $(CMODOBJS) $(SMODOBJS) $(MISCOBJS)
 
-DXGMX_COMMON_DEPS  := Makefile $(TARGET_FILE) $(CONFIG_FILE)
-
 SYSCALL_DEFS       := include/dxgmx/generated/syscall_defs.h
 CONFIG_DEFS        := include/dxgmx/generated/kconfig.h
 
-PHONY              :=
+CORE_DEPS          := $(CONFIG_DEFS) $(SYSCALL_DEFS) .WAIT
 
-$(KERNEL_BIN): $(CONFIG_DEFS) $(SYSCALL_DEFS) $(ALL_OBJS) $(LDSCRIPT) $(DXGMX_COMMON_DEPS)
+SYSCALLS_COMMON    := kernel/syscalls_common.json
+
+.PHONY             :=
+
+$(KERNEL_BIN): $(CORE_DEPS) $(ALL_OBJS) $(LDSCRIPT)
 	@$(PRETTY_PRINT) LD $@
 	@$(LD) -T $(LDSCRIPT) $(ALL_OBJS) $(LDFLAGS) -o $(KERNEL_BIN)
 
 	@[ -f build/image.img ] || tools/create-disk.sh -p build/image.img
 	@tools/bake_symbols.sh $(KERNEL_BIN)
 
-$(SYSCALL_DEFS): $(TOOL_SYSCALLS_GEN) kernel/syscalls_common.json
+$(SYSCALL_DEFS): $(TOOL_SYSCALLS_GEN) $(SYSCALLS_COMMON)
 	@$(PRETTY_PRINT) SYSDEFS $@
-	@$(TOOL_SYSCALLS_GEN) --common-defs kernel/syscalls_common.json --output $@
+	@$(TOOL_SYSCALLS_GEN) --common-defs $(SYSCALLS_COMMON) --output $@
 
 $(CONFIG_DEFS): $(TOOL_KCONFIG_H_GENERATOR) $(CONFIG_FILE)
 	@$(PRETTY_PRINT) KCONFIG $@
 	@$(TOOL_KCONFIG_H_GENERATOR) -i $(CONFIG_FILE) -o $(CONFIG_DEFS)
 
 -include $(CDEPS)
-$(BUILDDIR)/%.c.o: %.c $(DXGMX_COMMON_DEPS)
+$(BUILDDIR)/%.c.o: %.c $(CORE_DEPS)
 	@mkdir -p $(dir $@)
 	@$(PRETTY_PRINT) CC $<
 	@$(CC) -c $< $(CFLAGS) -o $@
 
 -include $(ASMDEPS)
-$(BUILDDIR)/%.S.o: %.S $(DXGMX_COMMON_DEPS)
+$(BUILDDIR)/%.S.o: %.S $(CORE_DEPS)
 	@mkdir -p $(dir $@)
 	@$(PRETTY_PRINT) AS $<
 	@$(AS) -c $< $(CFLAGS) -o $@
 
 -include $(CMODDEPS)
-$(BUILDDIR)/%_mod.c.o: %.c $(DXGMX_COMMON_DEPS)
+$(BUILDDIR)/%_mod.c.o: %.c $(CORE_DEPS)
 	@mkdir -p $(dir $@)
 	@$(PRETTY_PRINT) "CC MOD" $<
 	@$(CC) -c $< $(CFLAGS) -o $@
 
 -include $(SMODDEPS)
-$(BUILDDIR)/%_mod.S.o: %.S $(DXGMX_COMMON_DEPS)
+$(BUILDDIR)/%_mod.S.o: %.S $(CORE_DEPS)
 	@mkdir -p $(dir $@)
 	@$(PRETTY_PRINT) "AS MOD" $<
 	@$(AS) -c $< $(CFLAGS) -o $@
 
-PHONY += install_apis
+.PHONY += install_apis
 install_apis:
 	@tools/install-apis.sh --sysroot $(SYSROOT) --apis "$(EXPORT_APIS)"
 
-PHONY += install
+.PHONY += install
 install: $(KERNEL_BIN)
 	@mkdir -p $(SYSROOT)/boot
 	@mkdir -p $(SYSROOT)/usr/include
 	@$(MAKE) install_apis
 	@cp $(KERNEL_BIN) $(SYSROOT)/boot/
 
-PHONY += iso 
+.PHONY += iso 
 iso: $(KERNEL_ISO)
 $(KERNEL_ISO): $(KERNEL_BIN)
 	tools/create-iso.sh \
@@ -185,39 +187,39 @@ $(KERNEL_ISO): $(KERNEL_BIN)
 	--kernel $(KERNEL_BIN) \
 	--out $(KERNEL_ISO)
 
-PHONY += iso-run 
+.PHONY += iso-run 
 iso-run: $(KERNEL_ISO)
 	tools/run-qemu.sh -i $(KERNEL_ISO) -a $(CONFIG_ARCH)
 
-PHONY += run 
+.PHONY += run 
 run: $(KERNEL_BIN)
 	tools/run-qemu.sh -k $(KERNEL_BIN) -a $(CONFIG_ARCH)
 
-PHONY += clean 
+.PHONY += clean 
 clean:
 	@rm -f $(ALL_OBJS)
 	@rm -rf $(BUILDDIR)/tools/*
 	@rm -f $(CDEPS) $(ASMDEPS) $(CMODDEPS) $(SMODDEPS)
 	@rm -rf include/dxgmx/generated/*
 
-PHONY += mrclean 
+.PHONY += mrclean 
 mrclean:
 	$(MAKE) clean
 	@rm -f $$(ls | grep -Eo '^dxgmx-[0-9]+.[0-9]+.[0-9]+(.iso)?$$')
 	@rm -r $(BUILDDIR) 2> /dev/null || true
 
-PHONY += mount-root
+.PHONY += mount-root
 mount-root: build/image.img
 	sudo tools/mount-root.sh \
 	--image-path build/image.img \
 	--mountpoint $(SYSROOT_DISK_MNTPOINT) \
 	--cachefile $(BUILDDIR)/root-loopdev
 
-PHONY += unmount-root
+.PHONY += unmount-root
 unmount-root:
 	sudo tools/unmount-root.sh --cachefile $(BUILDDIR)/root-loopdev
 
-PHONY += syncroot
+.PHONY += syncroot
 syncroot:
 	sudo tools/syncroot.sh \
 	--sysroot $(SYSROOT) \
@@ -225,7 +227,7 @@ syncroot:
 	--mountpoint $(SYSROOT_DISK_MNTPOINT) \
 	--cachefile $(BUILDDIR)/root-loopdev
 
-PHONY += buildinfo
+.PHONY += buildinfo
 buildinfo:
 	@echo CC: $(CC)
 	@echo AS: $(AS)
@@ -235,9 +237,7 @@ buildinfo:
 	@echo CFLAGS: $(CFLAGS)
 	@echo LDFLAGS: $(LDFLAGS)
 
-PHONY += conf
+.PHONY += conf
 conf: $(TOOL_NCURSES_CONFIG)
 	@$(PRETTY_PRINT) CONFIG $(CONFIG_FILE)
 	@$(TOOL_NCURSES_CONFIG) -c $(CONFIG_FILE) -r $(SRCROOT)/root_config_menu.json
-
-.PHONY: $(PHONY)
