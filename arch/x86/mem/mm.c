@@ -525,20 +525,19 @@ int mm_map_kernel_into_paging_struct(PagingStruct* ps)
     return 0;
 }
 
-int mm_load_paging_struct(const PagingStruct* ps)
+void mm_load_paging_struct(const PagingStruct* ps)
 {
-    if (!ps)
-        return -EINVAL;
+    const ptr new_cr3 = mm_vaddr2paddr_arch((ptr)ps->data, g_pdpt);
+    const ptr old_cr3 = cpu_read_cr3();
+    if (old_cr3 == new_cr3)
+        return;
 
-    /* The kernel better be mapped into this :) */
-    cpu_write_cr3(mm_vaddr2paddr_arch((ptr)ps->data, g_pdpt));
-    return 0;
+    cpu_write_cr3(new_cr3);
 }
 
-int mm_load_kernel_paging_struct()
+void mm_load_kernel_paging_struct()
 {
-    cpu_write_cr3(mm_vaddr2paddr_arch((ptr)g_pdpt, g_pdpt));
-    return 0;
+    mm_load_paging_struct(&g_kernel_paging_struct);
 }
 
 PagingStruct* mm_get_kernel_paging_struct()
