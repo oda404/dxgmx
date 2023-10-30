@@ -10,8 +10,8 @@
 
 typedef struct S_FrameBuffer
 {
-    ptr paddr;
-    ptr vaddr;
+    ptr base_pa;
+    ptr base_va;
     size_t width;
     size_t height;
     size_t bpp;
@@ -20,10 +20,13 @@ typedef struct S_FrameBuffer
     bool takeover;
 } FrameBuffer;
 
-int fb_ensure_init();
+typedef struct FrameBufferPack
+{
+    FrameBuffer** fbs;
+    size_t* fb_count;
+} FrameBufferPack;
 
-int fb_write_pixel(size_t x, size_t y, u32 pixel);
-
-FrameBuffer* fb_get_main();
+FrameBufferPack* fb_get_pack();
+int fb_write_pixel(size_t x, size_t y, u32 pixel, FrameBuffer* fb);
 
 #endif // !_DXGMX_VIDEO_FB_H

@@ -11,39 +11,35 @@
 #include <dxgmx/kstdio/kstdio.h>
 #include <dxgmx/kstdio/sink.h>
 #include <dxgmx/module.h>
-#include <dxgmx/sched/sched.h>
+#include <dxgmx/proc/procm.h>
 #include <dxgmx/string.h>
 
 #define KLOGF_PREFIX "fbsink: "
 
-typedef struct S_FrameBufferTextRenderingContext
+typedef struct FrameBufferRenderContext
 {
     FrameBuffer* fb;
-
     size_t cx;
     size_t cy;
-
     size_t glyphs_per_row;
     size_t glyphs_per_col;
+} FrameBufferRenderContext;
+
+typedef struct S_FrameBufferSinkContext
+{
+    FrameBufferPack* fbpack;
+
+    FrameBufferRenderContext* contexts;
+    size_t context_count;
 
     const PSF2Header* font;
     void* glyph_buf;
-} FrameBufferTextRenderingContext;
+} FrameBufferSinkContext;
 
-static void fbsink_ensure_correct_paging_struct()
+static int fbsink_validate_render_contexts(FrameBufferSinkContext* ctx)
 {
-    /* !!! Stinky poopy smelly goofy hack alert. The framebuffer is only mapped
-     * at a known location in the kernel's paging struct. If the framebuffer has
-     * not been overtook and we want to write to it, we need to do something
-     * like this. The same goes for fbsink_maybe_revert_paging_struct() */
-    if (sched_current_proc())
-        mm_load_kernel_paging_struct();
-}
-
-static void fbsink_maybe_revert_paging_struct()
-{
-    if (sched_current_proc())
-        mm_load_paging_struct(sched_current_proc()->paging_struct);
+    (void)ctx;
+    return 0;
 }
 
 static u32 fbsink_koutput_color2pixel(KOutputColor color)
@@ -71,16 +67,17 @@ static u32 fbsink_koutput_color2pixel(KOutputColor color)
     }
 }
 
-static int fbsink_scroll(FrameBufferTextRenderingContext* ctx)
+static int
+fbsink_scroll(KOutputSink* sink, FrameBufferRenderContext* render_ctx)
 {
-    FrameBuffer* fb = ctx->fb;
-    const PSF2Header* font = ctx->font;
+    FrameBuffer* fb = render_ctx->fb;
+    const PSF2Header* font = ((FrameBufferSinkContext*)sink->ctx)->font;
 
     const size_t rowsize = fb->width * fb->bytespp * font->glyph_height;
     const size_t rowoffset = font->glyph_height * fb->bytespp * fb->width;
-    void* buf = (void*)fb->vaddr;
+    void* buf = (void*)fb->base_va;
 
-    for (size_t i = 1; i < ctx->glyphs_per_col; ++i)
+    for (size_t i = 1; i < render_ctx->glyphs_per_col; ++i)
     {
         void* src = buf + i * rowoffset;
         void* dst = buf + (i - 1) * rowoffset;
@@ -88,19 +85,15 @@ static int fbsink_scroll(FrameBufferTextRenderingContext* ctx)
     }
 
     /* Clear the last line. */
-    size_t off = (ctx->glyphs_per_col - 1) * rowoffset;
+    size_t off = (render_ctx->glyphs_per_col - 1) * rowoffset;
     memset(buf + off, 0, rowsize);
-
     return 0;
 }
 
 static int fbsink_init(KOutputSink* sink)
 {
-    if (fb_ensure_init() < 0)
-        return -ENODEV;
-
-    FrameBuffer* fb = fb_get_main();
-    if (!fb)
+    FrameBufferPack* fbpack = fb_get_pack();
+    if (*fbpack->fb_count == 0)
         return -ENODEV;
 
     int st = psf_validate_builtin();
@@ -117,89 +110,140 @@ static int fbsink_init(KOutputSink* sink)
     if (font->glyph_width >= 32)
         return -EINVAL; // goofy ahh font
 
-    FrameBufferTextRenderingContext* ctx = sink->ctx;
-    ctx->glyph_buf = kmalloc(font->glyph_size);
-    if (!ctx->glyph_buf)
+    sink->ctx = kmalloc(sizeof(FrameBufferSinkContext));
+    if (!sink->ctx)
         return -ENOMEM;
 
-    ctx->cx = 0;
-    ctx->cy = 0;
-    ctx->fb = fb;
-    ctx->glyphs_per_col = fb->height / font->glyph_height;
-    ctx->glyphs_per_row = fb->width / font->glyph_width;
+    FrameBufferSinkContext* ctx = sink->ctx;
+    ctx->glyph_buf = kmalloc(font->glyph_size);
     ctx->font = font;
+    if (!ctx->glyph_buf)
+    {
+        ctx->font = NULL;
+        kfree(sink->ctx);
+        sink->ctx = NULL;
+        return -ENOMEM;
+    }
 
+    ctx->contexts =
+        kmalloc(*fbpack->fb_count * sizeof(FrameBufferRenderContext));
+    if (!ctx->contexts)
+    {
+        ctx->font = NULL;
+        kfree(ctx->glyph_buf);
+        ctx->glyph_buf = NULL;
+        kfree(sink->ctx);
+        sink->ctx = NULL;
+        return -ENOMEM;
+    }
+
+    for (size_t i = 0; i < *fbpack->fb_count; ++i)
+    {
+        FrameBuffer* fb = &(*fbpack->fbs)[i];
+        ctx->contexts[i].cx = 0;
+        ctx->contexts[i].cy = 0;
+        ctx->contexts[i].fb = fb;
+        ctx->contexts[i].glyphs_per_col = fb->height / font->glyph_height;
+        ctx->contexts[i].glyphs_per_row = fb->width / font->glyph_width;
+    }
+
+    ctx->context_count = *fbpack->fb_count;
+    ctx->fbpack = fbpack;
     return 0;
 }
 
 static int fbsink_destroy(KOutputSink* sink)
 {
-    FrameBufferTextRenderingContext* ctx = sink->ctx;
+    FrameBufferSinkContext* ctx = sink->ctx;
+    kfree(ctx->contexts);
+    ctx->contexts = NULL;
+    ctx->context_count = 0;
+    ctx->fbpack = NULL;
+    ctx->font = NULL;
     kfree(ctx->glyph_buf);
+    ctx->glyph_buf = NULL;
+    kfree(sink->ctx);
+    sink->ctx = NULL;
+    return 0;
+}
+
+static int
+fbsink_newline_to_ctx(KOutputSink* sink, FrameBufferRenderContext* render_ctx)
+{
+    render_ctx->cx = 0;
+    if (render_ctx->cy + 1 >= render_ctx->glyphs_per_col)
+        fbsink_scroll(sink, render_ctx);
+    else
+        ++render_ctx->cy;
+
     return 0;
 }
 
 static int fbsink_newline(KOutputSink* sink)
 {
-    FrameBufferTextRenderingContext* ctx = sink->ctx;
-    if (ctx->fb->takeover)
-        return 0;
+    FrameBufferSinkContext* ctx = sink->ctx;
+    fbsink_validate_render_contexts(ctx);
 
-    ctx->cx = 0;
-
-    if (ctx->cy + 1 >= ctx->glyphs_per_col)
+    for (size_t i = 0; i < ctx->context_count; ++i)
     {
-        fbsink_ensure_correct_paging_struct();
-        fbsink_scroll(ctx);
-        fbsink_maybe_revert_paging_struct();
-    }
-    else
-    {
-        ++ctx->cy;
-    }
+        FrameBufferRenderContext* render_ctx = &ctx->contexts[i];
+        if (render_ctx->fb->takeover)
+            continue;
 
+        fbsink_newline_to_ctx(sink, render_ctx);
+    }
     return 0;
 }
 
-static int fbsink_print_char(char c, KOutputSink* sink)
+static int fbsink_print_char_to_ctx(
+    char c, KOutputSink* sink, FrameBufferRenderContext* render_ctx)
 {
-    FrameBufferTextRenderingContext* ctx = sink->ctx;
-    if (ctx->fb->takeover)
-        return 0;
-
+    FrameBuffer* fb = render_ctx->fb;
+    FrameBufferSinkContext* ctx = sink->ctx;
     const PSF2Header* font = ctx->font;
 
-    const size_t x = ctx->cx * font->glyph_width;
-    const size_t y = ctx->cy * font->glyph_height;
+    const size_t x = render_ctx->cx * font->glyph_width;
+    const size_t y = render_ctx->cy * font->glyph_height;
     const size_t bytes_per_row = font->glyph_width / 8;
     const u32 pixel = fbsink_koutput_color2pixel(sink->fgcolor);
     u32 glyphrow;
-
-    fbsink_ensure_correct_paging_struct();
 
     psf_get_glyph_data(c, ctx->glyph_buf, font);
 
     for (size_t i = 0; i < font->glyph_height; ++i)
     {
         memcpy(&glyphrow, ctx->glyph_buf + i * bytes_per_row, bytes_per_row);
-
         for (size_t k = 0; k < font->glyph_width; ++k)
         {
             if (glyphrow & (1 << k))
-                fb_write_pixel(x + (font->glyph_width - 1 - k), y + i, pixel);
+                fb_write_pixel(
+                    x + (font->glyph_width - 1 - k), y + i, pixel, fb);
         }
     }
 
-    if (ctx->cx + 1 >= ctx->glyphs_per_row)
-        fbsink_newline(sink);
+    if (render_ctx->cx + 1 >= render_ctx->glyphs_per_row)
+        fbsink_newline_to_ctx(sink, render_ctx);
     else
-        ++ctx->cx;
+        ++render_ctx->cx;
 
-    fbsink_maybe_revert_paging_struct();
     return 0;
 }
 
-static FrameBufferTextRenderingContext g_fb_ctx;
+static int fbsink_print_char(char c, KOutputSink* sink)
+{
+    FrameBufferSinkContext* ctx = sink->ctx;
+    fbsink_validate_render_contexts(ctx);
+
+    for (size_t i = 0; i < ctx->context_count; ++i)
+    {
+        FrameBufferRenderContext* render_ctx = &ctx->contexts[i];
+        if (render_ctx->fb->takeover)
+            continue;
+
+        fbsink_print_char_to_ctx(c, sink, render_ctx);
+    }
+    return 0;
+}
 
 static KOutputSink g_fbsink = {
     .name = "framebuffer",
@@ -207,8 +251,7 @@ static KOutputSink g_fbsink = {
     .init = fbsink_init,
     .destroy = fbsink_destroy,
     .output_char = fbsink_print_char,
-    .newline = fbsink_newline,
-    .ctx = &g_fb_ctx};
+    .newline = fbsink_newline};
 
 static int fbsink_main()
 {

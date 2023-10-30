@@ -1,7 +1,10 @@
 
 MODULEOBJS += \
-drivers/video/fb/fb.c.o \
-drivers/video/fb/fb_ioctl.c.o \
+drivers/video/fb/fb.c.o 
+
+ifdef CONFIG_DEVFS
+	MODULEOBJS += drivers/video/fb/fb_devfs.c.o
+endif
 
 MODULE_INCLUDEDIRS += \
 drivers/video/fb/include
