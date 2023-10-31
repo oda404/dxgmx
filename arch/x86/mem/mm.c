@@ -493,7 +493,10 @@ int mm_new_user_page(ptr vaddr, u16 flags, PagingStruct* ps)
 
     int st = mm_new_page(vaddr, paddr, flags | PAGE_USER, ps);
     if (st < 0)
+    {
         ffree_one(paddr);
+        return st;
+    }
 
     Page page = {.vaddr = vaddr};
     st = pagingstruct_track_page(&page, ps);
