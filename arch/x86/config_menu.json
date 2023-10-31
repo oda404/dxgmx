@@ -15,6 +15,7 @@
     ],
     "implies": [
         "CONFIG_LITTLE_ENDIAN",
-        "CONFIG_ARCH = i686"
+        "CONFIG_ARCH = i686",
+        "CONFIG_32BIT"
     ]
 }

@@ -8,6 +8,12 @@
             "visible": false
         },
         {
+            "name": "CONFIG_32BIT",
+            "title": "Native 32bit CPU",
+            "description": "",
+            "visible": false
+        },
+        {
             "name": "CONFIG_64BIT",
             "title": "Native 64bit CPU",
             "description": "",
