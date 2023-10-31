@@ -22,13 +22,7 @@
 static void proc_destroy_kernel_stack(Process* targetproc)
 {
     if (!targetproc->kstack_top)
-    {
-        KLOGF(
-            ERR,
-            "Tried to free non-existent kstack for pid %zu.",
-            targetproc->pid);
         return;
-    }
 
     kfree((void*)(targetproc->kstack_top - PROC_KSTACK_SIZE));
     targetproc->kstack_top = 0;
@@ -190,10 +184,7 @@ int proc_create_address_space(
 
     int st = mm_init_paging_struct(targetproc->paging_struct);
     if (st < 0)
-    {
-        proc_free(targetproc);
         return st;
-    }
 
     /* Map the kernel */
     mm_map_kernel_into_paging_struct(targetproc->paging_struct);
@@ -201,17 +192,11 @@ int proc_create_address_space(
     /* procm_load_from_file copies the binary from disk into memory */
     st = proc_load_from_file(path, actingproc, targetproc);
     if (st < 0)
-    {
-        proc_free(targetproc);
         return st;
-    }
 
     st = proc_create_stack(targetproc);
     if (st < 0)
-    {
-        proc_free(targetproc);
         return st;
-    }
 
     return 0;
 }

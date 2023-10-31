@@ -158,6 +158,7 @@ pid_t procm_spawn_proc(
     st = proc_create_address_space(path, actingproc, newproc);
     if (st < 0)
     {
+        proc_free(newproc);
         kfree(newproc);
         return st;
     }
@@ -212,8 +213,10 @@ _INIT pid_t procm_spawn_init()
     const char* initpath = "/bin/main";
     const char* argv[] = {NULL};
     const char* envv[] = {NULL};
-    if (procm_spawn_proc(initpath, argv, envv, procm_get_kernel_proc()) != 1)
-        panic("Failed to spawn init, tried \"%s\".", initpath);
+
+    int st = procm_spawn_proc(initpath, argv, envv, procm_get_kernel_proc());
+    if (st != 1)
+        panic("Failed to spawn init, tried \"%s\" (%d).", initpath, st);
 
     return 1;
 }

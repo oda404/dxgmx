@@ -432,11 +432,13 @@ int mm_destroy_paging_struct(PagingStruct* ps)
         kfree(pd);
     }
 
-    kfree(ps->data);
-    ps->data = NULL;
+    if (ps->data)
+    {
+        kfree(ps->data);
+        ps->data = NULL;
+    }
 
     pagingstruct_destroy(ps);
-
     return 0;
 }
 
