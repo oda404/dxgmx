@@ -8,6 +8,7 @@
 
 #include <dxgmx/err_or.h>
 #include <dxgmx/posix/sys/types.h>
+#include <dxgmx/units.h>
 
 #define NULL ((void*)0)
 
@@ -21,11 +22,6 @@ typedef __INT32_TYPE__ i32;
 typedef __INT64_TYPE__ i64;
 
 typedef __UINTPTR_TYPE__ ptr;
-
-#define KIB 1024
-#define MIB (KIB * 1024)
-#define GIB (MIB * 1024)
-#define TIB (GIB * 1024)
 
 #if (__STDC_VERSION__ <= 201710L) || (!defined(__clang__)) ||                  \
     (defined(__clang__) && __clang_major__ < 15)
