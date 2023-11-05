@@ -80,14 +80,10 @@ static void handle_absent_user(ptr faultaddr, InterruptFrame* frame)
 static void pagefault_handle_absent_kernel_heap(ptr faultaddr)
 {
     const ptr aligned_faultaddr = bytes_align_down64(faultaddr, PAGESIZE);
-    ptr frame = aligned_faultaddr - kimg_map_offset();
+    ++g_nested_pagefaults;
 
-    int st = falloc_one_at(frame);
-
-    /* We may have other available page frames, other than the one we requested,
-     * but using those will break the promise that the kernel heap is contiguous
-     * in both virtual & physical memory. */
-    if (st < 0)
+    ptr frame = falloc_one_user();
+    if (!frame)
         panic("Kernel out of memory!");
 
     /** mm_new_page may call kmalloc which is very risky, as we are already in a

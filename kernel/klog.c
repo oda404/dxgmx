@@ -78,7 +78,7 @@ size_t kvlog(KLogLevel lvl, const char* fmt, va_list list)
 #ifdef CONFIG_KLOG_COLOR
         kprintf("%s", g_klog_ts_color);
 #endif
-        kprintf("[%11.6f] ", time);
+        kprintf("%14.5f: ", time);
     }
 
 #ifdef CONFIG_KLOG_COLOR
