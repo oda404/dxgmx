@@ -1,7 +1,8 @@
 
-export DXGMX_SRC_ROOT=/home/oda/Documents/cpp/dxgmx
+set DXGMX_SRC_ROOT /home/oda/Documents/cpp/dxgmx
 
-export DXGMX_TOOLCHAIN_ROOT=/home/oda/Documents/cpp/dxgmx-toolchain
+set DXGMX_TOOLCHAIN_ROOT /home/oda/Documents/cpp/dxgmx-toolchain
+
 export DXGMX_SYSROOT=$DXGMX_SRC_ROOT/sysroot
 
 export CC=$DXGMX_TOOLCHAIN_ROOT/usr/bin/clang
