@@ -1,75 +1,71 @@
 # dxgmx
-dxgmx is a scratch written x86 kernel made for learning purposes. Right now the kernel loosely follows Unix conventions, is dependant on GRUB (more specifically the Multiboot 0.6.96 boot specification), and still misses core parts.
-
-# Getting dxgmx up and running
-
-## Toolchain
-First order of business is setting up the toolchain. You basically have two options here:
-- Using your host LLVM.
-- Building the dxgmx patched LLVM.
-
-The first options is much simpler and faster, but with the host LLVM you will only be able to compile the kernel. If you also want to cross compile binaries for the kernel, you should go with the second options.
-Both options are documented [here](docs/building.md#how-do-i-setup-a-toolchain).
-
-## Environment & Config
-Once you have the toolchain ready, you have two more things to do before compiling.
-- Setting the environment variables required for building. More information [here](docs/building.md#toolchain)
-- Creating or using an already available target file. More information [here](docs/building.md#target)
-
-Instead of writing these files yourself, you can use the already available ones:<br>
-
-Edit <b>toolchain/toolchain-i686.sh</b> to match your machine's paths, and run:
-```console
-$ source toolchain/toolchain-i686.sh
-```
-Next run:
-```console
-$ export TARGET_FILE=toolchain/target.debug.mk
-```
+dxgmx is a scratch written unix-y x86 (i686) kernel made with portability in mind for learning purposes.
 
 ## Compiling
-If everything was setup correctly, you can now run:
+### Toolchain
+dxgmx uses LLVM as it's toolchain and as such you have two options:
+- Using your host LLVM
+- Using the dxgmx patched LLVM
+
+The first options is much simpler and faster, but with the host LLVM you will only be able to compile and work on the kernel. If you also want to cross compile a userspace for the kernel you should go with the second option.
+Both options are documented [here](building.md#how-do-i-setup-a-toolchain).
+
+### Configuration
+dxgmx is configured with it's own configuration utility. Without any modules the kernel will most likely not even boot, or if it does it's going to be useless. If you haven't already you should set `HOSTCC=clang` and `HOSTCXX=clang++` in your env for compiling the configuration utility. GCC will also work for the host toolchain. <br>
+Run:
+```
+$ make conf
+```
+Play around with anything you like, just note that all `Drivers -> Core` modules are necessary for booting **and** compiling.
+
+### Building
+After setting up your toolchain and configuration run:
 ```console 
 $ make
 ```
-and let it rip. If you're doing a clean build, you will probably be asked for your sudo password, this is because it's trying to create a system root image, and calls stuff like fdisk, mkfs.fat and losetup. 
+If you're doing a clean build you will probably be asked for your sudo password, this is because it's trying to create a system root image, and calls stuff like fdisk, mkfs.fat and losetup. 
 
 ## Running in QEMU
-Install QEMU with an x86 BIOS and run:
+You need all the variables in `tools/run-qemu-x86-default-vars.sh` in your environment. <br>
+Run:
 ```console
 $ make run
 ```
+This will run the kernel in qemu using the -kernel option.<br>
+If you want to run it as an iso, run:
+```
+$ make iso-run
+```
+This has the main advantage of being able to use a framebuffer if configured.
 
 ## Customizing the system root
-When building for the first time a disk image <b>build/image.img</b> will be created. This is a fat32 formatted disk image that the kernel will mount as it's root. If you want to put anything here for the kernel to interact with:<br>
-
-Mount it:
-```console
-$ make mount-root
+When building for the first time a disk image <b>build/image.img</b> will be created. This is a fat32 formatted disk image that the kernel will mount as it's root. If you want to put anything here for the kernel to interact with, you should copy it to the `sysroot/` directory in the dxgmx source root and run:
 ```
-By default it will get mounted on <b>/mnt/dxgmx-sysroot/</b>.<br>
-
-**Make your changes**
-
-Unmount it:
-```console
-$ make unmount-root
+$ make syncroot
 ```
 
-## Bare-metal
+### libc
+The kernel has a very lacking libc used for hacking that you can install into the sysroot by running:
+```
+$ lib/libc/pak.sh
+```
+This only works if you are using the dxgmx patched LLVM of course.
+
+## Running on bare metal
+First order of business is tweaking the multiboot variables you can find in `drivers/core/multiboot/multiboot.c`. The main thing you probably want to change is the screen resolution. Also the grub configuration needs to have the all_video inserted. <br>
 Run:
 ```console
 $ make iso
 ```
-which will create an ISO in the root of the source tree with the name of **dxgmx-\<ver\>.iso**.
+This will create an iso in the root of the source tree with the name of **dxgmx-\<ver\>.iso**.
 
-You can then dd said ISO to a storage medium:
+Copy the iso byte for byte to a bootable medium:
 ```console
 # dd if=path/to/iso of=/dev/sdX status=progress
 ```
 and try to boot it.
 
-The kernel boots and works (does what it's supposed to do) on my 2019 Lenovo IdeaPad 330S-15ARR.
+The kernel boots (does what it's supposed to do) on my 2019 Lenovo IdeaPad 330S-15ARR.
 
-# Documentation
+## Documentation
 A growing set of documentation can be found in docs/.

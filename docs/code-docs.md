@@ -1,0 +1,2 @@
+# Documentation of actual code
+Most of the code is not documented at all since the kernel is still at a very early stage where stuff can change very easily and any documentation for that code instantly becomes obsolete. Instead, the code is made to be self documenting (hopefully). Any comments laying around are probably there due to some really questionable and/or obfuscated code that may or may not be my fault. If you're looking for a place to start `kernel/kinit_stage2.c` is where C code execution begins. The actual kernel entry is found in `arch/x86/boot/entry.S` (x86).
