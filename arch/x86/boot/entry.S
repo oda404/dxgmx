@@ -73,18 +73,6 @@ _start:
   # Even if we don't find a configured bootloader spec, 
   # we keep going. kinit_arch will panic later because of this.
 
-  # Make sure .bss is zeroed out
-  # The bootloader that got us here has probably done this for us already, but I'm not taking any chances.
-  # Pretty dumb implementation zeroing 1 byte at a time, but oh well.
-  movl $_bss_start - OFFSET, %eax
-  movl $_bss_end - OFFSET, %ecx
-  sub %eax, %ecx
-
-1:
-  movb $0, (%eax)
-  addl $1, %eax
-  loop 1b
-
   # If PAE is not supported, die.
   movl $1, %eax
   cpuid

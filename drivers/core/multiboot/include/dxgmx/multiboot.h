@@ -102,8 +102,8 @@ typedef struct _ATTR_PACKED S_MultibootMMAP
     u32 type;
 } MultibootMMAP;
 
-extern const u32 ___multiboot_magic;
-extern const ptr ___multiboot_struct_pa;
+extern const volatile u32 ___multiboot_magic;
+extern const volatile ptr ___multiboot_struct_pa;
 
 int multiboot_parse_info(KernelBootInfo* kbootinfo);
 
