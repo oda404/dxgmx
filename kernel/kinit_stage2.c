@@ -16,18 +16,28 @@
 
 static void kinit_print_banner()
 {
-    klogln(INFO, "     _");
-    klogln(INFO, "  __| |_  ____ _ _ __ ___ __  __");
-    klogln(INFO, " / _` \\ \\/ / _` | '_ ` _ \\\\ \\/ /");
-    klogln(INFO, "| (_| ||  | (_| | | | | | ||  |");
+    klogln(INFO, "\x1b[0;35;49m     _");
     klogln(
         INFO,
-        " \\__,_/_/\\_\\__, |_| |_| |_/_/\\_\\ %s - %d.%d.%d",
+        "\x1b[0;35;49m  __| |\x1b[0;36;49m_  __\x1b[0;35;49m__ _ _ __ ___ __  __");
+
+    klogln(
+        INFO,
+        "\x1b[0;35;49m / _` \x1b[0;36;49m\\ \\/ /\x1b[0;35;49m _` | '_ ` _ \\\\ \\/ /");
+
+    klogln(
+        INFO,
+        "\x1b[0;35;49m| (_| |\x1b[0;36;49m|  |\x1b[0;35;49m (_| | | | | | ||  |");
+
+    klogln(
+        INFO,
+        "\x1b[0;35;49m \\__,_\x1b[0;36;49m/_/\\_\\\x1b[0;35;49m__, |_| |_| |_/_/\\_\\ \x1b[0;36;49m%s - %d.%d.%d",
         CONFIG_CODENAME,
         CONFIG_VER_MAJ,
         CONFIG_VER_MIN,
         CONFIG_PATCH_N);
-    klogln(INFO, "           |___/");
+
+    klogln(INFO, "\x1b[0;35;49m           |___/");
 }
 
 _ATTR_NORETURN void kinit_stage2()
