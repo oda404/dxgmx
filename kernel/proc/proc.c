@@ -32,7 +32,7 @@ static void proc_destroy_kernel_stack(Process* targetproc)
 static int proc_create_stack(Process* targetproc)
 {
     const ptr stack_top = PROC_HIGH_ADDRESS - PAGESIZE;
-    const size_t stack_pages = PROC_STACK_PAGESPAN;
+    const size_t stack_pages = PROC_STACK_SIZE / PAGESIZE;
 
     // FIXME: don't explictly map all stack pages here.
     for (size_t i = 0; i < stack_pages; ++i)
@@ -96,6 +96,8 @@ int proc_init(Process* proc)
 
     proc->fd_last_free_idx = 0;
     proc->state = PROC_NEVER_RAN;
+    /* FIXME: Hardcoded, this will break something in the future! */
+    proc->dma_heap = (Heap){.vaddr = 2 * MIB, .pagespan = (2 * MIB) / PAGESIZE};
     return 0;
 }
 

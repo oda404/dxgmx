@@ -16,12 +16,15 @@
 #define PAGE_W BW_BIT(1)
 /* Read permissions */
 #define PAGE_R BW_BIT(2)
-/* R/W/X permissions mask.  */
-#define PAGE_ACCESS_MODE (PAGE_X | PAGE_W | PAGE_R)
 /* Page can be accesed by userspace */
 #define PAGE_USER BW_BIT(3)
+/* Page is mapped to physical memory */
+#define PAGE_PRESENT BW_BIT(4)
 
 #define PAGE_RW (PAGE_R | PAGE_W)
+#define PAGE_RX (PAGE_R | PAGE_X)
+#define PAGE_WX (PAGE_W | PAGE_X)
+#define PAGE_ACCESS_MODE (PAGE_X | PAGE_W | PAGE_R)
 
 typedef struct S_Page
 {

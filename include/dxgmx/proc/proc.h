@@ -8,6 +8,7 @@
 
 #include <dxgmx/attrs.h>
 #include <dxgmx/fs/fd.h>
+#include <dxgmx/mem/heap.h>
 #include <dxgmx/mem/mm.h>
 #include <dxgmx/task/task.h>
 #include <dxgmx/types.h>
@@ -37,6 +38,7 @@ typedef struct S_Process
     /* The paging structure used by this process. */
     PagingStruct* paging_struct;
 
+    Heap dma_heap;
     Bitmap dma_bitmap;
 
     /**

@@ -11,6 +11,7 @@
 #include <dxgmx/mem/dma.h>
 #include <dxgmx/posix/sys/mman.h>
 #include <dxgmx/posix/sys/stat.h>
+#include <dxgmx/proc/procm.h>
 #include <dxgmx/stdio.h>
 #include <dxgmx/user.h>
 
@@ -71,34 +72,34 @@ static void* fb_vnode_mmap(
     (void)flags;
     (void)off;
 
-    // (void)flags;
+    (void)flags;
 
-    // if (!len)
-    //     return NULL;
+    if (!len)
+        return NULL;
 
-    // ASSERT(addr == 0); // FIXME
-    // ASSERT(off == 0);  // FIXME
+    ASSERT(addr == 0); // FIXME
+    ASSERT(off == 0);  // FIXME
 
-    // FBInfo fbinfo;
-    // fbio_get_info(vnode, &fbinfo);
-    // const size_t fblen = fbinfo.width * fbinfo.height * (fbinfo.bpp / 8);
+    FBInfo fbinfo;
+    fbio_get_info(vnode, &fbinfo);
+    const size_t fblen = fbinfo.width * fbinfo.height * (fbinfo.bpp / 8);
 
-    // if (len > fblen)
-    //     return (void*)E2BIG;
+    if (len > fblen)
+        return (void*)E2BIG;
 
-    // FrameBuffer* fb = vnode->data;
+    FrameBuffer* fb = vnode->data;
 
-    // u16 map_flags = PAGE_USER;
-    // map_flags |= prot & PROT_READ ? PAGE_R : 0;
-    // map_flags |= prot & PROT_WRITE ? PAGE_W : 0;
+    u16 map_flags = PAGE_USER;
+    map_flags |= prot & PROT_READ ? PAGE_R : 0;
+    map_flags |= prot & PROT_WRITE ? PAGE_W : 0;
 
-    // ERR_OR(ptr)
-    // res = dma_map_range(fb->paddr, len, map_flags,
-    // procm_sched_current_proc()); if (res.error)
-    //     return (void*)res.error;
+    ERR_OR(ptr)
+    res =
+        dma_map_range(fb->base_pa, len, map_flags, procm_sched_current_proc());
+    if (res.error)
+        return (void*)res.error;
 
-    // return (void*)res.value;
-    return 0;
+    return (void*)res.value;
 }
 
 static VirtualNodeOperations g_fb_vnode_ops = {

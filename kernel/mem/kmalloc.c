@@ -16,17 +16,21 @@
 #include <dxgmx/todo.h>
 #include <dxgmx/utils/bitwise.h>
 #include <dxgmx/utils/bytes.h>
+#include <stddef.h>
 
 #define KLOGF_PREFIX "kmalloc: "
 /* KLOG informations about each kmalloc/free call. Very verbose! */
 #define KMALLOC_VERBOSE 0
 #define KMALLOC_RECORD_STATISTICS 1
+#define KMALLOC_MAX_HEAPS 4
 
-static bool g_kmalloc_up;
 /* The kmalloc driver. */
 static KMallocDriver g_driver;
-/* The kernel heap. */
-static Heap g_kheap;
+
+static Heap g_heaps[KMALLOC_MAX_HEAPS];
+static size_t g_heap_count;
+
+static Heap* g_active_heap;
 
 #if KMALLOC_RECORD_STATISTICS == 1
 static KMallocStatistics g_statistics;
@@ -98,10 +102,36 @@ static void kfree_with_heap(void* addr, Heap* heap)
 #endif
 }
 
-int kmalloc_register_kernel_heap(Heap heap)
+int kmalloc_register_heap(Heap heap)
 {
-    g_kheap = heap;
+    if (g_heap_count == KMALLOC_MAX_HEAPS)
+        return -ENOSPC;
+
+    g_heaps[g_heap_count] = heap;
+    if (g_driver.init_heap(&g_heaps[g_heap_count]) < 0)
+        TODO_FATAL();
+
+    return g_heap_count++;
+}
+
+int kmalloc_use_heap(size_t id)
+{
+    if (id >= g_heap_count)
+        return -EINVAL;
+
+    g_active_heap = &g_heaps[id];
     return 0;
+}
+
+bool kmalloc_owns_va(ptr va)
+{
+    for (size_t i = 0; i < g_heap_count; ++i)
+    {
+        if (heap_is_addr_inside(va, &g_heaps[i]))
+            return true;
+    }
+
+    return false;
 }
 
 _INIT int kmalloc_init()
@@ -112,7 +142,7 @@ _INIT int kmalloc_init()
     g_driver = (KMallocDriver){
         .name = "gallocator",
         .priority = 1,
-        .default_alignment = sizeof(ptr),
+        .default_alignment = _Alignof(max_align_t),
         .init = gallocator_init,
         .init_heap = gallocator_init_heap,
         .alloc_aligned = gallocator_alloc_aligned,
@@ -130,13 +160,6 @@ _INIT int kmalloc_init()
     st = g_driver.init();
     if (st < 0)
         return st;
-
-    /*  Init the kernel heap. */
-    st = g_driver.init_heap(&g_kheap);
-    if (st < 0)
-        return st;
-
-    g_kmalloc_up = true;
 
     return 0;
 }
@@ -158,18 +181,13 @@ void* kcalloc(size_t size)
 /* Small note: all kmalloc functions basically boil down to this one. */
 void* kmalloc_aligned(size_t size, size_t alignment)
 {
-    if (UNLIKELY(!g_kmalloc_up))
-        return NULL;
-
     if (!size)
         return NULL;
 
     if (!bw_is_power_of_two(alignment))
         panic("kmalloc_aligned: alignment is not a power of two!");
 
-    Heap* heap = &g_kheap;
-
-    void* addr = kmalloc_aligned_with_heap(size, alignment, heap);
+    void* addr = kmalloc_aligned_with_heap(size, alignment, g_active_heap);
 
     /* Sanity check */
     ASSERT(((ptr)addr % alignment) == 0);
@@ -179,13 +197,11 @@ void* kmalloc_aligned(size_t size, size_t alignment)
 
 void kfree(void* addr)
 {
-    if (UNLIKELY(!g_kmalloc_up))
-        return;
-
     if (!addr)
         panic("kfree: Tried to kfree a NULL address!");
 
-    Heap* heap = &g_kheap;
+    Heap* heap = g_active_heap;
+
     if (!heap_is_addr_inside((ptr)addr, heap))
         panic("kfree: Tried to free an invalid address (0x%p)!", addr);
 
@@ -194,13 +210,11 @@ void kfree(void* addr)
 
 void* krealloc(void* addr, size_t size)
 {
-    if (UNLIKELY(!g_kmalloc_up))
-        return NULL;
-
     if (!size)
         return NULL;
 
-    Heap* heap = &g_kheap;
+    Heap* heap = g_active_heap;
+
     if (addr && !heap_is_addr_inside((ptr)addr, heap))
         return NULL;
 

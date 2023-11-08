@@ -54,8 +54,6 @@ _ATTR_NORETURN void kinit_stage2()
     /* Load kernel sysmbols, now that we have kmalloc */
     ksyms_load();
 
-    procm_spawn_kernel_proc();
-
     /* Second stage of modules. */
     modules_init_stage2();
 

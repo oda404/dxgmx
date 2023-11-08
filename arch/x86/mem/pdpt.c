@@ -19,7 +19,7 @@ void pdpte_set_pd_paddr(ptr paddr, pdpte_t* pdpte)
 
 void pdpte_set_pd_vaddr(ptr vaddr, pdpte_t* pdpte)
 {
-    pdpte_set_pd_paddr(mm_kvaddr2paddr(vaddr), pdpte);
+    pdpte_set_pd_paddr(mm_kva2pa(vaddr), pdpte);
 }
 
 ptr pdpte_pd_paddr(const pdpte_t* pdpte)
@@ -33,7 +33,7 @@ pd_t* pdpte_pd_vaddr(const pdpte_t* pdpte)
     if (!pdpaddr)
         return NULL;
 
-    return (pd_t*)mm_kpaddr2vaddr(pdpaddr);
+    return (pd_t*)mm_kpa2va(pdpaddr);
 }
 
 pdpte_t* pdpte_from_vaddr(ptr vaddr, pdpt_t* pdpt)

@@ -99,7 +99,6 @@ typedef struct S_KMallocDriver
 
 /**
  * Initialize kmalloc.
- * The kernel heap needs to be registered before calling this function.
  * Returns 0 on success, negative on error.
  */
 int kmalloc_init();
@@ -107,14 +106,15 @@ int kmalloc_init();
 /* Registering a heap to kmalloc implies giving kmalloc full ownersip of the
  * memory range represented by said heap. No memory in that range is to be used
  * outside kmalloc/without the use of pointers returned by kmalloc, as it may be
- * overwritten/wrongly-interpreted by kmalloc. Two more restrictions are inposed
- * on a 'kernel heap': there is only 1, and it's starting address needs to be
- * >= the end of the kernel image. This is done for multiple reasons:
+ * overwritten/wrongly-interpreted by kmalloc. There is one restriction imposed
+ * on a 'kernel heap': it's starting address needs to be
+ * >= the end of the kernel image or inside the kernel image. This is done for
+ * multiple reasons:
  *
  *  1: The kernel will make sure that it's heap is higher half mapped in the
- * same fashion that the kernel image (and 1st MiB of memory on x86) is. This
+ * same fashion that the kernel image is. This
  * basically means that the virtual mapping of everything kernel-related,
- * starting from the 3GiB + 1Mib (on x86) going up to however big the kernel
+ * starting from the 3GiB going up to however big the kernel
  * heap is, is just a higher half mapping from 1MiB to however big the kernel
  * heap is.
  *
@@ -129,7 +129,11 @@ int kmalloc_init();
  * after it (except it's heap, of course). This can be seen easily, just by
  * looking at an address and seeing if it's bigger than _kernel_map_offset.
  */
-int kmalloc_register_kernel_heap(Heap heap);
+int kmalloc_register_heap(Heap heap);
+
+int kmalloc_use_heap(size_t id);
+
+bool kmalloc_owns_va(ptr va);
 
 /* Kernel version of malloc. */
 void* kmalloc(size_t size);

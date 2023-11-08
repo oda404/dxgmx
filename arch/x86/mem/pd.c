@@ -20,7 +20,7 @@ void pde_set_pt_paddr(ptr base, pde_t* pde)
 
 void pde_set_pt_vaddr(ptr vaddr, pde_t* pde)
 {
-    pde_set_pt_paddr(mm_kvaddr2paddr(vaddr), pde);
+    pde_set_pt_paddr(mm_kva2pa(vaddr), pde);
 }
 
 ptr pde_pt_paddr(pde_t* pde)
@@ -34,7 +34,7 @@ pt_t* pde_pt_vaddr(pde_t* pde)
     if (!ptpaddr)
         return NULL;
 
-    return (pt_t*)mm_kpaddr2vaddr(ptpaddr);
+    return (pt_t*)mm_kpa2va(ptpaddr);
 }
 
 pde_t* pde_from_vaddr(ptr vaddr, pd_t* pd)

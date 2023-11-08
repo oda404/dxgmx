@@ -6,23 +6,18 @@
 #ifndef _DXGMX_MEM_DMA_H
 #define _DXGMX_MEM_DMA_H
 
+#include <dxgmx/mem/heap.h>
 #include <dxgmx/mem/paging.h>
 #include <dxgmx/proc/proc.h>
 #include <dxgmx/proc/proc_limits.h>
 #include <dxgmx/types.h>
 
-#define DMA_POOL_START (1 * MIB)
-#define DMA_POOL_END (PROC_LOW_ADDRESS - 1 * MIB)
-
-int dma_init();
-
 /**
  * Maps a physical contiguous range of memory to some virtual contiguous range
  * of memory. The virtual starting address is not up to the caller, but instead
  * chosen internally by the algorithm. You can, however see the memory pool's
- * start and end bounds (DMA_POOL_START and DMA_POOL_END). This memory is of
- * course suitable for doing DMA, and is only mapped into the kernel's paging
- * struct. It is the mm's job to copy these mappings into user processes.
+ * start and end bounds (proc's dma heap). This memory is of course suitable for
+ * doing DMA and/or memory map hardware/
  *
  * 'paddr' The starting physical address.
  * 'n' How many bytes to map. (Will get page aligned, if not already).
