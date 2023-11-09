@@ -9,17 +9,18 @@
 #include <dxgmx/err_or.h>
 #include <dxgmx/posix/sys/types.h>
 #include <dxgmx/units.h>
+#include <dxgmx/user@types.h>
 
 #define NULL ((void*)0)
 
-typedef __UINT8_TYPE__ u8;
-typedef __UINT16_TYPE__ u16;
-typedef __UINT32_TYPE__ u32;
-typedef __UINT64_TYPE__ u64;
-typedef __INT8_TYPE__ i8;
-typedef __INT16_TYPE__ i16;
-typedef __INT32_TYPE__ i32;
-typedef __INT64_TYPE__ i64;
+typedef _u8 u8;
+typedef _u16 u16;
+typedef _u32 u32;
+typedef _u64 u64;
+typedef _i8 i8;
+typedef _i16 i16;
+typedef _i32 i32;
+typedef _i64 i64;
 
 typedef __UINTPTR_TYPE__ ptr;
 

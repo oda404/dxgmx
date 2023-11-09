@@ -15,6 +15,10 @@
 #include <dxgmx/posix/time.h>
 #include <dxgmx/types.h>
 
+#define TIMESPEC_IS_FIRST_BIGGER(_first, _second)                              \
+    (((_first)->tv_sec * 1000 + (_first)->tv_nsec / 1000000) >                 \
+     ((_second)->tv_sec * 1000 + (_second)->tv_nsec / 1000000))
+
 #define CLOCKS_PER_SEC 1000000
 
 struct tm

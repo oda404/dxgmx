@@ -10,4 +10,4 @@ MODULE_INCLUDEDIRS += \
 drivers/video/fb/include
 
 EXPORT_APIS += \
-drivers/video/fb/include/dxgmx/fb_user.h:fb_defs.h
+drivers/video/fb/include/dxgmx/user@fb.h

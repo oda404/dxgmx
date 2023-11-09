@@ -1,5 +1,5 @@
 /**
- * Copyright 2022 Alexandru Olaru.
+ * Copyright 2023 Alexandru Olaru.
  * Distributed under the MIT license.
  */
 
@@ -11,7 +11,7 @@
 struct timespec
 {
     time_t tv_sec;
-    long tv_nsec;
+    int32_t tv_nsec;
 };
 
 #endif // !_DXGMX_POSIX_TIME_H

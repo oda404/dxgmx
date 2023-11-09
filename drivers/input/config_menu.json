@@ -7,8 +7,8 @@
             "title": "PS2 Keyboard support",
             "description": "Driver for interacting with PS2 keyboards.",
             "implies": [
-                "CONFIG_DEVFS",
-                "CONFIG_PS2IO"
+                "CONFIG_PS2IO",
+                "CONFIG_INPUT"
             ],
             "modules": [
                 "drivers/input/ps2kbd"
@@ -20,6 +20,17 @@
             "description": "Register and find drivers for serial devices.",
             "modules": [
                 "drivers/input/serialio"
+            ]
+        },
+        {
+            "name": "CONFIG_INPUT",
+            "title": "Input device support",
+            "description": "Kernel utilities for exposing input devices.",
+            "implies": [
+                "CONFIG_DEVFS"
+            ],
+            "modules": [
+                "drivers/input/input"
             ]
         }
     ]

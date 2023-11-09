@@ -6,14 +6,14 @@
 #ifndef _DXGMX_FB_USER_H
 #define _DXGMX_FB_USER_H
 
-#include <dxgmx/posix/sys/types.h>
+#include <dxgmx/user@types.h>
 
 #define FBIO_GET_INFO 0xFF01
 typedef struct FBInfo
 {
     size_t width;
     size_t height;
-    uint8_t bpp;
+    _u8 bpp;
 } FBInfo;
 
 #endif // !_DXGMX_FB_USER_H

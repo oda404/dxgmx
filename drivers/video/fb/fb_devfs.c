@@ -7,13 +7,13 @@
 #include <dxgmx/devfs.h>
 #include <dxgmx/errno.h>
 #include <dxgmx/fb_devfs.h>
-#include <dxgmx/fb_user.h>
 #include <dxgmx/mem/dma.h>
 #include <dxgmx/posix/sys/mman.h>
 #include <dxgmx/posix/sys/stat.h>
 #include <dxgmx/proc/procm.h>
 #include <dxgmx/stdio.h>
 #include <dxgmx/user.h>
+#include <dxgmx/user@fb.h>
 
 static int fbio_get_info(VirtualNode* vnode, FBInfo* info)
 {
