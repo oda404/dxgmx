@@ -172,6 +172,11 @@ $(BUILDDIR)/%_mod.S.o: %.S $(CORE_DEPS)
 install_apis:
 	@tools/install-apis.sh --sysroot $(SYSROOT) --apis "$(EXPORT_APIS)"
 
+.PHONY += apisinfo
+apisinfo:
+	@echo The following headers are to be installed under sysroot?/usr/include/dxgmx/:
+	@echo $(EXPORT_APIS) | tr " " "\n"
+
 .PHONY += install
 install: $(KERNEL_BIN)
 	@mkdir -p $(SYSROOT)/boot
