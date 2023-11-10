@@ -284,7 +284,7 @@ static void kbd_isr()
     interrupts_irq_done();
 }
 
-static int ps2kbd_vnode_open(VirtualNode* vnode, int flags)
+static int ps2kbd_vnode_open(VirtualNode* vnode, int)
 {
     vnode->data = kmalloc(sizeof(LastReadInfo));
     if (!vnode->data)
@@ -297,7 +297,7 @@ static int ps2kbd_vnode_open(VirtualNode* vnode, int flags)
 }
 
 static ssize_t
-ps2kbd_vnode_read(const VirtualNode* vnode, void* buf, size_t n, off_t off)
+ps2kbd_vnode_read(const VirtualNode* vnode, void* buf, size_t n, off_t)
 {
     if (n % sizeof(InputEvent))
         return -EINVAL;
@@ -328,17 +328,30 @@ ps2kbd_vnode_read(const VirtualNode* vnode, void* buf, size_t n, off_t off)
 static ssize_t ps2kbd_vnode_write(
     VirtualNode* vnode, const void* _USERPTR buf, size_t n, off_t off)
 {
+    (void)vnode;
+    (void)buf;
+    (void)n;
+    (void)off;
     return -EINVAL;
 }
 
 static int ps2kbd_vnode_ioctl(VirtualNode* vnode, int req, void* data)
 {
+    (void)vnode;
+    (void)req;
+    (void)data;
     return -EINVAL;
 }
 
 static void* ps2kbd_vnode_mmap(
     VirtualNode* vnode, void* addr, size_t len, int prot, int flags, off_t off)
 {
+    (void)vnode;
+    (void)addr;
+    (void)len;
+    (void)prot;
+    (void)flags;
+    (void)off;
     return NULL;
 }
 
