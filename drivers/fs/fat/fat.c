@@ -307,10 +307,7 @@ static int fatfs_exit()
 }
 
 MODULE g_fat_module = {
-    .name = MODULE_NAME,
-    .main = fatfs_main,
-    .stage = MODULE_STAGE3,
-    .exit = fatfs_exit};
+    .name = MODULE_NAME, .main = fatfs_main, .exit = fatfs_exit};
 
 /* FAT32 utilities. */
 

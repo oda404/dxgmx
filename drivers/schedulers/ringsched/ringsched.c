@@ -61,7 +61,4 @@ static int ringsched_exit()
 }
 
 MODULE g_ringsched_module = {
-    .name = "ringsched",
-    .stage = MODULE_STAGE3,
-    .main = ringsched_main,
-    .exit = ringsched_exit};
+    .name = "ringsched", .main = ringsched_main, .exit = ringsched_exit};

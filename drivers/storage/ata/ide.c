@@ -406,5 +406,4 @@ static int ide_exit()
     return 0;
 }
 
-MODULE g_ata_module = {
-    .name = "ata", .main = ide_main, .exit = ide_exit, .stage = MODULE_STAGE3};
+MODULE g_ata_module = {.name = "ata", .main = ide_main, .exit = ide_exit};

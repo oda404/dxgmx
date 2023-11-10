@@ -143,9 +143,6 @@ static int devfs_exit()
 }
 
 MODULE g_devfs_module = {
-    .name = MODULE_NAME,
-    .main = devfs_main,
-    .stage = MODULE_STAGE3,
-    .exit = devfs_exit};
+    .name = MODULE_NAME, .main = devfs_main, .exit = devfs_exit};
 
 #undef MODULE_NAME

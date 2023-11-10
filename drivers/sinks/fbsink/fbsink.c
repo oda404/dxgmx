@@ -255,6 +255,10 @@ static KOutputSink g_fbsink = {
 
 static int fbsink_main()
 {
+    int st = mod_builtin_depends_on("fb");
+    if (st < 0)
+        return st;
+
     return kstdio_register_sink(&g_fbsink);
 }
 

@@ -395,7 +395,4 @@ static int ps2kbd_exit()
 }
 
 MODULE g_ps2kbd_module = {
-    .name = "ps2kbd",
-    .main = ps2kbd_main,
-    .exit = ps2kbd_exit,
-    .stage = MODULE_STAGE3};
+    .name = "ps2kbd", .main = ps2kbd_main, .exit = ps2kbd_exit};

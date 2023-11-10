@@ -10,8 +10,10 @@
 #include <dxgmx/kboot.h>
 #include <dxgmx/kmalloc.h>
 #include <dxgmx/mem/dma.h>
+#include <dxgmx/module.h>
 #include <dxgmx/proc/procm.h>
 #include <dxgmx/string.h>
+#include <dxgmx/todo.h>
 
 #ifdef CONFIG_DEVFS
 #include <dxgmx/fb_devfs.h>
@@ -20,7 +22,6 @@
 static FrameBuffer* g_fbs;
 static size_t g_fb_count;
 static FrameBufferPack g_fbpack = {.fbs = &g_fbs, .fb_count = &g_fb_count};
-static bool g_initialized;
 
 static FrameBuffer* fb_new_framebuffer()
 {
@@ -89,11 +90,6 @@ static int fb_init()
 
 FrameBufferPack* fb_get_pack()
 {
-    if (!g_initialized)
-    {
-        if (fb_init() == 0)
-            g_initialized = true;
-    }
     return &g_fbpack;
 }
 
@@ -103,3 +99,16 @@ int fb_write_pixel(size_t x, size_t y, u32 pixel, FrameBuffer* fb)
     memcpy((void*)(fb->base_va + off), &pixel, fb->bytespp);
     return 0;
 }
+
+static int fb_main()
+{
+    return fb_init();
+}
+
+static int fb_exit()
+{
+    TODO();
+    return 0;
+}
+
+MODULE g_fb_module = {.name = "fb", .main = fb_main, .exit = fb_exit};

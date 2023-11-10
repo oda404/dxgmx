@@ -47,7 +47,7 @@ _ATTR_NORETURN void kinit_stage2()
     kinit_arch();
 
     /* Load the first stage of builtin modules. */
-    modules_init_stage1();
+    mod_builtin_init_stage1();
 
     klog_init();
 
@@ -61,20 +61,20 @@ _ATTR_NORETURN void kinit_stage2()
      * allocation, page faults, dma, etc.. */
     mm_init();
 
+    /* Second stage of modules. */
+    mod_builtin_init_stage2();
+
     /* Load kernel sysmbols, now that we have kmalloc */
     ksyms_load();
-
-    /* Second stage of modules. */
-    modules_init_stage2();
 
     /* Bring timers online. */
     timekeep_init();
 
     kinit_print_banner();
 
-    modules_init_stage3();
+    mod_builtin_init_stage3();
 
-    modules_dump_builtins();
+    mod_builtin_dump_all();
 
     syscalls_init();
 

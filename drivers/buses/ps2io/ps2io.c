@@ -312,7 +312,4 @@ static int ps2io_exit()
 }
 
 MODULE g_ps2io_module = {
-    .name = "ps2io",
-    .main = ps2io_main,
-    .exit = ps2io_exit,
-    .stage = MODULE_STAGE3};
+    .name = "ps2io", .main = ps2io_main, .exit = ps2io_exit};

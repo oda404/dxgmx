@@ -32,34 +32,35 @@
  */
 
 #define MODULE_ATTRS _ATTR_SECTION(".modules") _ATTR_USED
+#define MODULE static MODULE_ATTRS const Module
 
 typedef enum E_ModuleStage
 {
-    MODULE_STAGE1 = 1,
+    MODULE_STAGE3 = 0,
+    MODULE_STAGE1,
     MODULE_STAGE2,
-    MODULE_STAGE3,
 } ModuleStage;
-
-#define MODULE static MODULE_ATTRS const Module
 
 typedef struct S_Module
 {
     const char* const name;
-
-    /* Comma separated string of module dependencies. */
-    const char* const dependencies;
 
     /* Load stage for built in module. */
     ModuleStage stage;
 
     int (*main)();
     int (*exit)();
+
+    bool _initialized;
+    size_t _refcount;
 } Module;
 
-int modules_init_stage1();
-int modules_init_stage2();
-int modules_init_stage3();
+int mod_builtin_init_stage1();
+int mod_builtin_init_stage2();
+int mod_builtin_init_stage3();
 
-void modules_dump_builtins();
+void mod_builtin_dump_all();
+
+int mod_builtin_depends_on(const char* mod);
 
 #endif // !_DXGMX_MODULE_H

@@ -7,7 +7,6 @@
 #include <dxgmx/errno.h>
 #include <dxgmx/klog.h>
 #include <dxgmx/kmalloc.h>
-#include <dxgmx/module.h>
 #include <dxgmx/serialio.h>
 #include <dxgmx/string.h>
 #include <dxgmx/todo.h>
