@@ -2,7 +2,7 @@
 build
 .d
 .o
-dxgmx-*
+dxgmx*
 .vscode
 buildconfig
 *.buildtarget

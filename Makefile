@@ -27,7 +27,7 @@ EXPORT_APIS        :=
 -include $(CONFIG_FILE)
 
 ### BINARY/ISO PATHS ###
-KERNEL_BIN   := dxgmx-$(VER_MAJ).$(VER_MIN).$(PATCH_N)
+KERNEL_BIN   ?= dxgmx-$(VER_MAJ).$(VER_MIN).$(PATCH_N)
 KERNEL_ISO   ?= $(KERNEL_BIN).iso
 
 .PHONY += all
@@ -132,8 +132,6 @@ SYSCALLS_COMMON    := kernel/syscalls_common.json
 $(KERNEL_BIN): $(CORE_DEPS) $(ALL_OBJS) $(LDSCRIPT)
 	@$(PRETTY_PRINT) LD $@
 	@$(LD) -T $(LDSCRIPT) $(ALL_OBJS) $(LDFLAGS) -o $(KERNEL_BIN)
-
-	@[ -f build/image.img ] || tools/create-disk.sh -p build/image.img
 	@tools/bake_symbols.sh $(KERNEL_BIN)
 
 $(SYSCALL_DEFS): $(TOOL_SYSCALLS_GEN) $(SYSCALLS_COMMON)
@@ -182,23 +180,7 @@ install: $(KERNEL_BIN)
 	@mkdir -p $(SYSROOT)/boot
 	@mkdir -p $(SYSROOT)/usr/include
 	@$(MAKE) install_apis
-	@cp $(KERNEL_BIN) $(SYSROOT)/boot/
-
-.PHONY += iso 
-iso: $(KERNEL_ISO)
-$(KERNEL_ISO): $(KERNEL_BIN)
-	tools/create-iso.sh \
-	--sysroot $(SYSROOT) \
-	--kernel $(KERNEL_BIN) \
-	--out $(KERNEL_ISO)
-
-.PHONY += iso-run 
-iso-run: $(KERNEL_ISO)
-	tools/run-qemu.sh -i $(KERNEL_ISO) -a $(CONFIG_ARCH)
-
-.PHONY += run 
-run: $(KERNEL_BIN)
-	tools/run-qemu.sh -k $(KERNEL_BIN) -a $(CONFIG_ARCH)
+	@cp -u $(KERNEL_BIN) $(SYSROOT)/boot/
 
 .PHONY += clean 
 clean:
@@ -212,25 +194,6 @@ mrclean:
 	$(MAKE) clean
 	@rm -f $$(ls | grep -Eo '^dxgmx-[0-9]+.[0-9]+.[0-9]+(.iso)?$$')
 	@rm -r $(BUILDDIR) 2> /dev/null || true
-
-.PHONY += mount-root
-mount-root: build/image.img
-	sudo tools/mount-root.sh \
-	--image-path build/image.img \
-	--mountpoint $(SYSROOT_DISK_MNTPOINT) \
-	--cachefile $(BUILDDIR)/root-loopdev
-
-.PHONY += unmount-root
-unmount-root:
-	sudo tools/unmount-root.sh --cachefile $(BUILDDIR)/root-loopdev
-
-.PHONY += syncroot
-syncroot:
-	sudo tools/syncroot.sh \
-	--sysroot $(SYSROOT) \
-	--image-path build/image.img \
-	--mountpoint $(SYSROOT_DISK_MNTPOINT) \
-	--cachefile $(BUILDDIR)/root-loopdev
 
 .PHONY += buildinfo
 buildinfo:

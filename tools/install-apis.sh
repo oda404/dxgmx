@@ -65,6 +65,6 @@ do
 	destpath=$SYSROOT/usr/include/dxgmx/$dest
 
 	mkdir -p $(dirname $destpath)
-	cp $src $destpath
+	cp -u $src $destpath
 done
 
