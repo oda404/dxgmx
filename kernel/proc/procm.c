@@ -210,7 +210,7 @@ _INIT pid_t procm_spawn_kernel_proc()
 
 _INIT pid_t procm_spawn_init()
 {
-    const char* initpath = "/bin/main";
+    const char* initpath = "/bin/init";
     const char* argv[] = {NULL};
     const char* envv[] = {NULL};
 
