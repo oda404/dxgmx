@@ -12,7 +12,7 @@
 typedef struct Scheduler
 {
     const char* name;
-    size_t priority;
+    u32 priority;
 
     /* Pointer to an array of pointers :) */
     Process*** procs;

@@ -13,8 +13,8 @@ static void divbyzero_isr(InterruptFrame* frame)
 {
 
     panic(
-        "Division by zero in ring 0 at EIP: 0x%p. Not proceeding.",
-        (void*)frame->eip);
+        "Division by zero in ring 0 at xip: 0x%p. Not proceeding.",
+        (void*)frame->xip);
 }
 
 static void debug_isr(InterruptFrame* frame)
@@ -26,7 +26,7 @@ static void debug_isr(InterruptFrame* frame)
 
 static void breakpoint_isr(InterruptFrame* frame)
 {
-    klogln(WARN, "Breakpoint in ring 0, ip: 0x%X", frame->eip);
+    klogln(WARN, "Breakpoint in ring 0, ip: 0x%p", (void*)frame->xip);
 }
 
 static void overflow_isr(InterruptFrame* frame)
@@ -34,9 +34,9 @@ static void overflow_isr(InterruptFrame* frame)
 
     klogln(
         WARN,
-        "Overflow in ring 0 at EIP: 0x%p, EFLAGS: 0x%p.",
-        (void*)frame->eip,
-        (void*)frame->eflags);
+        "Overflow in ring 0 at xip: 0x%p, xflags: 0x%p.",
+        (void*)frame->xip,
+        (void*)frame->xflags);
 }
 
 static void boundrange_exceeded_isr(InterruptFrame* frame)
@@ -51,7 +51,7 @@ static void invalid_opcode_isr(InterruptFrame* frame)
     (void)frame;
 
     panic(
-        "Invalid instruction at EIP: 0x%p. Not proceeding.", (void*)frame->eip);
+        "Invalid instruction at xip: 0x%p. Not proceeding.", (void*)frame->xip);
 }
 
 static void fpu_not_available_isr(InterruptFrame* frame)
@@ -66,8 +66,8 @@ static void double_fault_isr(InterruptFrame* frame)
     (void)frame;
 
     panic(
-        "Double fault! EIP: 0x%p. Obviously not proceeding.",
-        (void*)frame->eip);
+        "Double fault! xip: 0x%p. Obviously not proceeding.",
+        (void*)frame->xip);
 }
 
 static void invalid_tss_isr(InterruptFrame* frame)
@@ -93,18 +93,18 @@ static void stack_seg_fault(InterruptFrame* frame)
 
 static void general_prot_fault_isr(InterruptFrame* frame)
 {
-    if ((frame->cs & 3) == 0)
+    if ((frame->xcs & 3) == 0)
     {
         panic(
-            "#GP in ring 0 at 0x%p, code: 0x%X. Not proceeding.",
-            (void*)frame->eip,
+            "#GP in ring 0 at 0x%p, code: 0x%zx. Not proceeding.",
+            (void*)frame->xip,
             frame->code);
     }
 
     klogln(
         WARN,
-        "#GP in ring 3 at 0x%p, code: 0x%X.",
-        (void*)frame->eip,
+        "#GP in ring 3 at 0x%p, code: 0x%zx.",
+        (void*)frame->xip,
         frame->code);
 
     TODO_FATAL();
@@ -134,8 +134,8 @@ static void machine_check_isr(InterruptFrame* frame)
     (void)frame;
 
     panic(
-        "You just got machine checked, EIP: 0x%p. Not proceeding",
-        (void*)frame->eip);
+        "You just got machine checked, xip: 0x%p. Not proceeding",
+        (void*)frame->xip);
 }
 
 static void simdfloating_point_err_isr(InterruptFrame* frame)
@@ -154,17 +154,17 @@ static void virt_err_isr(InterruptFrame* frame)
 
 static void control_prot_isr(InterruptFrame* frame)
 {
-    klogln(WARN, "Control protection exception, ring: %d", frame->cs & 3);
+    klogln(WARN, "Control protection exception, ring: %zu", frame->xcs & 3);
 }
 
 static void hypervisor_injection_exception_isr(InterruptFrame* frame)
 {
-    klogln(WARN, "Hypervisor injection exception, ring: %d", frame->cs & 3);
+    klogln(WARN, "Hypervisor injection exception, ring: %zu", frame->xcs & 3);
 }
 
 static void vmm_comm_exception_isr(InterruptFrame* frame)
 {
-    klogln(WARN, "VMM communication exception, ring: %d", frame->cs & 3);
+    klogln(WARN, "VMM communication exception, ring: %zu", frame->xcs & 3);
 }
 
 static void security_err_isr(InterruptFrame* frame)

@@ -55,7 +55,7 @@ _INIT int timekeep_init()
 
     KLOGF(
         INFO,
-        "Using timesource '%s' with priority %d.",
+        "Using timesource '%s' with priority %u",
         g_best_timesource->name,
         g_best_timesource->priority);
 

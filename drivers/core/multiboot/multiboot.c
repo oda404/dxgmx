@@ -38,8 +38,8 @@ long mbootconfig[] = {
     VIDEO_HEIGHT,
     VIDEO_DEPTH};
 
-const volatile ptr ___multiboot_magic;
-const volatile u32 ___multiboot_struct_pa;
+const volatile u32 ___multiboot_magic;
+const volatile ptr ___multiboot_struct_pa;
 
 int multiboot_parse_info(KernelBootInfo* kbootinfo)
 {

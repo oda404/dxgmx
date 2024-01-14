@@ -90,7 +90,7 @@ static void ide_dump_drive_info(const BlockDevice* dev)
 
     KLOGF(
         DEBUG,
-        "[%s] %s (%u%s) mode %s.",
+        "[%s] %s (%zu%s) mode %s.",
         dev->name,
         atadev->master ? "Master" : "Slave",
         size,

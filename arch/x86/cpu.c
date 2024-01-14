@@ -5,6 +5,7 @@
 
 #include <dxgmx/attrs.h>
 #include <dxgmx/cpu.h>
+#include <dxgmx/generated/kconfig.h>
 #include <dxgmx/interrupts.h>
 #include <dxgmx/klog.h>
 #include <dxgmx/panic.h>
@@ -19,6 +20,14 @@ static int g_cpu_identified = 0;
 
 #define CPU_VENDORSTR_INTEL "GenuineIntel"
 #define CPU_VENDORSTR_AMD "AuthenticAMD"
+
+#ifdef CONFIG_64BIT
+#define BASEPTR "rbp"
+#define STACKPTR "rsp"
+#else
+#define BASEPTR "ebp"
+#define STACKPTR "esp"
+#endif
 
 #define KLOGF_PREFIX "cpu: "
 
@@ -153,45 +162,45 @@ bool cpu_has_feature(CPUFeatureFlag flag)
     return (bool)(g_cpufeatures.flags & flag);
 }
 
-u32 cpu_read_cr2()
+size_t cpu_read_cr2()
 {
-    u32 ret;
-    __asm__ volatile("movl %%cr2, %0" : "=a"(ret));
+    size_t ret;
+    __asm__ volatile("mov %%cr2, %0" : "=a"(ret));
     return ret;
 }
 
-u32 cpu_read_cr3()
+size_t cpu_read_cr3()
 {
-    u32 ret;
-    __asm__ volatile("movl %%cr3, %0" : "=a"(ret));
+    size_t ret;
+    __asm__ volatile("mov %%cr3, %0" : "=a"(ret));
     return ret;
 }
 
-u32 cpu_read_cr0()
+size_t cpu_read_cr0()
 {
-    u32 ret;
-    __asm__ volatile("movl %%cr0, %0" : "=a"(ret));
+    size_t ret;
+    __asm__ volatile("mov %%cr0, %0" : "=a"(ret));
     return ret;
 }
 
-u32 cpu_read_ebp()
+size_t cpu_read_bp()
 {
-    u32 ret;
-    __asm__ volatile("movl %%ebp, %0" : "=a"(ret));
+    size_t ret;
+    __asm__ volatile("mov %%" BASEPTR ", %0" : "=a"(ret));
     return ret;
 }
 
-u32 cpu_read_esp()
+size_t cpu_read_sp()
 {
-    u32 ret;
-    __asm__ volatile("movl %%esp, %0" : "=a"(ret));
+    size_t ret;
+    __asm__ volatile("mov %%" STACKPTR ", %0" : "=a"(ret));
     return ret;
 }
 
-u32 cpu_read_cr4()
+size_t cpu_read_cr4()
 {
-    u32 ret;
-    __asm__ volatile("movl %%cr4, %0" : "=a"(ret));
+    size_t ret;
+    __asm__ volatile("mov %%cr4, %0" : "=a"(ret));
     return ret;
 }
 
@@ -204,19 +213,19 @@ u64 cpu_read_msr(CPUMSR msr)
     return ((u64)hi << 32) | lo;
 }
 
-_INIT void cpu_write_cr0(u32 val)
+_INIT void cpu_write_cr0(size_t val)
 {
-    __asm__ volatile("movl %0, %%cr0" : : "a"(val));
+    __asm__ volatile("mov %0, %%cr0" : : "a"(val));
 }
 
-_INIT void cpu_write_cr3(u32 val)
+_INIT void cpu_write_cr3(size_t val)
 {
-    __asm__ volatile("movl %0, %%cr3" : : "a"(val));
+    __asm__ volatile("mov %0, %%cr3" : : "a"(val));
 }
 
-_INIT void cpu_write_cr4(u32 val)
+_INIT void cpu_write_cr4(size_t val)
 {
-    __asm__ volatile("movl %0, %%cr4" : : "a"(val));
+    __asm__ volatile("mov %0, %%cr4" : : "a"(val));
 }
 
 _INIT void cpu_write_msr(u64 val, CPUMSR msr)

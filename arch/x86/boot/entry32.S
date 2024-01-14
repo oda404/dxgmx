@@ -1,14 +1,82 @@
 /**
  * Copyright 2023 Alexandru Olaru.
  * Distributed under the MIT license.
-*/
+ */
 
+#define _ASM
 #include <dxgmx/generated/kconfig.h>
+#include <dxgmx/x86/gdt.h>
 
 .global kinit_stage2
 .type kinit_stage2, @function
 
 #define OFFSET 0xC0000000
+
+#ifdef CONFIG_64BIT
+#define SIZE_T .quad
+#define SIZE_T_BYTES 8
+#else
+#define SIZE_T .long
+#define SIZE_T_BYTES 4
+#endif
+
+# GDT. Previously defined and initiated in gdt.c, we moved it here for long mode
+# since long mode requires some setup in the gdt and once we get to C we should
+# already be running in long mode. (if supported)
+# If this structure is to be changed the relevant defines in dxgmx/x86/gdt.h are also to be updated!
+.section .ro_post_init
+.global ___boot_gdt
+___boot_gdt:
+null:
+  .quad 0
+
+code0:
+  .short 0xFFFF # limit lo
+  .byte 0 # base lo
+  .byte 0 # base lo
+  .byte 0 # base lo
+  .byte (1 << 1) | (1 << 3) | (1 << 4) | (1 << 7) # flags (rw, exec, code_or_data, present, w/ dpl 0)
+  .byte 0xF | (1 << 6) | (1 << 7) # 0xF for limit hi, 32bit, granularity 4K
+  .byte 0 # base hi
+
+data0:
+  .short 0xFFFF # limit lo
+  .byte 0 # base lo
+  .byte 0 # base lo
+  .byte 0 # base lo
+  .byte (1 << 1) | (1 << 4) | (1 << 7) # flags (rw, code_or_data, present, w/ dpl 0)
+  .byte 0xF | (1 << 6) | (1 << 7) # 0xF for limit hi, 32bit, granularity 4K
+  .byte 0 # base hi
+
+code3:
+  .short 0xFFFF # limit lo
+  .byte 0 # base lo
+  .byte 0 # base lo
+  .byte 0 # base lo
+  .byte (1 << 1) | (1 << 3) | (1 << 4) | (3 << 5) | (1 << 7) # flags (rw, exec, code_or_data, present, w/ dpl 0)
+  .byte 0xF | (1 << 6) | (1 << 7) # 0xF for limit hi, 32bit, granularity 4K
+  .byte 0 # base hi
+
+data3:
+  .short 0xFFFF # limit lo
+  .byte 0 # base lo
+  .byte 0 # base lo
+  .byte 0 # base lo
+  .byte (1 << 1) | (1 << 4) | (3 << 5) | (1 << 7) # flags (rw, code_or_data, present, w/ dpl 0)
+  .byte 0xF | (1 << 6) | (1 << 7) # 0xF for limit hi, 32bit, granularity 4K
+  .byte 0 # base hi
+
+tss:
+  .quad 0 # tss is setup later in C
+
+.global ___boot_gdt_size
+___boot_gdt_size: 
+  SIZE_T . - ___boot_gdt
+
+.local g_gdtr
+g_gdtr:
+  .short . - ___boot_gdt - 1 - SIZE_T_BYTES # SIZE_T_BYTES from ___boot_gdt_size
+  .long ___boot_gdt
 
 .section .rodata
 
@@ -139,9 +207,25 @@ higher_half:
   movl %cr3, %ecx
   movl %ecx, %cr3
   
+  # Now that we're higher half mapped we load the gdt because the gdt's 
+  # address can now be accessed without playing games.
+  # We could've loaded it earlier and just switched it again right before
+  # unmapping the first GiB but I don't see any benifit in doing that
+  lgdt g_gdtr
+  ljmp $GDT_KERNEL_CS, $reload_gdt_segments
+reload_gdt_segments:
+  movw $GDT_KERNEL_DS, %ax
+  movw %ax, %ds
+  movw %ax, %es
+  movw %ax, %fs
+  movw %ax, %gs
+  movw %ax, %ss
+
   # clear eflags
   pushl $0
   popf
+
+  # Note that interrupts are still off.
 
   # less go
   call kinit_stage2

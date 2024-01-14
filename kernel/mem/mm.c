@@ -92,7 +92,7 @@ static _INIT void mm_setup_dma(ptr dma_start, size_t dma_size)
         char unit[4];
         KLOGF(
             DEBUG,
-            "dma start: 0x%p, max size: %d%s.",
+            "dma start: 0x%p, max size: %zu%s.",
             (void*)dmaheap.vaddr,
             (size_t)bytes_to_human_readable(dmaheap.pagespan * PAGESIZE, unit),
             unit);
@@ -108,7 +108,7 @@ static _INIT void mm_setup_kmalloc(ptr kheap_start, size_t kheap_size)
         char unit[4];
         KLOGF(
             DEBUG,
-            "kheap start: 0x%p, max size: %d%s.",
+            "kheap start: 0x%p, max size: %zu%s.",
             (void*)kheap.vaddr,
             (size_t)bytes_to_human_readable(kheap.pagespan * PAGESIZE, unit),
             unit);

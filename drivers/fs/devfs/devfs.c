@@ -85,7 +85,7 @@ static int devfs_init(FileSystem* fs)
         size_t tmpstr_size = strlen(fs->mntpoint) + 1 + strlen(entry->name) + 1;
         if (tmpstr_size > PATH_MAX)
         {
-            KLOGF(ERR, "Entry idx: %u is bigger than PATH_MAX!", i);
+            KLOGF(ERR, "Entry idx: %zu is bigger than PATH_MAX!", i);
             continue;
         }
 

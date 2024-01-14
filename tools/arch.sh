@@ -7,14 +7,30 @@ Utility for dxgmx kernel architectures.
 Options:
   -h, --help                Show this message and exit.
   --to-srcarch <arch>       Prints the source architecture corresponding to the given one.
+  --to-normarch <arch>      Prints the normalized arch corresponding to the given one. Check the root Makefile too see what that means...
   --from-target-trip <trip> Parses the architecture from a target triplet.
 "
 }
 
 to_srcarch() {
     case $ARCH in
-        "x86"|"i686"|"i386")
+        "x86"|"i686"|"i386"|"x86_64")
             echo "x86"
+        ;;
+        *)
+            echo "undefined"
+            exit 1
+        ;;
+    esac
+}
+
+to_normarch() {
+    case $ARCH in
+        "x86"|"i686"|"i386")
+            echo "i686"
+        ;;
+        "x86_64")
+            echo "x86-64"
         ;;
         *)
             echo "undefined"
@@ -69,6 +85,13 @@ do
             shift 2
             ((++OPTS))
         ;;
+         "--to-normarch")
+            ARCH="$2"
+            exit_if_bad_usage "--to-normarch" $ARCH
+            TO_NORMARCH=1
+            shift 2
+            ((++OPTS))
+        ;;
         "--from-target-trip")
             TARGET_TRIP="$2"
             exit_if_bad_usage "--from-target-trip" $TARGET_TRIP
@@ -94,6 +117,11 @@ fi
 
 if [[ $TO_SRCARCH -eq 1 ]]; then
     to_srcarch $ARCH
+    exit
+fi
+
+if [[ $TO_NORMARCH -eq 1 ]]; then
+    to_normarch $ARCH
     exit
 fi
 

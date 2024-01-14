@@ -41,6 +41,8 @@ endif
 
 # Translate arch into src arch.
 SRCARCH           := $(shell tools/arch.sh --to-srcarch $(CONFIG_ARCH))
+# Some programs want x86-64 instead of x86_64, this is what this does
+NORMARCH          := $(shell tools/arch.sh --to-normarch $(CONFIG_ARCH))
 
 TARGET_TRIP       := $(CONFIG_ARCH)-unknown-dxgmx
 
@@ -48,7 +50,7 @@ TARGET_TRIP       := $(CONFIG_ARCH)-unknown-dxgmx
 CFLAGS            := \
 -MD -MP -isystem=/usr/include -std=c2x \
 -fno-omit-frame-pointer -ffreestanding \
--fno-builtin -march=$(CONFIG_ARCH) \
+-fno-builtin -march=$(NORMARCH) \
 -fno-pie -fno-pic --target=$(TARGET_TRIP)
 
 INCLUDEDIRS := -Iinclude 

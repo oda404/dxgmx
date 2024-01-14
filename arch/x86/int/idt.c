@@ -4,6 +4,7 @@
  */
 
 #include <dxgmx/attrs.h>
+#include <dxgmx/generated/kconfig.h>
 #include <dxgmx/interrupts.h>
 #include <dxgmx/panic.h>
 #include <dxgmx/types.h>
@@ -13,6 +14,64 @@
 #include <dxgmx/x86/interrupt_frame.h>
 #include <dxgmx/x86/pic.h>
 #include <dxgmx/x86/portio.h>
+
+#ifdef CONFIG_64BIT
+#define PUSH_REGISTERS_INT                                                     \
+    "push %rax \n"                                                             \
+    "push %rcx \n"                                                             \
+    "push %rdx \n"                                                             \
+    "push %rbx \n"                                                             \
+    "push %rbp \n"                                                             \
+    "push %rsi \n"                                                             \
+    "push %rdi \n"                                                             \
+    "push %r8  \n"                                                             \
+    "push %r9  \n"                                                             \
+    "push %r10 \n"                                                             \
+    "push %r11 \n"
+
+#define POP_REGISTERS_INT                                                      \
+    "pop %r11 \n"                                                              \
+    "pop %r10 \n"                                                              \
+    "pop %r9 \n"                                                               \
+    "pop %r8 \n"                                                               \
+    "pop %rdi \n"                                                              \
+    "pop %rsi \n"                                                              \
+    "pop %rbp \n"                                                              \
+    "pop %rbx \n"                                                              \
+    "pop %rdx \n"                                                              \
+    "pop %rcx \n"                                                              \
+    "pop %rax \n"
+
+#define PUSH_FAKE_CODE_INT "pushq $0 \n"
+#define MAKE_FRAME_INT "push %rsp \n"
+#define JUMP_OVER_SIZE_T_INT "add $8, %rsp \n"
+#define RET_INT "iretq"
+#define CALL_ISR_INT(n) "call *(g_isrs + " n " * 8) \n"
+#else
+#define PUSH_REGISTERS_INT                                                     \
+    "push %eax \n"                                                             \
+    "push %ecx \n"                                                             \
+    "push %edx \n"                                                             \
+    "push %ebx \n"                                                             \
+    "push %ebp \n"                                                             \
+    "push %esi \n"                                                             \
+    "push %edi \n"
+
+#define POP_REGISTERS_INT                                                      \
+    "pop %edi \n"                                                              \
+    "pop %esi \n"                                                              \
+    "pop %ebp \n"                                                              \
+    "pop %ebx \n"                                                              \
+    "pop %edx \n"                                                              \
+    "pop %ecx \n"                                                              \
+    "pop %eax \n"
+
+#define PUSH_FAKE_CODE_INT "pushl $0 \n"
+#define MAKE_FRAME_INT "push %esp \n"
+#define JUMP_OVER_SIZE_T_INT "add $4, %esp \n"
+#define RET_INT "iretl"
+#define CALL_ISR_INT(n) "call *(g_isrs + " n " * 4) \n"
+#endif
 
 /* The interrupt service routine callbacks. */
 static x86isr_t g_isrs[256];
@@ -33,54 +92,70 @@ static _ATTR_USED bool idt_is_irq_spurious()
 }
 
 /* Generic interrupt exit. */
-__asm__(".type int_common_exit, @function                       \n"
-        ".local int_common_exit                                 \n"
-        "int_common_exit:                                       \n"
-        "  addl $4, %esp # jump over the InterruptFrame* \n"
-        "  popa                                          \n"
-        "  addl $4, %esp # jump over the code            \n"
-        "  iretl                                         \n");
+// clang-format off
+__asm__(
+    ".type int_common_exit, @function  \n"
+    ".local int_common_exit            \n"
+    "int_common_exit:                  \n"
+        JUMP_OVER_SIZE_T_INT // jump over interrupt frame*
+        POP_REGISTERS_INT
+        JUMP_OVER_SIZE_T_INT // jump over code
+        RET_INT
+);
+// clang-format on
+
+// FIXME: 64bit calling conventions
 
 /* TRAP entry that has a status code pushed on to the stack. */
-#define INT_ENTRY_CODE(id)                                                            \
-    static _ATTR_NAKED _ATTR_USED void int##id()                                      \
-    {                                                                                 \
-        __asm__ volatile(                                                             \
-            "pusha                         # Push all registers*                  \n" \
-            "pushl %esp                    # Set the InterruptFrame*              \n" \
-            "cld                           # Clear direction flag                 \n" \
-            "call *(g_isrs + " #id " * 4)  # Call isr    \n"                          \
-            "jmp int_common_exit                                \n");                 \
+// clang-format off
+#define INT_ENTRY_CODE(id)                          \
+    static _ATTR_NAKED _ATTR_USED void int##id()    \
+    {                                               \
+        __asm__ volatile(                           \
+            PUSH_REGISTERS_INT                      \
+            MAKE_FRAME_INT                          \
+            "cld                              \n"   \
+            CALL_ISR_INT(#id)                       \
+            "jmp int_common_exit              \n"   \
+        );                                          \
     }
+// clang-format on
 
 /* TRAP entry that pushes a dummy status code on to the stack. */
-#define INT_ENTRY(id)                                                                 \
-    static _ATTR_NAKED _ATTR_USED void int##id()                                      \
-    {                                                                                 \
-        __asm__ volatile(                                                             \
-            "pushl $0                      # Push fake code                       \n" \
-            "pusha                         # Push all general registers           \n" \
-            "pushl %esp                    # Set the InterruptFrame*              \n" \
-            "cld                           # Clear direction flag                 \n" \
-            "call *(g_isrs + " #id " * 4)  # Call isr    \n"                          \
-            "jmp int_common_exit                                \n");                 \
+// clang-format off
+#define INT_ENTRY(id)                             \
+    static _ATTR_NAKED _ATTR_USED void int##id()  \
+    {                                             \
+        __asm__ volatile(                         \
+            PUSH_FAKE_CODE_INT                    \
+            PUSH_REGISTERS_INT                    \
+            MAKE_FRAME_INT                        \
+            "cld                              \n" \
+            CALL_ISR_INT(#id)                     \
+            "jmp int_common_exit              \n" \
+        );                                        \
     }
+// clang-format on
 
-/* Spurious interrupts won't even have their ISR called. I love the PIC :) */
-#define INT_ENTRY_MAYBE_SPURIOUS(id)                                                  \
-    static _ATTR_NAKED _ATTR_USED void int##id()                                      \
-    {                                                                                 \
-        __asm__ volatile(                                                             \
-            "pushl $0                      # Push fake code                       \n" \
-            "pusha                         # Push all general registers           \n" \
-            "pushl %esp                    # Set the InterruptFrame*              \n" \
-            "cld                           # Clear direction flag                 \n" \
-            "call idt_is_irq_spurious      # Check if it's spurious               \n" \
-            "cmp $1, %eax                                                         \n" \
-            "je int_common_exit            # Skip the isr call if it's spurious   \n" \
-            "call *(g_isrs + " #id " * 4)  # Call isr    \n"                          \
-            "jmp int_common_exit                                \n");                 \
+/* Spurious interrupts won't even have their ISR called. I love the
+ * PIC :) */
+// clang-format off
+#define INT_ENTRY_MAYBE_SPURIOUS(id)              \
+    static _ATTR_NAKED _ATTR_USED void int##id()  \
+    {                                             \
+        __asm__ volatile(                         \
+            PUSH_FAKE_CODE_INT                    \
+            PUSH_REGISTERS_INT                    \
+            MAKE_FRAME_INT                        \
+            "cld                              \n" \
+            "call idt_is_irq_spurious         \n" \
+            "cmp $1, %eax                     \n" \
+            "je int_common_exit               \n" \
+            CALL_ISR_INT(#id)                     \
+            "jmp int_common_exit              \n" \
+        );                                        \
     }
+// clang-format on
 
 /* Exceptions */
 INT_ENTRY(0)
@@ -134,7 +209,8 @@ INT_ENTRY(45)
 INT_ENTRY(46)
 INT_ENTRY_MAYBE_SPURIOUS(47)
 
-/* Free for use. I/O APIC will probably map ISA interrupts somewhere here */
+/* Free for use. I/O APIC will probably map ISA interrupts somewhere
+ * here */
 INT_ENTRY(48)
 INT_ENTRY(49)
 INT_ENTRY(50)
@@ -443,7 +519,8 @@ _INIT void idt_init()
 
 #define ISA_IRQ IDT_INT32_GATE | IDT_PRIVL0 | IDT_INT_PRESENT
 
-    /* ISA interrupts, these are predefined as they might fire anytime. */
+    /* ISA interrupts, these are predefined as they might fire
+     * anytime. */
     idt_encode_entry(int32, GDT_KERNEL_CS, ISA_IRQ, &g_idt[32]);
     idt_encode_entry(int33, GDT_KERNEL_CS, ISA_IRQ, &g_idt[33]);
     idt_encode_entry(int34, GDT_KERNEL_CS, ISA_IRQ, &g_idt[34]);
@@ -463,8 +540,8 @@ _INIT void idt_init()
 
 #undef ISA_IRQ
 
-    /* These should not fire unless they are setup by a driver, in which case
-     * we'll also have an isr */
+    /* These should not fire unless they are setup by a driver, in
+     * which case we'll also have an isr */
     idt_encode_absent(int48, &g_idt[48]);
     idt_encode_absent(int49, &g_idt[49]);
     idt_encode_absent(int50, &g_idt[50]);

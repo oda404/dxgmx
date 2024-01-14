@@ -77,8 +77,8 @@ _INIT int falloc_init(const MemoryRegionMap* mregmap)
     char unit[4];
     KLOGF(
         INFO,
-        "Using %u free %u%s page frames.",
-        (size_t)g_pgframes_cnt,
+        "Using %zu free %zu%s page frames.",
+        g_pgframes_cnt,
         (size_t)bytes_to_human_readable(PAGESIZE, unit),
         unit);
 

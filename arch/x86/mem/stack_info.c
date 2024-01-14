@@ -19,12 +19,7 @@ void stack_info_dump_trace()
 
 void stack_info_dump_trace_lvl(KLogLevel lvl)
 {
-    const StackFrame* frame = NULL;
-#if defined(CONFIG_X86)
-    frame = (StackFrame*)cpu_read_ebp();
-#elif defined(CONFIG_X86_64)
-    frame = (StackFrame*)cpu_read_rbp();
-#endif
+    const StackFrame* frame = (StackFrame*)cpu_read_bp();
 
     klogln(lvl, "Call stack backtrace:");
     if (!frame)
@@ -53,7 +48,7 @@ void stack_info_dump_trace_lvl(KLogLevel lvl)
 
         klogln(
             lvl,
-            "  0x%p - [%s] + 0x%X",
+            "  0x%p - [%s] + 0x%zx",
             (void*)(frame->instptr - 1),
             buf,
             offset);
@@ -70,7 +65,7 @@ void stack_info_dump_trace_lvl(KLogLevel lvl)
 void stack_info_dump_limits(const char* func, int line)
 {
     const Process* proc = procm_sched_current_proc();
-    const size_t esp = cpu_read_esp();
+    const size_t esp = cpu_read_sp();
 
     size_t rem;
     if (proc)
@@ -80,7 +75,7 @@ void stack_info_dump_limits(const char* func, int line)
 
     klogln(
         DEBUG,
-        "kstack: @%s():%d is %d bytes away from overflowing.",
+        "kstack: @%s():%d is %zu bytes away from overflowing.",
         func,
         line,
         rem);

@@ -8,8 +8,7 @@
 
 void kinit_arch()
 {
-    gdt_init();
-    tss_init();
+    gdt_finish_init();
     /* Interrupts are still disabled, set them up now */
     idt_init();
 }

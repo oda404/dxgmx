@@ -456,7 +456,7 @@ static void pci_enumerate_bus(u8 bus)
         if (!pci_device_is_multifunction(bus, dev))
             continue;
 
-        for (size_t func = 1; func < 8; ++func)
+        for (u8 func = 1; func < 8; ++func)
         {
             if (pci_read_vendor_id(bus, dev, func) == 0xFFFF)
                 continue;

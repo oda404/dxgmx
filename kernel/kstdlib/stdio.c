@@ -357,14 +357,12 @@ int vsnprintf(char* dest, size_t n, const char* fmt, va_list arglist)
             case PRINTF_LEN_j:
                 TODO();
                 break;
-            case PRINTF_LEN_z:
-                TODO();
-                break;
             case PRINTF_LEN_t:
                 TODO();
                 break;
             case PRINTF_LEN_L:
                 break;
+            case PRINTF_LEN_z:
             default:
                 utoa(va_arg(arglist, unsigned int), tmpbuf, 10);
                 break;
@@ -418,7 +416,7 @@ int vsnprintf(char* dest, size_t n, const char* fmt, va_list arglist)
         case 's':
         {
             outbuf = va_arg(arglist, char*);
-            if (precision != -1 && precision <= strlen(outbuf))
+            if (precision != -1 && (size_t)precision <= strlen(outbuf))
                 outbuf_len = precision;
             else
                 outbuf_len = strlen(outbuf);

@@ -38,11 +38,11 @@
                      "push %ebp                        \n"                     \
                      "pushfl                           \n"                     \
                      "                                 \n"                     \
-                     "movl 0x18(%esp), %ebx            \n"                     \
-                     "movl %esp, " #_esp0_off "(%ebx)   \n"                    \
+                     "mov 0x18(%esp), %ebx            \n"                      \
+                     "mov %esp, " #_esp0_off "(%ebx)   \n"                     \
                      "                                 \n"                     \
-                     "movl 0x1C(%esp), %ebx            \n"                     \
-                     "movl " #_esp0_off "(%ebx), %esp   \n"                    \
+                     "mov 0x1C(%esp), %ebx            \n"                      \
+                     "mov " #_esp0_off "(%ebx), %esp   \n"                     \
                      "                                 \n"                     \
                      "popfl                            \n"                     \
                      "pop %ebp                         \n"                     \
@@ -51,15 +51,42 @@
                      "pop %ebx                         \n"                     \
                      "ret                              \n")
 
+#define X86_64_TASK_SWITCH(_rsp0_off)                                          \
+    __asm__ volatile("push %rbx                        \n"                     \
+                     "push %rbp                        \n"                     \
+                     "push %r12                        \n"                     \
+                     "push %r13                        \n"                     \
+                     "push %r14                        \n"                     \
+                     "push %r15                        \n"                     \
+                     "pushfq                           \n"                     \
+                     "                                 \n"                     \
+                     "mov %rsp, " #_rsp0_off "(%rdi)   \n"                     \
+                     "                                 \n"                     \
+                     "mov " #_rsp0_off "(%rsi), %rsp   \n"                     \
+                     "                                 \n"                     \
+                     "popfq                            \n"                     \
+                     "pop %r15                         \n"                     \
+                     "pop %r14                         \n"                     \
+                     "pop %r13                         \n"                     \
+                     "pop %r12                         \n"                     \
+                     "pop %rbp                         \n"                     \
+                     "pop %rbx                         \n"                     \
+                     "ret                              \n")
+
 int task_set_impending_stack_top(ptr sp)
 {
     tss_set_esp0(sp);
     return 0;
 }
+
 /* God I love the C pre-processor >:( */
 STATIC_ASSERT(OFFSETOF(TaskContext, stack_ptr) == 0, "Bad TaskContext offset");
 
 _ATTR_NAKED _CDECL void task_switch(TaskContext* prevctx, TaskContext* nextctx)
 {
+#ifdef CONFIG_64BIT
+    X86_64_TASK_SWITCH(0);
+#else
     I686_TASK_SWITCH(0);
+#endif
 }

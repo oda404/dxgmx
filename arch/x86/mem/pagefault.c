@@ -30,8 +30,8 @@ static void pagefault_isr(InterruptFrame* frame)
     else
         action = PAGEFAULT_ACTION_READ;
 
-    frame->eip =
-        pagefault_handle(faultaddr, frame->eip, frame->cs & 3, reason, action);
+    frame->xip =
+        pagefault_handle(faultaddr, frame->xip, frame->xcs & 3, reason, action);
 }
 
 _INIT void pagefault_setup_arch()

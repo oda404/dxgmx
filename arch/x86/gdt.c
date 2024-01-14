@@ -1,31 +1,86 @@
 /**
- * Copyright 2022 Alexandru Olaru.
+ * Copyright 2023 Alexandru Olaru.
  * Distributed under the MIT license.
  */
 
 #include <dxgmx/assert.h>
 #include <dxgmx/attrs.h>
+#include <dxgmx/compiler_attrs.h>
 #include <dxgmx/string.h>
-#include <dxgmx/types.h>
 #include <dxgmx/x86/gdt.h>
 
-static _INIT void gdt_load(const GDTR* gdtr)
+typedef struct _ATTR_PACKED S_GDTEntry
 {
-    __asm__ volatile("cli                      \n"
-                     "lgdt (%0)                \n"
-                     "ljmp %1, $reload_segs    \n"
-                     "                         \n"
-                     "reload_segs:             \n"
-                     "  movw %2, %%ax          \n"
-                     "  movw %%ax, %%ds        \n"
-                     "  movw %%ax, %%es        \n"
-                     "  movw %%ax, %%fs        \n"
-                     "  movw %%ax, %%gs        \n"
-                     "  movw %%ax, %%ss        \n"
-                     "  sti                    \n"
-                     :
-                     : "b"(gdtr), "i"(GDT_KERNEL_CS), "i"(GDT_KERNEL_DS));
-}
+    /* First 16 bits of the limit. */
+    u16 limit_lo;
+    /* First 24 bits of the base. */
+    u32 base_lo : 24;
+    union
+    {
+        u8 access_byte;
+        struct
+        {
+            /* Set to 1 by the CPU if the segment was accessed. */
+            u8 accessed : 1;
+            /* 1 if the segment is read/write, 0 if the segment is read-only. */
+            u8 rw : 1;
+            /* I don't even know, look it up. */
+            u8 direction_conforming : 1;
+            /* 1 if the segment is executable (code segment)  */
+            u8 exec : 1;
+            /* 1 for a code or data segment, 0 for a system segment (tss/ldt) */
+            u8 code_or_data : 1;
+            /* Privilege level. */
+            u8 dpl : 2;
+            /* 1 for a valid segment. */
+            u8 present : 1;
+        };
+    };
+
+    /* Bits 16-19 of the limit. */
+    u8 limit_hi : 4;
+    /* Must be 0. */
+    u8 reserved : 1;
+    /* If the segment is for long mode. */
+    u8 longmode : 1;
+    /* 0 for a 16 bit segment, 1 for a 32bit segment. */
+    u8 bits32 : 1;
+    /* 0 for byte granularity, 1 for 4K */
+    u8 granularity : 1;
+    /* Bits 24-31 of the base. */
+    u8 base_hi;
+} GDTEntry;
+
+typedef struct _ATTR_PACKED S_TssEntry
+{
+    u32 prev_tss;
+    u32 esp0;
+    u32 ss0;
+    u32 esp1;
+    u32 ss1;
+    u32 esp2;
+    u32 ss2;
+    u32 cr3;
+    u32 eip;
+    u32 eflags;
+    u32 eax;
+    u32 ecx;
+    u32 edx;
+    u32 ebx;
+    u32 esp;
+    u32 ebp;
+    u32 esi;
+    u32 edi;
+    u32 es;
+    u32 cs;
+    u32 ss;
+    u32 ds;
+    u32 fs;
+    u32 gs;
+    u32 ldt;
+    u16 trap;
+    u16 iomap_base;
+} TssEntry;
 
 static _INIT void
 gdt_encode_entry_base_and_limit(u32 base, u32 limit, GDTEntry* entry)
@@ -36,102 +91,30 @@ gdt_encode_entry_base_and_limit(u32 base, u32 limit, GDTEntry* entry)
     entry->base_hi = (base & 0xFF000000) >> 24;
 }
 
-static _INIT void tss_load()
-{
-    __asm__ volatile("mov %0, %%ax  \n"
-                     "ltr %%ax      \n"
-                     :
-                     : "i"(GDT_TSS));
-}
-
-#define GDT_ENTRIES_CNT 6
-static GDTEntry g_gdt[GDT_ENTRIES_CNT];
-static GDTR g_gdtr;
+extern GDTEntry ___boot_gdt[GDT_ENTRIES_CNT];
+extern size_t ___boot_gdt_size;
 static TssEntry g_tss;
 
-_INIT void gdt_init()
+_INIT void gdt_finish_init()
 {
-    memset(g_gdt, 0, sizeof(g_gdt));
+    /* Just in case someone fucks with the gdt in entry.S and doesn't account
+     * for it */
+    ASSERT(___boot_gdt_size == GDT_ENTRIES_CNT * sizeof(GDTEntry));
 
-#define CS0_IDX (GDT_KERNEL_CS / sizeof(GDTEntry))
-#define DS0_IDX (GDT_KERNEL_DS / sizeof(GDTEntry))
-#define CS3_IDX (GDT_USER_CS / sizeof(GDTEntry))
-#define DS3_IDX (GDT_USER_DS / sizeof(GDTEntry))
-#define TSS_IDX (GDT_TSS / sizeof(GDTEntry))
-
-    STATIC_ASSERT(
-        (CS0_IDX < GDT_ENTRIES_CNT && DS0_IDX < GDT_ENTRIES_CNT &&
-         CS3_IDX < GDT_ENTRIES_CNT && DS3_IDX < GDT_ENTRIES_CNT &&
-         TSS_IDX < GDT_ENTRIES_CNT),
-        "Out of range GDT segment(s)!");
-
-    STATIC_ASSERT(
-        (CS0_IDX != DS0_IDX && DS0_IDX != CS3_IDX && CS3_IDX != DS3_IDX &&
-         DS3_IDX != TSS_IDX),
-        "Duplicate GDT segments(s)!");
-
-    /* code ring 0 segment */
-    GDTEntry* entry = &g_gdt[CS0_IDX];
-    gdt_encode_entry_base_and_limit(0, 0xFFFFF, entry);
-    entry->rw = 1;
-    entry->exec = 1;
-    entry->dpl = 0;
-    entry->code_or_data = 1;
-    entry->present = 1;
-    entry->granularity = 1;
-    entry->bits32 = 1;
-
-    /* data ring 0 segment */
-    entry = &g_gdt[DS0_IDX];
-    gdt_encode_entry_base_and_limit(0, 0xFFFFF, entry);
-    entry->rw = 1;
-    entry->dpl = 0;
-    entry->code_or_data = 1;
-    entry->present = 1;
-    entry->granularity = 1;
-    entry->bits32 = 1;
-
-    /* code ring 3 segment */
-    entry = &g_gdt[CS3_IDX];
-    gdt_encode_entry_base_and_limit(0, 0xFFFFF, entry);
-    entry->rw = 1;
-    entry->exec = 1;
-    entry->dpl = 3;
-    entry->code_or_data = 1;
-    entry->present = 1;
-    entry->granularity = 1;
-    entry->bits32 = 1;
-
-    /* data ring 3 segment */
-    entry = &g_gdt[DS3_IDX];
-    gdt_encode_entry_base_and_limit(0, 0xFFFFF, entry);
-    entry->rw = 1;
-    entry->dpl = 3;
-    entry->code_or_data = 1;
-    entry->present = 1;
-    entry->granularity = 1;
-    entry->bits32 = 1;
-
-    /* tss */
-    entry = &g_gdt[TSS_IDX];
+    /* Set gdt tss entry */
+    GDTEntry* entry = &___boot_gdt[GDT_TSS / sizeof(GDTEntry)];
     gdt_encode_entry_base_and_limit((ptr)&g_tss, sizeof(g_tss), entry);
     entry->accessed = 1; /* For a system segment 1: a TSS and 0: LDT */
     entry->exec = 1;     /* For a TSS 1: 32bit and 0: 16bit */
     entry->present = 1;
 
-    g_gdtr.base = g_gdt;
-    g_gdtr.limit = sizeof(g_gdt) - 1;
-
-    gdt_load(&g_gdtr);
-}
-
-_INIT void tss_init()
-{
-    /* Prepare the TSS */
+    /* Load the gdt */
     memset(&g_tss, 0, sizeof(TssEntry));
     g_tss.ss0 = GDT_KERNEL_DS;
-
-    tss_load();
+    __asm__ volatile("mov %0, %%ax  \n"
+                     "ltr %%ax      \n"
+                     :
+                     : "i"(GDT_TSS));
 }
 
 void tss_set_esp0(ptr esp)

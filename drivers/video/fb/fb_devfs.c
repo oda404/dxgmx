@@ -97,7 +97,7 @@ static void* fb_vnode_mmap(
     res =
         dma_map_range(fb->base_pa, len, map_flags, procm_sched_current_proc());
     if (res.error)
-        return (void*)res.error;
+        return 0; // FIXME
 
     return (void*)res.value;
 }

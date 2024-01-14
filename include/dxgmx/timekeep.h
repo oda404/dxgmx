@@ -15,7 +15,7 @@ typedef struct S_TimeSource
 
     /* Priority over other timesources. The biggest number gets choosen as the
      * best timesource. */
-    size_t priority;
+    u32 priority;
 
     int (*init)(struct S_TimeSource*);
     int (*destroy)(struct S_TimeSource*);

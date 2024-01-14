@@ -43,7 +43,7 @@ static int proc_create_stack(Process* targetproc)
         {
             KLOGF(
                 ERR,
-                "Failed to map a process' stack, (%u/%u) succeeded.",
+                "Failed to map a process' stack, (%zu/%zu) succeeded.",
                 i,
                 stack_pages);
             return st;

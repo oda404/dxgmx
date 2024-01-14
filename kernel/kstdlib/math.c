@@ -95,3 +95,8 @@ double min(double x, double y)
 {
     return x > y ? y : x;
 }
+
+size_t minzu(size_t x, size_t y)
+{
+    return x > y ? y : x;
+}

@@ -10,14 +10,14 @@ static void x86syscall_isr(InterruptFrame* frame)
 {
     /* Return value of syscall goes in eax. Note that even if the syscall
      * returns void, we still return and set eax to 0. Should we fix this ? */
-    frame->eax = syscalls_do_handle(
-        frame->eax,
-        frame->ebx,
-        frame->ecx,
-        frame->edx,
-        frame->esi,
-        frame->edi,
-        frame->ebp);
+    frame->xax = syscalls_do_handle(
+        frame->xax,
+        frame->xbx,
+        frame->xcx,
+        frame->xdx,
+        frame->xsi,
+        frame->xdi,
+        frame->xbp);
 }
 
 int syscalls_arch_init()

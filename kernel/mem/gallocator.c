@@ -27,17 +27,17 @@ typedef struct S_GAllocatorHeapMeta
     ptr lo_bitmap;
     size_t lo_bitmap_size;
     ptr lo_pool;
-    ptr lo_poolchunks;
+    size_t lo_poolchunks;
 
     ptr mid_bitmap;
     size_t mid_bitmap_size;
     ptr mid_pool;
-    ptr mid_poolchunks;
+    size_t mid_poolchunks;
 
     ptr hi_bitmap;
     size_t hi_bitmap_size;
     ptr hi_pool;
-    ptr hi_poolchunks;
+    size_t hi_poolchunks;
 } GAllocatorHeapMeta;
 
 typedef struct S_GAllocationMeta
@@ -497,14 +497,17 @@ int gallocator_init_heap(const Heap* heap)
     ASSERT(meta->hi_pool % HI_POOL_CHUNK_SIZE == 0);
 
     KLOGF(
-        DEBUG, "low chunks (%d): %u", LO_POOL_CHUNK_SIZE, meta->lo_poolchunks);
+        DEBUG, "low chunks (%d): %zu", LO_POOL_CHUNK_SIZE, meta->lo_poolchunks);
     KLOGF(
         DEBUG,
-        "mid chunks (%d): %u",
+        "mid chunks (%d): %zu",
         MID_POOL_CHUNK_SIZE,
         meta->mid_poolchunks);
     KLOGF(
-        DEBUG, "high chunks (%d): %u", HI_POOL_CHUNK_SIZE, meta->hi_poolchunks);
+        DEBUG,
+        "high chunks (%d): %zu",
+        HI_POOL_CHUNK_SIZE,
+        meta->hi_poolchunks);
 
     return 0;
 }

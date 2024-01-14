@@ -132,7 +132,7 @@ char* strchr(const char* str, char c)
 
 char* strrchr(const char* str, char c)
 {
-    size_t len = min(strlen(str), _SSIZE_MAX_);
+    size_t len = minzu(strlen(str), _SSIZE_MAX_);
     // i = len because the null terminator is part of string as per the spec
     for (ssize_t i = len; i >= 0; --i)
     {

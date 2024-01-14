@@ -1,5 +1,5 @@
 /**
- * Copyright 2022 Alexandru Olaru.
+ * Copyright 2023 Alexandru Olaru.
  * Distributed under the MIT license.
  */
 
@@ -212,17 +212,17 @@ typedef struct S_CPUFeatures
     };
 } CPUFeatures;
 
-u32 cpu_read_cr0();
-u32 cpu_read_cr2();
-u32 cpu_read_cr3();
-u32 cpu_read_cr4();
+size_t cpu_read_cr0();
+size_t cpu_read_cr2();
+size_t cpu_read_cr3();
+size_t cpu_read_cr4();
 
-u32 cpu_read_ebp();
-u32 cpu_read_esp();
+size_t cpu_read_bp();
+size_t cpu_read_sp();
 
-void cpu_write_cr0(u32 val);
-void cpu_write_cr4(u32 val);
-void cpu_write_cr3(u32 val);
+void cpu_write_cr0(size_t val);
+void cpu_write_cr4(size_t val);
+void cpu_write_cr3(size_t val);
 
 u64 cpu_read_msr(CPUMSR msr);
 void cpu_write_msr(u64 val, CPUMSR msr);

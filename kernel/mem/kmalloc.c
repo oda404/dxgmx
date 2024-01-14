@@ -233,7 +233,8 @@ void* krealloc(void* addr, size_t size)
         ssize_t res = g_driver.allocation_size(addr, heap);
         if (res <= 0)
         {
-            KLOGF(ERR, "%s: allocation_size() returned %d", g_driver.name, res);
+            KLOGF(
+                ERR, "%s: allocation_size() returned %zi", g_driver.name, res);
             return NULL;
         }
         prevsize = res;
@@ -248,7 +249,7 @@ void* krealloc(void* addr, size_t size)
         {
             KLOGF(
                 ERR,
-                "%s: allocation_alignment() returned %d",
+                "%s: allocation_alignment() returned %zi",
                 g_driver.name,
                 res);
             return NULL;
@@ -284,23 +285,23 @@ void kmalloc_dump_statistics()
     KLOGF(INFO, "Statistics:");
 
     KLOGF(
-        INFO, "-- Total allocations made: %d", g_statistics.total_allocations);
+        INFO, "-- Total allocations made: %zu", g_statistics.total_allocations);
 
     char hr_unit[4];
     size_t hr_total =
         bytes_to_human_readable(g_statistics.total_allocated, hr_unit);
 
-    KLOGF(INFO, "-- Total allocated memory: %d %s", hr_total, hr_unit);
+    KLOGF(INFO, "-- Total allocated memory: %zu %s", hr_total, hr_unit);
 
     size_t current_allocations =
         g_statistics.total_allocations - g_statistics.total_frees;
     size_t current_allocated =
         g_statistics.total_allocated - g_statistics.total_freed;
 
-    KLOGF(INFO, "-- Current allocations: %d", current_allocations);
+    KLOGF(INFO, "-- Current allocations: %zu", current_allocations);
 
     hr_total = bytes_to_human_readable(current_allocated, hr_unit);
-    KLOGF(INFO, "-- Currently allocated memory: %d %s", hr_total, hr_unit);
+    KLOGF(INFO, "-- Currently allocated memory: %zu %s", hr_total, hr_unit);
 #else
     KLOGF(WARN, "Statistics are not enabled!");
 #endif
