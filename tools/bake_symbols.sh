@@ -1,6 +1,6 @@
 #!/bin/bash
 
-KERNEL_BIN=$1
+KERNEL_BIN=$(basename $1)
 
 tmp=$(mktemp)
 final=build/$KERNEL_BIN.map
